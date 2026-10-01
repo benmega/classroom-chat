@@ -2,6 +2,7 @@ from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.classroom import Classroom
 from application.models.user import User
+from tests.factories import UserFactory
 
 
 def login_as_admin(client, admin_user):
@@ -162,6 +163,34 @@ def test_create_user(client, sample_admin, init_db):
 
     resp = client.post("/api/admin/create_user", data={})
     assert resp.status_code == 400
+
+
+def test_create_user_retries_when_generated_slug_collides(
+    client, sample_admin, init_db, monkeypatch
+):
+    login_as_admin(client, sample_admin)
+    UserFactory(_username="first_sam", nickname="Sam")  # slug "sam"
+    real_generate_slug = User.generate_slug
+    calls = []
+
+    def racy_generate_slug(self):
+        calls.append(1)
+        if len(calls) == 1:
+            self.slug = "sam"  # computed before the other creation committed
+            return self.slug
+        return real_generate_slug(self)
+
+    monkeypatch.setattr(User, "generate_slug", racy_generate_slug)
+
+    resp = client.post(
+        "/api/admin/create_user",
+        data={"username": "sam", "password": "password123", "ducks": 5},
+    )
+
+    assert resp.status_code == 200
+    created = User.query.filter_by(username="sam").one()
+    assert created.slug == "sam-1"
+    assert created.duck_balance == 5
 
 
 def test_remove_user(client, sample_admin, sample_user):

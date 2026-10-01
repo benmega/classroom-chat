@@ -51,33 +51,16 @@ def get_achievements_json():
         return jsonify({"success": False, "error": "User not found!"}), 404
 
     # Automatically check for new achievements when visiting the page
-    from application.models.challenge_log import ChallengeLog
-    from application.models.duck_trade import DuckTradeLog
-    from application.models.message import Message
     from application.services.achievement_engine import (
-        _calculate_consistency,
+        compute_user_stats,
         evaluate_user,
         get_achievement_progress,
-        longest_session_minutes,
     )
-    from sqlalchemy import func
 
     evaluate_user(current_user)
 
     # Pre-calculate stats for speed
-    stats = {
-        "chat_count": db.session.query(func.count(Message.id))
-        .filter(Message.user_id == current_user.id)
-        .scalar(),
-        "consistency_streak": _calculate_consistency(current_user.id),
-        "community_count": db.session.query(func.count(ChallengeLog.id))
-        .filter(func.lower(ChallengeLog.helper) == current_user.username.lower())
-        .scalar(),
-        "max_session": longest_session_minutes(current_user.id),
-        "trade_count": db.session.query(func.count(DuckTradeLog.id))
-        .filter(DuckTradeLog.user_id == current_user.id)
-        .scalar(),
-    }
+    stats = compute_user_stats(current_user)
 
     user_achievements = {ua.achievement_id for ua in current_user.achievements}
     all_achievements = Achievement.query.all()

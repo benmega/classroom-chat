@@ -4,9 +4,10 @@ from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
-from application.models.user import User
+from application.models.user import User, save_new_user
 from application.utilities.db_helpers import get_canonical_course_slug
 from flask import current_app, jsonify, request
+from sqlalchemy.orm import selectinload
 
 from ..admin_routes import admin_bp
 
@@ -52,27 +53,14 @@ def student_activity():
 @admin_only
 @api_response
 def pending_users():
-    from application.models.challenge_log import ChallengeLog
-    from sqlalchemy import func
-
-    pending = User.query.filter_by(is_approved=False).filter(User.role != 'admin').all()
-    user_ids = [u.id for u in pending]
-
-    counts = (
-        db.session.query(
-            ChallengeLog.user_id, ChallengeLog.domain, func.count(ChallengeLog.id)
-        )
-        .filter(ChallengeLog.user_id.in_(user_ids))
-        .group_by(ChallengeLog.user_id, ChallengeLog.domain)
+    pending = (
+        User.query.options(selectinload(User.projects))
+        .filter_by(is_approved=False)
+        .filter(User.role != 'admin')
         .all()
     )
 
-    id_to_username = {u.id: u._username for u in pending}
-    precomputed = {
-        (id_to_username[user_id], domain): count for user_id, domain, count in counts
-    }
-
-    return {"users": [u.to_dict_summary(precomputed) for u in pending]}
+    return {"users": User.to_dict_summaries(pending)}
 
 
 @admin_bp.route("/approve_user/<int:user_id>", methods=["POST"])
@@ -180,23 +168,11 @@ def get_users():
             User.id.desc(),
         )
 
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = query.options(selectinload(User.projects)).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     users = pagination.items
     user_ids = [u.id for u in users]
-
-    counts = (
-        db.session.query(
-            ChallengeLog.user_id, ChallengeLog.domain, func.count(ChallengeLog.id)
-        )
-        .filter(ChallengeLog.user_id.in_(user_ids))
-        .group_by(ChallengeLog.user_id, ChallengeLog.domain)
-        .all()
-    )
-
-    id_to_username = {u.id: u._username for u in users}
-    precomputed = {
-        (id_to_username[user_id], domain): count for user_id, domain, count in counts
-    }
 
     # Fetch levels completed today (UTC day start to match log timestamps)
     from datetime import datetime, time
@@ -212,11 +188,9 @@ def get_users():
     )
     levels_today_map = dict(today_counts)
 
-    user_data = []
-    for u in users:
-        d = u.to_dict_summary(precomputed)
-        d["levels_today"] = levels_today_map.get(u.id, 0)
-        user_data.append(d)
+    user_data = User.to_dict_summaries(users)
+    for d in user_data:
+        d["levels_today"] = levels_today_map.get(d["id"], 0)
 
     return jsonify(
         {
@@ -294,8 +268,7 @@ def create_user():
     try:
         new_user = User(username=username)
         new_user.set_password(password)
-        db.session.add(new_user)
-        db.session.flush()  # Get user ID
+        save_new_user(new_user, commit=False)  # Flush to get the user ID
         if ducks > 0:
             new_user.add_ducks(ducks, reason="Initial Balance")
         db.session.commit()

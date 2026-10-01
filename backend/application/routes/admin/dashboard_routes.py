@@ -11,6 +11,7 @@ from application.models.duck_transaction import DuckTransaction
 from application.models.user import User
 from flask import Response, current_app, request
 from sqlalchemy import func
+from sqlalchemy.orm import selectinload
 
 from ..admin_routes import admin_bp
 
@@ -33,7 +34,7 @@ def dashboard_data():
     )
 
     total_users_count = User.query.count()
-    users = User.query.limit(10).all()
+    users = User.query.options(selectinload(User.projects)).limit(10).all()
     # Column-only projection: avoids loading full ORM objects (and lazy relationship
     # triggers) just to produce the slim per-user list below. Unlike `users` above,
     # this is NOT capped, so it's safe to use for roster-wide stats (counts,
@@ -110,7 +111,7 @@ def dashboard_data():
         "pending_users_count": pending_users,
         "ducks_earned_this_week": ducks_earned_week,
         "total_users_count": total_users_count,
-        "users": [u.to_dict_summary() for u in users],
+        "users": User.to_dict_summaries(users),
         "all_users": [
             {
                 "id": u.id,

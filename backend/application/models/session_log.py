@@ -40,22 +40,41 @@ class SessionLog(db.Model):
         return None
 
     @classmethod
-    def start_session(cls, user_id):
-        """Log a new session start."""
-        log = cls(user_id=user_id)
-        db.session.add(log)
-        db.session.commit()
-        return log
+    def start_session(cls, user_id, commit=True):
+        """Log a new session start (idempotent).
 
-    @classmethod
-    def end_session(cls, user_id):
-        """Mark the most recent open session as ended."""
+        If the user already has an open session (second tab, repeat login) that
+        session is returned instead of opening another one.
+        """
         log = (
             cls.query.filter_by(user_id=user_id, end_time=None)
             .order_by(cls.start_time.desc())
             .first()
         )
         if log:
-            log.end_time = datetime.utcnow()
+            return log
+
+        log = cls(user_id=user_id)
+        db.session.add(log)
+        if commit:
             db.session.commit()
         return log
+
+    @classmethod
+    def end_session(cls, user_id, commit=True):
+        """Close every open session of the user; return the most recent one.
+
+        The newest open session ends now. Older ones are orphans that stopped
+        receiving heartbeats, so they end at their last_seen (as the periodic
+        cleanup does) rather than being stretched to now.
+        """
+        logs = (
+            cls.query.filter_by(user_id=user_id, end_time=None)
+            .order_by(cls.start_time.desc(), cls.id.desc())
+            .all()
+        )
+        for i, log in enumerate(logs):
+            log.end_time = datetime.utcnow() if i == 0 else log.last_seen
+        if logs and commit:
+            db.session.commit()
+        return logs[0] if logs else None

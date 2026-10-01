@@ -1418,3 +1418,58 @@ def test_real_unique_index_duplicate_is_already_claimed_and_session_recovers(
     assert response.status_code == 200
     assert response.get_json()["success"] is True
     assert _claim_rows(user) == (2, 1)
+
+
+def _helper_scenario():
+    """Create a valid course/challenge/instance and return the challenge details."""
+    course = CourseFactory()
+    course_instance = CourseInstanceFactory(course_id=course.id, classroom_id="cls1")
+    ChallengeFactory(
+        slug="case-challenge",
+        course_id=course.id,
+        domain="codecombat.com",
+        difficulty="easy",
+        value=10,
+        is_active=True,
+    )
+    return {
+        "domain": "codecombat.com",
+        "challenge_slug": "case-challenge",
+        "course_id": course.id,
+        "course_instance": course_instance.id,
+    }
+
+
+@pytest.mark.parametrize("typed", ["BEN", "Ben", "  ben  "])
+def test_log_challenge_self_helper_is_blanked_case_insensitively(init_db, typed):
+    """Typing your own username in any case/spacing must not store a helper."""
+    from application.routes.challenge_routes import _log_challenge
+    from application.services.achievement_engine import compute_user_stats
+
+    ben = UserFactory(_username="ben")
+    details = _helper_scenario()
+
+    result = _log_challenge(details, ben, helper=typed)
+
+    assert result["success"] is True
+    log = ChallengeLog.query.filter_by(user_id=ben.id).one()
+    assert log.helper == ""
+    # ...so it does not count toward his own "community" achievement
+    assert compute_user_stats(ben)["community_count"] == 0
+
+
+def test_log_challenge_other_users_helper_credits_the_helper(init_db):
+    """'Ben' typed on someone else's log counts for user 'ben'."""
+    from application.routes.challenge_routes import _log_challenge
+    from application.services.achievement_engine import compute_user_stats
+
+    ben = UserFactory(_username="ben")
+    friend = UserFactory()
+    details = _helper_scenario()
+
+    result = _log_challenge(details, friend, helper="Ben")
+
+    assert result["success"] is True
+    log = ChallengeLog.query.filter_by(user_id=friend.id).one()
+    assert log.helper == "Ben"
+    assert compute_user_stats(ben)["community_count"] == 1

@@ -34,8 +34,8 @@ def get_challenge_counts_by_language(user):
         "wd2": "HTML/CSS",
     }
 
-    # Materialise the dynamic relationship once to avoid firing two separate
-    # DB queries (one from get_completed_levels() and one from the loop below).
+    # Materialise the dynamic relationship once so the logs are queried a
+    # single time and reused by both passes below.
     challenge_logs = list(user.challenge_logs)
 
     # 1. Check Course Progress for WD1/WD2 (Legacy/Special handling)
@@ -70,7 +70,10 @@ def evaluate_user_skills(user):
     """
     new_skills_awarded = []
 
-    existing_map = {f"{s.name}-{s.proficiency}" for s in user.skills}
+    # Skills the user holds, by name. _award_skill keeps this up to date so a
+    # skill that is created earlier in this same pass is found (and not inserted
+    # a second time, which would violate uq_skill_name_user at commit).
+    skills_by_name = {s.name: s for s in user.skills}
 
     counts = get_challenge_counts_by_language(user)
 
@@ -99,7 +102,7 @@ def evaluate_user_skills(user):
                 "language",
                 _get_icon(lang_name),
                 level,
-                existing_map,
+                skills_by_name,
                 new_skills_awarded,
             )
 
@@ -112,7 +115,7 @@ def evaluate_user_skills(user):
             "tool",
             "fab fa-github",
             1,
-            existing_map,
+            skills_by_name,
             new_skills_awarded,
         )
 
@@ -127,7 +130,7 @@ def evaluate_user_skills(user):
                         "concept",
                         "fas fa-lightbulb",
                         1,
-                        existing_map,
+                        skills_by_name,
                         new_skills_awarded,
                     )
 
@@ -138,10 +141,10 @@ def evaluate_user_skills(user):
     return None
 
 
-def _award_skill(user, name, category, icon, level, existing_map, awarded_list):
+def _award_skill(user, name, category, icon, level, skills_by_name, awarded_list):
     """Helper to handle the add/upgrade logic safely."""
     # Check if the user already has this skill at any level
-    existing_skill = next((s for s in user.skills if s.name == name), None)
+    existing_skill = skills_by_name.get(name)
 
     if existing_skill:
         if existing_skill.proficiency >= level:
@@ -151,13 +154,11 @@ def _award_skill(user, name, category, icon, level, existing_map, awarded_list):
         existing_skill.icon = icon
         existing_skill.category = category
     else:
-        # Also clean up any lower proficiencies just in case
-        for s in [s for s in user.skills if s.name == name and s.proficiency < level]:
-            db.session.delete(s)
         new_skill = Skill(
             name=name, user_id=user.id, category=category, icon=icon, proficiency=level
         )
         db.session.add(new_skill)
+        skills_by_name[name] = new_skill
 
     awarded_list.append(f"{name} (Lvl {level})")
 

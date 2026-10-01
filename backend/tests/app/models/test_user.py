@@ -4,6 +4,21 @@ Type: py
 Summary: Unit tests for user model.
 """
 
+from contextlib import contextmanager
+from datetime import datetime, timedelta
+from unittest.mock import patch
+
+import pytest
+from application.extensions import db
+from application.models.challenge_log import ChallengeLog
+from application.models.project import Project
+from application.models.session_log import SessionLog
+from application.models.user import User, save_new_user
+from sqlalchemy import event
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
+from tests.factories import AchievementFactory, ChallengeFactory, UserFactory
+
 
 def test_user_creation(add_sample_user):
     user = add_sample_user("testuser", "hashed_pwd")
@@ -296,3 +311,311 @@ def test_earned_ducks_invariant_with_legacy_balance(add_sample_user):
     assert user.earned_ducks >= user.duck_balance, (
         f"Invariant violated after add_ducks: earned={user.earned_ducks}, balance={user.duck_balance}"
     )
+
+
+# --- Helpers for the tests below ----------------------------------------------
+
+
+@contextmanager
+def _captured_sql():
+    """Collect every SQL statement executed while the block runs."""
+    statements = []
+
+    def before(conn, cursor, statement, parameters, context, executemany):
+        statements.append(statement)
+
+    event.listen(db.engine, "before_cursor_execute", before)
+    try:
+        yield statements
+    finally:
+        event.remove(db.engine, "before_cursor_execute", before)
+
+
+def _make_user(index):
+    user = UserFactory(_username=f"batch{index}", nickname=f"Batch {index}")
+    db.session.add(Project(name=f"Proj {index}", user_id=user.id))
+    if index % 2 == 0:
+        db.session.add(
+            ChallengeLog(
+                user_id=user.id,
+                domain="codecombat.com",
+                challenge_slug=f"slug-{index}",
+            )
+        )
+    db.session.commit()
+    return user
+
+
+# --- Challenge totals / progress (T9a, T9c) -----------------------------------
+
+
+def test_progress_percent_follows_challenge_changes(add_sample_user, init_db):
+    """Adding challenges changes the percentage straight away (no process cache)."""
+    user = add_sample_user("testuser_pct", "pwd")
+    for i in range(2):
+        ChallengeFactory(slug=f"pct-{i}", domain="codecombat.com")
+    db.session.add(
+        ChallengeLog(user_id=user.id, domain="codecombat.com", challenge_slug="pct-0")
+    )
+    db.session.commit()
+
+    progress = User.build_progress_map([user])
+    assert user.get_progress_percent("codecombat.com") == 50
+    assert user.to_dict_summary(progress)["cc_percent"] == 50
+
+    for i in range(2, 4):
+        ChallengeFactory(slug=f"pct-{i}", domain="codecombat.com")
+
+    assert user.get_progress_percent("codecombat.com") == 25
+    assert user.to_dict_summary(progress)["cc_percent"] == 25
+
+
+def test_build_progress_map(init_db):
+    a, b, c = (_make_user(i) for i in range(3))
+    db.session.add(
+        ChallengeLog(user_id=a.id, domain="www.ozaria.com", challenge_slug="oz-1")
+    )
+    db.session.commit()
+
+    assert User.build_progress_map([a, b, c]) == {
+        ("batch0", "codecombat.com"): 1,
+        ("batch0", "www.ozaria.com"): 1,
+        ("batch2", "codecombat.com"): 1,
+    }
+    assert User.build_progress_map([]) == {}
+
+
+def test_to_dict_summary_empty_precomputed_progress_skips_per_user_queries(
+    add_sample_user, init_db
+):
+    """An empty map ("no logs on this page") must not fall back to COUNT queries."""
+    user = add_sample_user("testuser_empty", "pwd")
+    totals = {"codecombat.com": 0, "www.ozaria.com": 0}
+
+    with _captured_sql() as statements:
+        data = user.to_dict_summary({}, challenge_totals=totals, activity_user_ids=set())
+
+    assert data["cc_levels"] == 0
+    assert data["oz_levels"] == 0
+    assert data["has_activity"] is False
+    assert not [s for s in statements if "challenge_logs" in s]
+
+
+def test_to_dict_summaries_query_count_does_not_grow_with_users(init_db):
+    def measure():
+        db.session.expire_all()
+        with _captured_sql() as statements:
+            users = User.query.options(selectinload(User.projects)).all()
+            summaries = User.to_dict_summaries(users)
+        return len(statements), summaries
+
+    for i in range(2):
+        _make_user(i)
+    small_count, small = measure()
+
+    for i in range(2, 9):
+        _make_user(i)
+    large_count, large = measure()
+
+    assert len(small) == 2 and len(large) == 9
+    assert large_count == small_count
+
+    by_name = {d["username"]: d for d in large}
+    assert by_name["batch2"]["cc_levels"] == 1
+    assert by_name["batch3"]["cc_levels"] == 0
+    assert by_name["batch3"]["has_activity"] is False
+    assert by_name["batch4"]["has_activity"] is True
+    assert by_name["batch4"]["recent_project"] == {"name": "Proj 4"}
+
+
+def test_to_dict_summaries_empty(init_db):
+    assert User.to_dict_summaries([]) == []
+
+
+def test_batch_activity_matches_has_activity(init_db):
+    from application.models.course_instance_request import CourseInstanceRequest
+    from application.models.submission import Submission
+    from application.models.user_certificate import UserCertificate
+
+    logs, subs, certs, reqs, none = (UserFactory() for _ in range(5))
+    db.session.add_all(
+        [
+            ChallengeLog(user_id=logs.id, domain="x", challenge_slug="s"),
+            Submission(
+                user_id=subs.id,
+                original_filename="a.pdf",
+                stored_path="submissions/a.pdf",
+                file_size=1,
+            ),
+            UserCertificate(
+                user_id=certs.id,
+                achievement_id=AchievementFactory().id,
+                url="http://example.com/c.pdf",
+            ),
+            CourseInstanceRequest(
+                student_id=reqs.id, course_instance_id="ci", url="http://example.com"
+            ),
+        ]
+    )
+    db.session.commit()
+
+    users = [logs, subs, certs, reqs, none]
+    active = User._activity_user_ids(users)
+
+    assert active == {u.id for u in users if u.has_activity}
+    assert active == {logs.id, subs.id, certs.id, reqs.id}
+
+
+# --- Slug races (T9b) ----------------------------------------------------------
+
+
+def test_save_new_user_retries_when_slug_loses_a_race(init_db, monkeypatch):
+    winner = UserFactory(_username="slugwinner", nickname="Sam")
+    assert winner.slug == "sam"
+
+    real_generate_slug = User.generate_slug
+    calls = []
+
+    def racy_generate_slug(self):
+        # The first attempt computes a slug before the winner's commit is visible
+        calls.append(1)
+        if len(calls) == 1:
+            self.slug = "sam"
+            return self.slug
+        return real_generate_slug(self)
+
+    monkeypatch.setattr(User, "generate_slug", racy_generate_slug)
+
+    loser = User(username="slugloser", nickname="Sam")
+    loser.set_password("pwd")
+    save_new_user(loser)
+
+    assert len(calls) == 2
+    assert loser.slug == "sam-1"
+    assert db.session.get(User, loser.id).slug == "sam-1"
+    assert db.session.get(User, winner.id).slug == "sam"
+
+
+def test_save_new_user_commit_false_only_flushes(init_db):
+    user = User(username="flushonly", nickname="Flush Only")
+    user.set_password("pwd")
+
+    save_new_user(user, commit=False)
+
+    assert user.id is not None
+    assert user.slug == "flush-only"
+    db.session.rollback()
+    assert User.query.filter_by(username="flushonly").first() is None
+
+
+def test_save_new_user_other_integrity_errors_propagate(init_db):
+    UserFactory(_username="dupename")
+    clash = User(username="dupename")
+    clash.set_password("pwd")
+
+    with pytest.raises(IntegrityError):
+        save_new_user(clash)
+    db.session.rollback()
+
+    assert User.query.filter_by(username="dupename").count() == 1
+
+
+# --- Session logs (T9e, T9f) ---------------------------------------------------
+
+
+def _open_logs(user_id):
+    return SessionLog.query.filter_by(user_id=user_id, end_time=None).all()
+
+
+def test_set_online_then_offline_leaves_one_closed_log(add_sample_user, init_db):
+    user = add_sample_user("testuser_cycle", "pwd")
+
+    User.set_online(user.id, True)
+    assert user.is_online is True
+    assert len(_open_logs(user.id)) == 1
+
+    User.set_online(user.id, False)
+    assert user.is_online is False
+    logs = SessionLog.query.filter_by(user_id=user.id).all()
+    assert len(logs) == 1
+    assert logs[0].end_time is not None
+
+
+def test_set_online_commits_once(add_sample_user, init_db):
+    user = add_sample_user("testuser_once", "pwd")
+
+    with patch.object(db.session, "commit", wraps=db.session.commit) as commit:
+        User.set_online(user.id, True)
+        assert commit.call_count == 1
+        User.set_online(user.id, False)
+        assert commit.call_count == 2
+
+
+def test_set_online_rolls_back_session_log_when_commit_fails(add_sample_user, init_db):
+    user = add_sample_user("testuser_fail", "pwd")
+    user_id = user.id
+
+    with patch.object(db.session, "commit", side_effect=RuntimeError("boom")):
+        with pytest.raises(RuntimeError):
+            User.set_online(user_id, True)
+
+    # Neither the log nor is_online was persisted
+    assert SessionLog.query.filter_by(user_id=user_id).count() == 0
+    assert db.session.get(User, user_id).is_online is not True
+
+
+def test_set_online_twice_keeps_a_single_open_session(add_sample_user, init_db):
+    user = add_sample_user("testuser_twice", "pwd")
+
+    User.set_online(user.id, True)
+    User.set_online(user.id, True)
+
+    assert len(_open_logs(user.id)) == 1
+
+
+def test_start_session_is_idempotent(sample_user):
+    first = SessionLog.start_session(sample_user.id)
+    second = SessionLog.start_session(sample_user.id)
+
+    assert second.id == first.id
+    assert len(_open_logs(sample_user.id)) == 1
+
+    # Once it has ended, a new start opens a fresh session
+    SessionLog.end_session(sample_user.id)
+    third = SessionLog.start_session(sample_user.id)
+    assert third.id != first.id
+    assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 2
+
+
+def test_end_session_closes_every_open_session(sample_user):
+    now = datetime.utcnow()
+    orphan_start = now - timedelta(hours=5)
+    orphan_seen = now - timedelta(hours=4)
+    older_orphan = SessionLog(
+        user_id=sample_user.id,
+        start_time=now - timedelta(hours=9),
+        last_seen=now - timedelta(hours=8),
+    )
+    orphan = SessionLog(
+        user_id=sample_user.id, start_time=orphan_start, last_seen=orphan_seen
+    )
+    current = SessionLog(
+        user_id=sample_user.id, start_time=now - timedelta(minutes=5), last_seen=now
+    )
+    db.session.add_all([older_orphan, orphan, current])
+    db.session.commit()
+    ids = (older_orphan.id, orphan.id, current.id)
+
+    closed = SessionLog.end_session(sample_user.id)
+
+    assert closed.id == current.id
+    assert _open_logs(sample_user.id) == []
+    older_orphan, orphan, current = (db.session.get(SessionLog, i) for i in ids)
+    # The newest ends now; orphans end when they were last seen, not now
+    assert current.end_time >= now
+    assert orphan.end_time == orphan_seen
+    assert older_orphan.end_time == now - timedelta(hours=8)
+
+
+def test_end_session_without_open_session_returns_none(sample_user):
+    assert SessionLog.end_session(sample_user.id) is None

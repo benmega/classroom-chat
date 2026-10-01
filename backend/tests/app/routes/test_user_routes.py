@@ -166,6 +166,29 @@ def test_signup_success(client, init_db):
     assert user.check_password("newpassword123")
 
 
+def test_signup_retries_when_generated_slug_collides(client, init_db, monkeypatch):
+    """Two simultaneous signups can generate the same slug; the loser retries."""
+    UserFactory(_username="first_sam", nickname="Sam")  # slug "sam"
+    real_generate_slug = User.generate_slug
+    calls = []
+
+    def racy_generate_slug(self):
+        calls.append(1)
+        if len(calls) == 1:
+            self.slug = "sam"  # computed before the other signup committed
+            return self.slug
+        return real_generate_slug(self)
+
+    monkeypatch.setattr(User, "generate_slug", racy_generate_slug)
+
+    response = client.post(
+        "/user/signup", json={"username": "sam", "password": "newpassword123"}
+    )
+
+    assert response.status_code == 201
+    assert User.query.filter_by(username="sam").one().slug == "sam-1"
+
+
 def test_signup_duplicate_username(client, init_db):
     sample_user = UserFactory()
     """Test signup with existing username."""

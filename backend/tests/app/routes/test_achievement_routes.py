@@ -1063,3 +1063,30 @@ def test_achievement_pages_without_index_template_return_json_404_not_500(
         response = client.get(path, headers={"Accept": "text/html"})
         assert response.status_code == 404, path
         assert response.is_json
+
+
+def test_get_achievements_json_reports_progress_and_ignores_bad_requirements(
+    client, init_db, test_user
+):
+    good = AchievementFactory(type="chat", requirement_value="3", reward=0)
+    bad = AchievementFactory(type="ducks", requirement_value="abc", reward=5)
+    missing = AchievementFactory(type="chat", requirement_value=None, reward=5)
+    cert = AchievementFactory(type="certificate", requirement_value=None, reward=5)
+    test_user.earned_ducks = 100
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+
+    response = client.get("/achievements/all")
+
+    assert response.status_code == 200
+    data = response.get_json()["data"]
+    by_id = {a["id"]: a for a in data["achievements"]}
+    assert by_id[good.id]["requirement_value"] == 3
+    assert by_id[good.id]["current_progress"] == 0
+    # No usable requirement: reported as 0 (no progress bar) and never awarded
+    assert by_id[bad.id]["requirement_value"] == 0
+    assert by_id[missing.id]["requirement_value"] == 0
+    # Certificates have no numeric requirement; an approved certificate is it
+    assert by_id[cert.id]["requirement_value"] == 1
+    assert data["user_achievements"] == []

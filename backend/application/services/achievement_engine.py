@@ -1,4 +1,5 @@
 # application/services/achievement_engine.py
+import logging
 from datetime import datetime
 
 from application.extensions import db
@@ -9,17 +10,97 @@ from application.models.message import Message
 from application.models.session_log import SessionLog
 from application.models.user_certificate import UserCertificate
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+
+logger = logging.getLogger(__name__)
+
+# Upper bound on award passes in one evaluation (see _award_new_achievements).
+_MAX_AWARD_PASSES = 10
+
+# (slug, raw value) pairs already reported by _parse_requirement, so a broken
+# achievement logs once instead of on every evaluation.
+_warned_requirements: set = set()
 
 
-def check_achievement(user, achievement, stats=None):
-    """Return True if the user meets the condition for this achievement."""
+def _parse_requirement(achievement):
+    """Return the achievement's requirement as an int, or None if it is unusable.
+
+    A missing or mis-typed requirement must never unlock the achievement for
+    everyone, so callers treat None as "never". Certificates legitimately have
+    no numeric requirement (the approved certificate is the condition), so a
+    blank one means 1.
+    """
+    raw = achievement.requirement_value
+    if achievement.type == "certificate" and (raw is None or not str(raw).strip()):
+        return 1
+    try:
+        return int(raw)
+    except (ValueError, TypeError):
+        key = (achievement.slug, raw)
+        if key not in _warned_requirements:
+            _warned_requirements.add(key)
+            logger.warning(
+                "Achievement %r (type=%r) has an invalid requirement_value %r; "
+                "it will not unlock until it is fixed",
+                achievement.slug,
+                achievement.type,
+                raw,
+            )
+        return None
+
+
+def _chat_count(user):
+    return (
+        db.session.query(func.count(Message.id))
+        .filter(Message.user_id == user.id)
+        .scalar()
+    )
+
+
+def _community_count(user):
+    """Count logs by other users that credit this user as their helper."""
+    return (
+        db.session.query(func.count(ChallengeLog.id))
+        .filter(
+            func.lower(ChallengeLog.helper) == user.username.lower(),
+            ChallengeLog.user_id != user.id,
+        )
+        .scalar()
+    )
+
+
+def _trade_count(user):
+    return (
+        db.session.query(func.count(DuckTradeLog.id))
+        .filter(DuckTradeLog.user_id == user.id)
+        .scalar()
+    )
+
+
+def compute_user_stats(user):
+    """Pre-calculate the per-user stats shared by every achievement.
+
+    Passed as `stats` to check_achievement / get_achievement_progress so they do
+    not repeat these queries once per achievement.
+    """
+    return {
+        "chat_count": _chat_count(user),
+        "consistency_streak": _calculate_consistency(user.id),
+        "community_count": _community_count(user),
+        "max_session": longest_session_minutes(user.id),
+        "trade_count": _trade_count(user),
+    }
+
+
+def _stat(stats, key, compute):
+    """Use the pre-calculated stat if present, otherwise compute it lazily."""
+    return stats[key] if key in stats else compute()
+
+
+def _current_value(user, achievement, stats=None):
+    """Return the user's current value for this achievement's type."""
     if stats is None:
         stats = {}
-
-    try:
-        requirement = int(achievement.requirement_value)
-    except (ValueError, TypeError):
-        requirement = 0
 
     value_getters = {
         "ducks": lambda: user.earned_ducks,
@@ -28,41 +109,21 @@ def check_achievement(user, achievement, stats=None):
             user.get_progress(achievement.source) if achievement.source else 0
         ),
         # Count all messages sent by the user
-        "chat": lambda: (
-            stats.get("chat_count")
-            if "chat_count" in stats
-            else db.session.query(func.count(Message.id))
-            .filter(Message.user_id == user.id)
-            .scalar()
-        ),
+        "chat": lambda: _stat(stats, "chat_count", lambda: _chat_count(user)),
         # Count how many consecutive weeks with challenges
-        "consistency": lambda: (
-            stats.get("consistency_streak")
-            if "consistency_streak" in stats
-            else _calculate_consistency(user.id)
+        "consistency": lambda: _stat(
+            stats, "consistency_streak", lambda: _calculate_consistency(user.id)
         ),
         # Count how many times someone entered them as a helper
-        "community": lambda: (
-            stats.get("community_count")
-            if "community_count" in stats
-            else db.session.query(func.count(ChallengeLog.id))
-            .filter(func.lower(ChallengeLog.helper) == user.username.lower())
-            .scalar()
+        "community": lambda: _stat(
+            stats, "community_count", lambda: _community_count(user)
         ),
         # Longest session length in minutes
-        "session": lambda: (
-            stats.get("max_session")
-            if "max_session" in stats
-            else longest_session_minutes(user.id)
+        "session": lambda: _stat(
+            stats, "max_session", lambda: longest_session_minutes(user.id)
         ),
         # Count number of trades (regardless of status)
-        "trade": lambda: (
-            stats.get("trade_count")
-            if "trade_count" in stats
-            else db.session.query(func.count(DuckTradeLog.id))
-            .filter(DuckTradeLog.user_id == user.id)
-            .scalar()
-        ),
+        "trade": lambda: _stat(stats, "trade_count", lambda: _trade_count(user)),
         # Certificate submitted and reviewed
         "certificate": lambda: (
             1
@@ -73,68 +134,25 @@ def check_achievement(user, achievement, stats=None):
         ),
     }
 
-    value = value_getters.get(achievement.type, lambda: 0)()
-    return value >= requirement
+    return value_getters.get(achievement.type, lambda: 0)()
+
+
+def check_achievement(user, achievement, stats=None):
+    """Return True if the user meets the condition for this achievement."""
+    requirement = _parse_requirement(achievement)
+    if requirement is None:
+        return False
+
+    return _current_value(user, achievement, stats) >= requirement
 
 
 def get_achievement_progress(user, achievement, stats=None):
     """Return (current_value, requirement_value) for progress tracking."""
-    if stats is None:
-        stats = {}
+    requirement = _parse_requirement(achievement)
 
-    try:
-        requirement = int(achievement.requirement_value)
-    except (ValueError, TypeError):
-        requirement = 0
-
-    value_getters = {
-        "ducks": lambda: user.earned_ducks,
-        "project": lambda: len(user.projects),
-        "progress": lambda: (
-            user.get_progress(achievement.source) if achievement.source else 0
-        ),
-        "chat": lambda: (
-            stats.get("chat_count")
-            if "chat_count" in stats
-            else db.session.query(func.count(Message.id))
-            .filter(Message.user_id == user.id)
-            .scalar()
-        ),
-        "consistency": lambda: (
-            stats.get("consistency_streak")
-            if "consistency_streak" in stats
-            else _calculate_consistency(user.id)
-        ),
-        "community": lambda: (
-            stats.get("community_count")
-            if "community_count" in stats
-            else db.session.query(func.count(ChallengeLog.id))
-            .filter(func.lower(ChallengeLog.helper) == user.username.lower())
-            .scalar()
-        ),
-        "session": lambda: (
-            stats.get("max_session")
-            if "max_session" in stats
-            else longest_session_minutes(user.id)
-        ),
-        "trade": lambda: (
-            stats.get("trade_count")
-            if "trade_count" in stats
-            else db.session.query(func.count(DuckTradeLog.id))
-            .filter(DuckTradeLog.user_id == user.id)
-            .scalar()
-        ),
-        "certificate": lambda: (
-            1
-            if UserCertificate.query.filter_by(
-                user_id=user.id, achievement_id=achievement.id, status="approved"
-            ).first()
-            else 0
-        ),
-    }
-
-    value = value_getters.get(achievement.type, lambda: 0)()
-    return value, requirement
+    value = _current_value(user, achievement, stats)
+    # An unusable requirement reports 0 so the UI shows no progress bar.
+    return value, requirement if requirement is not None else 0
 
 
 def _calculate_consistency(user_id):
@@ -193,45 +211,60 @@ def evaluate_user(user, force=False):
 
     # Pre-calculate common stats for the entire evaluation pass
     # This avoids N extra queries inside the loop below.
-    from application.models.duck_trade import DuckTradeLog
-
-    stats = {
-        "chat_count": db.session.query(func.count(Message.id))
-        .filter(Message.user_id == user.id)
-        .scalar(),
-        "consistency_streak": _calculate_consistency(user.id),
-        "community_count": db.session.query(func.count(ChallengeLog.id))
-        .filter(func.lower(ChallengeLog.helper) == user.username.lower())
-        .scalar(),
-        "max_session": longest_session_minutes(user.id),
-        "trade_count": db.session.query(func.count(DuckTradeLog.id))
-        .filter(DuckTradeLog.user_id == user.id)
-        .scalar(),
-    }
-
-    earned_ids = {ua.achievement_id for ua in user.achievements}
-    new_awards = []
+    stats = compute_user_stats(user)
 
     # Optimization: Only query definitions once
     all_achievements = Achievement.query.all()
 
-    for achievement in all_achievements:
-        if achievement.id in earned_ids:
+    # Two attempts: if a concurrent evaluation of the same user wins the race to
+    # insert a UserAchievement (unique on user_id + achievement_id) our flush or
+    # commit fails; roll back, re-read what is already earned and try once more.
+    for _attempt in range(2):
+        try:
+            new_awards = _award_new_achievements(user, all_achievements, stats)
+
+            # Always update the last evaluation timestamp if we successfully ran
+            user.last_achievement_evaluation = now
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
             continue
-        if check_achievement(user, achievement, stats=stats):
-            ua = UserAchievement(user_id=user.id, achievement_id=achievement.id)
-            db.session.add(ua)
-            # grant ducks reward
-            if achievement.reward > 0:
-                user.add_ducks(
-                    achievement.reward, reason=f"Achievement: {achievement.name}"
+        return new_awards
+
+    logger.warning(
+        "Could not record achievements for user %s: concurrent evaluation", user.id
+    )
+    return []
+
+
+def _award_new_achievements(user, all_achievements, stats):
+    """Add every achievement the user newly qualifies for (does not commit)."""
+    earned_ids = {ua.achievement_id for ua in user.achievements}
+    new_awards = []
+
+    # A duck reward raises earned_ducks, which can satisfy a "ducks" achievement
+    # that was already checked earlier in the loop (or one that comes later in
+    # an arbitrary order). Repeat until a pass hands out no more ducks.
+    for _ in range(_MAX_AWARD_PASSES):
+        ducks_granted = False
+        for achievement in all_achievements:
+            if achievement.id in earned_ids:
+                continue
+            if check_achievement(user, achievement, stats=stats):
+                db.session.add(
+                    UserAchievement(user_id=user.id, achievement_id=achievement.id)
                 )
+                earned_ids.add(achievement.id)
+                # grant ducks reward
+                if achievement.reward > 0:
+                    user.add_ducks(
+                        achievement.reward, reason=f"Achievement: {achievement.name}"
+                    )
+                    ducks_granted = True
 
-            new_awards.append(achievement)
-
-    # Always update the last evaluation timestamp if we successfully ran
-    user.last_achievement_evaluation = now
-    db.session.commit()
+                new_awards.append(achievement)
+        if not ducks_granted:
+            break
 
     return new_awards
 

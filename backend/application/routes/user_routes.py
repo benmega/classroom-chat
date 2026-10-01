@@ -10,7 +10,7 @@ from application.decorators.api_response import api_response
 from application.extensions import csrf, db, limiter
 from application.models.project import Project
 from application.models.skill import Skill
-from application.models.user import User
+from application.models.user import User, save_new_user
 from application.utilities.helper_functions import allowed_file, get_s3_client
 from flask import (
     Blueprint,
@@ -198,8 +198,7 @@ def signup():
     try:
         new_user = User(username=username, is_approved=False)
         new_user.set_password(password)
-        db.session.add(new_user)
-        db.session.commit()
+        save_new_user(new_user)
         return {"message": "Account created! Awaiting admin approval."}, 201
     except Exception as e:
         db.session.rollback()

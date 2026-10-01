@@ -1,8 +1,8 @@
 import re
 from datetime import date, datetime, timedelta
-from typing import ClassVar
 
-from sqlalchemy import event
+from sqlalchemy import event, func
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -206,26 +206,114 @@ class User(db.Model):
             "can_chat": self.can_chat if self.can_chat is not None else True,
         }
 
-    def to_dict_summary(self, precomputed_progress=None):
-        """Lighter dictionary for list views, avoids extremely expensive processing."""
+    @classmethod
+    def build_progress_map(cls, users):
+        """Challenge-log counts per (username, domain) for a batch of users.
 
-        if precomputed_progress:
+        Pass the result to to_dict_summary as `precomputed_progress`: one grouped
+        query for the whole batch instead of several COUNT queries per user.
+        """
+        from .challenge_log import ChallengeLog
+
+        id_to_username = {u.id: u._username for u in users}
+        if not id_to_username:
+            return {}
+
+        counts = (
+            db.session.query(
+                ChallengeLog.user_id, ChallengeLog.domain, func.count(ChallengeLog.id)
+            )
+            .filter(ChallengeLog.user_id.in_(list(id_to_username)))
+            .group_by(ChallengeLog.user_id, ChallengeLog.domain)
+            .all()
+        )
+        return {
+            (id_to_username[user_id], domain): count
+            for user_id, domain, count in counts
+        }
+
+    @staticmethod
+    def _challenge_totals():
+        """Number of challenges in each progress domain (one grouped query)."""
+        from .challenge import Challenge
+
+        domains = ("codecombat.com", "www.ozaria.com")
+        rows = (
+            db.session.query(Challenge.domain, func.count(Challenge.id))
+            .filter(Challenge.domain.in_(domains))
+            .group_by(Challenge.domain)
+            .all()
+        )
+        totals = dict.fromkeys(domains, 0)
+        totals.update(dict(rows))
+        return totals
+
+    @staticmethod
+    def _activity_user_ids(users):
+        """Ids among `users` with any activity; the batch form of has_activity."""
+        from .challenge_log import ChallengeLog
+        from .course_instance_request import CourseInstanceRequest
+        from .submission import Submission
+        from .user_certificate import UserCertificate
+
+        user_ids = [u.id for u in users]
+        active = set()
+        for column in (
+            ChallengeLog.user_id,
+            Submission.user_id,
+            UserCertificate.user_id,
+            CourseInstanceRequest.student_id,
+        ):
+            rows = db.session.query(column).filter(column.in_(user_ids)).distinct()
+            active.update(user_id for (user_id,) in rows)
+        return active
+
+    @classmethod
+    def to_dict_summaries(cls, users):
+        """to_dict_summary() for each of `users` in a constant number of queries.
+
+        The per-user progress, challenge totals and activity flag are computed
+        once for the whole batch. Load the users with
+        selectinload(User.projects) to keep the recent-project lookup flat too.
+        """
+        users = list(users)
+        if not users:
+            return []
+
+        progress = cls.build_progress_map(users)
+        totals = cls._challenge_totals()
+        active_ids = cls._activity_user_ids(users)
+        return [
+            u.to_dict_summary(
+                progress, challenge_totals=totals, activity_user_ids=active_ids
+            )
+            for u in users
+        ]
+
+    def to_dict_summary(
+        self,
+        precomputed_progress=None,
+        challenge_totals=None,
+        activity_user_ids=None,
+    ):
+        """Lighter dictionary for list views, avoids extremely expensive processing.
+
+        List views should use to_dict_summaries(); the optional arguments are the
+        batch-computed values it passes in (an empty precomputed_progress is valid
+        and means "no challenge logs").
+        """
+
+        if precomputed_progress is not None:
             cc_levels = precomputed_progress.get((self._username, "codecombat.com"), 0)
             oz_levels = precomputed_progress.get((self._username, "www.ozaria.com"), 0)
 
-            from .challenge import Challenge
-
-            if "codecombat.com" not in self._total_challenges_cache:
-                self._total_challenges_cache["codecombat.com"] = (
-                    Challenge.query.filter_by(domain="codecombat.com").count()
-                )
-            if "www.ozaria.com" not in self._total_challenges_cache:
-                self._total_challenges_cache["www.ozaria.com"] = (
-                    Challenge.query.filter_by(domain="www.ozaria.com").count()
-                )
-
-            cc_total = self._total_challenges_cache["codecombat.com"]
-            oz_total = self._total_challenges_cache["www.ozaria.com"]
+            totals = (
+                challenge_totals
+                if challenge_totals is not None
+                else self._challenge_totals()
+            )
+            cc_total = totals["codecombat.com"]
+            oz_total = totals["www.ozaria.com"]
 
             cc_percent = (
                 int(round((cc_levels / cc_total * 100), 0)) if cc_total > 0 else 0
@@ -282,7 +370,11 @@ class User(db.Model):
             "last_activity_time": self.last_activity_time.isoformat()
             if self.last_activity_time
             else None,
-            "has_activity": self.has_activity,
+            "has_activity": (
+                self.id in activity_user_ids
+                if activity_user_ids is not None
+                else self.has_activity
+            ),
             "recent_project": {
                 "name": self.projects[-1].name,
             }
@@ -345,24 +437,22 @@ class User(db.Model):
         if not user:
             return
 
-        if online:
-            from .session_log import SessionLog
+        from .session_log import SessionLog
 
-            # Start new session if none active
-            if not SessionLog.query.filter_by(user_id=user.id, end_time=None).first():
-                SessionLog.start_session(user.id)
+        # The session log and is_online change together in a single commit.
+        if online:
+            # Returns the already-open session if there is one
+            SessionLog.start_session(user.id, commit=False)
             user.is_online = True
         else:
-            from .session_log import SessionLog
-
-            # End the most recent session
-            SessionLog.end_session(user.id)
+            SessionLog.end_session(user.id, commit=False)
             user.is_online = False
 
-        db.session.commit()
-
-    _total_challenges_cache: ClassVar[dict] = {}
-
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
@@ -378,12 +468,7 @@ class User(db.Model):
         """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
         from .challenge import Challenge
 
-        if domain not in self._total_challenges_cache:
-            self._total_challenges_cache[domain] = Challenge.query.filter_by(
-                domain=domain
-            ).count()
-
-        total_challenges = self._total_challenges_cache[domain]
+        total_challenges = Challenge.query.filter_by(domain=domain).count()
         from .challenge_log import ChallengeLog
 
         completed_challenges = ChallengeLog.query.filter_by(
@@ -668,12 +753,10 @@ class User(db.Model):
 
     def get_completed_levels(self):
         """
-        Returns a set of level slugs that the user has completed.
-        Used by the skill service to determine Web Dev and other specific course progress.
+        Returns a set of challenge slugs that the user has completed.
         """
-        # We assume the ChallengeLog model has a 'level_slug' column.
         # Using a set removes duplicates.
-        return {getattr(log, "challenge_slug", "") for log in self.challenge_logs}
+        return {log.challenge_slug for log in self.challenge_logs}
 
 
 # SQLAlchemy event listener to auto-generate slug for new users
@@ -682,3 +765,29 @@ def receive_before_insert(mapper, connection, target):
     """Auto-generate slug before inserting a new user if not already set."""
     if not target.slug:
         target.generate_slug()
+
+
+def save_new_user(user, commit=True):
+    """Insert a new user, retrying once if its generated slug loses a race.
+
+    The slug is generated inside the INSERT's flush (receive_before_insert), so
+    two simultaneous signups with the same nickname can pick the same slug and
+    the second violates the unique constraint. By then the winner is committed
+    and visible, so regenerating the slug finds a free one.
+
+    With commit=False the user is only flushed (e.g. to get its id first); the
+    caller commits.
+    """
+    db.session.add(user)
+    try:
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()
+        user.slug = None
+        user.generate_slug()
+        db.session.add(user)
+        db.session.flush()
+
+    if commit:
+        db.session.commit()
+    return user

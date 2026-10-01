@@ -10,7 +10,6 @@ import hmac
 
 import boto3
 from application.extensions import db, limiter
-from application.models.session_log import SessionLog
 from application.models.user import User
 from botocore.exceptions import ClientError
 from flask import Blueprint, current_app, jsonify, request, session
@@ -169,7 +168,6 @@ def login():
         user = sync_cognito_user(email_claim, cognito_sub)
 
         session["user"] = user.id
-        SessionLog.start_session(user.id)
         User.set_online(user.id, online=True)
 
         from application.services.achievement_engine import evaluate_user
