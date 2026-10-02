@@ -544,12 +544,7 @@ def _freeze_utc_day(monkeypatch, day):
     straddles midnight.
     """
 
-    class FrozenDatetime(datetime):
-        @classmethod
-        def now(cls, tz=None):
-            return datetime(day.year, day.month, day.day, 12, tzinfo=tz or timezone.utc)
-
-    monkeypatch.setattr("application.models.user.datetime", FrozenDatetime)
+    monkeypatch.setattr("application.models.user.utc_today", lambda: day)
 
 
 def test_daily_duck_logic(client, init_db, monkeypatch):
