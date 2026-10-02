@@ -1,21 +1,6 @@
 import pytest
 
 
-def test_classroom_creation(sample_classroom):
-    """Test that a classroom is created with correct attributes."""
-    assert sample_classroom.name == "Test Classroom"
-    assert sample_classroom.language == "python"
-
-
-def test_course_instance_relationship(sample_course_instance, sample_classroom):
-    """Test the one-to-many relationship between Classroom and CourseInstance."""
-    assert sample_course_instance.classroom_id == sample_classroom.id
-    assert sample_course_instance.classroom == sample_classroom
-
-    assert len(sample_classroom.course_assignments) == 1
-    assert sample_classroom.course_assignments[0].id == sample_course_instance.id
-
-
 def test_note_url_property(sample_note):
     """Test that the S3 URL is generated correctly based on the filename."""
     expected_bucket = "classroom-chat-student-notes"

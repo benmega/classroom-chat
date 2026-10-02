@@ -10,6 +10,12 @@ from application.models.classroom import Classroom, user_classrooms
 from tests.factories import ClassroomFactory, UserFactory
 
 
+def test_classroom_creation(sample_classroom):
+    """Test that a classroom is created with correct attributes."""
+    assert sample_classroom.name == "Test Classroom"
+    assert sample_classroom.language == "python"
+
+
 def test_classroom_methods(app):
     with app.app_context():
         clsroom = ClassroomFactory(

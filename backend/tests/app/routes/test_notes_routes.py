@@ -21,14 +21,12 @@ def notes_upload_dir(test_app, tmp_path, monkeypatch):
 
 def test_upload_note_no_auth(client):
     """Ensure unauthorized users cannot upload notes."""
-    # UPDATED URL: /notes/upload
     response = client.post("/notes/upload")
     assert response.status_code == 401
 
 
 def test_upload_note_no_file(logged_in_client):
     """Ensure a 400 error if no file is part of the request."""
-    # UPDATED URL: /notes/upload
     response = logged_in_client.post("/notes/upload", data={})
     assert response.status_code == 400
     assert b"No file provided" in response.data
@@ -36,11 +34,11 @@ def test_upload_note_no_file(logged_in_client):
 
 @patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
 def test_upload_note_success(
-    mock_get_s3_client, logged_in_client, sample_user, init_db
+    mock_get_s3_client, logged_in_client, sample_user, init_db, monkeypatch
 ):
     mock_s3_client = mock_get_s3_client.return_value
     mock_s3_client.upload_fileobj.return_value = None
-    logged_in_client.application.config["USE_S3"] = True
+    monkeypatch.setitem(logged_in_client.application.config, "USE_S3", True)
 
     db_user = db.session.get(User, sample_user.id)
     if not db_user:
@@ -48,7 +46,7 @@ def test_upload_note_success(
         init_db.session.commit()
 
     with logged_in_client.session_transaction() as sess:
-        sess["user"] = sample_user.id  # <--- This fixes the lookup error
+        sess["user"] = sample_user.id
 
     file_name = "homework.png"
     data = {"note_image": (io.BytesIO(PNG), file_name)}
@@ -71,11 +69,11 @@ def test_upload_note_success(
 
 @patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
 def test_upload_note_s3_failure(
-    mock_get_s3_client, logged_in_client, sample_user, init_db
+    mock_get_s3_client, logged_in_client, sample_user, init_db, monkeypatch
 ):
     mock_s3_client = mock_get_s3_client.return_value
     mock_s3_client.upload_fileobj.side_effect = Exception("AWS Down")
-    logged_in_client.application.config["USE_S3"] = True
+    monkeypatch.setitem(logged_in_client.application.config, "USE_S3", True)
 
     db_user = db.session.get(User, sample_user.id)
     if not db_user:
@@ -98,8 +96,8 @@ def test_upload_note_s3_failure(
     assert response.json["error"] == "Upload failed"
 
 
-def test_upload_note_local_success(logged_in_client, sample_user, init_db):
-    logged_in_client.application.config["USE_S3"] = False
+def test_upload_note_local_success(logged_in_client, sample_user, init_db, monkeypatch):
+    monkeypatch.setitem(logged_in_client.application.config, "USE_S3", False)
 
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_user.id
@@ -162,8 +160,8 @@ def test_delete_note_s3(mock_get_s3_client, logged_in_client, sample_user, init_
     mock_s3.delete_object.assert_called_once()
 
 
-def test_upload_note_field_name_note(logged_in_client, sample_user):
-    logged_in_client.application.config["USE_S3"] = False
+def test_upload_note_field_name_note(logged_in_client, sample_user, monkeypatch):
+    monkeypatch.setitem(logged_in_client.application.config, "USE_S3", False)
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -187,8 +185,8 @@ def test_upload_note_user_not_found(logged_in_client):
     assert response.json["error"] == "User not found"
 
 
-def test_upload_note_empty_file_is_rejected(logged_in_client, sample_user):
-    logged_in_client.application.config["USE_S3"] = False
+def test_upload_note_empty_file_is_rejected(logged_in_client, sample_user, monkeypatch):
+    monkeypatch.setitem(logged_in_client.application.config, "USE_S3", False)
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -301,8 +299,10 @@ def test_kiosk_upload_note_no_file(logged_in_client, sample_admin, sample_user):
     assert response.json["error"] == "No file provided"
 
 
-def test_kiosk_upload_note_success_local(logged_in_client, sample_admin, sample_user):
-    logged_in_client.application.config["USE_S3"] = False
+def test_kiosk_upload_note_success_local(
+    logged_in_client, sample_admin, sample_user, monkeypatch
+):
+    monkeypatch.setitem(logged_in_client.application.config, "USE_S3", False)
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_admin.id
 
@@ -322,11 +322,11 @@ def test_kiosk_upload_note_success_local(logged_in_client, sample_admin, sample_
 
 @patch(f"{ROUTE_MODULE_PATH}.get_s3_client")
 def test_kiosk_upload_note_success_s3(
-    mock_get_s3_client, logged_in_client, sample_admin, sample_user
+    mock_get_s3_client, logged_in_client, sample_admin, sample_user, monkeypatch
 ):
     mock_s3 = mock_get_s3_client.return_value
     mock_s3.upload_fileobj.return_value = None
-    logged_in_client.application.config["USE_S3"] = True
+    monkeypatch.setitem(logged_in_client.application.config, "USE_S3", True)
 
     with logged_in_client.session_transaction() as sess:
         sess["user"] = sample_admin.id

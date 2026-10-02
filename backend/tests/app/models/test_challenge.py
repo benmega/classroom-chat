@@ -52,12 +52,34 @@ def test_created_at_timestamp(init_db):
     assert isinstance(challenge_with_timestamp.created_at, datetime)
 
 
-def test_scale_value_with_custom_multiplier(init_db):
+@pytest.mark.parametrize(
+    "difficulty, multiplier, expected_value",
+    [
+        ("medium", 1.5, 15),  # 10 * 1.0 * 1.5
+        ("hard", 2.0, 40),  # 10 * 2.0 * 2.0
+    ],
+)
+def test_scale_value_with_custom_multiplier(
+    init_db, difficulty, multiplier, expected_value
+):
     sample_challenge = ChallengeFactory(value=10)
-    sample_challenge.difficulty = "medium"
-    assert (
-        sample_challenge.scale_value(difficulty_multiplier=1.5) == 15
-    )  # 10 * 1.0 * 1.5
+    sample_challenge.difficulty = difficulty
+    assert sample_challenge.scale_value(difficulty_multiplier=multiplier) == expected_value
+
+
+def test_challenge_repr(init_db):
+    challenge = ChallengeFactory(
+        name="Dungeons of Kithgard",
+        slug="dungeons-of-kithgard",
+        domain="codecombat.com",
+        difficulty="medium",
+        value=10,
+        is_active=True,
+    )
+    repr_str = repr(challenge)
+    assert "Challenge" in repr_str
+    assert "Dungeons of Kithgard" in repr_str
+    assert "codecombat.com" in repr_str
 
 
 def test_challenge_slug_auto_generation(init_db):

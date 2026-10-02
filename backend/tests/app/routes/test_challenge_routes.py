@@ -15,7 +15,6 @@ from application.config import (
     DEFAULT_DEV_CORS_ORIGINS,
     DEFAULT_PROD_CORS_ORIGINS,
 )
-from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
 from application.models.duck_transaction import DuckTransaction
@@ -549,97 +548,6 @@ def test_update_user_ducks_case_insensitive(init_db):
 
     reward = _update_user_ducks(sample_user, "DUNGEONS-OF-KITHGARD", duck_multiplier=1)
     assert reward == 10
-
-
-def test_challenge_scale_value_easy(init_db):
-    """Test scaling challenge value for easy difficulty."""
-    challenge = ChallengeFactory(
-        name="Easy Challenge",
-        slug="easy-challenge",
-        domain="codecombat.com",
-        difficulty="easy",
-        value=10,
-        is_active=True,
-    )
-
-    scaled_value = challenge.scale_value()
-    assert scaled_value == 5  # 10 * 0.5
-
-
-def test_challenge_scale_value_medium(init_db):
-    """Test scaling challenge value for medium difficulty."""
-    challenge = ChallengeFactory(
-        name="Medium Challenge",
-        slug="medium-challenge",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True,
-    )
-
-    scaled_value = challenge.scale_value()
-    assert scaled_value == 10  # 10 * 1.0
-
-
-def test_challenge_scale_value_hard(init_db):
-    """Test scaling challenge value for hard difficulty."""
-    challenge = ChallengeFactory(
-        name="Hard Challenge",
-        slug="hard-challenge",
-        domain="codecombat.com",
-        difficulty="hard",
-        value=10,
-        is_active=True,
-    )
-
-    scaled_value = challenge.scale_value()
-    assert scaled_value == 20  # 10 * 2.0
-
-
-def test_challenge_scale_value_with_multiplier(init_db):
-    """Test scaling challenge value with additional multiplier."""
-    challenge = ChallengeFactory(
-        name="Test Challenge",
-        slug="test-challenge",
-        domain="codecombat.com",
-        difficulty="hard",
-        value=10,
-        is_active=True,
-    )
-
-    scaled_value = challenge.scale_value(difficulty_multiplier=2.0)
-    assert scaled_value == 40  # 10 * 2.0 * 2.0
-
-
-def test_challenge_default_slug_listener(init_db):
-    """Test that default slug is set from name if not provided."""
-    challenge = Challenge(
-        name="Test Challenge Without Slug",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True,
-    )
-    db.session.add(challenge)
-    db.session.commit()
-
-    assert challenge.slug == "Test Challenge Without Slug"
-
-
-def test_challenge_model_repr(init_db):
-    """Test Challenge model string representation."""
-    challenge = ChallengeFactory(
-        name="Dungeons of Kithgard",
-        slug="dungeons-of-kithgard",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True,
-    )
-    repr_str = repr(challenge)
-    assert "Challenge" in repr_str
-    assert "Dungeons of Kithgard" in repr_str
-    assert "codecombat.com" in repr_str
 
 
 def test_url_pattern_matches_various_formats():

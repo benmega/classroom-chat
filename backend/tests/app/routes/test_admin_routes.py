@@ -4,7 +4,6 @@ Type: py
 Summary: Unit tests for admin routes Flask routes.
 """
 
-import contextlib
 import json
 from unittest.mock import patch
 
@@ -1100,25 +1099,18 @@ def test_dashboard_weekly_ducks_use_a_naive_utc_window(
     assert resp.get_json()["data"]["ducks_earned_this_week"] == 7
 
 
-def test_admin_logs(client, sample_admin, test_app):
+def test_admin_logs(client, sample_admin, test_app, tmp_path, monkeypatch):
     """Test the /logs route."""
-    import os
-
     login_as_admin(client, sample_admin)
 
-    log_path = os.path.join(test_app.config.get("INSTANCE_FOLDER"), "app.log")
-
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)
-    with open(log_path, "w") as f:
-        f.write("Line 1\nLine 2\n")
+    monkeypatch.setitem(test_app.config, "INSTANCE_FOLDER", str(tmp_path))
+    (tmp_path / "app.log").write_text("Line 1\nLine 2\n")
 
     resp = client.get("/api/admin/logs")
     assert resp.status_code == 200
     assert "Line 1" in resp.get_json()["data"]["logs"]
-    with contextlib.suppress(PermissionError):
-        os.remove(log_path)
 
-    test_app.config["INSTANCE_FOLDER"] = "/tmp/does_not_exist_log_path"
+    monkeypatch.setitem(test_app.config, "INSTANCE_FOLDER", str(tmp_path / "missing"))
     resp2 = client.get("/api/admin/logs")
     assert resp2.status_code == 200
     assert "Log file not found." in resp2.get_json()["data"]["logs"]

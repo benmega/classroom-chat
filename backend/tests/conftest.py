@@ -5,24 +5,18 @@ Summary: Pytest configuration and fixtures (Restored + New Helpers).
 """
 
 import base64
-import os
 import random
-import socket
 import string
-import tempfile
 import threading
 import uuid
 from contextlib import contextmanager
 from io import BytesIO
-from unittest.mock import patch
-from wsgiref.simple_server import make_server
 
 import pytest
 from application import create_app
-from application.config import TestingConfig
+from application.config import Config, TestingConfig
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
-from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.classroom import Classroom
@@ -39,24 +33,29 @@ from flask_login import LoginManager
 from PIL import Image
 from sqlalchemy import event
 
-db_fd, db_path = tempfile.mkstemp(suffix=".db")
 
+@pytest.fixture(scope="session", autouse=True)
+def _isolated_upload_folder(tmp_path_factory):
+    """Send every upload to a throwaway folder instead of the real userData/.
 
-@pytest.fixture(scope="module", autouse=True)
-def setup_directories():
-    os.makedirs("userData/image", exist_ok=True)
-    os.makedirs("userData/pdfs", exist_ok=True)
-    os.makedirs("userData/other", exist_ok=True)
+    Routes read the folder both from the Config class attribute and from
+    app.config["UPLOAD_FOLDER"], so the class attribute is patched for the whole
+    session and create_app() copies it into the app config.
+    """
+    folder = tmp_path_factory.mktemp("userData")
+    with pytest.MonkeyPatch.context() as patch_config:
+        patch_config.setattr(Config, "UPLOAD_FOLDER", str(folder))
+        yield folder
 
 
 @pytest.fixture(scope="session")
-def test_app():
+def test_app(_isolated_upload_folder):
     app = create_app(TestingConfig)
     app.config.update(
         {
             "TESTING": True,
             "WTF_CSRF_ENABLED": False,
-            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+            "UPLOAD_FOLDER": str(_isolated_upload_folder),
             "COGNITO_CLIENT_ID": "test_client_id",
             "COGNITO_USER_POOL_ID": "test_user_pool_id",
         }
@@ -78,16 +77,6 @@ def test_app():
         db.drop_all()
 
 
-@pytest.fixture(scope="session", autouse=True)
-def cleanup_temp_db(request):
-    def remove_db():
-        os.close(db_fd)
-        if os.path.exists(db_path):
-            os.remove(db_path)
-
-    request.addfinalizer(remove_db)
-
-
 # NEW HELPERS & OVERRIDES
 
 
@@ -96,35 +85,14 @@ def app(test_app):
     return test_app
 
 
-@pytest.fixture(scope="session")
-def live_server(test_app):  # <--- CHANGED: Request 'test_app' explicitly
-    """
-    Runs the Flask app in a background thread to avoid Windows
-    multiprocessing pickle errors.
-    """
-    # Find a free port
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(("localhost", 0))
-    port = sock.getsockname()[1]
-    sock.close()
-
-    server = make_server("localhost", port, test_app)
-
-    # Start the server in a thread
-    thread = threading.Thread(target=server.serve_forever)
-    thread.daemon = True
-    thread.start()
-
-    # Return an object with the url/app attributes of the old pytest-flask live_server
-    class ServerInfo:
-        url = f"http://localhost:{port}"
-        app = test_app  # <--- Assign the actual Flask object
-
-    yield ServerInfo()
-
-    # Teardown
-    server.shutdown()
-    thread.join()
+@pytest.fixture(autouse=True)
+def restore_app_config(test_app):
+    """test_app lives for the whole session: undo any config change a test makes."""
+    saved = dict(test_app.config)
+    yield
+    for key in set(test_app.config) - set(saved):
+        del test_app.config[key]
+    test_app.config.update(saved)
 
 
 @pytest.fixture
@@ -214,32 +182,16 @@ def add_sample_user(init_db):
 
 
 @pytest.fixture
-def sample_user_with_ducks(test_app):
-    with test_app.app_context():
-        db.create_all()
-        try:
-            from tests.factories import UserFactory
-            user = UserFactory(
-                username="user_with_ducks",
-                earned_ducks=50,
-                duck_balance=50,
-            )
-            user.set_password("test_password")
-            db.session.commit()
-            yield user
-        except Exception:
-            db.session.rollback()
-            raise
-        finally:
-            try:
-                user_to_delete = (
-                    db.session.query(User).filter_by(username="user_with_ducks").first()
-                )
-                if user_to_delete:
-                    db.session.delete(user_to_delete)
-                    db.session.commit()
-            except Exception:
-                db.session.rollback()
+def sample_user_with_ducks(init_db):
+    from tests.factories import UserFactory
+    user = UserFactory(
+        username="user_with_ducks",
+        earned_ducks=50,
+        duck_balance=50,
+    )
+    user.set_password("test_password")
+    db.session.commit()
+    return user
 
 
 @pytest.fixture
@@ -306,17 +258,6 @@ def sample_classroom(init_db, sample_user):
 
 
 @pytest.fixture
-def sample_banned_words(init_db):
-    words = [
-        BannedWords(word="forbidden", reason="Inappropriate language", active=True),
-        BannedWords(word="bannedword", reason="General ban", active=False),
-    ]
-    db.session.add_all(words)
-    db.session.commit()
-    return words
-
-
-@pytest.fixture
 def sample_configuration(init_db):
     from tests.factories import ConfigurationFactory
     config = ConfigurationFactory(
@@ -329,9 +270,9 @@ def sample_configuration(init_db):
 @pytest.fixture
 def sample_users(init_db):
     from tests.factories import UserFactory
-    user1 = UserFactory(username=f"User_{uuid.uuid4().hex[:8]}")
+    user1 = UserFactory(username=f"user_{uuid.uuid4().hex[:8]}")
     user1.set_password("test")
-    user2 = UserFactory(username=f"User_{uuid.uuid4().hex[:8]}")
+    user2 = UserFactory(username=f"user_{uuid.uuid4().hex[:8]}")
     user2.set_password("test")
     db.session.commit()
     return [user1, user2]
@@ -394,17 +335,6 @@ def sample_image_data():
 
 
 @pytest.fixture
-def auth_headers(sample_admin):
-    import base64
-
-    from application.config import TestingConfig
-
-    credentials = f"{TestingConfig.ADMIN_USERNAME}:{TestingConfig.ADMIN_PASSWORD}"
-    encoded = base64.b64encode(credentials.encode()).decode("utf-8")
-    return {"Authorization": f"Basic {encoded}"}
-
-
-@pytest.fixture
 def sample_duck_trade(init_db, sample_user):
     from tests.factories import DuckTradeLogFactory
     sample_user.duck_balance = 100
@@ -416,178 +346,6 @@ def sample_duck_trade(init_db, sample_user):
         status="pending",
     )
     return trade
-
-
-@pytest.fixture
-def sample_achievement(init_db):
-    from tests.factories import AchievementFactory
-    achievement = AchievementFactory(
-        name="Python Master",
-        slug="python-basics",
-        type="certificate",
-        reward=100,
-        description="Complete the Python basics course",
-        requirement_value="100",
-        source="codecombat.com",
-    )
-    return achievement
-
-
-@pytest.fixture
-def sample_user_achievement(init_db, sample_user, sample_achievement):
-    from tests.factories import UserAchievementFactory
-    user_achievement = UserAchievementFactory(
-        user_id=sample_user.id, achievement_id=sample_achievement.id
-    )
-    return user_achievement
-
-
-@pytest.fixture
-def sample_ducks_achievement(init_db):
-    from tests.factories import AchievementFactory
-    achievement = AchievementFactory(
-        name="Duck Collector",
-        slug="duck-collector-50",
-        type="ducks",
-        reward=10,
-        description="Collect 50 ducks",
-        requirement_value="50",
-    )
-    return achievement
-
-
-@pytest.fixture
-def sample_chat_achievement(init_db):
-    from tests.factories import AchievementFactory
-    achievement = AchievementFactory(
-        name="First Message",
-        slug="first-message",
-        type="chat",
-        reward=10,
-        description="Send your first message",
-        requirement_value="1",
-    )
-    return achievement
-
-
-@pytest.fixture
-def sample_new_achievements(init_db):
-    from tests.factories import AchievementFactory
-    achievements = [
-        AchievementFactory(
-            name="First Message",
-            slug="first-message",
-            type="chat",
-            reward=10,
-            description="Send your first message",
-            requirement_value="1",
-        ),
-        AchievementFactory(
-            name="Duck Collector",
-            slug="duck-collector-10",
-            type="ducks",
-            reward=25,
-            description="Collect 10 ducks",
-            requirement_value="10",
-        ),
-        AchievementFactory(
-            name="Project Starter",
-            slug="project-starter",
-            type="project",
-            reward=50,
-            description="Create your first project",
-            requirement_value="1",
-        ),
-    ]
-    return achievements
-
-
-@pytest.fixture
-def sample_multiple_achievements(init_db):
-    from tests.factories import AchievementFactory
-    achievements = [
-        AchievementFactory(
-            id=1,
-            name="Achievement One",
-            slug="achievement-one",
-            type="ducks",
-            reward=10,
-            description="First achievement",
-            requirement_value="10",
-        ),
-        AchievementFactory(
-            id=2,
-            name="Achievement Two",
-            slug="achievement-two",
-            type="chat",
-            reward=20,
-            description="Second achievement",
-            requirement_value="5",
-        ),
-    ]
-    return achievements
-
-
-@pytest.fixture
-def sample_challenge_active(init_db):
-    from tests.factories import ChallengeFactory
-    challenge = ChallengeFactory(
-        name="Dungeons of Kithgard",
-        slug="dungeons-of-kithgard",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True,
-        course_id="intro-to-python",
-    )
-    return challenge
-
-
-@pytest.fixture
-def sample_challenges_multi_domain(init_db):
-    from tests.factories import ChallengeFactory
-    c1 = ChallengeFactory(
-        name="Dungeons of Kithgard",
-        slug="dungeons-of-kithgard",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True,
-        course_id="intro-to-python",
-    )
-    c2 = ChallengeFactory(
-        name="Chapter 1: Sky Mountain",
-        slug="chapter-1-sky-mountain",
-        domain="ozaria.com",
-        difficulty="hard",
-        value=20,
-        is_active=True,
-        course_id="intro-to-coding",
-    )
-    return [c1, c2]
-
-
-@pytest.fixture
-def mock_render_template(client):
-    """
-    Robust mock for render_template that captures message arguments.
-    """
-
-    def side_effect(template_name_or_list, **context):
-        if "message" in context:
-            return context["message"]
-
-        if "context" in context and isinstance(context["context"], dict):
-            return context["context"].get("message", "Mocked Template Content")
-
-        return "Mocked Template Content"
-
-    with patch(
-        "application.routes.challenge_routes.render_template",
-        side_effect=side_effect,
-        create=True,
-    ) as mock:
-        yield mock
 
 
 @pytest.fixture
