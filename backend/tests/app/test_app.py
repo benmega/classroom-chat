@@ -825,26 +825,6 @@ def test_users_on_one_address_get_independent_buckets():
     assert other_address.status_code == 200
 
 
-@pytest.fixture
-def rate_limited_app():
-    """A real app with the global limiter switched on (it is off in TestingConfig)."""
-
-    class RateLimitedTesting(TestingConfig):
-        RATELIMIT_ENABLED = True
-
-    was_enabled = limiter.enabled
-    try:
-        with patch.object(socketio, "init_app"):
-            app = create_app(RateLimitedTesting)
-        limiter.reset()
-        yield app
-    finally:
-        # The limiter is a module-level singleton shared with every other app
-        limiter.enabled = was_enabled
-        if limiter._storage is not None:
-            limiter.reset()
-
-
 @pytest.mark.parametrize(
     ("path", "limit"),
     [

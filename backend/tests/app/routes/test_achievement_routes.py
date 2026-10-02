@@ -21,8 +21,15 @@ from application.routes.achievement_routes import (
     MAX_CERT_URL_LENGTH,
     _certificate_download_name,
 )
+from application.utilities.helper_functions import utcnow_naive
 from PIL import Image
-from tests.factories import AchievementFactory, AdminFactory, UserFactory
+from sqlalchemy.exc import IntegrityError
+from tests.factories import (
+    AchievementFactory,
+    AdminFactory,
+    UserAchievementFactory,
+    UserFactory,
+)
 from tests.image_helpers import animated_gif_bytes, image_bytes, jpeg_bytes, png_bytes
 
 
@@ -109,7 +116,7 @@ def test_add_achievement_no_requirement(client, init_db, test_admin):
 
 def test_add_achievement_no_user(client, init_db):
     """Test adding achievement without logged in user/admin privileges."""
-    initial_count = db.session.query(UserCertificate).count()
+    initial_count = Achievement.query.count()
 
     response = client.post(
         "/api/achievements/add",
@@ -122,9 +129,9 @@ def test_add_achievement_no_user(client, init_db):
         environ_base={"REMOTE_ADDR": "8.8.8.8"},
     )
 
-    final_count = db.session.query(UserCertificate).count()
-    assert final_count == initial_count
     assert response.status_code == 401
+    assert Achievement.query.count() == initial_count
+    assert Achievement.query.filter_by(slug="test-ach").first() is None
 
 
 def test_submit_certificate_valid(client, init_db, test_user, test_achievement):
@@ -275,15 +282,17 @@ def test_user_achievement_uniqueness(init_db, test_user, test_achievement):
     ua2 = UserAchievement(user_id=test_user.id, achievement_id=test_achievement.id)
     db.session.add(ua2)
 
-    # We expect a Database Integrity Error
-    with pytest.raises(Exception) as excinfo:
+    # The unique (user_id, achievement_id) constraint rejects the second row
+    with pytest.raises(IntegrityError):
         db.session.commit()
+    db.session.rollback()
 
     assert (
-        "integrity" in str(excinfo.value).lower()
-        or "unique" in str(excinfo.value).lower()
+        UserAchievement.query.filter_by(
+            user_id=test_user.id, achievement_id=test_achievement.id
+        ).count()
+        == 1
     )
-    db.session.rollback()
 
 
 def test_achievement_types(init_db):
@@ -364,9 +373,7 @@ def test_achievement_reward_values(init_db):
 
 def test_user_achievement_earned_at_timestamp(init_db, test_user, test_achievement):
     """Test that earned_at timestamp is set when achievement is earned."""
-    from datetime import datetime
-
-    before_time = datetime.utcnow()
+    before_time = utcnow_naive()
 
     user_achievement = UserAchievement(
         user_id=test_user.id, achievement_id=test_achievement.id
@@ -374,7 +381,7 @@ def test_user_achievement_earned_at_timestamp(init_db, test_user, test_achieveme
     db.session.add(user_achievement)
     db.session.commit()
 
-    after_time = datetime.utcnow()
+    after_time = utcnow_naive()
 
     assert user_achievement.earned_at is not None
     # Allow for small time differences in test execution
@@ -1114,6 +1121,54 @@ def test_get_achievements_json_success(client, init_db, test_user, test_achievem
     data = response.get_json()
     assert data["status"] == "success"
     assert "achievements" in data["data"]
+
+
+def test_get_achievements_json_reports_the_achievements_the_user_earned(
+    client, init_db, test_user, test_achievement
+):
+    # Needs far more chat messages than the user has, so evaluate_user never awards it
+    not_earned = AchievementFactory(type="chat", requirement_value="500")
+    UserAchievementFactory(user_id=test_user.id, achievement_id=test_achievement.id)
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+
+    response = client.get("/api/achievements/all", headers={"Accept": "application/json"})
+
+    assert response.status_code == 200
+    data = response.get_json()["data"]
+    assert data["user_achievements"] == [test_achievement.id]
+    listed = {a["id"] for a in data["achievements"]}
+    assert {test_achievement.id, not_earned.id} <= listed
+
+
+def test_get_achievements_json_returns_every_achievement_type(
+    client, init_db, test_user
+):
+    expected = {
+        "duck-100": "ducks",
+        "project-5": "project",
+        "chat-50": "chat",
+        "course-complete": "certificate",
+    }
+    requirements = {"duck-100": "100", "project-5": "5", "chat-50": "50"}
+    for slug, achievement_type in expected.items():
+        AchievementFactory(
+            slug=slug,
+            type=achievement_type,
+            requirement_value=requirements.get(slug),
+        )
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = test_user.id
+
+    response = client.get("/api/achievements/all", headers={"Accept": "application/json"})
+
+    assert response.status_code == 200
+    data = response.get_json()["data"]
+    type_by_slug = {a["slug"]: a["type"] for a in data["achievements"]}
+    assert {slug: type_by_slug.get(slug) for slug in expected} == expected
+    assert data["user_achievements"] == []
 
 
 def test_get_achievements_json_no_user(client, init_db):

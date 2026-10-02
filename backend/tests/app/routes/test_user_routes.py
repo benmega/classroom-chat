@@ -7,8 +7,9 @@ Summary: Unit tests for user routes Flask routes, adjusted for recent route refa
 import json
 import re
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from io import BytesIO
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -32,8 +33,23 @@ def test_login_get(client, init_db):
         sess.clear()
 
     response = client.get("/user/login")
+
+    # There is no login template: the React app owns the login screen, so the route
+    # answers with its plain fallback text.
     assert response.status_code == 200
-    assert b"login" in response.data.lower()
+    assert response.get_data(as_text=True) == "Login Page"
+    with client.session_transaction() as sess:
+        assert "user" not in sess
+
+
+def test_login_get_as_json_points_to_post(client, init_db):
+    """A JSON client that GETs the login URL is told to POST instead."""
+    response = client.get("/user/login", headers={"Accept": "application/json"})
+
+    assert response.status_code == 405
+    assert "Use POST to login" in response.get_json()["error"]
+    with client.session_transaction() as sess:
+        assert "user" not in sess
 
 
 def test_login_success(client, init_db):
@@ -442,12 +458,43 @@ def test_edit_profile_picture_no_file(client, init_db):
     assert b"No file part" in response.data
 
 
-def test_profile_picture_endpoint(client, init_db):
-    """Test serving profile pictures."""
-    with patch("application.routes.user_routes.send_from_directory") as mock_send:
-        mock_send.return_value = "file_content"
-        client.get("/user/profile_pictures/test.png")
-        assert mock_send.called
+@pytest.fixture
+def profile_picture_folders(upload_dir, monkeypatch):
+    """Scratch upload and static folders; returns the folder profile pictures are read from."""
+    static_images = upload_dir / "static" / "images"
+    static_images.mkdir(parents=True)
+    (static_images / "Default_pfp.jpg").write_bytes(b"default-picture-bytes")
+    monkeypatch.setattr(Config, "STATIC_FOLDER", str(upload_dir / "static"))
+    pictures = upload_dir / "profile_pictures"
+    pictures.mkdir()
+    return pictures
+
+
+def test_profile_picture_endpoint_serves_the_stored_file(client, init_db, profile_picture_folders):
+    (profile_picture_folders / "real.png").write_bytes(b"real-picture-bytes")
+
+    with client.get("/user/profile_pictures/real.png") as response:
+        assert response.status_code == 200
+        assert response.data == b"real-picture-bytes"
+        assert response.mimetype == "image/png"
+
+
+def test_profile_picture_endpoint_falls_back_to_the_default_picture(client, init_db, profile_picture_folders):
+    with client.get("/user/profile_pictures/missing.png") as response:
+        assert response.status_code == 200
+        assert response.data == b"default-picture-bytes"
+        assert response.mimetype == "image/jpeg"
+
+
+def test_profile_picture_endpoint_serves_the_shared_default_from_the_static_folder(
+    client, init_db, profile_picture_folders
+):
+    # An upload that happens to share the default's name never replaces it
+    (profile_picture_folders / "Default_pfp.jpg").write_bytes(b"someone-elses-bytes")
+
+    with client.get("/user/profile_pictures/Default_pfp.jpg") as response:
+        assert response.status_code == 200
+        assert response.data == b"default-picture-bytes"
 
 
 def test_profile_picture_path_traversal_protection(client, init_db):
@@ -490,38 +537,61 @@ def test_helper_functions_add_user_skills(init_db):
     assert "Python" in skill_names
 
 
-def test_daily_duck_logic(client, init_db):
-    sample_user = UserFactory()
+def _freeze_utc_day(monkeypatch, day):
+    """Make User.award_daily_duck see `day` as today (UTC).
+
+    The test then never depends on the real clock, so it cannot fail when a run
+    straddles midnight.
+    """
+
+    class FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(day.year, day.month, day.day, 12, tzinfo=tz or timezone.utc)
+
+    monkeypatch.setattr("application.models.user.datetime", FrozenDatetime)
+
+
+def test_daily_duck_logic(client, init_db, monkeypatch):
     """Test that login awards ducks correctly."""
+    sample_user = UserFactory()
     sample_user.set_password("testpassword")
     # Reset ducks
     sample_user.duck_balance = 0
     sample_user.last_daily_duck = None
     db.session.commit()
 
-    # First login
-    client.post(
-        "/user/login",
-        json={"username": sample_user.username, "password": "testpassword"},
-    )
+    def log_in():
+        with client.session_transaction() as sess:
+            sess.clear()
+        client.post(
+            "/user/login",
+            json={"username": sample_user.username, "password": "testpassword"},
+        )
+        db.session.refresh(sample_user)
 
-    db.session.refresh(sample_user)
+    # First login
+    day_one = date(2031, 3, 14)
+    _freeze_utc_day(monkeypatch, day_one)
+    log_in()
+
     assert sample_user.duck_balance >= 1
     # The daily-duck day boundary is UTC, not the server's local date.
-    assert sample_user.last_daily_duck == datetime.now(timezone.utc).date()
+    assert sample_user.last_daily_duck == day_one
 
     # Second login same day (should not award again)
-    initial_balance = sample_user.duck_balance
-    with client.session_transaction() as sess:
-        sess.clear()
+    balance_after_first_login = sample_user.duck_balance
+    log_in()
 
-    client.post(
-        "/user/login",
-        json={"username": sample_user.username, "password": "testpassword"},
-    )
+    assert sample_user.duck_balance == balance_after_first_login
 
-    db.session.refresh(sample_user)
-    assert sample_user.duck_balance == initial_balance
+    # The next UTC day awards again
+    day_two = day_one + timedelta(days=1)
+    _freeze_utc_day(monkeypatch, day_two)
+    log_in()
+
+    assert sample_user.duck_balance > balance_after_first_login
+    assert sample_user.last_daily_duck == day_two
 
 
 def test_get_project_templates(client, init_db):
@@ -696,6 +766,131 @@ def test_signup_validations(client, init_db):
     # Invalid username format
     resp = client.post("/user/signup", json={"username": "Invalid User!", "password": "password123"})
     assert resp.status_code == 400
+
+
+@pytest.mark.parametrize(
+    "username",
+    [
+        "",
+        "   ",
+        "ab",  # too short
+        "a" * 31,  # too long
+        "a" * 300,
+        "bad-name",
+        "bad name",
+        "bad.name",
+        "name!",
+        "../etc",
+        "\u00dcn\u00ef",  # non-ASCII letters
+    ],
+)
+def test_signup_rejects_an_unusable_username(client, init_db, username):
+    users_before = User.query.count()
+
+    response = client.post("/user/signup", json={"username": username, "password": "password123"})
+
+    assert response.status_code == 400
+    assert User.query.count() == users_before
+
+
+@pytest.mark.parametrize("password", ["", "1234567"])
+def test_signup_rejects_an_empty_or_short_password(client, init_db, password):
+    users_before = User.query.count()
+
+    response = client.post("/user/signup", json={"username": "valid_user", "password": password})
+
+    assert response.status_code == 400
+    assert User.query.count() == users_before
+    assert User.query.filter_by(username="valid_user").first() is None
+
+
+@pytest.mark.parametrize(
+    ("submitted", "stored"),
+    [
+        ("abc", "abc"),  # shortest allowed
+        ("a" * 30, "a" * 30),  # longest allowed
+        ("Mixed_Case9", "mixed_case9"),
+        ("  padded_name  ", "padded_name"),
+    ],
+)
+def test_signup_accepts_and_normalises_a_valid_username(client, init_db, submitted, stored):
+    response = client.post("/user/signup", json={"username": submitted, "password": "12345678"})
+
+    assert response.status_code == 201
+    created = User.query.filter_by(username=stored).one()
+    assert created.check_password("12345678")
+
+
+@pytest.mark.parametrize("submitted", ["Collide_Me", "COLLIDE_ME", "  collide_me "])
+def test_signup_username_collision_ignores_case_and_padding(client, init_db, submitted):
+    original = UserFactory(username="collide_me")
+    users_before = User.query.count()
+
+    response = client.post("/user/signup", json={"username": submitted, "password": "password123"})
+
+    assert response.status_code == 409
+    assert User.query.count() == users_before
+    assert User.query.filter_by(username="collide_me").one().id == original.id
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "status"),
+    [
+        ({"data": "username=abc&password=password123"}, 415),  # a form, not JSON
+        ({"data": "{not json", "content_type": "application/json"}, 400),
+    ],
+)
+def test_signup_rejects_a_body_that_is_not_json(client, init_db, kwargs, status):
+    users_before = User.query.count()
+
+    response = client.post("/user/signup", **kwargs)
+
+    assert response.status_code == status
+    assert User.query.count() == users_before
+
+
+# --- Throttling (the limiter is off in TestingConfig, so these use rate_limited_app) ---
+
+
+def test_login_is_throttled_after_ten_attempts_from_one_address(rate_limited_app):
+    client = rate_limited_app.test_client()
+
+    def attempt(address):
+        return client.post(
+            "/user/login",
+            json={"username": "nobody", "password": "wrong-password"},
+            environ_base={"REMOTE_ADDR": address},
+        )
+
+    assert [attempt("10.0.0.1").status_code for _ in range(10)] == [401] * 10
+
+    throttled = attempt("10.0.0.1")
+    assert throttled.status_code == 429
+    assert throttled.get_json()["error"] == "Rate limit exceeded"
+
+    # Another address has its own bucket, and only POSTs count against the limit
+    assert attempt("10.0.0.2").status_code == 401
+    assert client.get("/user/login", environ_base={"REMOTE_ADDR": "10.0.0.1"}).status_code == 200
+
+
+def test_signup_is_throttled_after_five_attempts_from_one_address(rate_limited_app):
+    client = rate_limited_app.test_client()
+
+    def attempt(address):
+        # Too short a username: refused before anything is written
+        return client.post(
+            "/user/signup",
+            json={"username": "ab", "password": "password123"},
+            environ_base={"REMOTE_ADDR": address},
+        )
+
+    assert [attempt("10.0.0.1").status_code for _ in range(5)] == [400] * 5
+
+    throttled = attempt("10.0.0.1")
+    assert throttled.status_code == 429
+    assert throttled.get_json()["error"] == "Rate limit exceeded"
+
+    assert attempt("10.0.0.2").status_code == 400
 
 
 def test_profile_not_found_and_html_redirect(client, init_db):
@@ -899,6 +1094,106 @@ def test_edit_project_edge_cases(client, init_db):
     # 5. GET edit_project non-JSON -> redirect
     resp_get = client.get(f"/user/project/edit/{project.id}")
     assert resp_get.status_code == 302
+
+
+# --- Ownership: one user must not reach another user's projects or skills ---
+
+
+@pytest.fixture
+def owned_project(init_db):
+    """A project of `owner`, plus a second user who must not be able to touch it."""
+    owner = UserFactory()
+    intruder = UserFactory()
+    project = Project(name="Owners Project", description="Owners text", user_id=owner.id)
+    db.session.add(project)
+    db.session.commit()
+    return SimpleNamespace(owner=owner, intruder=intruder, project=project)
+
+
+def test_non_owner_cannot_delete_a_project(client, owned_project):
+    _login(client, owned_project.intruder)
+
+    response = client.post(f"/user/project/edit/{owned_project.project.id}", data={"action": "delete"})
+
+    assert response.status_code == 403
+    assert db.session.get(Project, owned_project.project.id) is not None
+
+
+def test_non_owner_cannot_change_or_take_over_a_project(client, owned_project):
+    _login(client, owned_project.intruder)
+
+    response = client.post(
+        f"/user/project/edit/{owned_project.project.id}",
+        data={"name": "Hacked", "description": "Hacked text", "student_id": owned_project.intruder.id},
+    )
+
+    assert response.status_code == 403
+    db.session.refresh(owned_project.project)
+    assert owned_project.project.name == "Owners Project"
+    assert owned_project.project.description == "Owners text"
+    assert owned_project.project.user_id == owned_project.owner.id
+
+
+def test_non_owner_cannot_read_the_edit_form_of_a_project(client, owned_project):
+    _login(client, owned_project.intruder)
+
+    response = client.get(
+        f"/user/project/edit/{owned_project.project.id}", headers={"Accept": "application/json"}
+    )
+
+    assert response.status_code == 403
+    assert b"Owners Project" not in response.data
+
+
+def test_owner_cannot_use_the_admin_only_project_fields(client, owned_project):
+    status_before = owned_project.project.status
+    _login(client, owned_project.owner)
+
+    response = client.post(
+        f"/user/project/edit/{owned_project.project.id}",
+        data={
+            "name": "Renamed",
+            "student_id": owned_project.intruder.id,
+            "teacher_comment": "Self-praise",
+            "status": "approved",
+        },
+    )
+
+    assert response.status_code == 200
+    db.session.refresh(owned_project.project)
+    assert owned_project.project.name == "Renamed"
+    assert owned_project.project.user_id == owned_project.owner.id
+    assert owned_project.project.teacher_comment is None
+    assert owned_project.project.status == status_before
+
+
+def test_student_cannot_create_a_project_for_another_student(client, owned_project):
+    _login(client, owned_project.intruder)
+
+    response = client.post(
+        "/user/project/new",
+        data={"name": "Planted", "student_id": owned_project.owner.id, "teacher_comment": "Great work!"},
+    )
+
+    assert response.status_code == 200
+    planted = Project.query.filter_by(name="Planted").one()
+    assert planted.user_id == owned_project.intruder.id
+    assert planted.teacher_comment is None
+    assert Project.query.filter_by(user_id=owned_project.owner.id).count() == 1
+
+
+def test_editing_skills_only_touches_the_logged_in_users_skills(client, init_db):
+    owner = UserFactory()
+    other = UserFactory()
+    db.session.add_all([Skill(name="Python", user_id=owner.id), Skill(name="Rust", user_id=other.id)])
+    db.session.commit()
+    _login(client, other)
+
+    response = client.post("/user/edit_profile", json={"skills": []}, headers={"Accept": "application/json"})
+
+    assert response.status_code == 200
+    assert Skill.query.filter_by(user_id=other.id).count() == 0
+    assert [s.name for s in Skill.query.filter_by(user_id=owner.id)] == ["Python"]
 
 
 def test_api_profile_picture_validations(client, init_db):

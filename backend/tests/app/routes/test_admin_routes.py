@@ -450,9 +450,11 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db):
 
         assert response.status_code == 200
         users_data = json.loads(response.data)
-        assert len(users_data) >= len(sample_users)
+        # The route wraps the page of users in an object next to the totals
+        user_list = users_data["users"]
+        assert isinstance(user_list, list)
+        assert len(user_list) >= len(sample_users)
 
-        user_list = users_data.get("users", users_data)
         user_data = next(
             u for u in user_list if u["username"] == sample_users[0].username
         )

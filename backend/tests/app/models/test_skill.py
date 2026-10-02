@@ -7,6 +7,7 @@ Summary: Unit tests for skill model.
 import pytest
 from application import User, db
 from application.models.skill import Skill
+from sqlalchemy.exc import IntegrityError
 
 
 def test_skill_creation(init_db, sample_user):
@@ -32,8 +33,11 @@ def test_skill_unique_per_user(init_db, sample_user):
     skill_2 = Skill(name="C++", user_id=sample_user.id)
     db.session.add(skill_2)
 
-    with pytest.raises(Exception):  # Expect an IntegrityError or similar
+    with pytest.raises(IntegrityError):
         db.session.commit()
+    db.session.rollback()
+
+    assert Skill.query.filter_by(user_id=sample_user.id, name="C++").count() == 1
 
 
 def test_skill_multiple_users(init_db, sample_user):

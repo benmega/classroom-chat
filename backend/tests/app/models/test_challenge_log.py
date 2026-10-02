@@ -10,6 +10,8 @@ import pytest
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User
+from application.utilities.helper_functions import utcnow_naive
+from sqlalchemy.exc import IntegrityError
 
 
 def test_challenge_log_creation(sample_challenge_log):
@@ -40,7 +42,7 @@ def test_challenge_log_timestamp(init_db):
     db.session.commit()
 
     assert isinstance(challenge_log.timestamp, datetime)
-    assert challenge_log.timestamp <= datetime.utcnow()
+    assert challenge_log.timestamp <= utcnow_naive()
 
 
 def test_challenge_log_repr(sample_challenge_log):
@@ -58,14 +60,18 @@ def test_challenge_log_repr(sample_challenge_log):
 
 def test_challenge_log_missing_field():
     """Test the behavior when required fields are missing."""
-    with pytest.raises(Exception):  # Should raise an IntegrityError
-        challenge_log = ChallengeLog(
-            user_id=123,
-            domain="codecombat.com",
-            challenge_slug=None,  # Missing required challenge_slug
-        )
-        db.session.add(challenge_log)
+    challenge_log = ChallengeLog(
+        user_id=123,
+        domain="codecombat.com",
+        challenge_slug=None,  # Missing required challenge_slug
+    )
+    db.session.add(challenge_log)
+
+    with pytest.raises(IntegrityError):
         db.session.commit()
+    db.session.rollback()
+
+    assert ChallengeLog.query.count() == 0
 
 
 def test_challenge_log_with_optional_fields(init_db):

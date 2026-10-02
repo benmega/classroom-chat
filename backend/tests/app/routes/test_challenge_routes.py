@@ -186,8 +186,11 @@ def test_submit_challenge_with_helper(client, init_db):
     assert log.helper == "friend_user"
 
 
-def test_submit_challenge_with_notes(client, init_db):
-    """Test challenge submission with notes."""
+def test_submit_challenge_notes_are_accepted_and_ignored(client, init_db):
+    """Notes are accepted with a submission but not stored anywhere.
+
+    ChallengeLog has no notes column, so the claim is logged exactly as without notes.
+    """
     sample_user = UserFactory()
     ConfigurationFactory()
 
@@ -215,6 +218,13 @@ def test_submit_challenge_with_notes(client, init_db):
     )
 
     assert response.status_code == 200
+    assert response.get_json()["success"] is True
+
+    logs = ChallengeLog.query.filter_by(
+        user_id=sample_user.id, challenge_slug="dungeons-of-kithgard"
+    ).all()
+    assert len(logs) == 1
+    assert logs[0].course_instance == "456"
 
 
 def test_detect_and_handle_challenge_url_valid(init_db):
@@ -359,6 +369,10 @@ def test_extract_challenge_details_alternative_url():
 
     assert result is not None
     assert result["domain"] == "codecombat.com"
+    # The /s/<slug>/lessons/<n>/levels/<n> form carries the slug but no course parameters
+    assert result["challenge_slug"] == "python-basics"
+    assert result["course_id"] is None
+    assert result["course_instance"] is None
 
 
 def test_extract_challenge_details_no_match():

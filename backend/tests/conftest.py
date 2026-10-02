@@ -11,11 +11,12 @@ import threading
 import uuid
 from contextlib import contextmanager
 from io import BytesIO
+from unittest.mock import patch
 
 import pytest
 from application import create_app
 from application.config import Config, TestingConfig
-from application.extensions import db
+from application.extensions import db, limiter, socketio
 from application.models.achievements import Achievement, UserAchievement
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
@@ -98,6 +99,26 @@ def restore_app_config(test_app):
 @pytest.fixture
 def client(test_app):
     return test_app.test_client()
+
+
+@pytest.fixture
+def rate_limited_app():
+    """A real app with the global limiter switched on (it is off in TestingConfig)."""
+
+    class RateLimitedTesting(TestingConfig):
+        RATELIMIT_ENABLED = True
+
+    was_enabled = limiter.enabled
+    try:
+        with patch.object(socketio, "init_app"):
+            app = create_app(RateLimitedTesting)
+        limiter.reset()
+        yield app
+    finally:
+        # The limiter is a module-level singleton shared with every other app
+        limiter.enabled = was_enabled
+        if limiter._storage is not None:
+            limiter.reset()
 
 
 @pytest.fixture
