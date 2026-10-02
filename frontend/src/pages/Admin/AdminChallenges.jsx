@@ -361,6 +361,8 @@ const AdminChallenges = () => {
                                     onDragOver={(e) => e.preventDefault()}
                                     onClick={() => openModal(c)}
                                     onKeyDown={(e) => {
+                                        // Keys pressed on the delete button bubble up here: only the row itself opens the editor
+                                        if (e.target !== e.currentTarget) return;
                                         if (e.key === 'Enter' || e.key === ' ') {
                                             e.preventDefault();
                                             openModal(c);
@@ -369,17 +371,11 @@ const AdminChallenges = () => {
                                     role="button"
                                     tabIndex={0}
                                 >
+                                    {/* Decorative: the whole row is what drags, and the handle does nothing on its own */}
                                     <div
                                         className="drag-handle"
                                         onClick={(e) => e.stopPropagation()}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                            }
-                                        }}
-                                        role="button"
-                                        tabIndex={0}
+                                        aria-hidden="true"
                                     >
                                         <GripVertical size={20} color="var(--text-secondary)" />
                                     </div>
@@ -402,8 +398,9 @@ const AdminChallenges = () => {
                                         className="challenge-list-remove-btn"
                                         onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.name); }}
                                         title="Delete Challenge"
+                                        aria-label={`Delete challenge ${c.name}`}
                                     >
-                                        <X size={18} />
+                                        <X size={18} aria-hidden="true" />
                                     </button>
                                 </div>
                             ))}

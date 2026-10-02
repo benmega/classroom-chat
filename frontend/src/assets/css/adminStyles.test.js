@@ -97,33 +97,33 @@ describe('admin stylesheets', () => {
     expect(undefinedUses).toEqual([])
   })
 
-  it('puts the admin rail, its mobile overlay and the log modal on the shared z-index scale', () => {
+  it('puts the admin rail and its mobile overlay on the shared z-index scale, below the shared modal', () => {
     const layout = '/src/components/Layout/AdminLayout.css'
     const zRule = (path, selector) => declaration(ruleBody(sheet(path), selector), 'z-index')
 
     // Declared with the scale tokens, not literals (a literal here is what issue #76 removed)
     expect(zRule(layout, '.admin-sidebar')).toBe('var(--z-sidebar)')
     expect(zRule(layout, '.admin-mobile-overlay')).toBe('var(--z-dropdown)')
-    expect(zRule('/src/pages/Admin/AdvancedPanel.css', '.log-modal-overlay')).toBe('var(--z-modal)')
 
-    // ...and the layers keep their order: overlay < rail < modal
+    // ...and the layers keep their order: overlay < rail < modal. The log/stats/purge dialogs now use the
+    // shared Modal, whose overlay deliberately stays above toasts (see --z-modal in variables.css).
     const z = (path, selector) => Number(resolveToken(zRule(path, selector)))
     const rail = z(layout, '.admin-sidebar')
     const overlay = z(layout, '.admin-mobile-overlay')
-    const modal = z('/src/pages/Admin/AdvancedPanel.css', '.log-modal-overlay')
+    const modal = z('/src/components/common/Modal.css', '.admin-modal-overlay')
     expect(overlay).toBeLessThan(rail)
     expect(rail).toBeLessThan(modal)
-    expect(modal).toBe(Number(tokens['--z-modal']))
+    expect(modal).toBeGreaterThan(Number(tokens['--z-modal']))
   })
 
   it('draws the log console text and its sub-text with AA contrast', () => {
     const panel = sheet('/src/pages/Admin/AdvancedPanel.css')
-    const consoleBg = resolveToken(declaration(ruleBody(panel, '.log-content'), 'background'))
+    const consoleBg = resolveToken(declaration(ruleBody(panel, '.advanced-modal-console'), 'background'))
     const colors = {
-      'console text': declaration(ruleBody(panel, '.log-content'), 'color'),
-      'stat label': declaration(ruleBody(panel, '.log-content .stat-box .label'), 'color'),
-      'table row name': declaration(ruleBody(panel, '.log-content .table-row span'), 'color'),
-      'table row count': declaration(ruleBody(panel, '.log-content .table-row strong'), 'color'),
+      'console text': declaration(ruleBody(panel, '.advanced-modal-console'), 'color'),
+      'stat label': declaration(ruleBody(panel, '.advanced-modal-console .stat-box .label'), 'color'),
+      'table row name': declaration(ruleBody(panel, '.advanced-modal-console .table-row span'), 'color'),
+      'table row count': declaration(ruleBody(panel, '.advanced-modal-console .table-row strong'), 'color'),
     }
 
     for (const [what, value] of Object.entries(colors)) {

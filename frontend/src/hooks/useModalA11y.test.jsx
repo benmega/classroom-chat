@@ -65,6 +65,50 @@ describe('useModalA11y', () => {
 
             expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
         });
+
+        it('focuses the control marked data-autofocus instead of the first one', () => {
+            render(
+                <Dialog>
+                    <button>Close</button>
+                    <button data-autofocus>Cancel</button>
+                    <button>Delete</button>
+                </Dialog>
+            );
+
+            expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+        });
+
+        it('still returns focus to the opener when it moved focus to a data-autofocus control', () => {
+            const Page = ({ open }) => (
+                <>
+                    <button>Open dialog</button>
+                    <Dialog isOpen={open}>
+                        <button>Close</button>
+                        <button data-autofocus>Cancel</button>
+                    </Dialog>
+                </>
+            );
+            const { rerender } = render(<Page open={false} />);
+            const opener = screen.getByRole('button', { name: 'Open dialog' });
+            opener.focus();
+
+            rerender(<Page open />);
+            expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+            rerender(<Page open={false} />);
+
+            expect(opener).toHaveFocus();
+        });
+
+        it('falls back to the first control when the data-autofocus one is disabled', () => {
+            render(
+                <Dialog>
+                    <button>First</button>
+                    <button data-autofocus disabled>Cancel</button>
+                </Dialog>
+            );
+
+            expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
+        });
     });
 
     describe('Escape', () => {

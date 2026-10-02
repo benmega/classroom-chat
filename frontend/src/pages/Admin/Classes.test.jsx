@@ -1,4 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import Classes from './Classes';
@@ -228,6 +229,61 @@ describe('Classes Admin Page', () => {
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('Classroom still has students');
+        });
+    });
+
+    describe('Create Classroom dialog keyboard behaviour', () => {
+        const openDialog = async (user) => {
+            client.get.mockResolvedValue({
+                data: { classrooms: [{ id: 'c1', name: 'Math 101', language: 'English', student_count: 20 }] }
+            });
+            renderWithRouter(<Classes />);
+            await screen.findByText('Math 101');
+            const opener = screen.getByRole('button', { name: 'Add new classroom' });
+            await user.click(opener);
+            await screen.findByRole('dialog', { name: 'Create New Classroom' });
+            return opener;
+        };
+
+        it('puts focus on the first field when it opens', async () => {
+            await openDialog(userEvent.setup());
+
+            expect(screen.getByLabelText('Classroom ID (Unique Identifier)')).toHaveFocus();
+        });
+
+        it('closes on Escape and returns focus to the Add Classroom button', async () => {
+            const user = userEvent.setup();
+            const opener = await openDialog(user);
+
+            await user.keyboard('{Escape}');
+
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            expect(opener).toHaveFocus();
+        });
+
+        it('keeps Tab and Shift+Tab inside the dialog', async () => {
+            const user = userEvent.setup();
+            await openDialog(user);
+            const close = screen.getByRole('button', { name: 'Close modal' });
+            const create = screen.getByRole('button', { name: 'Create Classroom' });
+
+            create.focus();
+            await user.tab();
+            expect(close).toHaveFocus();
+            await user.tab({ shift: true });
+            expect(create).toHaveFocus();
+        });
+
+        it('still closes with the close button and Cancel', async () => {
+            const user = userEvent.setup();
+            await openDialog(user);
+
+            await user.click(screen.getByRole('button', { name: 'Close modal' }));
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+            await user.click(screen.getByRole('button', { name: 'Add new classroom' }));
+            await user.click(screen.getByRole('button', { name: 'Cancel' }));
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         });
     });
 });

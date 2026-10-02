@@ -73,6 +73,14 @@ describe('Modal', () => {
 
             expect(screen.getByRole('dialog').style.maxWidth).toBe('500px');
         });
+
+        it('adds bodyClassName to the body and keeps the plain body otherwise', () => {
+            const { rerender } = renderModal({ bodyClassName: 'flush' });
+            expect(document.querySelector('.modal-body')).toHaveClass('modal-body', 'flush');
+
+            rerender(<Modal isOpen onClose={vi.fn()} title="Edit user"><button>Save</button></Modal>);
+            expect(document.querySelector('.modal-body').className).toBe('modal-body');
+        });
     });
 
     describe('closing', () => {
@@ -153,6 +161,37 @@ describe('Modal', () => {
 
             rerender(<Page open />);
             expect(opener).not.toHaveFocus();
+            rerender(<Page open={false} />);
+
+            expect(opener).toHaveFocus();
+        });
+
+        it('starts on the control marked data-autofocus, e.g. Cancel in a destructive dialog', () => {
+            renderModal({}, (
+                <>
+                    <button data-autofocus>Cancel</button>
+                    <button>Delete everything</button>
+                </>
+            ));
+
+            expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+        });
+
+        it('returns focus to the opener after a data-autofocus start', () => {
+            const Page = ({ open }) => (
+                <>
+                    <button>Open dialog</button>
+                    <Modal isOpen={open} onClose={vi.fn()} title="Purge">
+                        <button data-autofocus>Cancel</button>
+                    </Modal>
+                </>
+            );
+            const { rerender } = render(<Page open={false} />);
+            const opener = screen.getByRole('button', { name: 'Open dialog' });
+            opener.focus();
+
+            rerender(<Page open />);
+            expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
             rerender(<Page open={false} />);
 
             expect(opener).toHaveFocus();

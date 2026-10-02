@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { screen, fireEvent, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../../test/test-utils';
 import Users from './Users';
 import { useUsersManagement } from '../../hooks/useUsersManagement';
@@ -334,6 +335,123 @@ describe('Users Page', () => {
       // The menu is open (it still has the other actions) but offers no removal.
       expect(screen.getByText('Reset Password')).toBeInTheDocument();
       expect(screen.queryByText('Remove User')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('keyboard and screen reader access', () => {
+    const student = { id: 2, username: 'student1', nickname: 'Sam', role: 'student', can_chat: true, duck_balance: 3 };
+    const parent = { id: 3, username: 'parent1', nickname: 'Pat', role: 'parent' };
+
+    const showUsers = (users) => useUsersManagement.mockReturnValue({ ...defaultMockState, users, totalUsers: users.length });
+
+    it('names the search box', () => {
+      renderComponent();
+
+      expect(screen.getByRole('textbox', { name: 'Search users' })).toBeInTheDocument();
+    });
+
+    it.each([
+      ['All', '/admin/users'],
+      ['Students', '/admin/users?role=student'],
+    ])('links the name to the detail page on the %s tab so it can be tabbed to', async (_tab, route) => {
+      const user = userEvent.setup();
+      showUsers([student]);
+      renderWithProviders(<Users />, { route });
+
+      const link = screen.getByRole('link', { name: 'Sam' });
+      expect(link).toHaveAttribute('href', '/admin/users/2');
+
+      link.focus();
+      expect(link).toHaveFocus();
+      const historyBefore = window.history.length;
+      await user.keyboard('{Enter}');
+
+      expect(window.location.pathname).toBe('/admin/users/2');
+      // One navigation, not two: the cell's own click handler must not fire as well
+      expect(window.history.length).toBe(historyBefore + 1);
+    });
+
+    it('links the parent name to the detail page on the Parents tab', () => {
+      showUsers([parent]);
+      renderWithProviders(<Users />, { route: '/admin/users?role=parent' });
+
+      expect(screen.getByRole('link', { name: 'Pat' })).toHaveAttribute('href', '/admin/users/3');
+    });
+
+    it('falls back to the username when there is no nickname', () => {
+      showUsers([{ id: 4, username: 'nonick', role: 'student' }]);
+      renderComponent();
+
+      expect(screen.getByRole('link', { name: 'nonick' })).toHaveAttribute('href', '/admin/users/4');
+    });
+
+    it('still opens the detail page when the rest of the row is clicked with the mouse', () => {
+      showUsers([student]);
+      renderComponent();
+
+      fireEvent.click(screen.getByText('@student1').closest('td'));
+
+      expect(window.location.pathname).toBe('/admin/users/2');
+    });
+
+    it('gives the row actions button a name that says whose actions they are, and reports whether it is open', () => {
+      showUsers([student]);
+      renderComponent();
+
+      const trigger = screen.getByRole('button', { name: 'Actions for @student1' });
+      expect(trigger).toHaveAttribute('type', 'button');
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(trigger).not.toHaveAttribute('aria-controls');
+
+      fireEvent.click(trigger);
+
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+      expect(document.getElementById(trigger.getAttribute('aria-controls'))).toHaveClass('kebab-dropdown');
+    });
+
+    it('opens the row actions with the keyboard and closes them with Escape, returning focus to the button', async () => {
+      const user = userEvent.setup();
+      showUsers([student]);
+      renderComponent();
+      const trigger = screen.getByRole('button', { name: 'Actions for @student1' });
+
+      trigger.focus();
+      await user.keyboard('{Enter}');
+      expect(screen.getByText('Adjust Ducks')).toBeInTheDocument();
+      screen.getByText('Reset Password').focus();
+      await user.keyboard('{Escape}');
+
+      expect(screen.queryByText('Adjust Ducks')).not.toBeInTheDocument();
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+      expect(trigger).toHaveFocus();
+    });
+
+    it('does nothing on Escape while the row actions are closed', async () => {
+      const user = userEvent.setup();
+      showUsers([student]);
+      renderComponent();
+      const search = screen.getByRole('textbox', { name: 'Search users' });
+
+      search.focus();
+      await user.keyboard('{Escape}');
+
+      expect(search).toHaveFocus();
+    });
+
+    it('names the expand button after the parent and reports whether the children are shown', async () => {
+      const client = await import('../../api/client');
+      client.default.get.mockResolvedValueOnce({ data: { children: [] } });
+      showUsers([parent]);
+      renderWithProviders(<Users />, { route: '/admin/users?role=parent' });
+
+      const expand = screen.getByRole('button', { name: 'Expand children of @parent1' });
+      expect(expand).toHaveAttribute('type', 'button');
+      expect(expand).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(expand);
+
+      const collapse = await screen.findByRole('button', { name: 'Collapse children of @parent1' });
+      expect(collapse).toHaveAttribute('aria-expanded', 'true');
     });
   });
 });

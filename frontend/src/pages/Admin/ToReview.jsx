@@ -753,7 +753,7 @@ const ToReview = () => {
             <div className={`review-card user-review-card ${isSelected ? 'selected' : ''}`} key={u.key}>
                 <div className="review-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} aria-label={`Select account signup for @${u.username}`} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
                         <div className="card-badge badge-user">
                             <Users size={14} /> Account Signup
                         </div>
@@ -818,7 +818,7 @@ const ToReview = () => {
             <div className={`review-card trade-review-card ${isSelected ? 'selected' : ''}`} key={t.key}>
                 <div className="review-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} aria-label={`Select duck trade from @${t.username}`} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
                         <div className="card-badge badge-trade">
                             <ArrowLeftRight size={14} /> Duck Trade
                         </div>
@@ -1070,7 +1070,7 @@ const ToReview = () => {
                     
                     {activeTab === 'users' && displayItems.length > 0 && (
                         <div className="bulk-actions-bar" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, cursor: 'pointer' }}>
                                 <input 
                                     type="checkbox" 
                                     checked={selectedUsers.size === pendingUsers.length && pendingUsers.length > 0} 
@@ -1081,7 +1081,7 @@ const ToReview = () => {
                                     style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                                 />
                                 <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>Select All ({selectedUsers.size})</span>
-                            </div>
+                            </label>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button className="btn-reject" onClick={() => handleBulkUserApproval('reject')} disabled={selectedUsers.size === 0 || isProcessing === 'bulk-user'}>
                                     <XCircle size={16} /> Reject Selected
@@ -1095,7 +1095,7 @@ const ToReview = () => {
 
                     {activeTab === 'trades' && displayItems.length > 0 && (
                         <div className="bulk-actions-bar" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, cursor: 'pointer' }}>
                                 <input 
                                     type="checkbox" 
                                     checked={selectedTrades.size === trades.length && trades.length > 0} 
@@ -1106,7 +1106,7 @@ const ToReview = () => {
                                     style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                                 />
                                 <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>Select All ({selectedTrades.size})</span>
-                            </div>
+                            </label>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button className="btn-reject" onClick={() => handleBulkTradeApproval('reject')} disabled={selectedTrades.size === 0 || isProcessing === 'bulk-trade'}>
                                     <XCircle size={16} /> Reject Selected

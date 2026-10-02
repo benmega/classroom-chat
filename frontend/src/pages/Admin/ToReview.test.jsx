@@ -658,6 +658,37 @@ describe('ToReview Component', () => {
       });
     });
 
+    describe('checkbox names', () => {
+      it('names each account signup checkbox after the account and the select-all box after its label', async () => {
+        await loadItems({ users: pendingUsers }, 'Account Signups');
+
+        expect(screen.getByRole('checkbox', { name: 'Select account signup for @newkid' })).not.toBeChecked();
+        expect(screen.getByRole('checkbox', { name: 'Select account signup for @newkid2' })).not.toBeChecked();
+
+        fireEvent.click(screen.getByRole('checkbox', { name: 'Select account signup for @newkid2' }));
+
+        expect(screen.getByRole('checkbox', { name: 'Select account signup for @newkid2' })).toBeChecked();
+        expect(screen.getByRole('checkbox', { name: 'Select All (1)' })).not.toBeChecked();
+      });
+
+      it('lets a click on the Select All text tick the box, for signups and for trades', async () => {
+        await loadItems({ users: pendingUsers, trades }, 'Account Signups');
+        fireEvent.click(screen.getByText('Select All (0)'));
+        expect(screen.getByRole('checkbox', { name: 'Select All (2)' })).toBeChecked();
+
+        fireEvent.click(screen.getByText('Duck Trades'));
+        fireEvent.click(screen.getByText('Select All (0)'));
+        expect(screen.getByRole('checkbox', { name: 'Select All (2)' })).toBeChecked();
+      });
+
+      it('names each duck trade checkbox after the student', async () => {
+        await loadItems({ trades }, 'Duck Trades');
+
+        expect(screen.getByRole('checkbox', { name: 'Select duck trade from @dee' })).toBeInTheDocument();
+        expect(screen.getByRole('checkbox', { name: 'Select duck trade from @eli' })).toBeInTheDocument();
+      });
+    });
+
     describe('course requests', () => {
       it('shows the server reason when a request cannot be approved', async () => {
         await loadItems({ courseRequests }, 'Course Requests');

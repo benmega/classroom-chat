@@ -153,8 +153,8 @@ const AdminUserDashboard = () => {
 
             {/* TOP HERO STATUS BAR */}
             <div className="user-hero-bar">
-                <button className="btn-icon small hero-back" onClick={() => navigate('/admin/users')} title="Back to Users">
-                    <ChevronLeft size={18} />
+                <button type="button" className="btn-icon small hero-back" onClick={() => navigate('/admin/users')} title="Back to Users" aria-label="Back to users">
+                    <ChevronLeft size={18} aria-hidden="true" />
                 </button>
                 <SmartImage
                     src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''}
@@ -166,8 +166,8 @@ const AdminUserDashboard = () => {
                     <div className="hero-name-row">
                         <h2 className="hero-name">{user.nickname || user.username}</h2>
                         <span className="hero-handle">@{user.username}</span>
-                        <Link to={`/profile/${user.slug}`} className="hero-profile-link" title="View Public Profile" target="_blank">
-                            <ExternalLink size={13} />
+                        <Link to={`/profile/${user.slug}`} className="hero-profile-link" title="View Public Profile" aria-label="View public profile (opens in a new tab)" target="_blank">
+                            <ExternalLink size={13} aria-hidden="true" />
                         </Link>
                     </div>
                     <div className="hero-meta-badges">
@@ -312,6 +312,7 @@ const AdminUserDashboard = () => {
                                         type="number"
                                         name="amount"
                                         step="1"
+                                        aria-label="Duck adjustment amount"
                                         placeholder="Amount (+/-)"
                                         required
                                         value={duckAmountInput}
@@ -330,7 +331,7 @@ const AdminUserDashboard = () => {
                                         <span className="econ-balance">{formatDecimal(user.packets)}</span>
                                     </div>
                                     <input type="hidden" name="username" value={user.username} />
-                                    <input type="number" name="amount" step="any" placeholder="Amount (+/-)" required className="inline-input" />
+                                    <input type="number" name="amount" step="any" aria-label="Packet adjustment amount" placeholder="Amount (+/-)" required className="inline-input" />
                                     <button type="submit" className="btn-compact action-green" disabled={formLoading}>
                                         <Check size={14} /> Adjust
                                     </button>
@@ -342,7 +343,7 @@ const AdminUserDashboard = () => {
                                         <span className="econ-label">🔒 Locker Drawer</span>
                                         <span className="econ-balance">{user.drawer || 'Not Set'}</span>
                                     </div>
-                                    <input type="text" name="drawer" defaultValue={user.drawer || ''} placeholder="e.g. 0x08" maxLength={6} className="inline-input" />
+                                    <input type="text" name="drawer" aria-label="Locker drawer" defaultValue={user.drawer || ''} placeholder="e.g. 0x08" maxLength={6} className="inline-input" />
                                     <button type="submit" className="btn-compact action-green" disabled={formLoading}>
                                         <Check size={14} /> Set
                                     </button>
@@ -424,6 +425,7 @@ const AdminUserDashboard = () => {
                             <div className="dense-links">
                                 <input
                                     type="text"
+                                    aria-label={user.role === 'parent' ? "Search students to link" : "Search parents to link"}
                                     placeholder={user.role === 'parent' ? "Find students to link..." : "Find parents to link..."}
                                     value={user.role === 'parent' ? childSearchQuery : parentSearchQuery}
                                     onChange={(e) => user.role === 'parent' ? setChildSearchQuery(e.target.value) : setParentSearchQuery(e.target.value)}
@@ -460,8 +462,8 @@ const AdminUserDashboard = () => {
                                 {user.role === 'student' && connectionCode && (
                                     <div className="qr-tiny-box mt-sm">
                                         <span className="qr-tiny-lbl">Parent QR Code: <strong>{connectionCode}</strong></span>
-                                        <button className="btn-icon small" onClick={() => window.print()} title="Print QR Connection Card">
-                                            <Copy size={14} />
+                                        <button type="button" className="btn-icon small" onClick={() => window.print()} title="Print QR Connection Card" aria-label="Print connection card">
+                                            <Copy size={14} aria-hidden="true" />
                                         </button>
                                     </div>
                                 )}
@@ -502,15 +504,15 @@ const AdminUserDashboard = () => {
                         <form onSubmit={handleResetPassword} className="dense-form-group-stack">
                             <div className="inline-lbl">Reset Password</div>
                             <div className="pwd-row">
-                                <input type={showNewPassword ? "text" : "password"} name="new_password" placeholder="New Password" required className="inline-input full" />
-                                <button type="button" className="btn-icon small" onClick={() => setShowNewPassword(!showNewPassword)}>
-                                    {showNewPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                <input type={showNewPassword ? "text" : "password"} name="new_password" aria-label="New password" placeholder="New Password" required className="inline-input full" />
+                                <button type="button" className="btn-icon small" onClick={() => setShowNewPassword(!showNewPassword)} aria-label="Show new password" aria-pressed={showNewPassword}>
+                                    {showNewPassword ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
                                 </button>
                             </div>
                             <div className="pwd-row mt-xs">
-                                <input type={showConfirmPassword ? "text" : "password"} name="confirm_password" placeholder="Confirm Password" required className="inline-input full" />
-                                <button type="button" className="btn-icon small" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                                    {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                                <input type={showConfirmPassword ? "text" : "password"} name="confirm_password" aria-label="Confirm password" placeholder="Confirm Password" required className="inline-input full" />
+                                <button type="button" className="btn-icon small" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label="Show confirm password" aria-pressed={showConfirmPassword}>
+                                    {showConfirmPassword ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
                                 </button>
                             </div>
                             <button type="submit" className="btn-compact action-neutral w-full mt-xs" disabled={formLoading}>Reset Password</button>
@@ -547,6 +549,7 @@ const AdminUserDashboard = () => {
                     setShowAssignProjectModal(false);
                 }} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <select
+                        aria-label="Project template"
                         value={selectedTemplateName}
                         onChange={(e) => setSelectedTemplateName(e.target.value)}
                         required
@@ -564,8 +567,9 @@ const AdminUserDashboard = () => {
 
             <Modal isOpen={showAwardCertificateModal} onClose={() => setShowAwardCertificateModal(false)} title="Award Certificate">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <select 
-                        value={selectedCertCourse} 
+                    <select
+                        aria-label="Certificate course"
+                        value={selectedCertCourse}
                         onChange={(e) => setSelectedCertCourse(e.target.value)}
                         className="inline-select"
                         style={{ width: '100%', padding: '8px' }}
@@ -597,7 +601,7 @@ const AdminUserDashboard = () => {
 
             <Modal isOpen={showPassChapterModal} onClose={() => setShowPassChapterModal(false)} title="Pass Chapter">
                 <form onSubmit={handlePassChapterPreview} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <select value={selectedChapterId} onChange={(e) => { setSelectedChapterId(e.target.value); setPassPreview(null); }} required className="inline-select" style={{ width: '100%', padding: '8px' }}>
+                    <select aria-label="Chapter" value={selectedChapterId} onChange={(e) => { setSelectedChapterId(e.target.value); setPassPreview(null); }} required className="inline-select" style={{ width: '100%', padding: '8px' }}>
                         <option value="">Select Chapter...</option>
                         <option value="cs1">CS 1</option>
                         <option value="cs2">CS 2</option>

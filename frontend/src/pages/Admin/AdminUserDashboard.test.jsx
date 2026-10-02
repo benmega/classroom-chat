@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminUserDashboard from './AdminUserDashboard';
@@ -208,6 +208,85 @@ describe('AdminUserDashboard Component Redesign', () => {
 
             await waitFor(() => expect(client.put).toHaveBeenCalledTimes(1));
             expect(client.put.mock.calls[0][1]).toEqual(expect.objectContaining({ role: 'student', is_admin: false }));
+        });
+    });
+
+    describe('accessible names for icon buttons and bare inputs', () => {
+        const renderDashboard = async () => {
+            render(
+                <BrowserRouter>
+                    <AdminUserDashboard />
+                </BrowserRouter>
+            );
+            // The hero bar is the first thing that renders once the user has loaded
+            await screen.findByRole('button', { name: 'Back to users' });
+        };
+
+        it('names the icon-only back button and public-profile link in the hero bar', async () => {
+            await renderDashboard();
+
+            expect(screen.getByRole('button', { name: 'Back to users' })).toHaveAttribute('type', 'button');
+            expect(screen.getByRole('link', { name: 'View public profile (opens in a new tab)' })).toBeInTheDocument();
+        });
+
+        it('names the amount and drawer inputs of the economy panel', async () => {
+            await renderDashboard();
+
+            expect(screen.getByRole('spinbutton', { name: 'Duck adjustment amount' })).toBeInTheDocument();
+            expect(screen.getByRole('spinbutton', { name: 'Packet adjustment amount' })).toBeInTheDocument();
+            expect(screen.getByRole('textbox', { name: 'Locker drawer' })).toHaveValue('0xA6');
+        });
+
+        it('names the link search and the print button of the connections panel', async () => {
+            await renderDashboard();
+            fireEvent.click(screen.getByText('Account & Connections'));
+
+            expect(screen.getByRole('textbox', { name: 'Search parents to link' })).toBeInTheDocument();
+            expect(await screen.findByRole('button', { name: 'Print connection card' })).toHaveAttribute('type', 'button');
+        });
+
+        it('says which kind of account the link search finds when the user is a parent', async () => {
+            const parent = { ...mockStudent, role: 'parent' };
+            client.get.mockImplementation((url) => {
+                if (url.includes('/api/admin/user/1')) return Promise.resolve({ data: { user: parent } });
+                if (url.includes('/api/admin/users')) return Promise.resolve({ data: { users: [] } });
+                return Promise.resolve({ data: { success: true, children: [] } });
+            });
+            await renderDashboard();
+            fireEvent.click(screen.getByText('Account & Connections'));
+
+            expect(screen.getByRole('textbox', { name: 'Search students to link' })).toBeInTheDocument();
+        });
+
+        it('names both reset-password fields and their show/hide toggles, and reports the toggle state', async () => {
+            await renderDashboard();
+            fireEvent.click(screen.getByText('Sensitive Actions'));
+
+            const newPassword = screen.getByLabelText('New password');
+            const confirmPassword = screen.getByLabelText('Confirm password');
+            expect(newPassword).toHaveAttribute('type', 'password');
+
+            const showNew = screen.getByRole('button', { name: 'Show new password' });
+            expect(showNew).toHaveAttribute('aria-pressed', 'false');
+            fireEvent.click(showNew);
+            expect(newPassword).toHaveAttribute('type', 'text');
+            expect(showNew).toHaveAttribute('aria-pressed', 'true');
+
+            fireEvent.click(screen.getByRole('button', { name: 'Show confirm password' }));
+            expect(confirmPassword).toHaveAttribute('type', 'text');
+        });
+
+        it.each([
+            ['Assign Project', 'Project template'],
+            ['Award Certificate', 'Certificate course'],
+            ['Pass Chapter', 'Chapter'],
+        ])('names the select in the %s dialog', async (action, selectName) => {
+            await renderDashboard();
+
+            fireEvent.click(screen.getByRole('button', { name: action }));
+
+            const dialog = await screen.findByRole('dialog');
+            expect(within(dialog).getByRole('combobox', { name: selectName })).toBeInTheDocument();
         });
     });
 });

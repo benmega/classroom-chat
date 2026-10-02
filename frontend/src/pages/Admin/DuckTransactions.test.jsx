@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../../test/test-utils';
 import DuckTransactions from './DuckTransactions';
 
@@ -281,5 +282,35 @@ describe('DuckTransactions', () => {
     client.get.mockRejectedValue(new Error('Network Error'));
     renderComponent();
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to load transactions.'));
+  });
+
+  describe('keyboard and screen reader access', () => {
+    it('makes Back to Dashboard a real link to the dashboard', async () => {
+      client.get.mockResolvedValue(successResponse);
+      renderComponent();
+
+      const back = await screen.findByRole('link', { name: 'Back to Dashboard' });
+
+      expect(back).toHaveAttribute('href', '/admin');
+    });
+
+    it('follows Back to Dashboard with the keyboard', async () => {
+      const user = userEvent.setup();
+      client.get.mockResolvedValue(successResponse);
+      renderComponent();
+      const back = await screen.findByRole('link', { name: 'Back to Dashboard' });
+
+      back.focus();
+      await user.keyboard('{Enter}');
+
+      expect(window.location.pathname).toBe('/admin');
+    });
+
+    it('names the search box', async () => {
+      client.get.mockResolvedValue(successResponse);
+      renderComponent();
+
+      expect(await screen.findByRole('textbox', { name: 'Search transactions' })).toBeInTheDocument();
+    });
   });
 });

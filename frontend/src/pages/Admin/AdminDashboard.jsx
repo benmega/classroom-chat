@@ -214,8 +214,9 @@ const AdminDashboard = () => {
                 <div className="main-content">
                     <div className="chart-card card">
                         <div className="chart-header justify-end mb-sm">
-                            <select 
-                                value={timeframe} 
+                            <select
+                                aria-label="Chart timeframe"
+                                value={timeframe}
                                 onChange={(e) => setTimeframe(e.target.value === 'all' ? 'all' : Number(e.target.value))}
                                 className="chart-timeframe-select"
                             >

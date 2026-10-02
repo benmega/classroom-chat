@@ -6,6 +6,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    text-decoration: none;
     color: var(--text-secondary);
     font-size: 0.9rem;
     font-weight: 600;

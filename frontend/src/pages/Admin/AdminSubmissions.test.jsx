@@ -137,4 +137,48 @@ describe('AdminSubmissions Component', () => {
       expect(screen.getByText('test.pdf')).toBeInTheDocument();
     });
   });
+
+  describe('accessible names', () => {
+    beforeEach(() => {
+      client.get.mockReset();
+    });
+
+    const submission = (overrides) => ({
+      id: 1,
+      username: 'testuser',
+      nickname: 'Test User',
+      status: 'pending',
+      timestamp: '2023-01-01T00:00:00Z',
+      original_filename: 'test.pdf',
+      file_size: 1024,
+      ...overrides,
+    });
+
+    it('names the note box, and the download, review and delete icon buttons, after the submission', async () => {
+      client.get.mockResolvedValueOnce({ data: { status: 'success', data: { submissions: [submission()] } } });
+
+      render(<AdminSubmissions />);
+
+      expect(await screen.findByRole('textbox', { name: 'Note back to Test User' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Download test.pdf' })).toHaveAttribute('href', expect.stringContaining('/api/admin/submissions/1/download'));
+      expect(screen.getByRole('button', { name: 'Mark test.pdf as reviewed' })).toHaveAttribute('type', 'button');
+      expect(screen.getByRole('button', { name: 'Delete test.pdf' })).toHaveAttribute('type', 'button');
+    });
+
+    it('falls back to the username in the note box name, and has no note box or review button once reviewed', async () => {
+      client.get.mockResolvedValueOnce({
+        data: { status: 'success', data: { submissions: [
+          submission({ id: 1, nickname: '' }),
+          submission({ id: 2, status: 'reviewed', original_filename: 'done.pdf' }),
+        ] } },
+      });
+
+      render(<AdminSubmissions />);
+
+      expect(await screen.findByRole('textbox', { name: 'Note back to testuser' })).toBeInTheDocument();
+      expect(screen.getAllByRole('textbox')).toHaveLength(1);
+      expect(screen.queryByRole('button', { name: 'Mark done.pdf as reviewed' })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Delete done.pdf' })).toBeInTheDocument();
+    });
+  });
 });

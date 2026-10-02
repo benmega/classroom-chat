@@ -184,7 +184,7 @@ const AdminAssignProject = () => {
                                                     <User size={16} />
                                                     <span>{selectedUser.nickname} ({selectedUser.username}) - #{selectedUser.id}</span>
                                                 </div>
-                                                <button type="button" onClick={() => setSelectedUser(null)}><XCircle size={16}/></button>
+                                                <button type="button" onClick={() => setSelectedUser(null)} aria-label="Clear selected student"><XCircle size={16} aria-hidden="true" /></button>
                                             </div>
                                         )}
                                     </div>
@@ -298,7 +298,8 @@ const AdminAssignProject = () => {
                                 <section className="form-section code-section fade-in h-full">
                                     <p className="hint">Paste the most interesting logic or function from your project here.</p>
                                     <textarea 
-                                        name="code_snippet" 
+                                        name="code_snippet"
+                                        aria-label="Code snippet"
                                         value={assignForm.code_snippet} 
                                         onChange={handleInputChange} 
                                         className="form-control code-editor h-full"
@@ -345,7 +346,7 @@ const AdminAssignProject = () => {
                                 
                                 <div className="project-footer">
                                     {assignForm.link && (
-                                        <button type="button" href="#" className="link-icon" onClick={(e) => e.preventDefault()}><ExternalLink size={16} /></button>
+                                        <button type="button" className="link-icon" onClick={(e) => e.preventDefault()} aria-label="Demo link (preview)"><ExternalLink size={16} aria-hidden="true" /></button>
                                     )}
                                     <button className="btn-text" onClick={(e) => e.preventDefault()}>Details</button>
                                 </div>

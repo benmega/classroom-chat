@@ -349,6 +349,7 @@ const AdminClassDashboard = () => {
                         <div className="name-edit-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <input
                                 type="text"
+                                aria-label="Classroom name"
                                 value={editNameValue}
                                 onChange={(e) => setEditNameValue(e.target.value)}
                                 className="name-edit-input"
@@ -366,8 +367,8 @@ const AdminClassDashboard = () => {
                                     color: 'inherit'
                                 }}
                             />
-                            <button onClick={handleUpdateName} className="btn-action-sm primary" disabled={formLoading}>
-                                <Check size={16} />
+                            <button type="button" onClick={handleUpdateName} className="btn-action-sm primary" disabled={formLoading} aria-label="Save classroom name">
+                                <Check size={16} aria-hidden="true" />
                             </button>
                         </div>
                     ) : (
@@ -619,7 +620,12 @@ const AdminClassDashboard = () => {
                                                             <span className="name">{student.nickname || student.username}</span>
                                                             <span className="handle">@{student.username}</span>
                                                         </div>
-                                                        <span className={`status-dot ${student.is_online ? 'online' : 'offline'}`} />
+                                                        <span
+                                                            className={`status-dot ${student.is_online ? 'online' : 'offline'}`}
+                                                            role="img"
+                                                            aria-label={student.is_online ? 'Online' : 'Offline'}
+                                                            title={student.is_online ? 'Online' : 'Offline'}
+                                                        />
                                                     </div>
                                                     <button 
                                                         type="button" 

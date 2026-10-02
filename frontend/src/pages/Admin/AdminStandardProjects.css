@@ -27,6 +27,32 @@
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
+/* The card body is a real button (header + text); the remove button sits beside it, over the corner */
+.project-card-open {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    padding: 0;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+}
+
+/* The card clips its overflow and its header paints over the button's own ring, so the ring goes on the card.
+   Only where :has() exists: elsewhere the button keeps its own ring rather than losing every indicator. */
+@supports selector(:has(*)) {
+    .project-card-open:focus-visible {
+        outline: none;
+    }
+
+    .project-card:has(.project-card-open:focus-visible) {
+        outline: 2px solid var(--primary-accessible);
+        outline-offset: 3px;
+    }
+}
+
 .project-card-header {
     height: 140px;
     background-size: cover;
@@ -49,6 +75,7 @@
 }
 
 .project-card-title {
+    display: block;
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);

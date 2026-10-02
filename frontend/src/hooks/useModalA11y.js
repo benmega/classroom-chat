@@ -32,8 +32,8 @@ export const getFocusable = (container) => (
  *
  * While `isOpen`: Escape calls `onClose` (innermost modal only, and not when an inner widget such as an
  * open combobox already used the key and called preventDefault), Tab and Shift+Tab stay inside
- * `containerRef`, focus moves into the dialog, and it returns to the element that opened it on close.
- * `lockScroll` also stops the page behind from scrolling.
+ * `containerRef`, focus moves into the dialog (to the control marked `data-autofocus`, else the first one),
+ * and it returns to the element that opened it on close. `lockScroll` also stops the page behind from scrolling.
  *
  * The container needs tabIndex={-1} so it can take focus when it holds nothing focusable.
  */
@@ -92,7 +92,9 @@ const useModalA11y = ({ isOpen, onClose, containerRef, lockScroll = false }) => 
         const opener = container && container.contains(active) ? null : active;
         if (container && !container.contains(active)) {
             const focusable = getFocusable(container);
-            (focusable[0] || container).focus();
+            // A control marked data-autofocus (e.g. Cancel in a destructive confirmation) beats the first one.
+            const preferred = focusable.find((el) => el.hasAttribute('data-autofocus'));
+            (preferred || focusable[0] || container).focus();
         }
 
         let originalOverflow;

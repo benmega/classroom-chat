@@ -162,6 +162,16 @@
     max-width: 140px;
 }
 
+/* The name is a link to the user's page (the only keyboard-reachable one in the row); it keeps the plain look */
+:where(.admin-users-page) .user-profile-cell a.name {
+    display: block;
+    text-decoration: none;
+}
+
+:where(.admin-users-page) .user-profile-cell a.name:hover {
+    text-decoration: underline;
+}
+
 :where(.admin-users-page) .user-profile-cell .handle {
     font-size: 0.8rem;
     color: var(--text-muted);

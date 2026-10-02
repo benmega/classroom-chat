@@ -4,7 +4,8 @@ import { X } from 'lucide-react';
 import useModalA11y from '../../hooks/useModalA11y';
 import './Modal.css';
 
-const Modal = ({ isOpen, onClose, title, ariaLabel, children, maxWidth }) => {
+// bodyClassName lets a caller restyle the body, e.g. to drop its padding for a full-bleed console.
+const Modal = ({ isOpen, onClose, title, ariaLabel, children, maxWidth, bodyClassName }) => {
     const modalRef = useRef(null);
     // Not a fixed id: two modals can be open at once (e.g. a helper dialog over a form).
     const titleId = useId();
@@ -35,7 +36,7 @@ const Modal = ({ isOpen, onClose, title, ariaLabel, children, maxWidth }) => {
                 ) : (
                     <button onClick={onClose} className="close-btn" aria-label="Close modal" style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={20} /></button>
                 )}
-                <div className="modal-body">
+                <div className={bodyClassName ? `modal-body ${bodyClassName}` : 'modal-body'}>
                     {children}
                 </div>
             </div>

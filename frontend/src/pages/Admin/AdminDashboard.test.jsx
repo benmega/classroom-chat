@@ -406,6 +406,12 @@ describe('AdminDashboard', () => {
     expect(defaultHookReturn.setTimeframe).toHaveBeenCalledWith('all');
   });
 
+  it('names the chart timeframe select', () => {
+    renderComponent();
+
+    expect(screen.getByLabelText('Chart timeframe')).toHaveValue('7');
+  });
+
   it('navigates when chart point is clicked', () => {
     renderComponent();
     const chart = screen.getByTestId('line-chart');

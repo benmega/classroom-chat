@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/apiError';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import useModalA11y from '../../hooks/useModalA11y';
 import './Classes.css';
 
 const LanguageSymbol = ({ language }) => {
@@ -98,6 +99,10 @@ const Classes = () => {
     const [newLanguage, setNewLanguage] = useState('Python');
     const [newUrl, setNewUrl] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const createModalRef = React.useRef(null);
+
+    // Escape closes the dialog, Tab stays inside it, and focus returns to Add Classroom afterwards
+    useModalA11y({ isOpen: isCreateModalOpen, onClose: () => setIsCreateModalOpen(false), containerRef: createModalRef });
 
     const fetchClassrooms = useCallback(async () => {
         try {
@@ -277,7 +282,7 @@ const Classes = () => {
 
             {/* Create Classroom Modal */}
             {isCreateModalOpen && (
-                <div data-testid="modal-overlay" className="modal-overlay" role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
+                <div data-testid="modal-overlay" className="modal-overlay" ref={createModalRef} tabIndex={-1} role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
                     <div className="modal-card">
                         <div className="modal-header">
                             <h3 id="modal-title-create-classroom">Create New Classroom</h3>
@@ -296,6 +301,7 @@ const Classes = () => {
                                 <input
                                     type="text"
                                     id="new-class-id"
+                                    data-autofocus
                                     value={newId}
                                     onChange={(e) => setNewId(e.target.value)}
                                     placeholder="e.g. PY101_SPRING"

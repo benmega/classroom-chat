@@ -1,4 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminStandardProjects from './AdminStandardProjects';
@@ -176,7 +177,7 @@ describe('AdminStandardProjects', () => {
             expect(screen.getByText('Project 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Project 1').closest('.project-card'));
+        fireEvent.click(screen.getByRole('button', { name: /^Project 1/ }));
         
         const nameInput = screen.getByPlaceholderText(/e.g. Text-Based Adventure/i);
         expect(nameInput).toHaveValue('Project 1');
@@ -291,7 +292,7 @@ describe('AdminStandardProjects', () => {
             expect(screen.getByText('Project With Image')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Project With Image').closest('.project-card'));
+        fireEvent.click(screen.getByRole('button', { name: /^Project With Image/ }));
         
         expect(screen.getByText('Thumbnail Image')).toBeInTheDocument();
         const preview = screen.getByAltText('Upload preview');
@@ -317,7 +318,7 @@ describe('AdminStandardProjects', () => {
             expect(screen.getByText('Project With Image')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Project With Image').closest('.project-card'));
+        fireEvent.click(screen.getByRole('button', { name: /^Project With Image/ }));
         
         const removeBtn = screen.getByRole('button', { name: /Remove image/i });
         fireEvent.click(removeBtn);
@@ -414,6 +415,77 @@ describe('AdminStandardProjects', () => {
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('A template with this name already exists.');
+        });
+    });
+
+    describe('keyboard', () => {
+        const twoProjects = {
+            data: { status: 'success', data: { templates: {
+                1: { id: 1, name: 'Project 1', description: 'Desc 1' },
+                2: { id: 2, name: 'Project 2', description: 'Desc 2' },
+            } } }
+        };
+
+        it('reaches each project card, then its delete button, with Tab', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(twoProjects);
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project 1');
+
+            await user.tab();
+            expect(screen.getByRole('button', { name: /Add Project/i })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('button', { name: /^Project 1/ })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('button', { name: 'Delete project Project 1' })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('button', { name: /^Project 2/ })).toHaveFocus();
+        });
+
+        it.each([
+            ['Enter', '{Enter}'],
+            ['Space', ' '],
+        ])('opens the edit modal for the focused card with %s', async (_label, key) => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(twoProjects);
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project 2');
+
+            screen.getByRole('button', { name: /^Project 2/ }).focus();
+            await user.keyboard(key);
+
+            expect(screen.getByRole('dialog', { name: 'Edit Standard Project' })).toBeInTheDocument();
+            expect(screen.getByPlaceholderText(/e.g. Text-Based Adventure/i)).toHaveValue('Project 2');
+        });
+
+        it('asks to delete, and does not open the editor, when Enter is pressed on a delete button', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(twoProjects);
+            showConfirm.mockResolvedValueOnce(false);
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project 1');
+
+            screen.getByRole('button', { name: 'Delete project Project 1' }).focus();
+            await user.keyboard('{Enter}');
+
+            await waitFor(() => expect(showConfirm).toHaveBeenCalledTimes(1));
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
+
+        it('puts focus back on the card when the editor is closed with Escape', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(twoProjects);
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project 1');
+            const card = screen.getByRole('button', { name: /^Project 1/ });
+
+            card.focus();
+            await user.keyboard('{Enter}');
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+            await user.keyboard('{Escape}');
+
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            expect(card).toHaveFocus();
         });
     });
 });

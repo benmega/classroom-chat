@@ -62,7 +62,8 @@
 
 
 
-.admin-advanced-panel .btn-danger {
+.admin-advanced-panel .btn-danger,
+.advanced-modal-footer .btn-danger {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -77,7 +78,8 @@
     transition: all 0.2s;
 }
 
-.admin-advanced-panel .btn-danger:hover {
+.admin-advanced-panel .btn-danger:hover,
+.advanced-modal-footer .btn-danger:hover {
     background: var(--error-color);
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);
@@ -96,53 +98,33 @@
     }
 }
 
-/* Log Modal */
-:where(.admin-advanced-panel) .log-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.4);
-    z-index: var(--z-modal);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-}
-
-:where(.admin-advanced-panel) .log-modal {
-    background: var(--bg-primary);
-    width: 100%;
-    max-width: 1000px;
-    height: 80vh;
+/* Logs, statistics and purge dialogs. The shared Modal renders into <body>, outside .admin-advanced-panel,
+   so these rules are not scoped to the page. */
+.modal-body.advanced-modal-body {
+    padding: 0;
     display: flex;
     flex-direction: column;
-    padding: 0;
     overflow: hidden;
 }
 
-:where(.admin-advanced-panel) .log-modal-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-subtle);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-:where(.admin-advanced-panel) .log-modal-header .title-group {
-    display: flex;
+.advanced-modal-title {
+    display: inline-flex;
     align-items: center;
     gap: 12px;
+}
+
+.advanced-modal-title svg {
+    flex-shrink: 0;
     color: var(--primary-accessible);
 }
 
-:where(.admin-advanced-panel) .log-modal-header h3 {
-    font-size: 1.25rem;
-    font-weight: 800;
-    margin: 0;
-    color: var(--slate-800);
+.advanced-modal-title.danger svg {
+    color: var(--error-color);
 }
 
-:where(.admin-advanced-panel) .log-content {
-    flex: 1;
+.advanced-modal-console {
+    flex: 1 1 auto;
+    min-height: 50vh;
     overflow: auto;
     padding: 1.5rem;
     background: var(--text-primary);
@@ -152,12 +134,13 @@
     line-height: 1.6;
 }
 
-:where(.admin-advanced-panel) .log-content pre {
+.advanced-modal-console pre {
     margin: 0;
     white-space: pre-wrap;
 }
 
-:where(.admin-advanced-panel) .log-modal-footer {
+.advanced-modal-footer {
+    flex-shrink: 0;
     padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-subtle);
     display: flex;
@@ -166,26 +149,14 @@
     background: var(--bg-secondary);
 }
 
-:where(.admin-advanced-panel) .log-modal-header .close-btn {
-    color: var(--text-muted);
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-:where(.admin-advanced-panel) .log-modal-header .close-btn:hover {
-    background: var(--bg-tertiary);
-    color: var(--slate-800);
-}
-
-:where(.admin-advanced-panel) .log-content .stats-grid {
+.advanced-modal-console .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
 
-:where(.admin-advanced-panel) .log-content .stat-box {
+.advanced-modal-console .stat-box {
     background: rgba(255, 255, 255, 0.05);
     padding: 1rem;
     border-radius: 16px;
@@ -196,32 +167,32 @@
 }
 
 /* On the dark console --text-muted is only ~2.4:1, so its sub-text uses --border-rich (~7:1) */
-:where(.admin-advanced-panel) .log-content .stat-box .label {
+.advanced-modal-console .stat-box .label {
     font-size: 0.8rem;
     color: var(--border-rich);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-:where(.admin-advanced-panel) .log-content .stat-box .value {
+.advanced-modal-console .stat-box .value {
     font-size: 1.5rem;
     font-weight: 700;
     color: white;
 }
 
-:where(.admin-advanced-panel) .log-content h4 {
+.advanced-modal-console h4 {
     color: white;
     margin-bottom: 1rem;
     font-size: 1.1rem;
 }
 
-:where(.admin-advanced-panel) .log-content .table-counts {
+.advanced-modal-console .table-counts {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 10px;
 }
 
-:where(.admin-advanced-panel) .log-content .table-row {
+.advanced-modal-console .table-row {
     display: flex;
     justify-content: space-between;
     padding: 12px 16px;
@@ -229,11 +200,12 @@
     border-radius: 10px;
 }
 
-:where(.admin-advanced-panel) .log-content .table-row span { color: var(--border-rich); }
-:where(.admin-advanced-panel) .log-content .table-row strong { color: var(--primary-color); }
+.advanced-modal-console .table-row span { color: var(--border-rich); }
+.advanced-modal-console .table-row strong { color: var(--primary-color); }
 
 /* Purge Confirmation */
-:where(.admin-advanced-panel) .purge-confirm .log-content {
+.advanced-modal-console.advanced-modal-danger {
+    min-height: 0;
     background: var(--bg-primary);
     color: var(--slate-800);
     font-family: inherit;
@@ -242,25 +214,7 @@
     padding: 3rem 2rem;
 }
 
-:where(.admin-advanced-panel) .warning-text {
+.advanced-modal-danger .warning-text {
     color: var(--error-color);
     margin-bottom: 1rem;
-}
-
-:where(.admin-advanced-panel) .log-modal-header.danger {
-    border-bottom: 2px solid var(--error-subtle);
-}
-
-:where(.admin-advanced-panel) .log-modal-header.danger .title-group {
-    color: var(--error-color);
-}
-
-:where(.admin-advanced-panel) .log-modal.purge-confirm {
-    height: auto;
-}
-
-@media (max-width: 600px) {
-    :where(.admin-advanced-panel) .log-modal-overlay {
-        padding: 1rem;
-    }
 }

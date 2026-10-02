@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AdminChallenges from './AdminChallenges';
 import client from '../../api/client';
@@ -150,6 +151,65 @@ describe('AdminChallenges', () => {
         await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Admin access required'));
         expect(client.put).toHaveBeenCalledWith('/api/admin/challenges/reorder', {
             updates: [{ id: 2, sequence: 1 }, { id: 1, sequence: 2 }],
+        });
+    });
+
+    describe('keyboard', () => {
+        it('names each delete button after its challenge', async () => {
+            await openCourse();
+
+            expect(screen.getByRole('button', { name: 'Delete challenge Loops' })).toHaveAttribute('title', 'Delete Challenge');
+            expect(screen.getByRole('button', { name: 'Delete challenge Arrays' })).toBeInTheDocument();
+        });
+
+        it.each([
+            ['Enter', '{Enter}'],
+            ['Space', ' '],
+        ])('opens the editor when %s is pressed on a challenge row', async (_label, key) => {
+            const user = userEvent.setup();
+            await openCourse();
+
+            document.querySelector('.challenge-list-item').focus();
+            await user.keyboard(key);
+
+            expect(screen.getByRole('dialog', { name: 'Edit Challenge' })).toBeInTheDocument();
+            expect(screen.getByLabelText(/Challenge Name/)).toHaveValue('Loops');
+        });
+
+        it.each([
+            ['Enter', '{Enter}'],
+            ['Space', ' '],
+        ])('deletes, rather than opening the editor, when %s is pressed on the delete button', async (_label, key) => {
+            const user = userEvent.setup();
+            client.delete.mockResolvedValueOnce({ data: { message: 'Challenge deleted.' } });
+            await openCourse();
+
+            screen.getByRole('button', { name: 'Delete challenge Loops' }).focus();
+            await user.keyboard(key);
+
+            await waitFor(() => expect(client.delete).toHaveBeenCalledWith('/api/admin/challenges/1'));
+            expect(showConfirm).toHaveBeenCalledTimes(1);
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
+
+        it('tabs from one row straight to its delete button, with nothing inert in between', async () => {
+            const user = userEvent.setup();
+            await openCourse();
+            const row = document.querySelector('.challenge-list-item');
+            expect(row.querySelector('.drag-handle')).toHaveAttribute('aria-hidden', 'true');
+
+            row.focus();
+            await user.tab();
+
+            expect(screen.getByRole('button', { name: 'Delete challenge Loops' })).toHaveFocus();
+        });
+
+        it('still ignores a click on the drag handle', async () => {
+            await openCourse();
+
+            fireEvent.click(document.querySelector('.drag-handle'));
+
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         });
     });
 });
