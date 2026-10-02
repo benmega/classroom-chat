@@ -119,13 +119,13 @@ describe('vite /static proxy bypass', () => {
 
   it('serves files that exist in frontend/public instead of proxying them', async () => {
     const fn = await bypass()
-    expect(fn(req('/static/images/Default_pfp.png'))).toBe('/static/images/Default_pfp.png')
+    expect(fn(req('/static/images/Default_pfp.jpg'))).toBe('/static/images/Default_pfp.jpg')
     expect(fn(req('/static/sounds/quack.mp3'))).toBe('/static/sounds/quack.mp3')
   })
 
   it('keeps the query string when it serves a public file', async () => {
     const fn = await bypass()
-    expect(fn(req('/static/images/Default_pfp.png?v=2'))).toBe('/static/images/Default_pfp.png?v=2')
+    expect(fn(req('/static/images/Default_pfp.jpg?v=2'))).toBe('/static/images/Default_pfp.jpg?v=2')
   })
 
   it('proxies files that only the backend has (achievement badges, project templates)', async () => {
