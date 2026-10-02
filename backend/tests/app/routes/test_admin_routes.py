@@ -79,12 +79,6 @@ def test_toggle_message_sending(client, test_app, sample_configuration, sample_a
         assert updated_config.message_sending_enabled != initial_state
 
 
-def test_clear_partial_history(client, test_app, init_db, sample_admin):
-    """Test clearing partial conversation history."""
-    login_as_admin(client, sample_admin)
-
-
-
 def test_add_banned_word(client, sample_admin, test_app):
     """Test adding a banned word."""
     login_as_admin(client, sample_admin)
@@ -110,12 +104,6 @@ def test_add_banned_word(client, sample_admin, test_app):
 
         db.session.delete(banned_word)
         db.session.commit()
-
-
-def test_strike_message(client, sample_admin, sample_message):
-    """Test striking a message."""
-    login_as_admin(client, sample_admin)
-
 
 
 def test_adjust_ducks(client, sample_admin, sample_user, test_app):
@@ -371,12 +359,14 @@ def test_trade_action_rejects_unknown_trade_and_action(
         "/api/admin/trade_action", data={"trade_id": "99999", "action": "approve"}
     )
     assert missing.status_code == 404
+    assert missing.get_json() == {"status": "error", "message": "Trade not found"}
 
     bad_action = client.post(
         "/api/admin/trade_action",
         data={"trade_id": str(sample_duck_trade.id), "action": "refund"},
     )
     assert bad_action.status_code == 400
+    assert bad_action.get_json() == {"status": "error", "message": "Invalid action"}
     assert db.session.get(DuckTradeLog, sample_duck_trade.id).status == "pending"
 
 

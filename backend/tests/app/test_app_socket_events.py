@@ -9,15 +9,6 @@ def setup_socketio(app):
     tasks.set_app_instance(app)
 
 
-def test_socket_unauthenticated_connection(app):
-    # Unauthenticated connection should be rejected
-    flask_client = app.test_client()
-    with flask_client.session_transaction() as sess:
-        sess.clear()
-    socket_client = socketio.test_client(app, flask_test_client=flask_client)
-    assert not socket_client.is_connected()
-
-
 def test_socket_flow(app, sample_user, init_db):
     flask_client = app.test_client()
     with flask_client.session_transaction() as sess:

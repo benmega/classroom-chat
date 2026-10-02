@@ -430,7 +430,7 @@ def test_evaluate_user(init_db, test_user):
     assert len(txs) == 1
     assert txs[0].reason == "Achievement: D1"
 
-    # Throttling test: evaluating again within 1 hour should return []
+    # Throttling test: evaluating again within 5 minutes should return []
     awards = evaluate_user(test_user)
     assert awards == []
 
@@ -829,3 +829,252 @@ def test_evaluate_user_recovers_from_a_real_concurrent_insert(init_db, test_user
     assert UserAchievement.query.filter_by(user_id=user_id).count() == 1
     assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
     assert db.session.get(User, user_id).duck_balance == 0
+
+
+def _ledger(user_id):
+    from application.models.duck_transaction import DuckTransaction
+
+    return DuckTransaction.query.filter_by(user_id=user_id).all()
+
+
+def test_evaluate_user_force_is_idempotent(init_db, test_user):
+    """Re-evaluating without any change in state awards nothing and pays nothing."""
+    ach = Achievement(
+        name="Ten", slug="ten", type="ducks", reward=7, requirement_value="10"
+    )
+    db.session.add(ach)
+    test_user.earned_ducks = 10
+    test_user.duck_balance = 0
+    db.session.commit()
+
+    first = evaluate_user(test_user, force=True)
+    assert [a.slug for a in first] == ["ten"]
+
+    assert evaluate_user(test_user, force=True) == []
+    assert evaluate_user(test_user, force=True) == []
+
+    assert UserAchievement.query.filter_by(user_id=test_user.id).count() == 1
+    ledger = _ledger(test_user.id)
+    assert [(t.amount, t.reason) for t in ledger] == [(7, "Achievement: Ten")]
+    assert test_user.duck_balance == 7
+    # The reward also counts as earned, and only once
+    assert test_user.earned_ducks == 17
+
+
+def test_evaluate_user_zero_reward_creates_no_transaction(init_db, test_user):
+    ach = Achievement(
+        name="Badge only", slug="badge-only", type="ducks", reward=0, requirement_value="1"
+    )
+    db.session.add(ach)
+    test_user.earned_ducks = 5
+    test_user.duck_balance = 3
+    db.session.commit()
+
+    awards = evaluate_user(test_user, force=True)
+
+    assert [a.slug for a in awards] == ["badge-only"]
+    assert UserAchievement.query.filter_by(user_id=test_user.id).count() == 1
+    assert _ledger(test_user.id) == []
+    assert test_user.duck_balance == 3
+    assert test_user.earned_ducks == 5
+
+
+def test_evaluate_user_does_not_award_an_achievement_the_user_already_holds(init_db, test_user):
+    ach = Achievement(
+        name="Held", slug="held", type="ducks", reward=4, requirement_value="1"
+    )
+    db.session.add(ach)
+    test_user.earned_ducks = 5
+    test_user.duck_balance = 0
+    db.session.commit()
+    db.session.add(UserAchievement(user_id=test_user.id, achievement_id=ach.id))
+    db.session.commit()
+
+    assert evaluate_user(test_user, force=True) == []
+
+    assert UserAchievement.query.filter_by(user_id=test_user.id).count() == 1
+    assert _ledger(test_user.id) == []
+    assert test_user.duck_balance == 0
+
+
+def _seed_chat(user, other, ach):
+    db.session.add_all([Message(user_id=user.id, content="a"), Message(user_id=user.id, content="b")])
+
+
+def _seed_trade(user, other, ach):
+    for _ in range(2):
+        db.session.add(
+            DuckTradeLog(
+                user_id=user.id, status="pending", digital_ducks=1, bit_ducks=[], byte_ducks=[]
+            )
+        )
+
+
+def _seed_community(user, other, ach):
+    for i in range(2):
+        db.session.add(
+            ChallengeLog(
+                user_id=other.id,
+                domain="x",
+                challenge_slug=f"helped-{i}",
+                helper=user.username.upper(),
+            )
+        )
+
+
+def _seed_session(user, other, ach):
+    db.session.add(
+        SessionLog(
+            user_id=user.id,
+            start_time=datetime.utcnow() - timedelta(minutes=40),
+            end_time=datetime.utcnow() - timedelta(minutes=10),
+        )
+    )
+
+
+def _seed_certificate(user, other, ach):
+    # One certificate per user and achievement: the pending one gets approved
+    UserCertificate.query.filter_by(user_id=user.id, achievement_id=ach.id).one().status = "approved"
+
+
+def _seed_project(user, other, ach):
+    db.session.add_all([Project(name="One", user_id=user.id), Project(name="Two", user_id=user.id)])
+
+
+def _seed_progress(user, other, ach):
+    # One log counts through its domain, the other through its course id
+    db.session.add_all(
+        [
+            ChallengeLog(user_id=user.id, domain="codecombat.com", challenge_slug="p1"),
+            ChallengeLog(
+                user_id=user.id, domain="elsewhere.com", challenge_slug="p2", course_id="codecombat.com"
+            ),
+        ]
+    )
+
+
+def _seed_consistency(user, other, ach):
+    db.session.add_all(
+        [
+            ChallengeLog(
+                user_id=user.id, domain="x", challenge_slug="w1", timestamp=datetime(2025, 1, 1)
+            ),
+            ChallengeLog(
+                user_id=user.id, domain="x", challenge_slug="w2", timestamp=datetime(2025, 1, 8)
+            ),
+        ]
+    )
+
+
+def _seed_noise(user, other, ach):
+    """Rows that must not count towards any type: they belong to someone else or fall short."""
+    db.session.add_all(
+        [
+            Message(user_id=other.id, content="not mine"),
+            Project(name="Theirs", user_id=other.id),
+            ChallengeLog(user_id=other.id, domain="codecombat.com", challenge_slug="n1"),
+            ChallengeLog(user_id=user.id, domain="elsewhere.com", challenge_slug="n2"),
+            DuckTradeLog(
+                user_id=other.id, status="completed", digital_ducks=1, bit_ducks=[], byte_ducks=[]
+            ),
+            # a certificate that was never approved
+            UserCertificate(
+                user_id=user.id,
+                achievement_id=ach.id,
+                url="http://example.com/pending.pdf",
+                status="pending",
+            ),
+            SessionLog(
+                user_id=user.id,
+                start_time=datetime.utcnow() - timedelta(minutes=5),
+                end_time=datetime.utcnow(),
+            ),
+        ]
+    )
+
+
+@pytest.mark.parametrize(
+    "ach_type, requirement, source, seed",
+    [
+        ("chat", "2", None, _seed_chat),
+        ("trade", "2", None, _seed_trade),
+        ("community", "2", None, _seed_community),
+        ("session", "25", None, _seed_session),
+        ("certificate", "1", None, _seed_certificate),
+        ("project", "2", None, _seed_project),
+        ("progress", "2", "codecombat.com", _seed_progress),
+        ("consistency", "2", None, _seed_consistency),
+    ],
+)
+def test_evaluate_user_awards_each_type_end_to_end_exactly_once(
+    init_db, test_user, ach_type, requirement, source, seed
+):
+    other = UserFactory()
+    ach = Achievement(
+        name=f"{ach_type} goal",
+        slug=f"{ach_type}-goal",
+        type=ach_type,
+        requirement_value=requirement,
+        source=source,
+        reward=6,
+    )
+    db.session.add(ach)
+    test_user.duck_balance = 0
+    db.session.commit()
+    _seed_noise(test_user, other, ach)
+    db.session.commit()
+
+    # Real rows, but not enough of them yet
+    assert evaluate_user(test_user, force=True) == []
+    assert UserAchievement.query.filter_by(user_id=test_user.id).count() == 0
+    assert _ledger(test_user.id) == []
+
+    seed(test_user, other, ach)
+    db.session.commit()
+
+    awards = evaluate_user(test_user, force=True)
+    assert [a.slug for a in awards] == [f"{ach_type}-goal"]
+
+    # Nothing changed since: no second award and no second reward
+    assert evaluate_user(test_user, force=True) == []
+    assert UserAchievement.query.filter_by(user_id=test_user.id).count() == 1
+    ledger = _ledger(test_user.id)
+    assert [(t.amount, t.reason) for t in ledger] == [(6, f"Achievement: {ach_type} goal")]
+    assert test_user.duck_balance == 6
+
+
+def test_progress_value_is_read_from_the_real_user_model(init_db, test_user):
+    """check_achievement and the progress bar use User.get_progress, not a stand-in."""
+    other = UserFactory()
+    ach = Achievement(
+        name="Levels", slug="levels", type="progress", requirement_value="3", source="codecombat.com"
+    )
+    sourceless = Achievement(
+        name="No source", slug="no-source", type="progress", requirement_value="1"
+    )
+    db.session.add_all(
+        [
+            ach,
+            sourceless,
+            ChallengeLog(user_id=test_user.id, domain="codecombat.com", challenge_slug="a"),
+            ChallengeLog(user_id=test_user.id, domain="codecombat.com", challenge_slug="b"),
+            ChallengeLog(user_id=other.id, domain="codecombat.com", challenge_slug="c"),
+        ]
+    )
+    db.session.commit()
+
+    assert get_achievement_progress(test_user, ach) == (2, 3)
+    assert check_achievement(test_user, ach) is False
+
+    db.session.add(
+        ChallengeLog(
+            user_id=test_user.id, domain="ozaria", challenge_slug="d", course_id="codecombat.com"
+        )
+    )
+    db.session.commit()
+
+    assert get_achievement_progress(test_user, ach) == (3, 3)
+    assert check_achievement(test_user, ach) is True
+    # An achievement without a source never reads progress
+    assert get_achievement_progress(test_user, sourceless) == (0, 1)
+    assert check_achievement(test_user, sourceless) is False

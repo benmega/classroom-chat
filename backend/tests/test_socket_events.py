@@ -375,6 +375,61 @@ def test_admin_connect_joins_every_classroom_and_the_admin_room(app, sample_admi
     assert {f"classroom:{c.id}" for c in classrooms} <= rooms
 
 
+def _probe(socket_client, room):
+    """Whether an event addressed to the room reaches the socket."""
+    socket_client.get_received()
+    socketio.emit("probe", {}, room=room)
+    return any(e["name"] == "probe" for e in socket_client.get_received())
+
+
+def test_connected_student_is_reached_only_through_their_own_rooms(app, sample_user):
+    enrolled = ClassroomFactory(id="cs_101")
+    ClassroomFactory(id="cs_202")
+    enrolled.users.append(sample_user)
+    db.session.commit()
+    stranger = UserFactory()
+
+    socket_client, _ = _connect(app, sample_user)
+
+    assert _probe(socket_client, f"user:{sample_user.id}")
+    assert _probe(socket_client, f"classroom:{GLOBAL_CLASSROOM_ID}")
+    assert _probe(socket_client, "classroom:cs_101")
+    assert not _probe(socket_client, "classroom:cs_202")
+    assert not _probe(socket_client, "admin")
+    assert not _probe(socket_client, f"user:{stranger.id}")
+
+
+def test_connected_admin_is_reached_through_the_admin_room_and_every_classroom(app, sample_admin):
+    ClassroomFactory(id="cs_101")
+    ClassroomFactory(id="cs_202")
+
+    socket_client, _ = _connect(app, sample_admin)
+
+    assert _probe(socket_client, "admin")
+    assert _probe(socket_client, f"user:{sample_admin.id}")
+    assert _probe(socket_client, f"classroom:{GLOBAL_CLASSROOM_ID}")
+    assert _probe(socket_client, "classroom:cs_101")
+    assert _probe(socket_client, "classroom:cs_202")
+
+
+# --- parents cannot chat -----------------------------------------------------------
+
+
+def test_parent_cannot_send_a_message_over_the_socket(app):
+    parent = UserFactory(role="parent")
+    socket_client, _ = _connect(app, parent)
+    socket_client.get_received()
+
+    ack = socket_client.emit(
+        "send_message", {"content": "let me in", "is_global": True}, callback=True
+    )
+
+    assert ack["success"] is False
+    assert ack["error"].startswith("Forbidden")
+    assert Message.query.count() == 0
+    assert _received_contents(socket_client) == []
+
+
 # --- multi-tab presence and the sid registry ------------------------------------
 
 

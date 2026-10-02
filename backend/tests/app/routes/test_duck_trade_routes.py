@@ -136,6 +136,126 @@ def test_submit_trade_invalid_ajax_json(client, sample_user_with_ducks, test_app
     assert response.get_json()["message"] == "Invalid duck count."
 
 
+@pytest.mark.parametrize("count", [-1, -3, "-5", -(10**6)])
+def test_submit_trade_rejects_a_negative_count(client, sample_user_with_ducks, count):
+    _login(client, sample_user_with_ducks)
+
+    response = client.post(
+        "/duck_trade/submit_trade",
+        json={"digital_ducks": count, "bit_ducks": PLACES, "byte_ducks": PLACES},
+        headers=AJAX,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"status": "error", "message": "Must trade at least 1 duck."}
+    assert DuckTradeLog.query.count() == 0
+
+
+@pytest.mark.parametrize("count", [None, [], {}, "", "ten", "1e3"])
+def test_submit_trade_rejects_a_count_that_is_not_a_number(client, sample_user_with_ducks, count):
+    _login(client, sample_user_with_ducks)
+
+    response = client.post(
+        "/duck_trade/submit_trade",
+        json={"digital_ducks": count, "bit_ducks": PLACES, "byte_ducks": PLACES},
+        headers=AJAX,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"status": "error", "message": "Invalid duck count."}
+    assert DuckTradeLog.query.count() == 0
+
+
+def test_submit_trade_without_a_count_is_refused(client, sample_user_with_ducks):
+    _login(client, sample_user_with_ducks)
+
+    response = client.post(
+        "/duck_trade/submit_trade",
+        json={"bit_ducks": PLACES, "byte_ducks": PLACES},
+        headers=AJAX,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "Must trade at least 1 duck."
+    assert DuckTradeLog.query.count() == 0
+
+
+def test_submit_trade_for_the_whole_balance_is_accepted(client, sample_user_with_ducks):
+    """The balance is the ceiling, not an exclusive limit: trading every duck is fine."""
+    _login(client, sample_user_with_ducks)
+    balance = sample_user_with_ducks.duck_balance
+
+    response = client.post(
+        "/duck_trade/submit_trade",
+        json={"digital_ducks": balance, "bit_ducks": PLACES, "byte_ducks": PLACES},
+        headers=AJAX,
+    )
+
+    assert response.status_code == 200
+    assert DuckTradeLog.query.one().digital_ducks == balance
+
+
+def test_submit_trade_does_not_touch_the_balance_until_approval(client, sample_user_with_ducks):
+    from application.models.duck_transaction import DuckTransaction
+
+    _login(client, sample_user_with_ducks)
+    balance = sample_user_with_ducks.duck_balance
+
+    client.post(
+        "/duck_trade/submit_trade",
+        json={"digital_ducks": 5, "bit_ducks": PLACES, "byte_ducks": PLACES},
+        headers=AJAX,
+    )
+
+    db.session.expire_all()
+    assert sample_user_with_ducks.duck_balance == balance
+    assert DuckTransaction.query.filter_by(user_id=sample_user_with_ducks.id).count() == 0
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="DEFECT: submit_trade never compares the count with the student's duck_balance "
+    "(only the approval does), so a trade for more ducks than they hold is queued and then "
+    "blocks them from submitting another until an admin rejects it",
+)
+@pytest.mark.parametrize("count", [51, 10**30], ids=["just-over", "absurd"])
+def test_submit_trade_rejects_more_ducks_than_the_balance(client, sample_user_with_ducks, count):
+    assert sample_user_with_ducks.duck_balance == 50
+    _login(client, sample_user_with_ducks)
+
+    response = client.post(
+        "/duck_trade/submit_trade",
+        json={"digital_ducks": count, "bit_ducks": PLACES, "byte_ducks": PLACES},
+        headers=AJAX,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["status"] == "error"
+    assert DuckTradeLog.query.count() == 0
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="DEFECT: a non-finite count (JSON Infinity / 1e400) makes int() raise OverflowError, "
+    "which submit_trade does not catch with ValueError/TypeError, so the client gets a 500 "
+    "'Server Error' instead of the 400 'Invalid duck count.'",
+)
+@pytest.mark.parametrize("raw", ["Infinity", "-Infinity", "1e400"])
+def test_submit_trade_treats_a_non_finite_count_as_invalid(client, sample_user_with_ducks, raw):
+    _login(client, sample_user_with_ducks)
+    body = f'{{"digital_ducks": {raw}, "bit_ducks": {PLACES}, "byte_ducks": {PLACES}}}'
+
+    response = client.post(
+        "/duck_trade/submit_trade", data=body, content_type="application/json", headers=AJAX
+    )
+
+    assert response.status_code == 400
+    assert response.get_json() == {"status": "error", "message": "Invalid duck count."}
+    assert DuckTradeLog.query.count() == 0
+
+
 @pytest.mark.parametrize(
     "payload",
     [

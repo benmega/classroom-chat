@@ -465,6 +465,65 @@ def test_create_allows_ids_for_courses(admin_client):
     assert resp.json["data"]["id"] == "my-course"
 
 
+def test_create_allows_ids_for_course_instances_and_whatever_the_resource_case(admin_client):
+    classroom = ClassroomFactory()
+    course = CourseFactory()
+
+    resp = admin_client.post(
+        f"{BASE}/courseinstances",
+        json={"id": "ci-1", "classroom_id": classroom.id, "course_id": course.id},
+    )
+    assert resp.status_code == 200
+    assert resp.json["data"]["id"] == "ci-1"
+
+    resp = admin_client.post(f"{BASE}/COURSE", json={"id": "upper-course", "name": "N", "domain": "d"})
+    assert resp.status_code == 200
+    assert resp.json["data"]["id"] == "upper-course"
+
+
+@pytest.mark.parametrize("resource", ["challenge", "challenges", "CHALLENGE"])
+def test_create_ignores_a_supplied_id_for_every_other_resource(admin_client, resource):
+    resp = admin_client.post(f"{BASE}/{resource}", json={**_NEW_CHALLENGE, "id": 4242})
+
+    assert resp.status_code == 200
+    assert resp.json["data"]["id"] != 4242
+    assert db.session.get(Challenge, 4242) is None
+    assert db.session.get(Challenge, resp.json["data"]["id"]).slug == "new"
+
+
+def test_create_user_cannot_smuggle_in_a_password_hash(admin_client):
+    resp = admin_client.post(
+        f"{BASE}/user",
+        json={"_username": "smuggler", "password_hash": "chosen-hash", "password": "chosen", "id": 777},
+    )
+
+    # The password fields are dropped, so the row has no hash and the insert is refused
+    assert resp.status_code == 409
+    assert "password_hash" in resp.json["error"]
+    assert User.query.filter_by(_username="smuggler").first() is None
+    assert User.query.filter_by(password_hash="chosen-hash").first() is None
+    assert db.session.get(User, 777) is None
+
+
+def test_update_cannot_change_the_id_or_created_at_of_a_challenge(admin_client):
+    row = ChallengeFactory(name="before")
+    row_id = row.id
+    created_at = admin_client.get(f"{BASE}/challenge/{row_id}").json["data"]["created_at"]
+
+    resp = admin_client.put(
+        f"{BASE}/challenge/{row_id}",
+        json={"id": 5150, "created_at": "2000-01-01T00:00:00", "name": "after"},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json["data"]["id"] == row_id
+    assert resp.json["data"]["created_at"] == created_at
+    assert resp.json["data"]["name"] == "after"
+    db.session.expire_all()
+    assert db.session.get(Challenge, 5150) is None
+    assert db.session.get(Challenge, row_id).name == "after"
+
+
 @pytest.mark.parametrize("kwargs", [{"data": "not json", "content_type": "application/json"}, {"json": None}, {"json": [1, 2]}, {"data": "x=1"}])
 def test_create_and_update_require_a_json_object(admin_client, kwargs):
     row = ChallengeFactory()
