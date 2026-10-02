@@ -335,7 +335,16 @@ def test_send_message_statements_do_not_grow_with_the_message_history(
 
     assert small_ack["success"] is True
     assert large_ack["success"] is True
-    assert len(small) == len(large)
+
+    # Bumping last_seen only emits an UPDATE when the clock moved since the session
+    # was opened, which a coarse timer (Windows) does not guarantee within one test
+    def timing_independent(statements):
+        return [
+            s for s in statements
+            if not s.lstrip().startswith("UPDATE session_logs SET last_seen")
+        ]
+
+    assert len(timing_independent(small)) == len(timing_independent(large))
     assert len(large) <= 30
     # No message is loaded at all, and only the sender and the target classroom are
     assert loaded[Message] == []

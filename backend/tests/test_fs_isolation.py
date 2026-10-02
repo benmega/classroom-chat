@@ -10,6 +10,7 @@ from pathlib import Path
 from application.config import Config
 from application.models.note import Note
 from application.models.submission import Submission
+from tests.image_helpers import png_bytes
 
 REAL_UPLOAD_FOLDER = Path(Config.BASE_DIR) / "userData"
 
@@ -47,16 +48,18 @@ def test_note_upload_lands_in_the_throwaway_folder(
     """/notes/upload reads app.config["UPLOAD_FOLDER"]."""
     monkeypatch.setitem(test_app.config, "USE_S3", False)
 
+    image = png_bytes()
+
     response = logged_in_client.post(
         "/notes/upload",
-        data={"note_image": (io.BytesIO(b"note"), "note.png")},
+        data={"note_image": (io.BytesIO(image), "note.png")},
         content_type="multipart/form-data",
     )
 
     assert response.status_code == 200
     note = Note.query.filter_by(user_id=sample_user.id).one()
     stored = Path(Config.UPLOAD_FOLDER) / "notes" / note.filename
-    assert stored.read_bytes() == b"note"
+    assert stored.read_bytes() == image
 
 
 def test_a_test_can_change_the_shared_app_config(test_app):

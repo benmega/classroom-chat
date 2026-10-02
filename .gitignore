@@ -20,6 +20,7 @@ backend/reports/certificates/
 *.iws
 .venv/
 *.log
+*.log.*
 *.bak
 certificates/*
 backend/certificates/
