@@ -1,7 +1,6 @@
 import os
 import re
 import threading
-from datetime import datetime
 from io import BytesIO
 
 from application.config import Config
@@ -11,7 +10,7 @@ from application.models.project import Project
 from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
 from application.models.user import User, save_new_user
-from application.utilities.helper_functions import allowed_file, get_s3_client
+from application.utilities.helper_functions import allowed_file, get_s3_client, utcnow_naive
 from application.utilities.image_upload import (
     AVATAR_MAX_EDGE,
     PROJECT_MAX_EDGE,
@@ -398,7 +397,7 @@ def new_project():
         db.session.add(new_proj)
 
         target_user.current_activity = f"Working on project: {new_proj.name}"
-        target_user.last_activity_time = datetime.utcnow()
+        target_user.last_activity_time = utcnow_naive()
 
         db.session.flush()
 

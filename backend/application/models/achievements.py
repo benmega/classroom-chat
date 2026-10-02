@@ -4,9 +4,8 @@ Type: py
 Summary: SQLAlchemy model for achievement definitions and metadata.
 """
 
-from datetime import datetime
-
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class Achievement(db.Model):  # type: ignore[name-defined,misc]
@@ -45,7 +44,7 @@ class UserAchievement(db.Model):  # type: ignore[name-defined,misc]
     achievement_id = db.Column(
         db.Integer, db.ForeignKey("achievement.id"), nullable=False, index=True
     )
-    earned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    earned_at = db.Column(db.DateTime, default=utcnow_naive)
 
     __table_args__ = (db.UniqueConstraint("user_id", "achievement_id"),)
 

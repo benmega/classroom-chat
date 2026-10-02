@@ -4,9 +4,8 @@ Type: py
 Summary: SQLAlchemy model for user-submitted certificates.
 """
 
-from datetime import datetime
-
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class UserCertificate(db.Model):
@@ -17,7 +16,7 @@ class UserCertificate(db.Model):
         db.Integer, db.ForeignKey("achievement.id"), nullable=False
     )
     url = db.Column(db.String(256), nullable=False)
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    submitted_at = db.Column(db.DateTime, default=utcnow_naive)
     file_path = db.Column(db.String(256), nullable=True)
     status = db.Column(db.String(20), nullable=False, default="pending")
     review_note = db.Column(db.Text, nullable=True)

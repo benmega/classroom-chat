@@ -1,6 +1,6 @@
 import math
 import re
-from datetime import date, datetime, timedelta, timezone
+from datetime import timedelta
 
 from sqlalchemy import case, event, func, or_, update
 from sqlalchemy.exc import IntegrityError
@@ -8,6 +8,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..extensions import db
+from ..utilities.helper_functions import utc_today, utcnow_naive
 
 # Models are imported locally within methods to prevent circular dependencies
 
@@ -37,7 +38,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=True)
     cognito_sub = db.Column(db.String(50), unique=True, nullable=True)
     bio = db.Column(db.String(500), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     has_seen_tutorial = db.Column(db.Boolean, default=False)
     current_activity = db.Column(db.String(255), nullable=True)
     last_activity_time = db.Column(db.DateTime, nullable=True)
@@ -656,7 +657,7 @@ class User(db.Model):
             amount *= 2
 
         # The day boundary is UTC, like every other timestamp in the app.
-        today = datetime.now(timezone.utc).date()
+        today = utc_today()
         if self.last_daily_duck == today:
             return False
 
@@ -690,7 +691,7 @@ class User(db.Model):
         }
         """
         # Align end date to the coming Saturday to complete the grid
-        today = date.today()
+        today = utc_today()
         idx = (today.weekday() + 1) % 7  # 0 = Sun
         end_date = today + timedelta(days=(6 - idx))
         start_date = end_date - timedelta(weeks=52)

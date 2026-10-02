@@ -4,11 +4,10 @@ Type: py
 Summary: SQLAlchemy model for feed posts (messages) and visibility targeting.
 """
 
-from datetime import datetime
-
 from sqlalchemy import Enum
 
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 # Association tables for message visibility targeting
 message_classrooms = db.Table(
@@ -60,7 +59,7 @@ class Message(db.Model):
         default="text",
     )
     is_struck = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    created_at = db.Column(db.DateTime, default=utcnow_naive, index=True)
     edited_at = db.Column(db.DateTime, nullable=True)
     deleted_at = db.Column(db.DateTime, nullable=True)
 

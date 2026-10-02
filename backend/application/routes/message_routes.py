@@ -4,6 +4,7 @@ from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.message import Message
 from application.models.user import User
+from application.utilities.helper_functions import utcnow_naive
 from flask import Blueprint, g, jsonify, request
 from sqlalchemy.orm import selectinload
 
@@ -245,8 +246,6 @@ def delete_message(message_id):
         return jsonify({"error": "Forbidden: Login required"}), 401
 
     try:
-        from datetime import datetime
-
         msg = db.session.get(Message, message_id)
         if not msg:
             return jsonify({"error": "Message not found"}), 404
@@ -257,7 +256,7 @@ def delete_message(message_id):
             ), 403
 
         msg.is_struck = True
-        msg.deleted_at = datetime.utcnow()
+        msg.deleted_at = utcnow_naive()
         db.session.commit()
 
         # Broadcast deletion to everyone

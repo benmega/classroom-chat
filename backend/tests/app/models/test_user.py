@@ -472,21 +472,53 @@ def test_award_daily_duck_awards_again_the_next_day(add_sample_user):
     assert user.duck_balance == 1
 
 
-def test_award_daily_duck_day_boundary_is_utc(add_sample_user):
+@contextmanager
+def _utc_clock_at(moment):
+    """Freeze the clock behind utc_today() and utcnow_naive() at an aware `moment`."""
+
     class FrozenDatetime(datetime):
         @classmethod
         def now(cls, tz=None):
-            return datetime(2030, 1, 15, 23, 30, tzinfo=timezone.utc).astimezone(tz)
+            return moment.astimezone(tz)
 
+    with patch("application.utilities.helper_functions.datetime", FrozenDatetime):
+        yield
+
+
+def test_award_daily_duck_day_boundary_is_utc(add_sample_user):
     user = add_sample_user("daily_utc", "pwd")
 
-    with patch("application.models.user.datetime", FrozenDatetime):
+    with _utc_clock_at(datetime(2030, 1, 15, 23, 30, tzinfo=timezone.utc)):
         assert user.award_daily_duck() is True
     db.session.commit()
 
     # 23:30 UTC is already the 16th in any zone east of UTC+0:30; the stored day
     # must still be the UTC one.
     assert user.last_daily_duck == date(2030, 1, 15)
+
+
+def test_contribution_data_follows_the_utc_day(add_sample_user):
+    user = add_sample_user("contrib_utc", "pwd")
+    # Saturday 19 Jan 2030, 23:30 UTC: already Sunday 20 Jan east of UTC+0:30
+    db.session.add(
+        ChallengeLog(
+            user_id=user.id,
+            domain="codecombat.com",
+            challenge_slug="utc-day",
+            timestamp=datetime(2030, 1, 19, 23, 0),
+        )
+    )
+    db.session.commit()
+
+    with _utc_clock_at(datetime(2030, 1, 19, 23, 30, tzinfo=timezone.utc)):
+        data = user.get_contribution_data()
+
+    cells = {cell["date"]: cell for row in data["rows"] for cell in row if cell}
+    # The grid closes on the Saturday of the UTC week, 52 weeks after its first Saturday
+    assert data["rows"][6][52]["date"] == "2030-01-19"
+    assert data["rows"][6][0]["date"] == "2029-01-20"
+    assert "2030-01-20" not in cells
+    assert cells["2030-01-19"]["count"] == 1
 
 
 def test_award_daily_duck_for_an_unsaved_user_sets_the_day_in_memory():

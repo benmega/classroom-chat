@@ -6,12 +6,12 @@ Summary: SQLAlchemy model for Classroom and the user_classrooms join table.
 
 import random
 import string
-from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy import inspect as sa_inspect
 
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 # ---------------------------------------------------------------------------
 # Join table — many-to-many between users and classrooms.
@@ -36,7 +36,7 @@ user_classrooms = db.Table(
         "enrolled_at",
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow,
+        default=utcnow_naive,
     ),
 )
 
@@ -55,7 +55,7 @@ class Classroom(db.Model):
     id = db.Column(db.String(64), primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     language = db.Column(db.String(64), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
     join_code = db.Column(db.String(5), unique=True, nullable=True, index=True)
     sandbox_active = db.Column(db.Boolean, default=False, nullable=False)
     sandbox_activated_at = db.Column(db.DateTime, nullable=True)
@@ -103,7 +103,7 @@ class Classroom(db.Model):
         if self.sandbox_active:
             if (
                 self.sandbox_activated_at
-                and self.sandbox_activated_at.date() < datetime.utcnow().date()
+                and self.sandbox_activated_at.date() < utcnow_naive().date()
             ):
                 self.sandbox_active = False
                 self.sandbox_activated_at = None

@@ -1,6 +1,5 @@
-from datetime import datetime
-
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class DuckTransaction(db.Model):
@@ -11,7 +10,7 @@ class DuckTransaction(db.Model):
     )
     amount = db.Column(db.Float, nullable=False)
     reason = db.Column(db.String(200), nullable=True)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    timestamp = db.Column(db.DateTime, default=utcnow_naive, index=True)
 
     user = db.relationship(
         "User",

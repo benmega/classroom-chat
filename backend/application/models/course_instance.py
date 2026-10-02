@@ -4,9 +4,8 @@ Type: py
 Summary: SQLAlchemy model for specific class instances (e.g., "Sat1030 CS 4 PY").
 """
 
-from datetime import datetime
-
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class CourseInstance(db.Model):
@@ -26,7 +25,7 @@ class CourseInstance(db.Model):
     course_id = db.Column(db.String(64), db.ForeignKey("courses.id"), nullable=True)
     course = db.relationship("Course", backref="instances")
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     def __repr__(self):
         return f"<CourseInstance(id={self.id}, classroom_id={self.classroom_id})>"

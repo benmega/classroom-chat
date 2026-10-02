@@ -4,7 +4,6 @@ import re
 import subprocess
 import sys
 import zipfile
-from datetime import datetime
 from typing import Any
 
 from application.decorators.admin_required import admin_only
@@ -13,7 +12,7 @@ from application.extensions import db
 from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
-from application.utilities.helper_functions import allowed_file
+from application.utilities.helper_functions import allowed_file, utcnow_naive
 from application.utilities.image_upload import (
     BADGE_MAX_EDGE,
     ImageUploadError,
@@ -621,7 +620,7 @@ View Student Profile:
 def mark_reviewed(cert_id):
     cert = db.get_or_404(UserCertificate, cert_id)
     cert.status = "approved"
-    cert.reviewed_at = datetime.utcnow()
+    cert.reviewed_at = utcnow_naive()
     db.session.commit()
 
     from application.socket_events import emit_activity_resolved
@@ -644,7 +643,7 @@ def reject_certificate(cert_id):
     data = request.get_json(silent=True) or {}
     cert.status = "rejected"
     cert.review_note = data.get("review_note")
-    cert.reviewed_at = datetime.utcnow()
+    cert.reviewed_at = utcnow_naive()
     db.session.commit()
 
     from application.socket_events import emit_activity_resolved
@@ -680,7 +679,7 @@ def download_certificate(cert_id):
 @admin_only
 def mark_all_reviewed():
     certs = db.session.query(UserCertificate).filter_by(status="pending").all()
-    now = datetime.utcnow()
+    now = utcnow_naive()
     users_to_evaluate = set()
     for cert in certs:
         cert.status = "approved"

@@ -1,6 +1,5 @@
 # application/services/achievement_engine.py
 import logging
-from datetime import datetime
 
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
@@ -9,6 +8,7 @@ from application.models.duck_trade import DuckTradeLog
 from application.models.message import Message
 from application.models.session_log import SessionLog
 from application.models.user_certificate import UserCertificate
+from application.utilities.helper_functions import utcnow_naive
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
@@ -193,7 +193,7 @@ def _calculate_consistency(user_id):
 
 def evaluate_user(user, force=False):
     """Evaluate all achievements for a given user with 1-hour throttling and pessimistic locking."""
-    now = datetime.utcnow()
+    now = utcnow_naive()
 
     # Use pessimistic locking to prevent concurrent evaluations
     # Lock the user row to ensure only one evaluation runs at a time

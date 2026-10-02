@@ -4,9 +4,8 @@ Type: py
 Summary: SQLAlchemy model for sandbox level games unlocked by progression milestones.
 """
 
-from datetime import datetime
-
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class LevelGame(db.Model):
@@ -27,7 +26,7 @@ class LevelGame(db.Model):
     requires_account = db.Column(db.Boolean, default=False, nullable=False)
     rating = db.Column(db.Float, nullable=True)
     verified = db.Column(db.Boolean, default=True, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
 
     def __repr__(self):
         return f"<LevelGame(id={self.id}, name='{self.game_name}', lesson='{self.assigned_lesson}', challenge_slug='{self.challenge_slug}')>"

@@ -7,7 +7,6 @@ Summary: Flask routes for challenge routes functionality (Merged Version).
 import logging
 import os
 import re
-from datetime import datetime
 from urllib.parse import parse_qs
 
 from application import Configuration
@@ -22,6 +21,7 @@ from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from application.models.course_instance import CourseInstance
 from application.models.user import User
+from application.utilities.helper_functions import utcnow_naive
 from flask import Blueprint, flash, jsonify, redirect, request, session, url_for
 from flask_cors import cross_origin
 from sqlalchemy import func
@@ -485,12 +485,12 @@ def _log_challenge(details, user, helper=None):
             challenge_slug=challenge.slug,
             course_id=actual_course_id,  # Verified parent course ID
             course_instance=course_instance.id,  # Verified instance ID
-            timestamp=datetime.utcnow(),
+            timestamp=utcnow_naive(),
             helper=helper,
         )
         db.session.add(challenge_log)
         user.current_activity = f"Working on {challenge.name}"
-        user.last_activity_time = datetime.utcnow()
+        user.last_activity_time = utcnow_naive()
         # Flush (not commit) so a constraint violation surfaces here, while the
         # caller still owns the transaction.
         db.session.flush()
@@ -561,8 +561,6 @@ def _enroll_user_in_classroom(user, classroom_id: str):
     This is the ONLY student enrollment path — called exclusively from the
     challenge submission success route.
     """
-    from datetime import datetime
-
     from application.models.classroom import Classroom, user_classrooms
     from sqlalchemy import insert, select
 
@@ -589,7 +587,7 @@ def _enroll_user_in_classroom(user, classroom_id: str):
             insert(user_classrooms).values(
                 user_id=user.id,
                 classroom_id=classroom_id,
-                enrolled_at=datetime.utcnow(),
+                enrolled_at=utcnow_naive(),
             )
         )
         db.session.commit()

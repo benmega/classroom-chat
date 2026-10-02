@@ -4,9 +4,8 @@ Type: py
 Summary: SQLAlchemy model for student requests to add unrecognized course instances.
 """
 
-from datetime import datetime
-
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class CourseInstanceRequest(db.Model):
@@ -31,7 +30,7 @@ class CourseInstanceRequest(db.Model):
     # "pending", "approved", or "rejected"
     status = db.Column(db.String(20), default="pending")
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     def to_dict(self):
         return {

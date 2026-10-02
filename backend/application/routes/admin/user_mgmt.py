@@ -7,6 +7,7 @@ from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User, save_new_user
 from application.utilities.db_helpers import get_canonical_course_slug
+from application.utilities.helper_functions import utcnow_naive
 from flask import current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -184,7 +185,7 @@ def get_users():
     # Fetch levels completed today (UTC day start to match log timestamps)
     from datetime import datetime, time
 
-    today_start = datetime.combine(datetime.utcnow().date(), time.min)
+    today_start = datetime.combine(utcnow_naive().date(), time.min)
 
     today_counts = (
         db.session.query(ChallengeLog.user_id, func.count(ChallengeLog.id))
@@ -1035,8 +1036,6 @@ def pass_chapter_preview(user_id):
 @admin_only
 @api_response
 def pass_chapter(user_id):
-    import datetime
-
     from application.models.achievements import Achievement
     from application.models.challenge import Challenge
     from application.models.challenge_log import ChallengeLog
@@ -1090,7 +1089,7 @@ def pass_chapter(user_id):
                 achievement_id=cert.id,
                 url="Honorary Degree",
                 status="approved",
-                reviewed_at=datetime.datetime.utcnow(),
+                reviewed_at=utcnow_naive(),
             )
             db.session.add(uc)
 

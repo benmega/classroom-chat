@@ -1,7 +1,8 @@
 """
 Unit tests for helper_functions.py
 """
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from unittest.mock import patch
 
 from application.utilities.helper_functions import (
     allowed_file,
@@ -9,6 +10,7 @@ from application.utilities.helper_functions import (
     format_number,
     get_s3_client,
     safe_parse_datetime,
+    utc_today,
     utcnow_naive,
 )
 
@@ -75,6 +77,25 @@ def test_utcnow_naive_is_naive_utc():
     assert before <= now <= after
     # Same clock as the deprecated utcnow() it replaces, so stored rows stay comparable
     assert abs(now - datetime.utcnow()) < timedelta(seconds=5)
+
+
+def test_utc_today_is_the_utc_date():
+    before = datetime.now(timezone.utc).date()
+    today = utc_today()
+    after = datetime.now(timezone.utc).date()
+
+    assert type(today) is date
+    assert before <= today <= after
+
+
+def test_utc_today_reads_the_clock_in_utc():
+    class FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2030, 1, 19, 23, 30, tzinfo=timezone.utc).astimezone(tz)
+
+    with patch("application.utilities.helper_functions.datetime", FrozenDatetime):
+        assert utc_today() == date(2030, 1, 19)
 
 
 def test_get_s3_client_failure_is_logged_not_printed(capsys):

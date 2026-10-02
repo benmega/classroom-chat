@@ -4,12 +4,11 @@ Type: py
 Summary: Model for storing user notes (images) uploaded to S3.
 """
 
-from datetime import datetime
-
 from flask import current_app, has_app_context
 
 from ..config import Config
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 def _s3_setting(name):
@@ -25,7 +24,7 @@ class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     filename = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Relationships
     user = db.relationship("User", back_populates="notes")

@@ -5,9 +5,10 @@ Summary: SQLAlchemy model for tracking student classroom join attempts.
          Used for rate limiting and audit logging.
 """
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class ClassroomJoinAttempt(db.Model):
@@ -25,7 +26,7 @@ class ClassroomJoinAttempt(db.Model):
     attempted_at = db.Column(
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow,
+        default=utcnow_naive,
         index=True,
     )
     code_attempted = db.Column(db.String(10), nullable=False)
@@ -57,7 +58,7 @@ class ClassroomJoinAttempt(db.Model):
         Returns:
             (is_allowed: bool, error_message: str | None)
         """
-        now = datetime.utcnow()
+        now = utcnow_naive()
 
         hourly_count = ClassroomJoinAttempt.query.filter(
             ClassroomJoinAttempt.student_id == student_id,

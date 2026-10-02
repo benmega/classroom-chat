@@ -21,6 +21,15 @@ def utcnow_naive():
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+def utc_today():
+    """Today's date in UTC.
+
+    Use this instead of date.today() (the server's local date) wherever the day is
+    compared with, or stored next to, the UTC timestamps the app keeps.
+    """
+    return datetime.now(timezone.utc).date()
+
+
 def allowed_file(filename, allowed_extensions=None):
     if allowed_extensions is None:
         allowed_extensions = Config.ALLOWED_EXTENSIONS

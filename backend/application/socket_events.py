@@ -16,7 +16,6 @@ user's live sockets whenever enrollment or role changes.
 """
 
 import logging
-from datetime import datetime
 
 from application.constants import GLOBAL_CLASSROOM_ID
 from application.extensions import db, socketio
@@ -28,6 +27,7 @@ from .models.classroom import Classroom, user_classrooms
 from .models.session_log import SessionLog
 from .models.user import User
 from .utilities.db_helpers import save_message_to_db
+from .utilities.helper_functions import utcnow_naive
 
 logger = logging.getLogger(__name__)
 
@@ -272,7 +272,7 @@ def handle_send_message(data):
             .limit(1)
         )
         if last_message_at:
-            time_elapsed = (datetime.utcnow() - last_message_at).total_seconds()
+            time_elapsed = (utcnow_naive() - last_message_at).total_seconds()
             if time_elapsed < 30:
                 remaining = int(30 - time_elapsed)
                 return {
@@ -330,7 +330,7 @@ def handle_send_message(data):
         "message_type": msg["message_type"],
         "created_at": msg["created_at"].isoformat()
         if msg["created_at"]
-        else datetime.utcnow().isoformat(),
+        else utcnow_naive().isoformat(),
         "is_global": msg["is_global"],
         "target_live": msg["target_live"],
         "target_classrooms": [c["name"] for c in save_result["target_classrooms"]],
