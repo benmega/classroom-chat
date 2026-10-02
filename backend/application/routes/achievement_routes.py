@@ -14,6 +14,12 @@ from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
 from application.utilities.helper_functions import allowed_file
+from application.utilities.image_upload import (
+    BADGE_MAX_EDGE,
+    ImageUploadError,
+    process_image,
+    write_bytes_atomic,
+)
 from flask import (
     Blueprint,
     current_app,
@@ -51,6 +57,171 @@ ALLOWED_EXTENSIONS = {"pdf"}
 SLUG_RE = re.compile(r"[a-z0-9-]+")
 SLUG_ERROR = "Slug may only contain lowercase letters, digits and hyphens."
 REWARD_ERROR = "Reward must be a whole number of at least 1."
+
+# Badge uploads are normalised to <slug>.png, the only name every consumer looks for.
+# The other extensions are what older uploads may have left behind.
+BADGE_EXTENSIONS = ("png", "jpg", "jpeg", "webp")
+SPRITE_REBUILD_TIMEOUT = 60  # seconds
+
+
+class _BadgeError(Exception):
+    """A badge change failed after the upload was accepted; the message is shown to the admin."""
+
+
+class _BadgeFiles:
+    """The badge file changes of one request, remembered so they can be undone."""
+
+    def __init__(self):
+        self._originals: dict[str, bytes | None] = {}
+
+    def _remember(self, path):
+        if path not in self._originals:
+            try:
+                with open(path, "rb") as handle:
+                    self._originals[path] = handle.read()
+            except FileNotFoundError:
+                self._originals[path] = None
+
+    def write(self, path, data):
+        self._remember(path)
+        write_bytes_atomic(path, data)
+
+    def remove(self, path):
+        if os.path.isfile(path):
+            self._remember(path)
+            os.remove(path)
+
+    def move(self, source, target):
+        with open(source, "rb") as handle:
+            data = handle.read()
+        self.write(target, data)
+        self.remove(source)
+
+    def undo(self):
+        """Put every touched file back as it was: restored, or removed if it did not exist."""
+        for path, data in self._originals.items():
+            try:
+                if data is not None:
+                    write_bytes_atomic(path, data)
+                elif os.path.exists(path):
+                    os.remove(path)
+            except OSError:
+                current_app.logger.exception(f"Could not restore the badge file {path}")
+
+
+def _badge_dir():
+    """Folder of the badge images (current_app.static_folder / images / achievement_badges)."""
+    return os.path.join(str(current_app.static_folder), "images", "achievement_badges")
+
+
+def _badge_slug_is_safe(slug):
+    """True when ``<slug>.<ext>`` is a plain file name, so a badge can never leave the badge folder."""
+    return bool(slug) and all(os.path.basename(f"{slug}.{ext}") == f"{slug}.{ext}" for ext in BADGE_EXTENSIONS)
+
+
+def _badge_path(slug, ext):
+    badge_dir = os.path.abspath(_badge_dir())
+    path = os.path.abspath(os.path.join(badge_dir, f"{slug}.{ext}"))
+    if not _badge_slug_is_safe(slug) or os.path.commonpath([badge_dir, path]) != badge_dir:
+        raise ValueError(f"Unsafe badge slug: {slug!r}")
+    return path
+
+
+def _prepare_badge(badge_file):
+    """Validates an uploaded badge and returns it as a PNG of at most BADGE_MAX_EDGE pixels."""
+    return process_image(
+        badge_file,
+        max_bytes=current_app.config["IMAGE_MAX_BYTES_BADGE"],
+        max_edge=BADGE_MAX_EDGE,
+        allowed_formats=("PNG", "JPEG", "WEBP"),
+        output_format="PNG",
+    )
+
+
+def _rebuild_sprite():
+    """Runs backend/tools/make_sprite_sheet.py, which packs every badge into the sprite sheet."""
+    tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
+    script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
+    try:
+        subprocess.run(
+            [sys.executable, script_path],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=SPRITE_REBUILD_TIMEOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        raise _BadgeError(f"Sprite sheet rebuild failed: {e.stderr}") from e
+    except Exception as e:
+        raise _BadgeError(f"Error rebuilding sprite sheet: {e}") from e
+
+
+def _apply_badge_change(files, old_slug, new_slug, badge_png):
+    """
+    Brings the badge files in line with an add or edit, through ``files`` so it can be undone.
+
+    ``badge_png`` is the new badge (PNG bytes) or None; ``old_slug`` is None for an add.
+    Returns True when the sprite sheet has to be rebuilt.
+    """
+    slug_changed = bool(old_slug) and old_slug != new_slug
+    # A stored slug from before slugs were restricted may not be a plain file name:
+    # its files are left alone.
+    old_files_usable = slug_changed and _badge_slug_is_safe(old_slug)
+
+    if badge_png is not None:
+        os.makedirs(_badge_dir(), exist_ok=True)
+        files.write(_badge_path(new_slug, "png"), badge_png)
+        # An earlier upload of another type would give the slug a second sprite cell and CSS rule.
+        for ext in BADGE_EXTENSIONS[1:]:
+            files.remove(_badge_path(new_slug, ext))
+        if old_files_usable:
+            for ext in BADGE_EXTENSIONS:
+                files.remove(_badge_path(old_slug, ext))
+        return True
+
+    changed = False
+    if old_files_usable:
+        for ext in BADGE_EXTENSIONS:
+            old_path = _badge_path(old_slug, ext)
+            if os.path.isfile(old_path):
+                files.move(old_path, _badge_path(new_slug, ext))
+                changed = True
+    return changed
+
+
+def _commit_with_badge(old_slug, new_slug, badge_png):
+    """
+    Flushes and commits the achievement the caller added or changed, together with its badge files.
+
+    The row is flushed first, so a database problem shows up before any file is touched.
+    The badge files are then written and the sprite rebuilt (a slow subprocess), and only
+    then is the session committed. Returns None on success. On any failure the session is
+    rolled back, the files are put back as they were and the JSON error response is returned.
+    """
+    files = _BadgeFiles()
+    rebuilt = False
+    try:
+        db.session.flush()
+        if _apply_badge_change(files, old_slug, new_slug, badge_png):
+            _rebuild_sprite()
+            rebuilt = True
+        db.session.commit()
+        return None
+    except Exception as e:
+        db.session.rollback()
+        files.undo()
+        if rebuilt:
+            # The sprite was built from the files that were just put back.
+            try:
+                _rebuild_sprite()
+            except _BadgeError:
+                current_app.logger.exception("Could not rebuild the sprite sheet after undoing a badge change")
+        if isinstance(e, _BadgeError):
+            message = str(e)
+        else:
+            current_app.logger.exception(f"Error saving achievement badge: {e}")
+            message = "Error saving the achievement."
+        return jsonify({"status": "error", "message": message}), 500
 
 
 def _parse_reward(value):
@@ -183,7 +354,8 @@ def add_achievement():
             400,
         )
 
-    # Handle Badge Upload
+    # Handle Badge Upload: validate it before anything is created or written
+    badge_png = None
     badge_file = request.files.get("badge")
     if badge_file and badge_file.filename != "":
         allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
@@ -192,51 +364,10 @@ def add_achievement():
                 jsonify({"status": "error", "message": "Invalid badge file type."}),
                 400,
             )
-
-        from flask import current_app
-
-        # We save to frontend/static/images/achievement_badges/
-        # which is current_app.static_folder / "images" / "achievement_badges"
-        badge_dir = os.path.join(
-            str(current_app.static_folder), "images", "achievement_badges"
-        )
-        os.makedirs(badge_dir, exist_ok=True)
-
-        ext = (badge_file.filename or "").rsplit(".", 1)[1].lower()
-        filename = f"{slug}.{ext}"
-        filepath = os.path.join(badge_dir, filename)
-        badge_file.save(filepath)
-
-        # Trigger sprite sheet rebuild
         try:
-            tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
-            script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
-            subprocess.run(
-                [sys.executable, script_path],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except subprocess.CalledProcessError as e:
-            return (
-                jsonify(
-                    {
-                        "status": "error",
-                        "message": f"Sprite sheet rebuild failed: {e.stderr}",
-                    }
-                ),
-                500,
-            )
-        except Exception as e:
-            return (
-                jsonify(
-                    {
-                        "status": "error",
-                        "message": f"Error rebuilding sprite sheet: {e}",
-                    }
-                ),
-                500,
-            )
+            badge_png = _prepare_badge(badge_file).data
+        except ImageUploadError as e:
+            return jsonify({"status": "error", "message": e.message}), e.status
 
     ach = Achievement(
         name=name,
@@ -248,7 +379,13 @@ def add_achievement():
         source=source,
     )
     db.session.add(ach)
-    db.session.commit()
+
+    # The row is created first; the badge is saved to
+    # current_app.static_folder / "images" / "achievement_badges" and the sprite rebuilt
+    # before the commit, so a failure leaves neither a row nor a badge behind.
+    failure = _commit_with_badge(None, slug, badge_png)
+    if failure:
+        return failure
 
     return jsonify(
         {"status": "success", "message": f"Achievement '{name}' added successfully!"}
@@ -279,46 +416,40 @@ def edit_achievement(id):
         new_reward = _parse_reward(reward)
         if new_reward is None:
             return jsonify({"status": "error", "message": REWARD_ERROR}), 400
-
-    if name: ach.name = name
     if slug:
         existing = Achievement.query.filter(Achievement.slug == slug, Achievement.id != id).first()
         if existing:
             return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
-        ach.slug = slug
+
+    badge_png = None
+    badge_file = request.files.get("badge")
+    if badge_file and badge_file.filename != "":
+        allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
+        if not allowed_file(badge_file.filename, allowed_badge_ext):
+            return jsonify({"status": "error", "message": "Invalid badge file type."}), 400
+        # An unchanged slug is not re-validated above, so a stored slug that predates
+        # SLUG_RE must still never be able to write outside the badge directory.
+        if not _badge_slug_is_safe(slug or ach.slug):
+            return jsonify({"status": "error", "message": SLUG_ERROR}), 400
+        try:
+            badge_png = _prepare_badge(badge_file).data
+        except ImageUploadError as e:
+            return jsonify({"status": "error", "message": e.message}), e.status
+
+    old_slug = ach.slug
+    if name: ach.name = name
+    if slug: ach.slug = slug
     if description is not None: ach.description = description
     if achievement_type: ach.type = achievement_type
     if new_reward is not None: ach.reward = new_reward
     if requirement_value is not None: ach.requirement_value = requirement_value
     if source is not None: ach.source = source
 
-    badge_file = request.files.get("badge")
-    if badge_file and badge_file.filename != "":
-        allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
-        if not allowed_file(badge_file.filename, allowed_badge_ext):
-            return jsonify({"status": "error", "message": "Invalid badge file type."}), 400
-
-        from flask import current_app
-        badge_dir = os.path.join(str(current_app.static_folder), "images", "achievement_badges")
-        os.makedirs(badge_dir, exist_ok=True)
-
-        ext = (badge_file.filename or "").rsplit(".", 1)[1].lower()
-        filename = f"{ach.slug}.{ext}"
-        # An unchanged slug is not re-validated above, so a stored slug that predates
-        # SLUG_RE must still never be able to write outside the badge directory.
-        if os.path.basename(filename) != filename:
-            return jsonify({"status": "error", "message": SLUG_ERROR}), 400
-        filepath = os.path.join(badge_dir, filename)
-        badge_file.save(filepath)
-
-        try:
-            tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
-            script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
-            subprocess.run([sys.executable, script_path], check=True, capture_output=True, text=True)
-        except Exception as e:
-            return jsonify({"status": "error", "message": f"Error rebuilding sprite sheet: {e}"}), 500
-
-    db.session.commit()
+    # A renamed slug moves the badge along; a new badge replaces it. The sprite is rebuilt
+    # before the commit, and a failure puts the previous badge files back.
+    failure = _commit_with_badge(old_slug, ach.slug, badge_png)
+    if failure:
+        return failure
     return jsonify({"status": "success", "message": f"Achievement '{ach.name}' updated successfully!"})
 
 @achievements.route("/submit_certificate", methods=["POST"])

@@ -90,6 +90,16 @@ class Config:
     }
     SUBMISSION_MAX_BYTES = 20 * 1024 * 1024  # 20MB
 
+    # Image uploads (application/utilities/image_upload.py). Each cap sits under
+    # MAX_CONTENT_LENGTH, which is enforced on the request body before a route runs.
+    IMAGE_MAX_BYTES_AVATAR = 5 * 1024 * 1024
+    IMAGE_MAX_BYTES_WALLPAPER = 10 * 1024 * 1024
+    IMAGE_MAX_BYTES_PROJECT = 10 * 1024 * 1024
+    IMAGE_MAX_BYTES_NOTE = 10 * 1024 * 1024
+    IMAGE_MAX_BYTES_BADGE = 2 * 1024 * 1024
+    MAX_IMAGE_PIXELS = 25_000_000  # width * height
+    IMAGE_MAX_FRAMES = 100  # animated GIF / WebP / APNG
+
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")

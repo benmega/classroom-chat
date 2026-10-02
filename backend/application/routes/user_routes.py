@@ -1,7 +1,6 @@
 import os
 import re
 import threading
-import uuid
 from datetime import datetime
 from io import BytesIO
 
@@ -9,9 +8,17 @@ from application.config import Config
 from application.decorators.api_response import api_response
 from application.extensions import csrf, db, limiter
 from application.models.project import Project
+from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
 from application.models.user import User, save_new_user
 from application.utilities.helper_functions import allowed_file, get_s3_client
+from application.utilities.image_upload import (
+    AVATAR_MAX_EDGE,
+    PROJECT_MAX_EDGE,
+    ImageUploadError,
+    delete_stored_image,
+    save_validated_image,
+)
 from flask import (
     Blueprint,
     abort,
@@ -27,7 +34,6 @@ from flask import (
 )
 from flask_limiter.util import get_remote_address
 from flask_wtf import FlaskForm
-from PIL import Image
 from sqlalchemy.orm import selectinload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
@@ -278,7 +284,9 @@ def edit_profile():
     user_obj = db.session.get(User, user_id)
 
     if request.method == "POST":
+        new_picture = None
         try:
+            old_picture = user_obj.profile_picture
             data = request.get_json() if request.is_json else request.form
             # 1. Update Basic Info (Password, IP, Online Status)
             if not update_basic_user_info(user_obj, data):
@@ -298,13 +306,21 @@ def edit_profile():
 
             # 3. Handle Profile Picture (if uploaded via this form, currently only form-data)
             if not request.is_json:
-                handle_profile_picture_upload(user_obj)
+                new_picture = handle_profile_picture_upload(user_obj)
 
             db.session.commit()
+            # Only once the new picture is committed is the old file safe to remove.
+            if new_picture:
+                delete_profile_picture_file(old_picture)
             return {"message": "Account settings updated successfully!"}, 200
 
+        except ImageUploadError as e:
+            db.session.rollback()
+            return e.message, e.status
         except Exception as e:
             db.session.rollback()
+            if new_picture:
+                delete_profile_picture_file(new_picture)
             current_app.logger.exception(f"Error during profile update: {e}")
             return "An error occurred while updating the profile.", 500
 
@@ -389,15 +405,12 @@ def new_project():
         if "project_image" in request.files:
             file = request.files["project_image"]
             if file and file.filename != "":
-                filename = handle_project_image_upload(file)
-                if filename:
-                    new_proj.image_url = f"/user/project_images/{filename}"
-                else:
-                    return (
-                        "Invalid image format. Allowed: "
-                        + ", ".join(Config.ALLOWED_EXTENSIONS),
-                        400,
-                    )
+                try:
+                    filename = handle_project_image_upload(file)
+                except ImageUploadError as e:
+                    db.session.rollback()  # the new project is not kept
+                    return e.message, e.status
+                new_proj.image_url = f"/user/project_images/{filename}"
 
         db.session.commit()
 
@@ -452,8 +465,10 @@ def edit_project(project_id):
         action = data.get("action")
 
         if action == "delete":
+            image_url = project.image_url
             db.session.delete(project)
             db.session.commit()
+            _delete_project_image_if_unreferenced(image_url)
             return {"message": "Project deleted successfully."}
 
         # Default action is save
@@ -484,20 +499,20 @@ def edit_project(project_id):
             if project.status == "rejected":
                 project.status = "pending"
 
+        replaced_image_url = None
         if "project_image" in request.files:
             file = request.files["project_image"]
             if file and file.filename != "":
-                filename = handle_project_image_upload(file)
-                if filename:
-                    project.image_url = f"/user/project_images/{filename}"
-                else:
-                    return (
-                        "Invalid image format. Allowed: "
-                        + ", ".join(Config.ALLOWED_EXTENSIONS),
-                        400,
-                    )
+                try:
+                    filename = handle_project_image_upload(file)
+                except ImageUploadError as e:
+                    db.session.rollback()  # none of the other edits is kept
+                    return e.message, e.status
+                replaced_image_url = project.image_url
+                project.image_url = f"/user/project_images/{filename}"
 
         db.session.commit()
+        _delete_project_image_if_unreferenced(replaced_image_url)
 
         video_started = False
         if "project_video" in request.files:
@@ -544,43 +559,33 @@ def api_edit_profile_picture():
             400,
         )
 
-    # Limit size to 5MB
-    file.seek(0, os.SEEK_END)
-    file_size = file.tell()
-    file.seek(0)
-    if file_size > 5 * 1024 * 1024:
-        return "File too large. Maximum size is 5MB.", 400
-
+    filename = None
     try:
-        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-        secure_path = os.path.join(
-            current_app.config["UPLOAD_FOLDER"], "profile_pictures", filename
+        # Verified, shrunk to AVATAR_MAX_EDGE and stored under a name made from its real
+        # format; an animated image keeps its frames.
+        filename = save_validated_image(
+            file,
+            _upload_dir("profile_pictures"),
+            max_bytes=current_app.config["IMAGE_MAX_BYTES_AVATAR"],
+            max_edge=AVATAR_MAX_EDGE,
+            preserve_animation=True,
         )
 
-        os.makedirs(os.path.dirname(secure_path), exist_ok=True)
-
-        # Open and resize/save with PIL for consistency
-        img = Image.open(file)
-        img.save(secure_path)
-
-        # Cleanup old image if it exists
-        if user_obj.profile_picture:
-            old_path = os.path.join(
-                current_app.config["UPLOAD_FOLDER"],
-                "profile_pictures",
-                user_obj.profile_picture,
-            )
-            if os.path.exists(old_path):
-                os.remove(old_path)
-
+        old_picture = user_obj.profile_picture
         user_obj.profile_picture = filename
         db.session.commit()
+        # Only once the new picture is committed is the old file safe to remove.
+        delete_profile_picture_file(old_picture)
 
         new_url = url_for("user.profile_picture", filename=filename)
         return {"new_url": new_url, "filename": filename}
 
+    except ImageUploadError as e:
+        return e.message, e.status
     except Exception as e:
         db.session.rollback()
+        if filename:
+            delete_profile_picture_file(filename)
         current_app.logger.exception(f"Error updating profile picture: {e}")
         return "Server error during image processing.", 500
 
@@ -608,34 +613,20 @@ def api_edit_profile_wallpaper():
             400,
         )
 
-    file.seek(0, os.SEEK_END)
-    file_size = file.tell()
-    file.seek(0)
-    if file_size > 10 * 1024 * 1024:
-        return "File too large. Maximum size is 10MB.", 400
-
+    wallpaper_dir = _upload_dir("profile_wallpapers")
+    filename = None
     try:
-        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-        secure_path = os.path.join(
-            current_app.config["UPLOAD_FOLDER"], "profile_wallpapers", filename
+        filename = save_validated_image(
+            file,
+            wallpaper_dir,
+            max_bytes=current_app.config["IMAGE_MAX_BYTES_WALLPAPER"],
+            preserve_animation=True,
         )
 
-        os.makedirs(os.path.dirname(secure_path), exist_ok=True)
-
-        img = Image.open(file)
-        img.save(secure_path)
-
-        if user_obj.profile_wallpaper:
-            old_path = os.path.join(
-                current_app.config["UPLOAD_FOLDER"],
-                "profile_wallpapers",
-                user_obj.profile_wallpaper,
-            )
-            if os.path.exists(old_path):
-                os.remove(old_path)
-
+        old_wallpaper = user_obj.profile_wallpaper
         user_obj.profile_wallpaper = filename
         db.session.commit()
+        delete_stored_image(wallpaper_dir, old_wallpaper)
 
         new_url = url_for("user.profile_wallpaper", filename=filename)
         return {
@@ -643,8 +634,13 @@ def api_edit_profile_wallpaper():
             "filename": filename,
             "message": "Profile wallpaper updated successfully!",
         }
+    except ImageUploadError as e:
+        return e.message, e.status
     except Exception as e:
-        print(f"Error saving wallpaper: {e!s}")
+        db.session.rollback()
+        if filename:
+            delete_stored_image(wallpaper_dir, filename)
+        current_app.logger.exception(f"Error saving wallpaper: {e!s}")
         return "Error saving wallpaper", 500
 
 
@@ -792,33 +788,91 @@ def add_user_skills(user_obj, skills):
             user_obj.skills.append(Skill(name=skill_name))
 
 
+def _upload_dir(name):
+    """A folder of the persistent userData directory."""
+    return os.path.join(current_app.config["UPLOAD_FOLDER"], name)
+
+
+def _invalid_image_format_error():
+    return ImageUploadError("Invalid image format. Allowed: " + ", ".join(sorted(Config.ALLOWED_EXTENSIONS)))
+
+
+def delete_profile_picture_file(filename):
+    """Removes a stored profile picture. The shared default picture and non-file names are left alone."""
+    delete_stored_image(_upload_dir("profile_pictures"), filename, keep=("Default_pfp.jpg",))
+
+
 def handle_profile_picture_upload(user_obj):
-    """Handles uploading and saving a user profile picture."""
+    """
+    Saves an uploaded profile picture and points ``user_obj`` at it.
+
+    Returns the new file name, or None when the request has no picture. The caller
+    removes the previous file (see delete_profile_picture_file) once the change is
+    committed. Raises ImageUploadError for a picture that is not an acceptable image.
+    """
     if "profile_picture" in request.files:
         file = request.files["profile_picture"]
-        if file and allowed_file(file.filename):
-            filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-            filepath = os.path.join(Config.UPLOAD_FOLDER, "profile_pictures", filename)
-
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            file.save(filepath)
-
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                raise _invalid_image_format_error()
+            filename = save_validated_image(
+                file,
+                _upload_dir("profile_pictures"),
+                max_bytes=current_app.config["IMAGE_MAX_BYTES_AVATAR"],
+                max_edge=AVATAR_MAX_EDGE,
+                preserve_animation=True,
+            )
             user_obj.profile_picture = filename
+            return filename
+    return None
 
 
 def handle_project_image_upload(file):
     """
     Saves a project image to the persistent userData directory and returns the filename.
+
+    Returns None when there is no file. Raises ImageUploadError for an image that is
+    not acceptable (wrong type, too large, not a readable image).
     """
-    if file and allowed_file(file.filename):
-        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-        upload_path = os.path.join(Config.UPLOAD_FOLDER, "projects")
+    if not file or not file.filename:
+        return None
+    if not allowed_file(file.filename):
+        raise _invalid_image_format_error()
+    return save_validated_image(
+        file,
+        _upload_dir("projects"),
+        max_bytes=current_app.config["IMAGE_MAX_BYTES_PROJECT"],
+        max_edge=PROJECT_MAX_EDGE,
+        preserve_animation=True,
+    )
 
-        os.makedirs(upload_path, exist_ok=True)
-        file.save(os.path.join(upload_path, filename))
 
-        return filename
-    return None
+_PROJECT_IMAGE_URL_RE = re.compile(r"/user/project_images/([0-9a-f]{32}\.\w+)")
+
+
+def _delete_project_image_if_unreferenced(image_url):
+    """
+    Removes the uploaded file behind a project image URL once nothing uses it.
+
+    The same /user/project_images/<file> URL can be shared: an assigned project copies
+    its template's image, and a template can point at an uploaded file. Only files this
+    app uploaded match; anything else (static images, YouTube thumbnails) is ignored.
+    Call it after the project row was deleted or changed and committed. A failure is
+    logged and never blocks the caller.
+    """
+    match = _PROJECT_IMAGE_URL_RE.fullmatch(image_url or "")
+    if not match:
+        return
+    filename = match.group(1)
+    try:
+        in_use = (
+            db.session.query(Project.id).filter(Project.image_url.endswith(filename)).first()
+            or db.session.query(ProjectTemplate.id).filter(ProjectTemplate.image_url.endswith(filename)).first()
+        )
+        if not in_use:
+            delete_stored_image(_upload_dir("projects"), filename)
+    except Exception:
+        current_app.logger.exception(f"Could not clean up project image {filename}")
 
 
 def _do_s3_upload(app, file_bytes, filename, content_type, username, project_name, project_id):

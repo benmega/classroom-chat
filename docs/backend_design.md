@@ -127,6 +127,8 @@ backend/
 
 Uploaded user assets (profile pictures, project images, certificates) live in `userData/` at the repo root, not under `backend/`.
 
+Every image upload (profile picture and wallpaper, project and template images, notes, achievement badges) goes through `application/utilities/image_upload.py`. It enforces a byte cap (413), checks the content with Pillow (400 for anything that is not a PNG, JPEG, GIF or WebP image), caps the pixel count and animation frames, and names the stored file `<uuid>.<extension of the verified format>` rather than trusting the client's name. The caps are `IMAGE_MAX_BYTES_*`, `MAX_IMAGE_PIXELS` and `IMAGE_MAX_FRAMES` in `config.py`. Profile pictures and project images are re-encoded (EXIF orientation applied, metadata dropped, shrunk to 512 and 1600 px; animated GIF/WebP files are kept as uploaded), badges are normalised to a 256 px `<slug>.png`, and notes keep their original bytes. Replacing or deleting a profile picture, wallpaper or project removes the old file once the change is committed; a project image that a template or another project still uses is kept.
+
 ---
 
 ## 8. Testing Strategy

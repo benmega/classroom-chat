@@ -5,17 +5,22 @@ Summary: Unit tests for user routes Flask routes, adjusted for recent route refa
 """
 
 import json
+import re
 import uuid
 from datetime import datetime, timezone
 from io import BytesIO
 from unittest.mock import patch
 
+import pytest
 from application import db
+from application.config import Config
 from application.models.project import Project
+from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
 from application.models.user import User
 from PIL import Image
 from tests.factories import AdminFactory, UserFactory
+from tests.image_helpers import animated_gif_bytes, jpeg_bytes, png_bytes, png_header_only
 
 # --- Authentication Tests ---
 
@@ -911,11 +916,12 @@ def test_api_profile_picture_validations(client, init_db):
     resp = client.post("/user/api/profile-picture", data={"profile_picture": txt_file})
     assert resp.status_code == 400
 
-    # File > 5MB -> 400
+    # File > 5MB -> 413 (Payload Too Large)
     large_data = BytesIO(b"0" * (5 * 1024 * 1024 + 10))
     large_file = (large_data, "large.png")
     resp = client.post("/user/api/profile-picture", data={"profile_picture": large_file})
-    assert resp.status_code == 400
+    assert resp.status_code == 413
+    assert "Maximum size is 5MB" in resp.json["error"]
 
 
 def test_api_profile_wallpaper_validations(client, init_db):
@@ -944,13 +950,14 @@ def test_api_profile_wallpaper_validations(client, init_db):
     )
     assert resp.status_code == 400
 
-    # Large file > 10MB -> 400
+    # Large file > 10MB -> 413 (Payload Too Large)
     large_data = BytesIO(b"0" * (10 * 1024 * 1024 + 10))
     resp = client.post(
         "/user/api/profile-wallpaper",
         data={"profile_wallpaper": (large_data, "huge.png")},
     )
-    assert resp.status_code == 400
+    assert resp.status_code == 413
+    assert "Maximum size is 10MB" in resp.json["error"]
 
 
 def test_search_users_empty_query(client, init_db):
@@ -1099,3 +1106,559 @@ def test_edit_profile_form_pfp_upload(client, init_db):
     assert sample_user.profile_picture is not None
 
 
+
+
+# --- Image uploads: validation, stored names, resizing and cleanup of replaced/deleted files ---
+
+
+@pytest.fixture(autouse=True)
+def upload_dir(test_app, tmp_path, monkeypatch):
+    """Point every upload folder at a scratch directory instead of the real userData."""
+    monkeypatch.setitem(test_app.config, "UPLOAD_FOLDER", str(tmp_path))
+    monkeypatch.setattr(Config, "UPLOAD_FOLDER", str(tmp_path))
+    return tmp_path
+
+
+def _login(client, user):
+    with client.session_transaction() as sess:
+        sess["user"] = user.id
+
+
+def _files(folder):
+    return sorted(p.name for p in folder.iterdir()) if folder.exists() else []
+
+
+def _post_picture(client, name, data, path="/user/api/profile-picture", field="profile_picture"):
+    return client.post(path, data={field: (BytesIO(data), name)}, content_type="multipart/form-data")
+
+
+def _make_stored(folder, name, data=b"old"):
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / name).write_bytes(data)
+    return folder / name
+
+
+UPLOADED_URL = "/user/project_images/{}.png".format("a" * 32)
+
+
+# profile picture (API)
+
+
+def test_profile_picture_rgba_png_named_jpg_is_stored_as_a_valid_png(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = _post_picture(client, "avatar.jpg", png_bytes(mode="RGBA"))
+
+    assert resp.status_code == 200
+    filename = resp.json["data"]["filename"]
+    assert re.fullmatch(r"[0-9a-f]{32}\.png", filename)
+    assert resp.json["data"]["new_url"] == f"/user/profile_pictures/{filename}"
+    with Image.open(upload_dir / "profile_pictures" / filename) as stored:
+        assert stored.format == "PNG"
+        assert stored.mode == "RGBA"
+    db.session.refresh(user)
+    assert user.profile_picture == filename
+
+
+def test_profile_picture_extension_follows_the_content(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = _post_picture(client, "avatar.png", jpeg_bytes())
+
+    assert resp.status_code == 200
+    assert resp.json["data"]["filename"].endswith(".jpg")
+
+
+def test_profile_picture_animated_gif_keeps_its_frames(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = _post_picture(client, "dance.gif", animated_gif_bytes(frames=4))
+
+    assert resp.status_code == 200
+    filename = resp.json["data"]["filename"]
+    assert filename.endswith(".gif")
+    with Image.open(upload_dir / "profile_pictures" / filename) as stored:
+        assert stored.n_frames == 4
+
+
+def test_profile_picture_is_shrunk_to_512_pixels(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = _post_picture(client, "big.png", png_bytes(size=(1200, 800)))
+
+    assert resp.status_code == 200
+    with Image.open(upload_dir / "profile_pictures" / resp.json["data"]["filename"]) as stored:
+        assert stored.size == (512, 341)
+
+
+def test_profile_picture_with_too_many_pixels_is_a_400_not_a_500(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = _post_picture(client, "bomb.png", png_header_only(6000, 5000))
+
+    assert resp.status_code == 400
+    assert "Image dimensions too large" in resp.json["error"]
+    assert _files(upload_dir / "profile_pictures") == []
+
+
+def test_profile_picture_with_corrupt_content_is_a_400(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = _post_picture(client, "avatar.png", b"definitely not a png")
+
+    assert resp.status_code == 400
+    assert resp.json["error"] == "Invalid or corrupt image file."
+    assert _files(upload_dir / "profile_pictures") == []
+
+
+def test_profile_picture_replacement_deletes_the_old_file(client, init_db, upload_dir):
+    user = UserFactory(profile_picture="old.png")
+    folder = upload_dir / "profile_pictures"
+    _make_stored(folder, "old.png")
+    _login(client, user)
+
+    resp = _post_picture(client, "new.png", png_bytes())
+
+    assert resp.status_code == 200
+    assert _files(folder) == [resp.json["data"]["filename"]]
+
+
+def test_profile_picture_replacement_never_deletes_the_shared_default(client, init_db, upload_dir):
+    user = UserFactory(profile_picture="Default_pfp.jpg")
+    folder = upload_dir / "profile_pictures"
+    _make_stored(folder, "Default_pfp.jpg")
+    _login(client, user)
+
+    resp = _post_picture(client, "new.png", png_bytes())
+
+    assert resp.status_code == 200
+    assert "Default_pfp.jpg" in _files(folder)
+
+
+def test_profile_picture_failed_commit_keeps_the_old_file_and_drops_the_new_one(client, init_db, upload_dir):
+    user = UserFactory(profile_picture="old.png")
+    folder = upload_dir / "profile_pictures"
+    _make_stored(folder, "old.png")
+    _login(client, user)
+
+    with patch("application.extensions.db.session.commit", side_effect=Exception("DB Error")):
+        resp = _post_picture(client, "new.png", png_bytes())
+
+    assert resp.status_code == 500
+    assert _files(folder) == ["old.png"]
+    db.session.refresh(user)
+    assert user.profile_picture == "old.png"
+
+
+# profile wallpaper
+
+
+def _wallpaper_user():
+    user = UserFactory()
+    user.has_custom_wallpaper = True
+    db.session.commit()
+    return user
+
+
+def test_wallpaper_rgba_png_named_jpg_is_stored_as_a_valid_png(client, init_db, upload_dir):
+    user = _wallpaper_user()
+    _login(client, user)
+
+    resp = _post_picture(client, "wall.jpg", png_bytes(mode="RGBA", size=(64, 40)),
+                         "/user/api/profile-wallpaper", "profile_wallpaper")
+
+    assert resp.status_code == 200
+    filename = resp.json["data"]["filename"]
+    assert filename.endswith(".png")
+    with Image.open(upload_dir / "profile_wallpapers" / filename) as stored:
+        assert (stored.format, stored.size) == ("PNG", (64, 40))
+
+
+def test_wallpaper_animated_gif_keeps_its_frames(client, init_db, upload_dir):
+    user = _wallpaper_user()
+    _login(client, user)
+
+    resp = _post_picture(client, "wall.gif", animated_gif_bytes(frames=3),
+                         "/user/api/profile-wallpaper", "profile_wallpaper")
+
+    assert resp.status_code == 200
+    with Image.open(upload_dir / "profile_wallpapers" / resp.json["data"]["filename"]) as stored:
+        assert stored.n_frames == 3
+
+
+def test_wallpaper_corrupt_content_is_a_400(client, init_db, upload_dir):
+    user = _wallpaper_user()
+    _login(client, user)
+
+    resp = _post_picture(client, "wall.png", b"nope", "/user/api/profile-wallpaper", "profile_wallpaper")
+
+    assert resp.status_code == 400
+    assert _files(upload_dir / "profile_wallpapers") == []
+
+
+def test_wallpaper_replacement_deletes_the_old_file(client, init_db, upload_dir):
+    user = _wallpaper_user()
+    user.profile_wallpaper = "old_wall.png"
+    db.session.commit()
+    folder = upload_dir / "profile_wallpapers"
+    _make_stored(folder, "old_wall.png")
+    _login(client, user)
+
+    resp = _post_picture(client, "wall.png", png_bytes(), "/user/api/profile-wallpaper", "profile_wallpaper")
+
+    assert resp.status_code == 200
+    assert _files(folder) == [resp.json["data"]["filename"]]
+
+
+def test_wallpaper_failed_commit_keeps_the_old_file_and_drops_the_new_one(client, init_db, upload_dir):
+    user = _wallpaper_user()
+    user.profile_wallpaper = "old_wall.png"
+    db.session.commit()
+    folder = upload_dir / "profile_wallpapers"
+    _make_stored(folder, "old_wall.png")
+    _login(client, user)
+
+    with patch("application.extensions.db.session.commit", side_effect=Exception("DB Error")):
+        resp = _post_picture(client, "wall.png", png_bytes(), "/user/api/profile-wallpaper", "profile_wallpaper")
+
+    assert resp.status_code == 500
+    assert _files(folder) == ["old_wall.png"]
+
+
+# profile picture (edit_profile form)
+
+
+def _post_profile_form(client, **fields):
+    return client.post("/user/edit_profile", data=fields, content_type="multipart/form-data")
+
+
+def test_edit_profile_form_picture_is_validated_and_stored_under_its_real_type(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = _post_profile_form(client, profile_picture=(BytesIO(png_bytes(mode="RGBA")), "me.jpg"))
+
+    assert resp.status_code == 200
+    db.session.refresh(user)
+    assert re.fullmatch(r"[0-9a-f]{32}\.png", user.profile_picture)
+    with Image.open(upload_dir / "profile_pictures" / user.profile_picture) as stored:
+        assert stored.format == "PNG"
+
+
+def test_edit_profile_form_picture_replacement_deletes_the_old_file(client, init_db, upload_dir):
+    user = UserFactory(profile_picture="old.png")
+    folder = upload_dir / "profile_pictures"
+    _make_stored(folder, "old.png")
+    _login(client, user)
+
+    resp = _post_profile_form(client, profile_picture=(BytesIO(png_bytes()), "new.png"))
+
+    assert resp.status_code == 200
+    db.session.refresh(user)
+    assert _files(folder) == [user.profile_picture]
+    assert user.profile_picture != "old.png"
+
+
+def test_edit_profile_form_without_a_picture_keeps_the_old_file(client, init_db, upload_dir):
+    user = UserFactory(profile_picture="old.png")
+    folder = upload_dir / "profile_pictures"
+    _make_stored(folder, "old.png")
+    _login(client, user)
+
+    resp = _post_profile_form(client, bio="hello", profile_picture=(BytesIO(b""), ""))
+
+    assert resp.status_code == 200
+    assert _files(folder) == ["old.png"]
+    db.session.refresh(user)
+    assert (user.profile_picture, user.bio) == ("old.png", "hello")
+
+
+@pytest.mark.parametrize(
+    "name, data, status",
+    [
+        ("notes.txt", b"text", 400),
+        ("me.png", b"not an image", 400),
+        ("me.png", b"0" * (5 * 1024 * 1024 + 10), 413),
+    ],
+    ids=["bad-extension", "not-an-image", "too-large"],
+)
+def test_edit_profile_form_rejects_a_bad_picture_and_saves_nothing(client, init_db, upload_dir, name, data, status):
+    user = UserFactory(profile_picture="old.png", bio="before")
+    folder = upload_dir / "profile_pictures"
+    _make_stored(folder, "old.png")
+    _login(client, user)
+
+    resp = _post_profile_form(client, bio="after", profile_picture=(BytesIO(data), name))
+
+    assert resp.status_code == status
+    assert resp.json["status"] == "error"
+    assert _files(folder) == ["old.png"]
+    db.session.expire_all()
+    assert (user.profile_picture, user.bio) == ("old.png", "before")
+
+
+def test_edit_profile_form_failed_commit_drops_the_new_file_and_keeps_the_old(client, init_db, upload_dir):
+    user = UserFactory(profile_picture="old.png")
+    folder = upload_dir / "profile_pictures"
+    _make_stored(folder, "old.png")
+    _login(client, user)
+
+    with patch("application.extensions.db.session.commit", side_effect=Exception("DB Error")):
+        resp = _post_profile_form(client, profile_picture=(BytesIO(png_bytes()), "new.png"))
+
+    assert resp.status_code == 500
+    assert _files(folder) == ["old.png"]
+
+
+def test_edit_profile_form_for_a_deleted_user_is_a_500_not_a_crash(client, init_db, upload_dir):
+    with client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    resp = _post_profile_form(client, bio="hello")
+
+    assert resp.status_code == 500
+    assert resp.json["status"] == "error"
+    assert resp.json["error"] == "An error occurred while updating the profile."
+
+
+# project images
+
+
+def test_new_project_image_is_validated_and_stored_under_its_real_type(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = client.post(
+        "/user/project/new",
+        data={"name": "With Image", "project_image": (BytesIO(png_bytes(mode="RGBA")), "shot.jpg")},
+        content_type="multipart/form-data",
+    )
+
+    assert resp.status_code == 200
+    project = Project.query.filter_by(name="With Image").one()
+    match = re.fullmatch(r"/user/project_images/([0-9a-f]{32}\.png)", project.image_url)
+    assert match
+    with Image.open(upload_dir / "projects" / match.group(1)) as stored:
+        assert stored.format == "PNG"
+
+
+def test_new_project_image_is_shrunk_to_1600_pixels(client, init_db, upload_dir):
+    user = UserFactory()
+    _login(client, user)
+
+    client.post(
+        "/user/project/new",
+        data={"name": "Wide", "project_image": (BytesIO(png_bytes(size=(3200, 1600))), "wide.png")},
+        content_type="multipart/form-data",
+    )
+
+    project = Project.query.filter_by(name="Wide").one()
+    with Image.open(upload_dir / "projects" / project.image_url.rsplit("/", 1)[1]) as stored:
+        assert stored.size == (1600, 800)
+
+
+@pytest.mark.parametrize(
+    "name, data, status",
+    [
+        ("shot.png", b"not an image", 400),
+        ("shot.png", png_header_only(6000, 5000), 400),
+        ("shot.gif", b"GIF89a" + b"\0" * 10, 400),
+        ("shot.png", b"0" * (10 * 1024 * 1024 + 10), 413),
+    ],
+    ids=["not-an-image", "too-many-pixels", "truncated-gif", "too-large"],
+)
+def test_new_project_rejects_a_bad_image_and_creates_nothing(client, init_db, upload_dir, name, data, status):
+    user = UserFactory()
+    _login(client, user)
+
+    resp = client.post(
+        "/user/project/new",
+        data={"name": "Rejected", "project_image": (BytesIO(data), name)},
+        content_type="multipart/form-data",
+    )
+
+    assert resp.status_code == status
+    assert Project.query.filter_by(name="Rejected").first() is None
+    assert _files(upload_dir / "projects") == []
+
+
+def test_edit_project_rejects_a_bad_image_and_keeps_the_current_one(client, init_db, upload_dir):
+    user = UserFactory()
+    _make_stored(upload_dir / "projects", "a" * 32 + ".png")
+    project = Project(name="Keep", user_id=user.id, image_url=UPLOADED_URL)
+    db.session.add(project)
+    db.session.commit()
+    _login(client, user)
+
+    resp = client.post(
+        f"/user/project/edit/{project.id}",
+        data={"name": "Keep", "project_image": (BytesIO(b"not an image"), "x.png")},
+        content_type="multipart/form-data",
+    )
+
+    assert resp.status_code == 400
+    assert _files(upload_dir / "projects") == ["a" * 32 + ".png"]
+    db.session.expire_all()
+    assert project.image_url == UPLOADED_URL
+
+
+def test_deleting_a_project_removes_its_uploaded_image(client, init_db, upload_dir):
+    user = UserFactory()
+    _make_stored(upload_dir / "projects", "a" * 32 + ".png")
+    project = Project(name="Gone", user_id=user.id, image_url=UPLOADED_URL)
+    db.session.add(project)
+    db.session.commit()
+    project_id = project.id
+    _login(client, user)
+
+    resp = client.post(f"/user/project/edit/{project_id}", data={"action": "delete"})
+
+    assert resp.status_code == 200
+    assert db.session.get(Project, project_id) is None
+    assert _files(upload_dir / "projects") == []
+
+
+def test_deleting_a_project_keeps_an_image_a_template_still_uses(client, init_db, upload_dir):
+    user = UserFactory()
+    _make_stored(upload_dir / "projects", "a" * 32 + ".png")
+    template = ProjectTemplate(name="Shared Template", description="d", image_url=UPLOADED_URL)
+    project = Project(name="Assigned", user_id=user.id, image_url=UPLOADED_URL)
+    db.session.add_all([template, project])
+    db.session.commit()
+    _login(client, user)
+
+    resp = client.post(f"/user/project/edit/{project.id}", data={"action": "delete"})
+
+    assert resp.status_code == 200
+    assert _files(upload_dir / "projects") == ["a" * 32 + ".png"]
+
+
+def test_deleting_a_project_keeps_an_image_another_project_still_uses(client, init_db, upload_dir):
+    user = UserFactory()
+    other = UserFactory()
+    _make_stored(upload_dir / "projects", "a" * 32 + ".png")
+    mine = Project(name="Mine", user_id=user.id, image_url=UPLOADED_URL)
+    # an absolute URL to the same upload still counts as a use
+    theirs = Project(name="Theirs", user_id=other.id, image_url="https://blossom.example.com" + UPLOADED_URL)
+    db.session.add_all([mine, theirs])
+    db.session.commit()
+    _login(client, user)
+
+    resp = client.post(f"/user/project/edit/{mine.id}", data={"action": "delete"})
+
+    assert resp.status_code == 200
+    assert _files(upload_dir / "projects") == ["a" * 32 + ".png"]
+
+
+@pytest.mark.parametrize(
+    "image_url",
+    [
+        "/images/standard_projects/proj_1.jpg",
+        "https://img.youtube.com/vi/abc/hqdefault.jpg",
+        "/user/project_images/../../outside.png",
+        "/user/project_images/short.png",
+        "/user/project_images/" + "A" * 32 + ".png",
+        None,
+        "",
+    ],
+)
+def test_deleting_a_project_ignores_image_urls_that_are_not_uploads(client, init_db, upload_dir, image_url):
+    user = UserFactory()
+    for name in ("short.png", "A" * 32 + ".png", "proj_1.jpg", "hqdefault.jpg"):
+        _make_stored(upload_dir / "projects", name)
+    (upload_dir / "outside.png").write_bytes(b"x")
+    project = Project(name="Other URL", user_id=user.id, image_url=image_url)
+    db.session.add(project)
+    db.session.commit()
+    _login(client, user)
+    before = _files(upload_dir / "projects")
+
+    resp = client.post(f"/user/project/edit/{project.id}", data={"action": "delete"})
+
+    assert resp.status_code == 200
+    assert _files(upload_dir / "projects") == before
+    assert (upload_dir / "outside.png").exists()
+
+
+def test_a_cleanup_failure_never_blocks_deleting_a_project(client, init_db, upload_dir):
+    user = UserFactory()
+    _make_stored(upload_dir / "projects", "a" * 32 + ".png")
+    project = Project(name="Stuck", user_id=user.id, image_url=UPLOADED_URL)
+    db.session.add(project)
+    db.session.commit()
+    project_id = project.id
+    _login(client, user)
+
+    with patch("application.routes.user_routes.delete_stored_image", side_effect=RuntimeError("boom")):
+        resp = client.post(f"/user/project/edit/{project_id}", data={"action": "delete"})
+
+    assert resp.status_code == 200
+    assert db.session.get(Project, project_id) is None
+
+
+def test_replacing_a_project_image_removes_the_old_file(client, init_db, upload_dir):
+    user = UserFactory()
+    _make_stored(upload_dir / "projects", "a" * 32 + ".png")
+    project = Project(name="Swap", user_id=user.id, image_url=UPLOADED_URL)
+    db.session.add(project)
+    db.session.commit()
+    _login(client, user)
+
+    resp = client.post(
+        f"/user/project/edit/{project.id}",
+        data={"name": "Swap", "project_image": (BytesIO(png_bytes()), "new.png")},
+        content_type="multipart/form-data",
+    )
+
+    assert resp.status_code == 200
+    db.session.refresh(project)
+    new_name = project.image_url.rsplit("/", 1)[1]
+    assert new_name != "a" * 32 + ".png"
+    assert _files(upload_dir / "projects") == [new_name]
+
+
+def test_replacing_a_project_image_keeps_the_old_file_a_template_uses(client, init_db, upload_dir):
+    user = UserFactory()
+    _make_stored(upload_dir / "projects", "a" * 32 + ".png")
+    template = ProjectTemplate(name="Shared Swap", description="d", image_url=UPLOADED_URL)
+    project = Project(name="Swap Shared", user_id=user.id, image_url=UPLOADED_URL)
+    db.session.add_all([template, project])
+    db.session.commit()
+    _login(client, user)
+
+    resp = client.post(
+        f"/user/project/edit/{project.id}",
+        data={"name": "Swap Shared", "project_image": (BytesIO(png_bytes()), "new.png")},
+        content_type="multipart/form-data",
+    )
+
+    assert resp.status_code == 200
+    assert len(_files(upload_dir / "projects")) == 2
+    assert "a" * 32 + ".png" in _files(upload_dir / "projects")
+
+
+def test_editing_a_project_without_a_new_image_keeps_the_file(client, init_db, upload_dir):
+    user = UserFactory()
+    _make_stored(upload_dir / "projects", "a" * 32 + ".png")
+    project = Project(name="Same Image", user_id=user.id, image_url=UPLOADED_URL)
+    db.session.add(project)
+    db.session.commit()
+    _login(client, user)
+
+    resp = client.post(f"/user/project/edit/{project.id}", data={"name": "Renamed"})
+
+    assert resp.status_code == 200
+    assert _files(upload_dir / "projects") == ["a" * 32 + ".png"]
+
+
+def test_project_image_handler_returns_none_without_a_file(test_app):
+    from application.routes.user_routes import handle_project_image_upload
+
+    with test_app.test_request_context():
+        assert handle_project_image_upload(None) is None

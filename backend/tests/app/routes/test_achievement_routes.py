@@ -4,6 +4,7 @@ Type: py
 Summary: Unit tests for achievement routes Flask routes.
 """
 
+import os
 import re
 import zipfile
 from io import BytesIO
@@ -14,12 +15,15 @@ import pytest
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
 from application.models.user_certificate import UserCertificate
+from application.routes import achievement_routes
 from application.routes.achievement_routes import (
     CERT_URL_REGEX,
     MAX_CERT_URL_LENGTH,
     _certificate_download_name,
 )
+from PIL import Image
 from tests.factories import AchievementFactory, AdminFactory, UserFactory
+from tests.image_helpers import animated_gif_bytes, image_bytes, jpeg_bytes, png_bytes
 
 
 @pytest.fixture
@@ -39,6 +43,17 @@ def test_achievement(init_db):
     ach = AchievementFactory(type='ducks', requirement_value='100')
     db.session.commit()
     return ach
+
+
+REAL_BADGE_DIR = achievement_routes._badge_dir  # the autouse fixture below replaces it per test
+
+
+@pytest.fixture(autouse=True)
+def badge_dir(tmp_path, monkeypatch):
+    """Badges are written to a scratch folder, never to the real static/images/achievement_badges."""
+    folder = tmp_path / "achievement_badges"
+    monkeypatch.setattr(achievement_routes, "_badge_dir", lambda: str(folder))
+    return folder
 
 
 
@@ -454,24 +469,18 @@ def test_add_achievement_duplicate_slug(
     assert "already exists" in response.json["message"]
 
 
-@patch("werkzeug.datastructures.FileStorage.save")
-@patch("application.routes.achievement_routes.allowed_file")
-@patch("application.routes.achievement_routes.os.makedirs")
 @patch("application.routes.achievement_routes.subprocess.run")
 def test_add_achievement_with_badge(
     mock_subprocess,
-    mock_makedirs,
-    mock_allowed,
-    mock_save,
     client,
     init_db,
     test_admin,
+    badge_dir,
 ):
-    mock_allowed.return_value = True
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
 
-    img_data = b"fake image"
+    img_data = png_bytes()
     img_file = (BytesIO(img_data), "badge.png")
 
     response = client.post(
@@ -488,7 +497,9 @@ def test_add_achievement_with_badge(
     assert response.status_code == 200
     assert response.json["status"] == "success"
     mock_subprocess.assert_called_once()
-    mock_save.assert_called_once()
+    assert mock_subprocess.call_args.kwargs["timeout"] == achievement_routes.SPRITE_REBUILD_TIMEOUT
+    assert [p.name for p in badge_dir.iterdir()] == ["badge-ach.png"]
+    assert Achievement.query.filter_by(slug="badge-ach").one().name == "Badge Ach"
 
 
 @patch("application.routes.achievement_routes.allowed_file")
@@ -683,9 +694,8 @@ def test_edit_achievement_accepts_unchanged_legacy_slug(
 
 
 @patch("application.routes.achievement_routes.subprocess.run")
-@patch("werkzeug.datastructures.FileStorage.save")
 def test_edit_achievement_legacy_slug_still_gets_its_badge(
-    mock_save, mock_subprocess, client, init_db, test_admin, test_achievement
+    mock_subprocess, client, init_db, test_admin, test_achievement, badge_dir
 ):
     """A path-safe slug that predates SLUG_RE can still have a badge uploaded."""
     test_achievement.slug = "Legacy_Slug"
@@ -694,21 +704,19 @@ def test_edit_achievement_legacy_slug_still_gets_its_badge(
 
     response = client.put(
         f"/api/achievements/edit/{test_achievement.id}",
-        data={"slug": "Legacy_Slug", "badge": (BytesIO(b"fake"), "badge.png")},
+        data={"slug": "Legacy_Slug", "badge": (BytesIO(png_bytes()), "badge.png")},
         content_type="multipart/form-data",
     )
 
     assert response.status_code == 200
-    mock_save.assert_called_once()
-    assert mock_save.call_args[0][0].endswith("Legacy_Slug.png")
+    assert [p.name for p in badge_dir.iterdir()] == ["Legacy_Slug.png"]
     mock_subprocess.assert_called_once()
 
 
 @pytest.mark.parametrize("stored_slug", ["../evil", "sub/dir"])
 @patch("application.routes.achievement_routes.subprocess.run")
-@patch("werkzeug.datastructures.FileStorage.save")
 def test_edit_achievement_never_writes_a_badge_outside_the_badge_dir(
-    mock_save, mock_subprocess, stored_slug, client, init_db, test_admin, test_achievement
+    mock_subprocess, stored_slug, client, init_db, test_admin, test_achievement, badge_dir, tmp_path
 ):
     """A stored slug that is not path-safe (unchanged, so not re-validated) is refused for badges."""
     test_achievement.slug = stored_slug
@@ -717,14 +725,15 @@ def test_edit_achievement_never_writes_a_badge_outside_the_badge_dir(
 
     response = client.put(
         f"/api/achievements/edit/{test_achievement.id}",
-        data={"slug": stored_slug, "badge": (BytesIO(b"fake"), "badge.png")},
+        data={"slug": stored_slug, "badge": (BytesIO(png_bytes()), "badge.png")},
         content_type="multipart/form-data",
     )
 
     assert response.status_code == 400
     assert "Slug may only contain" in response.json["message"]
-    mock_save.assert_not_called()
     mock_subprocess.assert_not_called()
+    assert not badge_dir.exists()
+    assert sorted(p.name for p in tmp_path.rglob("*.png")) == []
 
 
 @pytest.mark.parametrize("reward", ["abc", "1.5", "0", "-2"])
@@ -765,22 +774,19 @@ def test_edit_achievement_invalid_badge_ext_is_400(
     mock_subprocess.assert_not_called()
 
 
-@patch("werkzeug.datastructures.FileStorage.save")
-@patch("application.routes.achievement_routes.allowed_file")
 @patch("application.routes.achievement_routes.subprocess.run")
 def test_add_achievement_badge_subprocess_fail(
-    mock_subprocess, mock_allowed, mock_save, client, init_db, test_admin
+    mock_subprocess, client, init_db, test_admin, badge_dir
 ):
     import subprocess
 
-    mock_allowed.return_value = True
     mock_subprocess.side_effect = subprocess.CalledProcessError(
         1, "cmd", stderr="error"
     )
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
 
-    img_file = (BytesIO(b"fake image"), "badge.png")
+    img_file = (BytesIO(png_bytes()), "badge.png")
     response = client.post(
         "/api/achievements/add",
         data={
@@ -794,20 +800,21 @@ def test_add_achievement_badge_subprocess_fail(
     )
     assert response.status_code == 500
     assert response.json["status"] == "error"
+    assert "Sprite sheet rebuild failed: error" in response.json["message"]
+    # nothing is left behind: no row and no badge file
+    assert Achievement.query.filter_by(slug="badge-ach-3").first() is None
+    assert list(badge_dir.glob("*")) == []
 
 
-@patch("werkzeug.datastructures.FileStorage.save")
-@patch("application.routes.achievement_routes.allowed_file")
 @patch("application.routes.achievement_routes.subprocess.run")
 def test_add_achievement_badge_subprocess_exception(
-    mock_subprocess, mock_allowed, mock_save, client, init_db, test_admin
+    mock_subprocess, client, init_db, test_admin, badge_dir
 ):
-    mock_allowed.return_value = True
     mock_subprocess.side_effect = Exception("unexpected error")
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
 
-    img_file = (BytesIO(b"fake image"), "badge.png")
+    img_file = (BytesIO(png_bytes()), "badge.png")
     response = client.post(
         "/api/achievements/add",
         data={
@@ -821,6 +828,9 @@ def test_add_achievement_badge_subprocess_exception(
     )
     assert response.status_code == 500
     assert response.json["status"] == "error"
+    assert "Error rebuilding sprite sheet: unexpected error" in response.json["message"]
+    assert Achievement.query.filter_by(slug="badge-ach-4").first() is None
+    assert list(badge_dir.glob("*")) == []
 
 
 def test_view_certificate(
@@ -1415,22 +1425,20 @@ def test_edit_achievement_requires_admin(client, init_db, test_user, test_achiev
     assert test_achievement.name not in ("Anonymous", "Student")
 
 
-@patch("werkzeug.datastructures.FileStorage.save")
-@patch("application.routes.achievement_routes.os.makedirs")
 @patch("application.routes.achievement_routes.subprocess.run")
 def test_edit_achievement_with_badge(
-    mock_subprocess, mock_makedirs, mock_save, client, init_db, test_admin, test_achievement
+    mock_subprocess, client, init_db, test_admin, test_achievement, badge_dir
 ):
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
 
     response = _edit(
-        client, test_achievement.id, badge=(BytesIO(b"fake image"), "badge.png")
+        client, test_achievement.id, badge=(BytesIO(png_bytes()), "badge.png")
     )
 
     assert response.status_code == 200
     assert response.json["status"] == "success"
-    mock_save.assert_called_once()
+    assert [p.name for p in badge_dir.iterdir()] == [f"{test_achievement.slug}.png"]
     mock_subprocess.assert_called_once()
 
 
@@ -1450,22 +1458,21 @@ def test_edit_achievement_rejects_invalid_badge_type(
     mock_save.assert_not_called()
 
 
-@patch("werkzeug.datastructures.FileStorage.save")
-@patch("application.routes.achievement_routes.os.makedirs")
 @patch("application.routes.achievement_routes.subprocess.run")
 def test_edit_achievement_sprite_rebuild_failure(
-    mock_subprocess, mock_makedirs, mock_save, client, init_db, test_admin, test_achievement
+    mock_subprocess, client, init_db, test_admin, test_achievement, badge_dir
 ):
     mock_subprocess.side_effect = Exception("boom")
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
 
     response = _edit(
-        client, test_achievement.id, badge=(BytesIO(b"fake image"), "badge.png")
+        client, test_achievement.id, badge=(BytesIO(png_bytes()), "badge.png")
     )
 
     assert response.status_code == 500
     assert response.json["status"] == "error"
+    assert not list(badge_dir.glob("*"))
 
 
 # --- Certificate submission: URL anchoring, stored file names, download names ---
@@ -1814,3 +1821,385 @@ def test_download_all_certificates_zip_entries_are_safe_and_unique(
     assert len(names) == len(set(names)) == 2
     assert f"{base}.pdf" in names
     assert all(n.startswith(base) and n.endswith(".pdf") for n in names)
+
+
+# --- Badge uploads: one validated PNG per slug, stale variants removed, and all-or-nothing saves ---
+
+RUN_SPRITE = "application.routes.achievement_routes.subprocess.run"
+
+
+def _names(folder):
+    return sorted(p.name for p in folder.iterdir()) if folder.exists() else []
+
+
+def _put(folder, name, data=b"old"):
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / name).write_bytes(data)
+
+
+def _add_with_badge(client, slug, data, filename="badge.png", **extra):
+    return client.post(
+        "/api/achievements/add",
+        data={"name": f"Badge {slug}", "slug": slug, "type": "ducks", "reward": 10,
+              "badge": (BytesIO(data), filename), **extra},
+        content_type="multipart/form-data",
+    )
+
+
+@pytest.fixture
+def admin_session(client, test_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+    return client
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_is_normalised_to_a_small_png(mock_run, admin_session, badge_dir):
+    response = _add_with_badge(admin_session, "from-jpeg", jpeg_bytes(size=(600, 400)), "badge.jpg")
+
+    assert response.status_code == 200
+    assert _names(badge_dir) == ["from-jpeg.png"]
+    with Image.open(badge_dir / "from-jpeg.png") as stored:
+        assert (stored.format, stored.size) == ("PNG", (256, 171))
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_keeps_the_alpha_of_a_webp(mock_run, admin_session, badge_dir):
+    response = _add_with_badge(admin_session, "from-webp", image_bytes("WEBP", mode="RGBA"), "badge.webp")
+
+    assert response.status_code == 200
+    with Image.open(badge_dir / "from-webp.png") as stored:
+        assert (stored.format, stored.mode) == ("PNG", "RGBA")
+        assert stored.getpixel((0, 0))[3] > 0
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_removes_leftover_files_of_other_types(mock_run, admin_session, badge_dir):
+    for ext in ("jpg", "jpeg", "webp", "png"):
+        _put(badge_dir, f"stale.{ext}")
+    _put(badge_dir, "other.jpg")  # another slug is never touched
+
+    response = _add_with_badge(admin_session, "stale", png_bytes())
+
+    assert response.status_code == 200
+    assert _names(badge_dir) == ["other.jpg", "stale.png"]
+    with Image.open(badge_dir / "stale.png") as stored:
+        assert stored.format == "PNG"
+
+
+@patch(RUN_SPRITE)
+def test_add_without_a_badge_does_not_touch_files_or_the_sprite(mock_run, admin_session, badge_dir):
+    response = admin_session.post("/api/achievements/add", data={"name": "Plain", "slug": "plain"})
+
+    assert response.status_code == 200
+    mock_run.assert_not_called()
+    assert not badge_dir.exists()
+
+
+@pytest.mark.parametrize(
+    "data, filename, status",
+    [
+        (b"not an image", "badge.png", 400),
+        (animated_gif_bytes(), "badge.png", 400),
+        (image_bytes("BMP"), "badge.webp", 400),
+        (png_bytes(size=(10, 10))[:40], "badge.png", 400),
+    ],
+    ids=["garbage", "gif-content", "bmp-content", "truncated"],
+)
+@patch(RUN_SPRITE)
+def test_add_badge_with_unusable_content_is_a_400_and_creates_nothing(
+    mock_run, data, filename, status, admin_session, badge_dir
+):
+    response = _add_with_badge(admin_session, "bad-content", data, filename)
+
+    assert response.status_code == status
+    assert response.json["status"] == "error"
+    assert Achievement.query.filter_by(slug="bad-content").first() is None
+    assert not badge_dir.exists()
+    mock_run.assert_not_called()
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_over_the_size_cap_is_413(mock_run, admin_session, badge_dir, monkeypatch):
+    data = png_bytes(size=(64, 64))
+    monkeypatch.setitem(admin_session.application.config, "IMAGE_MAX_BYTES_BADGE", len(data) - 1)
+
+    response = _add_with_badge(admin_session, "too-big", data)
+
+    assert response.status_code == 413
+    assert "File too large" in response.json["message"]
+    assert Achievement.query.filter_by(slug="too-big").first() is None
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_over_the_pixel_cap_is_400(mock_run, admin_session, badge_dir, monkeypatch):
+    monkeypatch.setitem(admin_session.application.config, "MAX_IMAGE_PIXELS", 100)
+
+    response = _add_with_badge(admin_session, "too-wide", png_bytes(size=(20, 20)))
+
+    assert response.status_code == 400
+    assert response.json["message"].startswith("Image dimensions too large")
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_sprite_timeout_leaves_no_row_and_no_file(mock_run, admin_session, badge_dir):
+    import subprocess
+
+    mock_run.side_effect = subprocess.TimeoutExpired("make_sprite_sheet.py", 60)
+
+    response = _add_with_badge(admin_session, "slow-sprite", png_bytes())
+
+    assert response.status_code == 500
+    assert "Error rebuilding sprite sheet" in response.json["message"]
+    assert Achievement.query.filter_by(slug="slow-sprite").first() is None
+    assert _names(badge_dir) == []
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_failed_commit_removes_the_badge_and_rebuilds_the_sprite(mock_run, admin_session, badge_dir):
+    with patch("application.extensions.db.session.commit", side_effect=Exception("DB Error")):
+        response = _add_with_badge(admin_session, "commit-fails", png_bytes())
+
+    assert response.status_code == 500
+    assert response.json["message"] == "Error saving the achievement."
+    assert Achievement.query.filter_by(slug="commit-fails").first() is None
+    assert _names(badge_dir) == []
+    assert mock_run.call_count == 2  # built with the badge, then again without it
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_failed_flush_touches_no_file(mock_run, admin_session, badge_dir):
+    with patch("application.extensions.db.session.flush", side_effect=Exception("constraint")):
+        response = _add_with_badge(admin_session, "flush-fails", png_bytes())
+
+    assert response.status_code == 500
+    assert Achievement.query.filter_by(slug="flush-fails").first() is None
+    assert not badge_dir.exists()
+    mock_run.assert_not_called()
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_failed_commit_and_failed_second_rebuild_still_reports_the_commit_error(
+    mock_run, admin_session, badge_dir
+):
+    mock_run.side_effect = [None, Exception("sprite gone")]
+
+    with patch("application.extensions.db.session.commit", side_effect=Exception("DB Error")):
+        response = _add_with_badge(admin_session, "double-fail", png_bytes())
+
+    assert response.status_code == 500
+    assert _names(badge_dir) == []
+
+
+# edit
+
+
+def _edit_badge(client, achievement, data=None, filename="badge.png", **fields):
+    payload = dict(fields)
+    if data is not None:
+        payload["badge"] = (BytesIO(data), filename)
+    return client.put(
+        f"/api/achievements/edit/{achievement.id}", data=payload, content_type="multipart/form-data"
+    )
+
+
+@patch(RUN_SPRITE)
+def test_edit_badge_replaces_the_png_and_removes_other_types(mock_run, admin_session, test_achievement, badge_dir):
+    slug = test_achievement.slug
+    for ext in ("png", "jpg", "jpeg", "webp"):
+        _put(badge_dir, f"{slug}.{ext}")
+
+    response = _edit_badge(admin_session, test_achievement, jpeg_bytes(size=(80, 80)), "new.jpg")
+
+    assert response.status_code == 200
+    assert _names(badge_dir) == [f"{slug}.png"]
+    with Image.open(badge_dir / f"{slug}.png") as stored:
+        assert (stored.format, stored.size) == ("PNG", (80, 80))
+    mock_run.assert_called_once()
+
+
+@patch(RUN_SPRITE)
+def test_edit_badge_failure_puts_the_previous_files_back(mock_run, admin_session, test_achievement, badge_dir):
+    slug = test_achievement.slug
+    _put(badge_dir, f"{slug}.png", b"previous png")
+    _put(badge_dir, f"{slug}.jpg", b"previous jpg")
+    mock_run.side_effect = Exception("boom")
+
+    response = _edit_badge(admin_session, test_achievement, png_bytes(), name="Renamed")
+
+    assert response.status_code == 500
+    assert (badge_dir / f"{slug}.png").read_bytes() == b"previous png"
+    assert (badge_dir / f"{slug}.jpg").read_bytes() == b"previous jpg"
+    assert _names(badge_dir) == [f"{slug}.jpg", f"{slug}.png"]
+    db.session.expire_all()
+    assert db.session.get(Achievement, test_achievement.id).name != "Renamed"
+
+
+@patch(RUN_SPRITE)
+def test_edit_badge_failed_commit_restores_files_and_rebuilds(mock_run, admin_session, test_achievement, badge_dir):
+    slug = test_achievement.slug
+    _put(badge_dir, f"{slug}.png", b"previous png")
+
+    with patch("application.extensions.db.session.commit", side_effect=Exception("DB Error")):
+        response = _edit_badge(admin_session, test_achievement, png_bytes())
+
+    assert response.status_code == 500
+    assert (badge_dir / f"{slug}.png").read_bytes() == b"previous png"
+    assert mock_run.call_count == 2
+
+
+@patch(RUN_SPRITE)
+def test_edit_renaming_the_slug_moves_the_badge_files(mock_run, admin_session, test_achievement, badge_dir):
+    old = test_achievement.slug
+    _put(badge_dir, f"{old}.png", b"png bytes")
+    _put(badge_dir, f"{old}.webp", b"webp bytes")
+
+    response = _edit_badge(admin_session, test_achievement, slug="renamed-badge")
+
+    assert response.status_code == 200
+    assert _names(badge_dir) == ["renamed-badge.png", "renamed-badge.webp"]
+    assert (badge_dir / "renamed-badge.png").read_bytes() == b"png bytes"
+    mock_run.assert_called_once()  # the sprite's CSS class is named after the slug
+    db.session.expire_all()
+    assert db.session.get(Achievement, test_achievement.id).slug == "renamed-badge"
+
+
+@patch(RUN_SPRITE)
+def test_edit_renaming_a_slug_without_badge_files_does_not_rebuild(mock_run, admin_session, test_achievement, badge_dir):
+    response = _edit_badge(admin_session, test_achievement, slug="no-files-here")
+
+    assert response.status_code == 200
+    mock_run.assert_not_called()
+    assert not badge_dir.exists()
+
+
+@patch(RUN_SPRITE)
+def test_edit_renaming_the_slug_with_a_new_badge_drops_the_old_files(mock_run, admin_session, test_achievement, badge_dir):
+    old = test_achievement.slug
+    _put(badge_dir, f"{old}.png")
+    _put(badge_dir, f"{old}.jpg")
+
+    response = _edit_badge(admin_session, test_achievement, png_bytes(), slug="fresh-slug")
+
+    assert response.status_code == 200
+    assert _names(badge_dir) == ["fresh-slug.png"]
+    mock_run.assert_called_once()
+
+
+@patch(RUN_SPRITE)
+def test_edit_rename_failure_puts_the_files_back_under_the_old_slug(mock_run, admin_session, test_achievement, badge_dir):
+    old = test_achievement.slug
+    _put(badge_dir, f"{old}.png", b"png bytes")
+    mock_run.side_effect = Exception("boom")
+
+    response = _edit_badge(admin_session, test_achievement, slug="never-applied")
+
+    assert response.status_code == 500
+    assert _names(badge_dir) == [f"{old}.png"]
+    assert (badge_dir / f"{old}.png").read_bytes() == b"png bytes"
+    db.session.expire_all()
+    assert db.session.get(Achievement, test_achievement.id).slug == old
+
+
+@patch(RUN_SPRITE)
+def test_edit_with_an_unusable_badge_changes_nothing(mock_run, admin_session, test_achievement, badge_dir):
+    old_name = test_achievement.name
+
+    response = _edit_badge(admin_session, test_achievement, b"not an image", name="Should Not Stick")
+
+    assert response.status_code == 400
+    assert response.json["message"] == "Invalid or corrupt image file."
+    db.session.expire_all()
+    assert db.session.get(Achievement, test_achievement.id).name == old_name
+    mock_run.assert_not_called()
+
+
+@patch(RUN_SPRITE)
+def test_edit_with_a_duplicate_slug_changes_nothing(mock_run, admin_session, test_achievement, badge_dir):
+    other = AchievementFactory()
+    db.session.commit()
+    old_name = test_achievement.name
+
+    response = _edit_badge(admin_session, test_achievement, png_bytes(), name="Should Not Stick", slug=other.slug)
+
+    assert response.status_code == 400
+    assert "already exists" in response.json["message"]
+    db.session.expire_all()
+    assert db.session.get(Achievement, test_achievement.id).name == old_name
+    assert not badge_dir.exists()
+
+
+@patch(RUN_SPRITE)
+def test_edit_badge_over_the_size_cap_is_413(mock_run, admin_session, test_achievement, badge_dir, monkeypatch):
+    data = png_bytes(size=(64, 64))
+    monkeypatch.setitem(admin_session.application.config, "IMAGE_MAX_BYTES_BADGE", len(data) - 1)
+
+    response = _edit_badge(admin_session, test_achievement, data)
+
+    assert response.status_code == 413
+    assert not badge_dir.exists()
+
+
+@patch(RUN_SPRITE)
+def test_edit_with_a_legacy_unsafe_slug_can_move_to_a_valid_one_without_touching_files(
+    mock_run, admin_session, test_achievement, badge_dir, tmp_path
+):
+    """The old slug is not a plain file name, so none of its files are read, moved or removed."""
+    test_achievement.slug = "../legacy"
+    db.session.commit()
+    _put(tmp_path, "legacy.png", b"outside the badge folder")
+
+    response = _edit_badge(admin_session, test_achievement, png_bytes(), slug="valid-now")
+
+    assert response.status_code == 200
+    assert _names(badge_dir) == ["valid-now.png"]
+    assert (tmp_path / "legacy.png").read_bytes() == b"outside the badge folder"
+
+    renamed_only = _edit_badge(admin_session, test_achievement, name="No Files", slug="valid-again")
+    assert renamed_only.status_code == 200
+
+
+def test_badges_live_in_the_static_images_folder(test_app):
+    with test_app.app_context():
+        assert REAL_BADGE_DIR() == os.path.join(str(test_app.static_folder), "images", "achievement_badges")
+
+
+def test_badge_paths_refuse_unsafe_slugs(test_app):
+    with test_app.app_context():
+        for slug in ("", "../x", "a/b", "a\\b" if os.sep == "\\" else "a/../../b"):
+            assert not achievement_routes._badge_slug_is_safe(slug)
+            with pytest.raises(ValueError, match="Unsafe badge slug"):
+                achievement_routes._badge_path(slug, "png")
+        assert achievement_routes._badge_slug_is_safe("3-week-streak")
+        assert achievement_routes._badge_slug_is_safe("Legacy_Slug")
+        assert achievement_routes._badge_path("ok", "png").endswith("ok.png")
+
+
+def test_badge_files_undo_ignores_a_file_it_cannot_restore(test_app, tmp_path, monkeypatch):
+    target = tmp_path / "a.png"
+    target.write_bytes(b"before")
+    with test_app.app_context():
+        files = achievement_routes._BadgeFiles()
+        files.write(str(target), b"after")
+
+        def broken(path, data):
+            raise OSError("read-only")
+
+        monkeypatch.setattr(achievement_routes, "write_bytes_atomic", broken)
+        files.undo()  # logs and carries on
+
+    assert target.read_bytes() == b"after"
+
+
+def test_badge_files_remove_and_move_only_touch_existing_files(test_app, tmp_path):
+    (tmp_path / "src.png").write_bytes(b"data")
+    with test_app.app_context():
+        files = achievement_routes._BadgeFiles()
+        files.remove(str(tmp_path / "missing.png"))  # nothing to remove
+        files.move(str(tmp_path / "src.png"), str(tmp_path / "dst.png"))
+        assert sorted(p.name for p in tmp_path.iterdir()) == ["dst.png"]
+
+        files.undo()
+
+    assert (tmp_path / "src.png").read_bytes() == b"data"
+    assert not (tmp_path / "dst.png").exists()

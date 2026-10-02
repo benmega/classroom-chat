@@ -733,6 +733,54 @@ def test_upload_template_image_invalid_file(client, sample_admin):
     assert resp_txt.status_code == 400
 
 
+def test_upload_template_image_is_stored_under_its_real_type(client, sample_admin, test_app, tmp_path, monkeypatch):
+    """A template image goes through the same validation as every other project image."""
+    from io import BytesIO
+
+    from PIL import Image
+    from tests.image_helpers import png_bytes
+
+    monkeypatch.setitem(test_app.config, "UPLOAD_FOLDER", str(tmp_path))
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/project-templates/upload-image",
+        data={"file": (BytesIO(png_bytes(mode="RGBA")), "thumb.jpg")},
+        content_type="multipart/form-data",
+    )
+
+    assert resp.status_code == 200
+    res_data = resp.get_json()["data"]
+    assert res_data["filename"].endswith(".png")
+    assert res_data["new_url"] == f"/user/project_images/{res_data['filename']}"
+    with Image.open(tmp_path / "projects" / res_data["filename"]) as stored:
+        assert (stored.format, stored.mode) == ("PNG", "RGBA")
+
+
+def test_upload_template_image_rejects_bad_content_and_oversize(client, sample_admin, test_app, tmp_path, monkeypatch):
+    from io import BytesIO
+
+    monkeypatch.setitem(test_app.config, "UPLOAD_FOLDER", str(tmp_path))
+    login_as_admin(client, sample_admin)
+
+    corrupt = client.post(
+        "/api/project-templates/upload-image",
+        data={"file": (BytesIO(b"not an image"), "thumb.png")},
+        content_type="multipart/form-data",
+    )
+    assert corrupt.status_code == 400
+    assert corrupt.get_json()["error"] == "Invalid or corrupt image file."
+
+    too_large = client.post(
+        "/api/project-templates/upload-image",
+        data={"file": (BytesIO(b"0" * (10 * 1024 * 1024 + 10)), "thumb.png")},
+        content_type="multipart/form-data",
+    )
+    assert too_large.status_code == 413
+    assert "Maximum size is 10MB" in too_large.get_json()["error"]
+    assert not (tmp_path / "projects").exists()
+
+
 def test_project_review_packets(client, sample_admin, sample_user, test_app):
     """Test project review packet rewards and retraction."""
     from application.models.project import Project
