@@ -40,7 +40,7 @@ export const handlers = [
 
   // Mock logout
   http.get('*/user/logout', () => {
-    return HttpResponse.json({ success: true });
+    return HttpResponse.json({ status: 'success', message: 'Logged out' });
   }),
 
   // Silence session heartbeat requests in tests

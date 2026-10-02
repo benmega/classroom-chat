@@ -55,6 +55,42 @@ describe('useAdminDashboard', () => {
         expect(result.current.isLoading).toBe(false);
     });
 
+    it('toasts and stops loading when the server answers with a 500', async () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+        client.get.mockRejectedValueOnce({ response: { status: 500, data: { status: 'error', error: 'Internal error' } } });
+
+        const { result } = renderHook(() => useAdminDashboard());
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+
+        expect(toast.error).toHaveBeenCalledTimes(1);
+        expect(toast.error).toHaveBeenCalledWith('Failed to load dashboard data.');
+        expect(result.current.dashboardData).toBeNull();
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isRefreshing).toBe(false);
+        consoleError.mockRestore();
+    });
+
+    it('keeps the data it has when a later refresh fails', async () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+        client.get.mockResolvedValueOnce({ data: { status: 'success', data: { users: 10 } } });
+        const { result } = renderHook(() => useAdminDashboard());
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+        client.get.mockRejectedValueOnce({ response: { status: 500 } });
+
+        await act(async () => {
+            await result.current.fetchDashboardData();
+        });
+
+        expect(toast.error).toHaveBeenCalledWith('Failed to load dashboard data.');
+        expect(result.current.dashboardData).toEqual({ users: 10 });
+        expect(result.current.isRefreshing).toBe(false);
+        consoleError.mockRestore();
+    });
+
     it('toggles messages successfully', async () => {
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         client.post.mockResolvedValueOnce({ data: { success: true, message: 'Messages toggled' } });
@@ -274,4 +310,99 @@ describe('useAdminDashboard', () => {
         expect(toast.error).toHaveBeenCalledWith('Word exists');
         expect(res).toBe(false);
     });
+
+    describe('requests that overlap', () => {
+        // A request the test answers by hand, so it decides in what order the answers arrive
+        const deferred = () => {
+            const handle = {};
+            handle.promise = new Promise((resolve, reject) => {
+                handle.resolve = resolve;
+                handle.reject = reject;
+            });
+            return handle;
+        };
+        const answer = (users) => ({ data: { status: 'success', data: { users } } });
+        const daysOf = (call) => new URL(client.get.mock.calls[call][0], 'http://localhost').searchParams.get('days');
+
+        // Mounts with the 7 day request outstanding, then asks for 30 days while it is still out
+        const startTwoRequests = () => {
+            const week = deferred();
+            const month = deferred();
+            client.get.mockReturnValueOnce(week.promise).mockReturnValueOnce(month.promise);
+            const hook = renderHook(() => useAdminDashboard());
+            act(() => hook.result.current.setTimeframe(30));
+            expect(client.get).toHaveBeenCalledTimes(2);
+            expect(daysOf(0)).toBe('7');
+            expect(daysOf(1)).toBe('30');
+            return { ...hook, week, month };
+        };
+
+        it('keeps the data of the latest timeframe when an older answer arrives last', async () => {
+            const { result, week, month } = startTwoRequests();
+
+            await act(async () => { month.resolve(answer(30)); });
+            expect(result.current.dashboardData).toEqual({ users: 30 });
+            await act(async () => { week.resolve(answer(7)); });
+
+            expect(result.current.dashboardData).toEqual({ users: 30 });
+            expect(result.current.isLoading).toBe(false);
+            expect(result.current.isRefreshing).toBe(false);
+        });
+
+        it('ignores an older answer that arrives first and waits for the latest one', async () => {
+            const { result, week, month } = startTwoRequests();
+
+            await act(async () => { week.resolve(answer(7)); });
+            expect(result.current.dashboardData).toBeNull();
+            expect(result.current.isLoading).toBe(true);
+            expect(result.current.isRefreshing).toBe(true);
+
+            await act(async () => { month.resolve(answer(30)); });
+            expect(result.current.dashboardData).toEqual({ users: 30 });
+            expect(result.current.isLoading).toBe(false);
+            expect(result.current.isRefreshing).toBe(false);
+        });
+
+        it('does not toast for an older request that failed after a newer one worked', async () => {
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const { result, week, month } = startTwoRequests();
+
+            await act(async () => { month.resolve(answer(30)); });
+            await act(async () => { week.reject(new Error('timeout')); });
+
+            expect(toast.error).not.toHaveBeenCalled();
+            expect(result.current.dashboardData).toEqual({ users: 30 });
+            expect(result.current.isRefreshing).toBe(false);
+            consoleError.mockRestore();
+        });
+
+        it('still toasts when the latest request is the one that fails', async () => {
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const { result, week, month } = startTwoRequests();
+
+            await act(async () => { week.resolve(answer(7)); });
+            await act(async () => { month.reject(new Error('timeout')); });
+
+            expect(toast.error).toHaveBeenCalledTimes(1);
+            expect(toast.error).toHaveBeenCalledWith('Failed to load dashboard data.');
+            expect(result.current.dashboardData).toBeNull();
+            expect(result.current.isLoading).toBe(false);
+            consoleError.mockRestore();
+        });
+
+        it('lets a refresh after an action supersede a timeframe request that is still out', async () => {
+            const week = deferred();
+            const refresh = deferred();
+            client.get.mockReturnValueOnce(week.promise).mockReturnValueOnce(refresh.promise);
+            client.post.mockResolvedValueOnce({ data: { success: true } });
+            const { result } = renderHook(() => useAdminDashboard());
+
+            await act(async () => { await result.current.handleUpdateMultiplier(2); });
+            await act(async () => { refresh.resolve(answer(2)); });
+            await act(async () => { week.resolve(answer(7)); });
+
+            expect(result.current.dashboardData).toEqual({ users: 2 });
+        });
+    });
+
 });

@@ -27,7 +27,8 @@ vi.mock('react-hot-toast', () => ({
     },
 }));
 
-let mockUser = { id: 1, is_admin: true };
+// The hook gates the admin-only student list on role, so this is what makes a user an admin
+let mockUser = { id: 1, role: 'admin' };
 vi.mock('../store/useAuthStore', () => ({
     default: () => ({ user: mockUser }),
 }));
@@ -46,36 +47,95 @@ describe('useProjectManagement', () => {
         client.get.mockReset();
         client.post.mockReset();
         mockNavigate.mockReset();
-        mockUser = { id: 1, is_admin: true };
+        mockUser = { id: 1, role: 'admin' };
         vi.spyOn(window, 'confirm').mockReturnValue(true);
         window.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');
         window.URL.revokeObjectURL = vi.fn();
     });
 
-    it.skip('fetches project data correctly', async () => {
+    // The three endpoints the hook loads on mount: the admin-only student list, the project being
+    // edited (project 1, owned by student 2) and the template catalogue.
+    const serveProject = ({ project = { name: 'Proj 1', user_id: '2' }, templates = {} } = {}) => {
         client.get.mockImplementation((url) => {
             if (url === '/user/project/new') {
                 return Promise.resolve({ data: { data: { students: [{ id: 2, slug: 'student2' }] } } });
             }
             if (url === '/user/project/edit/1') {
-                return Promise.resolve({ data: { status: 'success', data: { project: { name: 'Proj 1', user_id: '2', image_url: '/img.png' } } } });
+                return Promise.resolve({ data: { status: 'success', data: { project } } });
             }
             if (url === '/api/project-templates') {
-                return Promise.resolve({ data: { data: { templates: { 'Proj 1': { description: 'desc' } } } } });
+                return Promise.resolve({ data: { data: { templates } } });
             }
             return Promise.resolve(null);
         });
-
-        const { result } = renderHook(() => useProjectManagement());
-
+    };
+    const mountProject = async () => {
+        const hook = renderHook(() => useProjectManagement());
         await act(async () => {
             await new Promise(r => setTimeout(r, 10));
         });
+        return hook;
+    };
+
+    it('fetches project data correctly', async () => {
+        serveProject({
+            project: { name: 'Proj 1', user_id: '2', image_url: '/img.png' },
+            templates: { 'Proj 1': { description: 'desc' } },
+        });
+
+        const { result } = await mountProject();
 
         expect(result.current.projectData.name).toBe('Proj 1');
-        expect(result.current.students.length).toBe(1);
+        expect(result.current.projectData.student_id).toBe('2');
+        expect(result.current.students).toEqual([{ id: 2, slug: 'student2' }]);
         expect(result.current.selectedTemplate).toBe('Proj 1');
         expect(result.current.imagePreview).toBe('/img.png');
+        expect(result.current.isLoading).toBe(false);
+    });
+
+    it('loads the student list for an admin', async () => {
+        serveProject();
+
+        await mountProject();
+
+        expect(client.get).toHaveBeenCalledWith('/user/project/new');
+        expect(client.get).toHaveBeenCalledWith('/user/project/edit/1');
+        expect(client.get).toHaveBeenCalledWith('/api/project-templates');
+    });
+
+    it.each([
+        ['a student', { id: 1, role: 'student' }],
+        ['a user whose role is unknown', { id: 1 }],
+        ['a parent', { id: 1, role: 'parent' }],
+    ])('does not ask %s for the student list', async (_name, user) => {
+        mockUser = user;
+        serveProject();
+
+        const { result } = await mountProject();
+
+        expect(client.get).not.toHaveBeenCalledWith('/user/project/new');
+        expect(client.get).toHaveBeenCalledWith('/user/project/edit/1');
+        expect(client.get).toHaveBeenCalledWith('/api/project-templates');
+        expect(result.current.students).toEqual([]);
+        expect(result.current.projectData.name).toBe('Proj 1');
+    });
+
+    it('tells the page the project is forbidden or missing', async () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+        client.get.mockRejectedValue({ response: { status: 403 } });
+        const forbidden = await mountProject();
+        expect(forbidden.result.current.error).toBe('forbidden');
+        expect(forbidden.result.current.isLoading).toBe(false);
+
+        client.get.mockRejectedValue({ response: { status: 404 } });
+        const missing = await mountProject();
+        expect(missing.result.current.error).toBe('not_found');
+
+        client.get.mockRejectedValue(new Error('Network Error'));
+        const broken = await mountProject();
+        expect(broken.result.current.error).toBeNull();
+        expect(toast.error).toHaveBeenCalledWith('Failed to load project details.');
+        consoleError.mockRestore();
     });
 
     it('handles input change', async () => {
@@ -190,33 +250,52 @@ describe('useProjectManagement', () => {
         expect(toast.success).toHaveBeenCalledWith('Generated thumbnail from recording!');
     });
 
-    it.skip('handles submit', async () => {
-        client.get.mockImplementation((url) => {
-            if (url === '/user/project/new') {
-                return Promise.resolve({ data: { data: { students: [{ id: 2, slug: 'student2' }] } } });
-            }
-            if (url === '/user/project/edit/1') {
-                return Promise.resolve({ data: { status: 'success', data: { project: { name: 'Proj 1', user_id: '2' } } } });
-            }
-            return Promise.resolve(null);
-        });
-
+    it('handles submit', async () => {
+        serveProject();
         client.post.mockResolvedValueOnce({ data: { status: 'success' } });
-
-        const { result } = renderHook(() => useProjectManagement());
-
-        await act(async () => {
-            await new Promise(r => setTimeout(r, 10));
-        });
+        const { result } = await mountProject();
 
         const event = { preventDefault: vi.fn() };
         await act(async () => {
             await result.current.handleSubmit(event);
         });
 
+        expect(event.preventDefault).toHaveBeenCalled();
         expect(client.post).toHaveBeenCalledWith('/user/project/edit/1', expect.any(FormData));
-        
+        const body = client.post.mock.calls[0][1];
+        expect(body.get('name')).toBe('Proj 1');
+        expect(body.get('student_id')).toBe('2');
+        expect(toast.success).toHaveBeenCalledWith('Project updated!');
+        // An admin lands on the profile of the student the project belongs to
         expect(mockNavigate).toHaveBeenCalledWith('/profile/student2');
+        expect(result.current.isSaving).toBe(false);
+    });
+
+    it('sends an admin to their own profile when the project owner is not in the student list', async () => {
+        serveProject({ project: { name: 'Proj 1', user_id: '99' } });
+        client.post.mockResolvedValueOnce({ data: { status: 'success' } });
+        const { result } = await mountProject();
+
+        await act(async () => {
+            await result.current.handleSubmit({ preventDefault: vi.fn() });
+        });
+
+        expect(mockNavigate).toHaveBeenCalledWith('/profile');
+    });
+
+    it('sends a student back to their own profile after saving', async () => {
+        mockUser = { id: 2, role: 'student' };
+        serveProject();
+        client.post.mockResolvedValueOnce({ data: { status: 'success' } });
+        const { result } = await mountProject();
+
+        await act(async () => {
+            await result.current.handleSubmit({ preventDefault: vi.fn() });
+        });
+
+        expect(client.post).toHaveBeenCalledWith('/user/project/edit/1', expect.any(FormData));
+        expect(mockNavigate).toHaveBeenCalledWith('/profile');
+        expect(mockNavigate).not.toHaveBeenCalledWith('/profile/student2');
     });
 
     it('handles submit fail', async () => {
@@ -237,32 +316,38 @@ describe('useProjectManagement', () => {
         expect(toast.error).toHaveBeenCalledWith('An error occurred.');
     });
 
-    it.skip('handles delete', async () => {
-        client.get.mockImplementation((url) => {
-            if (url === '/user/project/new') {
-                return Promise.resolve({ data: { data: { students: [{ id: 2, slug: 'student2' }] } } });
-            }
-            if (url === '/user/project/edit/1') {
-                return Promise.resolve({ data: { status: 'success', data: { project: { name: 'Proj 1', user_id: '2' } } } });
-            }
-            return Promise.resolve(null);
-        });
-
+    it('handles delete', async () => {
+        serveProject();
+        showConfirm.mockResolvedValue(true);
         client.post.mockResolvedValueOnce({ data: { status: 'success' } });
-
-        const { result } = renderHook(() => useProjectManagement());
-
-        await act(async () => {
-            await new Promise(r => setTimeout(r, 10));
-        });
+        const { result } = await mountProject();
 
         await act(async () => {
             await result.current.handleDelete();
         });
 
+        expect(showConfirm).toHaveBeenCalledWith(
+            'Are you sure you want to delete this project?',
+            expect.objectContaining({ destructive: true })
+        );
         expect(client.post).toHaveBeenCalledWith('/user/project/edit/1', expect.any(FormData));
-        
+        expect(client.post.mock.calls[0][1].get('action')).toBe('delete');
         expect(mockNavigate).toHaveBeenCalledWith('/profile/student2');
+        expect(result.current.isSaving).toBe(false);
+    });
+
+    it('sends a student to their profile after deleting a project', async () => {
+        mockUser = { id: 2, role: 'student' };
+        serveProject();
+        showConfirm.mockResolvedValue(true);
+        client.post.mockResolvedValueOnce({ data: { status: 'success' } });
+        const { result } = await mountProject();
+
+        await act(async () => {
+            await result.current.handleDelete();
+        });
+
+        expect(mockNavigate).toHaveBeenCalledWith('/profile');
     });
 
     describe('image preview object URLs', () => {

@@ -35,6 +35,9 @@ vi.mock('./pages/Admin/AdminDashboard', () => ({
 vi.mock('./pages/Parent/ParentDashboard', () => ({
   default: () => <div>Parent Dashboard Mock</div>
 }));
+vi.mock('./pages/General/CourseProgressTree', () => ({
+  default: () => <div>Course Progress Mock</div>
+}));
 // Shows where the guard said the user came from, so the tests can read the redirect state
 vi.mock('./pages/Auth/Login', async () => {
   const { useLocation } = await import('react-router-dom');
@@ -112,7 +115,7 @@ describe('App Component', () => {
       isLoading: false,
       isAuthenticated: true,
       isServerOffline: false,
-      user: { role: 'student', is_admin: false },
+      user: { role: 'student' },
       checkAuth: vi.fn(),
     });
 
@@ -130,7 +133,7 @@ describe('App Component', () => {
         isLoading: false,
         isAuthenticated: true,
         isServerOffline: false,
-        user: { role: 'student', is_admin: false },
+        user: { role: 'student' },
         checkAuth: vi.fn(),
       });
 
@@ -147,7 +150,7 @@ describe('App Component', () => {
       isLoading: false,
       isAuthenticated: true,
       isServerOffline: false,
-      user: { role: 'student', is_admin: false },
+      user: { role: 'student' },
       checkAuth: vi.fn(),
     });
 
@@ -239,13 +242,177 @@ describe('App Component', () => {
     });
   });
 
+  describe('route guards', () => {
+    const signedInAs = (user) =>
+      useAuthStore.mockReturnValue({
+        isLoading: false,
+        isAuthenticated: true,
+        isServerOffline: false,
+        user,
+        checkAuth: vi.fn(),
+      });
+
+    it.each(['/chat', '/profile', '/settings', '/shop', '/bit-shift', '/admin/dashboard', '/parent/dashboard'])(
+      'sends a signed-out user from %s to /login',
+      async (path) => {
+        window.history.pushState({}, 'Test page', path);
+        useAuthStore.mockReturnValue({
+          isLoading: false,
+          isAuthenticated: false,
+          isServerOffline: false,
+          user: null,
+          checkAuth: vi.fn(),
+        });
+
+        renderApp();
+
+        expect(await screen.findByText('Login Page Mock')).toBeInTheDocument();
+        expect(window.location.pathname).toBe('/login');
+        expect(screen.getByTestId('login-from')).toHaveTextContent(path);
+      }
+    );
+
+    it('lets an admin into the admin pages, inside the admin layout', async () => {
+      window.history.pushState({}, 'Test page', '/admin/dashboard');
+      signedInAs({ role: 'admin' });
+
+      renderApp();
+
+      const dashboard = await screen.findByText('Admin Dashboard Mock');
+      expect(screen.getByTestId('admin-layout')).toContainElement(dashboard);
+      expect(screen.queryByText('Access Denied Mock')).not.toBeInTheDocument();
+    });
+
+    it('opens the admin dashboard for a bare /admin', async () => {
+      window.history.pushState({}, 'Test page', '/admin');
+      signedInAs({ role: 'admin' });
+
+      renderApp();
+
+      expect(await screen.findByText('Admin Dashboard Mock')).toBeInTheDocument();
+    });
+
+    it('sends a retired admin analytics page to the dashboard', async () => {
+      window.history.pushState({}, 'Test page', '/admin/analytics');
+      signedInAs({ role: 'admin' });
+
+      renderApp();
+
+      expect(await screen.findByText('Admin Dashboard Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/admin/dashboard');
+    });
+
+    it('keeps students out of the admin pages, which never reach the admin layout', () => {
+      window.history.pushState({}, 'Test page', '/admin/dashboard');
+      signedInAs({ role: 'student' });
+
+      renderApp();
+
+      expect(screen.getByText('Access Denied Mock')).toBeInTheDocument();
+      expect(screen.queryByTestId('admin-layout')).not.toBeInTheDocument();
+      expect(screen.queryByText('Admin Dashboard Mock')).not.toBeInTheDocument();
+    });
+
+    it('keeps a user without a role out of the admin pages', () => {
+      window.history.pushState({}, 'Test page', '/admin');
+      signedInAs({});
+
+      renderApp();
+
+      expect(screen.getByText('Access Denied Mock')).toBeInTheDocument();
+    });
+
+    it('sends a student who opens the parent dashboard to the chat', async () => {
+      window.history.pushState({}, 'Test page', '/parent/dashboard');
+      signedInAs({ role: 'student' });
+
+      renderApp();
+
+      expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
+      expect(screen.queryByText('Parent Dashboard Mock')).not.toBeInTheDocument();
+      expect(window.location.pathname).toBe('/chat');
+    });
+
+    it('sends an admin who opens the parent dashboard to the chat', async () => {
+      window.history.pushState({}, 'Test page', '/parent/dashboard');
+      signedInAs({ role: 'admin' });
+
+      renderApp();
+
+      expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/chat');
+    });
+
+    it('lets a parent into the parent dashboard', async () => {
+      window.history.pushState({}, 'Test page', '/parent/dashboard');
+      signedInAs({ role: 'parent' });
+
+      renderApp();
+
+      expect(await screen.findByText('Parent Dashboard Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/parent/dashboard');
+    });
+
+    it('lets a parent use the chat, which is shared with students', async () => {
+      window.history.pushState({}, 'Test page', '/chat');
+      signedInAs({ role: 'parent' });
+
+      renderApp();
+
+      expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/chat');
+    });
+
+    describe('where a signed-in user lands when they open /login', () => {
+      beforeEach(() => {
+        window.history.pushState({}, 'Test page', '/login');
+      });
+
+      it('sends an admin to the admin dashboard', async () => {
+        signedInAs({ role: 'admin' });
+
+        renderApp();
+
+        expect(await screen.findByText('Admin Dashboard Mock')).toBeInTheDocument();
+        expect(window.location.pathname).toBe('/admin/dashboard');
+      });
+
+      it('sends a parent to the parent dashboard', async () => {
+        signedInAs({ role: 'parent' });
+
+        renderApp();
+
+        expect(await screen.findByText('Parent Dashboard Mock')).toBeInTheDocument();
+        expect(window.location.pathname).toBe('/parent/dashboard');
+      });
+
+      it('sends a student with a profile slug to their course progress', async () => {
+        signedInAs({ role: 'student', slug: 'jane-doe' });
+
+        renderApp();
+
+        expect(await screen.findByText('Course Progress Mock')).toBeInTheDocument();
+        expect(window.location.pathname).toBe('/course-progress/jane-doe');
+      });
+
+      it('sends a student without a slug to the chat', async () => {
+        signedInAs({ role: 'student' });
+
+        renderApp();
+
+        expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
+        expect(window.location.pathname).toBe('/chat');
+      });
+    });
+  });
+
   it('redirects parent role to parent dashboard', async () => {
     window.history.pushState({}, 'Test page', '/shop');
     useAuthStore.mockReturnValue({
       isLoading: false,
       isAuthenticated: true,
       isServerOffline: false,
-      user: { role: 'parent', is_admin: false },
+      user: { role: 'parent' },
       checkAuth: vi.fn(),
     });
 
@@ -260,7 +427,7 @@ describe('App Component', () => {
       isLoading: false,
       isAuthenticated: true,
       isServerOffline: false,
-      user: { role: 'student', is_admin: false },
+      user: { role: 'student' },
       checkAuth: vi.fn(),
     });
 

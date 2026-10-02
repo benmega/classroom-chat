@@ -2,12 +2,15 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useLayout } from './useLayout';
 import client from '../api/client';
+import useChatSocket from './useChatSocket';
 
 // Mock react-router-dom
 const navigateMock = vi.hoisted(() => vi.fn());
+// The page the hook thinks it is on; tests that care set it, the rest stay on '/'
+const route = vi.hoisted(() => ({ pathname: '/' }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => navigateMock,
-  useLocation: () => ({ pathname: '/' }),
+  useLocation: () => ({ pathname: route.pathname }),
 }));
 
 // The chat socket is not under test here; keep it from opening a connection
@@ -374,5 +377,158 @@ describe('useLayout - logout', () => {
 
     expect(order).toEqual(['logout', 'navigate']);
     expect(navigateMock).toHaveBeenCalledWith('/');
+  });
+});
+
+describe('useLayout - unread badges fed by the chat socket', () => {
+  // The callbacks useLayout hands to useChatSocket: (onMessageReceived, onClassroomEnrolled, lifecycle, onActivityResolved)
+  const socketCallbacks = () => {
+    const [onMessageReceived, , , onActivityResolved] = useChatSocket.mock.calls.at(-1);
+    return { onMessageReceived, onActivityResolved };
+  };
+  const storeWith = (overrides = {}) => {
+    currentStoreState = {
+      user: { id: 1, username: 'testuser', duck_balance: 10, role: 'student' },
+      logout: vi.fn(),
+      isAuthenticated: true,
+      hamburgerProgress: 0,
+      unreadCount: 4,
+      activityUnreadCount: 7,
+      setUnreadCount: vi.fn(),
+      setLastReadMessageId: vi.fn(),
+      setActivityUnreadCount: vi.fn(),
+      ...overrides,
+    };
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    route.pathname = '/shop';
+    client.post.mockResolvedValue({});
+    client.get.mockResolvedValue({ data: { success: true, count: 0, latest_id: null } });
+    storeWith();
+  });
+
+  afterEach(() => {
+    route.pathname = '/';
+  });
+
+  it('counts a new message on top of the stored count when the chat is not open', () => {
+    renderHook(() => useLayout());
+
+    socketCallbacks().onMessageReceived({ id: 1 });
+
+    expect(currentStoreState.setUnreadCount).toHaveBeenCalledTimes(1);
+    expect(currentStoreState.setUnreadCount).toHaveBeenCalledWith(5);
+  });
+
+  it('does not count a message while the chat is open', () => {
+    route.pathname = '/chat';
+    renderHook(() => useLayout());
+
+    socketCallbacks().onMessageReceived({ id: 1 });
+
+    expect(currentStoreState.setUnreadCount).not.toHaveBeenCalled();
+  });
+
+  it('does not count messages for a parent, who has no feed', () => {
+    storeWith({ user: { id: 2, role: 'parent', duck_balance: 0 } });
+    renderHook(() => useLayout());
+
+    socketCallbacks().onMessageReceived({ id: 1 });
+
+    expect(currentStoreState.setUnreadCount).not.toHaveBeenCalled();
+  });
+
+  it('does not count messages for nobody', () => {
+    storeWith({ user: null, isAuthenticated: false });
+    renderHook(() => useLayout());
+
+    socketCallbacks().onMessageReceived({ id: 1 });
+
+    expect(currentStoreState.setUnreadCount).not.toHaveBeenCalled();
+  });
+
+  it('counts a resolved activity on top of the stored count when the activity page is not open', () => {
+    renderHook(() => useLayout());
+
+    socketCallbacks().onActivityResolved({ id: 9 });
+
+    expect(currentStoreState.setActivityUnreadCount).toHaveBeenCalledTimes(1);
+    expect(currentStoreState.setActivityUnreadCount).toHaveBeenCalledWith(8);
+  });
+
+  it('does not count a resolved activity while the activity page is open', () => {
+    route.pathname = '/activity';
+    renderHook(() => useLayout());
+
+    socketCallbacks().onActivityResolved({ id: 9 });
+
+    expect(currentStoreState.setActivityUnreadCount).not.toHaveBeenCalled();
+  });
+
+  it('does not count a resolved activity for a parent', () => {
+    storeWith({ user: { id: 2, role: 'parent', duck_balance: 0 } });
+    renderHook(() => useLayout());
+
+    socketCallbacks().onActivityResolved({ id: 9 });
+
+    expect(currentStoreState.setActivityUnreadCount).not.toHaveBeenCalled();
+  });
+
+  it('counts messages on the activity page and activities in the chat, as each badge is its own', () => {
+    route.pathname = '/activity';
+    const { unmount } = renderHook(() => useLayout());
+    socketCallbacks().onMessageReceived({ id: 1 });
+    expect(currentStoreState.setUnreadCount).toHaveBeenCalledWith(5);
+    unmount();
+
+    route.pathname = '/chat';
+    renderHook(() => useLayout());
+    socketCallbacks().onActivityResolved({ id: 9 });
+    expect(currentStoreState.setActivityUnreadCount).toHaveBeenCalledWith(8);
+  });
+});
+
+describe('useLayout - page flags', () => {
+  const flagsFor = (pathname) => {
+    route.pathname = pathname;
+    const { result } = renderHook(() => useLayout());
+    return { isGuestPage: result.current.isGuestPage, isChatPage: result.current.isChatPage };
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    client.post.mockResolvedValue({});
+    client.get.mockResolvedValue({ data: { success: true, count: 0, latest_id: null } });
+    currentStoreState = {
+      user: { id: 1, username: 'testuser', duck_balance: 10, role: 'student' },
+      logout: vi.fn(),
+      isAuthenticated: true,
+      hamburgerProgress: 0,
+      unreadCount: 0,
+      setUnreadCount: vi.fn(),
+      setLastReadMessageId: vi.fn(),
+    };
+  });
+
+  afterEach(() => {
+    route.pathname = '/';
+  });
+
+  it.each(['/login', '/signup'])('treats %s as a guest page', (pathname) => {
+    expect(flagsFor(pathname)).toEqual({ isGuestPage: true, isChatPage: false });
+  });
+
+  it.each(['/', '/chat'])('treats %s as the chat page', (pathname) => {
+    expect(flagsFor(pathname)).toEqual({ isGuestPage: false, isChatPage: true });
+  });
+
+  it('treats the pages under /chat as the chat page too', () => {
+    expect(flagsFor('/chat/room/3')).toEqual({ isGuestPage: false, isChatPage: true });
+  });
+
+  it.each(['/shop', '/activity', '/profile', '/admin/dashboard'])('treats %s as neither', (pathname) => {
+    expect(flagsFor(pathname)).toEqual({ isGuestPage: false, isChatPage: false });
   });
 });

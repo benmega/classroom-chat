@@ -100,6 +100,31 @@ describe('useAuthStore', () => {
     expect(result.error).toBe('Invalid username or password.');
   });
 
+  it('login reports the server message for an account that is awaiting approval', async () => {
+    server.use(
+      http.post('*/user/login', () =>
+        HttpResponse.json(
+          { error: 'Your account is awaiting admin approval.', is_approved: false },
+          { status: 403 }
+        )
+      )
+    );
+
+    const result = await useAuthStore.getState().login('newstudent', 'password123');
+
+    expect(result).toEqual({ success: false, error: 'Your account is awaiting admin approval.' });
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  it('login falls back to a generic message when the server sends no error text', async () => {
+    server.use(http.post('*/user/login', () => new HttpResponse(null, { status: 500 })));
+
+    const result = await useAuthStore.getState().login('testuser', 'password123');
+
+    expect(result).toEqual({ success: false, error: 'Login failed' });
+  });
+
   it('loginParentCognito updates state on success', async () => {
     server.use(
       http.post('*/api/auth/cognito/login', () => {

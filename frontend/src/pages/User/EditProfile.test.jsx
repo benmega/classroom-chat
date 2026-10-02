@@ -149,11 +149,15 @@ describe('EditProfile', () => {
     });
 
     it('handles successful profile update for student (without sending nickname)', async () => {
+        // The handler only records the body: an assertion thrown in here would turn into a 500
+        // response for the page instead of failing the test.
+        let body;
+        const user = useAuthStore.getState().user;
+        const checkAuth = vi.fn(async () => useAuthStore.setState({ user: { ...user, bio: 'New Bio' } }));
+        useAuthStore.setState({ checkAuth });
         server.use(
             http.post('*/user/edit_profile', async ({ request }) => {
-                const body = await request.json();
-                expect(body.nickname).toBeUndefined();
-                expect(body.bio).toBe('New Bio');
+                body = await request.json();
                 return HttpResponse.json({ success: true });
             })
         );
@@ -165,9 +169,51 @@ describe('EditProfile', () => {
 
         expect(screen.getByRole('button', { name: /Saving.../i })).toBeInTheDocument();
 
-        await waitFor(() => {
-            
-        });
+        await waitFor(() => expect(body).toBeDefined());
+        expect(body.bio).toBe('New Bio');
+        expect(body).not.toHaveProperty('nickname');
+        // Skills are not part of this form: the server keeps what it has unless the key is sent
+        expect(body).not.toHaveProperty('skills');
+        expect(body).not.toHaveProperty('password');
+        // The user is reloaded in the background, and with nothing left to save the buttons go away
+        await waitFor(() => expect(checkAuth).toHaveBeenCalledWith(true));
+        await waitFor(() => expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument());
+        expect(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i).value).toBe('New Bio');
+        expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it('sends the new password with its confirmation, and clears both fields once saved', async () => {
+        let body;
+        server.use(
+            http.post('*/user/edit_profile', async ({ request }) => {
+                body = await request.json();
+                return HttpResponse.json({ success: true });
+            })
+        );
+        render(<EditProfile />);
+
+        fireEvent.change(screen.getByPlaceholderText(/^New Password/i), { target: { value: 'pass12345' } });
+        fireEvent.change(screen.getByPlaceholderText(/confirm new password/i), { target: { value: 'pass12345' } });
+        submit();
+
+        await waitFor(() => expect(body).toBeDefined());
+        expect(body).toMatchObject({ password: 'pass12345', confirm_password: 'pass12345' });
+        await waitFor(() => expect(screen.getByPlaceholderText(/^New Password/i).value).toBe(''));
+        expect(screen.getByPlaceholderText(/confirm new password/i).value).toBe('');
+    });
+
+    it('does not send anything when the password is mistyped, and keeps the form as it is', () => {
+        let requests = 0;
+        server.use(http.post('*/user/edit_profile', () => { requests += 1; return HttpResponse.json({}); }));
+        render(<EditProfile />);
+
+        fireEvent.change(screen.getByPlaceholderText(/^New Password/i), { target: { value: 'pass123' } });
+        fireEvent.change(screen.getByPlaceholderText(/confirm new password/i), { target: { value: 'pass456' } });
+        submit();
+
+        expect(toast.error).toHaveBeenCalledWith('Passwords do not match!');
+        expect(requests).toBe(0);
+        expect(screen.getByRole('button', { name: /Save Changes/i })).toBeEnabled();
     });
 
     it('allows non-student to edit nickname and sends nickname in payload', async () => {
@@ -185,10 +231,12 @@ describe('EditProfile', () => {
             isChecking: false
         });
 
+        let body;
+        const checkAuth = vi.fn();
+        useAuthStore.setState({ checkAuth });
         server.use(
             http.post('*/user/edit_profile', async ({ request }) => {
-                const body = await request.json();
-                expect(body.nickname).toBe('New Parent Nick');
+                body = await request.json();
                 return HttpResponse.json({ success: true });
             })
         );
@@ -201,9 +249,11 @@ describe('EditProfile', () => {
         fireEvent.change(nicknameInput, { target: { value: 'New Parent Nick' } });
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 
-        await waitFor(() => {
-            
-        });
+        await waitFor(() => expect(body).toBeDefined());
+        expect(body.nickname).toBe('New Parent Nick');
+        expect(body).not.toHaveProperty('skills');
+        await waitFor(() => expect(checkAuth).toHaveBeenCalledWith(true));
+        expect(toast.error).not.toHaveBeenCalled();
     });
 
     it('handles file change', async () => {
@@ -219,11 +269,17 @@ describe('EditProfile', () => {
     });
 
     it('handles successful profile picture update and info update together', async () => {
+        let infoBody;
+        let pictureFile;
+        const checkAuth = vi.fn();
+        useAuthStore.setState({ checkAuth });
         server.use(
-            http.post('*/user/api/profile-picture', async () => {
+            http.post('*/user/api/profile-picture', async ({ request }) => {
+                pictureFile = (await request.formData()).get('profile_picture');
                 return HttpResponse.json({ success: true });
             }),
-            http.post('*/user/edit_profile', async () => {
+            http.post('*/user/edit_profile', async ({ request }) => {
+                infoBody = await request.json();
                 return HttpResponse.json({ success: true });
             })
         );
@@ -236,9 +292,12 @@ describe('EditProfile', () => {
 
         fireEvent.submit(screen.getByRole('button', { name: /Save Changes/i }).closest('form'));
 
-        await waitFor(() => {
-            
-        });
+        await waitFor(() => expect(pictureFile).toBeDefined());
+        expect(pictureFile.name).toBe('test.png');
+        expect(infoBody.bio).toBe('This is my bio');
+        expect(infoBody).not.toHaveProperty('skills');
+        await waitFor(() => expect(checkAuth).toHaveBeenCalledWith(true));
+        expect(toast.error).not.toHaveBeenCalled();
     });
 
     it('handles update failure', async () => {
@@ -444,6 +503,52 @@ describe('EditProfile', () => {
             submit();
 
             await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Passwords do not match.'));
+        });
+
+        it('shows a plain-text error body as it is', async () => {
+            server.use(
+                http.post('*/user/edit_profile', () => new HttpResponse('Bio is too long.', { status: 400 }))
+            );
+            render(<EditProfile />);
+
+            fireEvent.change(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i), { target: { value: 'New Bio' } });
+            submit();
+
+            await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Bio is too long.'));
+        });
+
+        it('does not show an HTML error page, such as the proxy sends, to the user', async () => {
+            server.use(
+                http.post('*/user/edit_profile', () => new HttpResponse('<html><body>502 Bad Gateway</body></html>', { status: 502 }))
+            );
+            render(<EditProfile />);
+
+            fireEvent.change(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i), { target: { value: 'New Bio' } });
+            submit();
+
+            await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to update profile.'));
+        });
+
+        it('lets the user try again after a failed save', async () => {
+            let attempts = 0;
+            server.use(
+                http.post('*/user/edit_profile', () => {
+                    attempts += 1;
+                    return attempts === 1
+                        ? HttpResponse.json({ error: 'Try later' }, { status: 503 })
+                        : HttpResponse.json({ success: true });
+                })
+            );
+            render(<EditProfile />);
+
+            fireEvent.change(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i), { target: { value: 'New Bio' } });
+            submit();
+            await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Try later'));
+            await waitFor(() => expect(screen.getByRole('button', { name: /Save Changes/i })).toBeEnabled());
+
+            submit();
+
+            await waitFor(() => expect(attempts).toBe(2));
         });
 
         it('falls back to a generic message when the error body has no usable text', async () => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import client from '../api/client';
 import { showConfirm } from '../utils/confirm';
 import { getErrorMessage } from '../utils/apiError';
@@ -41,7 +41,13 @@ export const useUsersManagement = (role = '') => {
         setPage(1);
     }, [debouncedSearchTerm, statusFilter, accountTypeFilter, sortBy, sortDir]);
 
+    // Search, filters, sort and page each start a request, and answers can arrive in any order.
+    // Only the latest request may update the list, or an older answer would overwrite a newer one.
+    const latestRequestRef = useRef(0);
+
     const fetchUsers = useCallback(async (targetPage = page) => {
+        const requestId = ++latestRequestRef.current;
+        const isLatest = () => requestId === latestRequestRef.current;
         setIsRefreshing(true);
         try {
             let url = `/api/admin/users?page=${targetPage}&per_page=${USERS_PER_PAGE}`;
@@ -61,6 +67,7 @@ export const useUsersManagement = (role = '') => {
                 url += `&sort_by=${sortBy}&sort_dir=${sortDir}`;
             }
             const response = await client.get(url);
+            if (!isLatest()) return;
             const data = response.data;
             
             if (Array.isArray(data)) {
@@ -71,15 +78,19 @@ export const useUsersManagement = (role = '') => {
                 setUsers(data.users || []);
                 setTotalUsers(data.total || 0);
                 setTotalPages(data.pages || 1);
-                setPage(data.current_page || 1);
+                // The page is not read back from the response: the server only echoes the one asked for,
+                // and setting it here would re-run the page effect and request the same page twice.
                 if (data.stats) setStats(data.stats);
             }
         } catch (error) {
+            if (!isLatest()) return;
             console.error('Error fetching users:', error);
             toast.error('Failed to load users list.');
         } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
+            if (isLatest()) {
+                setIsLoading(false);
+                setIsRefreshing(false);
+            }
         }
     }, [page, debouncedSearchTerm, role, statusFilter, accountTypeFilter, sortBy, sortDir]);
 

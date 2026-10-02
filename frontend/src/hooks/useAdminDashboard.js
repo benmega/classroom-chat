@@ -15,20 +15,30 @@ export const useAdminDashboard = () => {
 
     const [timeframe, setTimeframe] = useState(7);
 
+    // A new timeframe or an action's refresh can start a request while an older one is still out, and
+    // answers can arrive in any order. Only the latest request may update the dashboard.
+    const latestRequestRef = useRef(0);
+
     const fetchDashboardData = useCallback(async (days = timeframe) => {
+        const requestId = ++latestRequestRef.current;
+        const isLatest = () => requestId === latestRequestRef.current;
         setIsRefreshing(true);
         try {
             const tzOffset = new Date().getTimezoneOffset();
             const response = await client.get(`/api/admin/dashboard?days=${days}&tz_offset=${tzOffset}`);
+            if (!isLatest()) return;
             if (response.data.status === 'success') {
                 setDashboardData(response.data.data);
             }
         } catch (error) {
+            if (!isLatest()) return;
             console.error('Error fetching admin data:', error);
             toast.error('Failed to load dashboard data.');
         } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
+            if (isLatest()) {
+                setIsLoading(false);
+                setIsRefreshing(false);
+            }
         }
     }, [timeframe]);
 

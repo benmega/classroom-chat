@@ -683,4 +683,241 @@ describe('useUsersManagement', () => {
     });
   });
 
+
+  describe('pagination', () => {
+    // Pages of users the way the real endpoint serves them: it echoes the page that was asked for
+    const servePages = ({ total = 120, perPage = 50 } = {}) => {
+      const urls = [];
+      server.use(
+        http.get('*/api/admin/users', ({ request }) => {
+          const url = new URL(request.url);
+          urls.push(url);
+          const page = Number(url.searchParams.get('page'));
+          return HttpResponse.json({
+            users: [{ id: page, username: `page${page}` }],
+            total,
+            pages: Math.ceil(total / perPage),
+            current_page: page,
+            stats: { online: 1, admins: 2, pending: 3 },
+          });
+        })
+      );
+      return urls;
+    };
+    const pageParams = (urls) => urls.map((url) => url.searchParams.get('page'));
+    const quiet = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 60)); });
+    const renderLoaded = async (role) => {
+      const hook = renderHook(() => useUsersManagement(role));
+      await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
+      return hook;
+    };
+
+    it('asks for the first page of 50 on mount, once, and reports the totals', async () => {
+      const urls = servePages();
+
+      const { result } = await renderLoaded();
+      await quiet();
+
+      expect(urls).toHaveLength(1);
+      expect(urls[0].search).toMatch(/^\?page=1&per_page=50/);
+      expect(result.current.page).toBe(1);
+      expect(result.current.totalUsers).toBe(120);
+      expect(result.current.totalPages).toBe(3);
+      expect(result.current.stats).toEqual({ online: 1, admins: 2, pending: 3 });
+    });
+
+    it('requests a page exactly once when setPage moves to it', async () => {
+      const urls = servePages();
+      const { result } = await renderLoaded();
+
+      act(() => result.current.setPage(2));
+      await waitFor(() => expect(result.current.users[0].username).toBe('page2'));
+      await quiet();
+
+      expect(pageParams(urls)).toEqual(['1', '2']);
+      expect(urls[1].search).toMatch(/^\?page=2&per_page=50/);
+      expect(result.current.page).toBe(2);
+    });
+
+    it('steps back and forth without repeating requests', async () => {
+      const urls = servePages();
+      const { result } = await renderLoaded();
+
+      act(() => result.current.setPage(2));
+      await waitFor(() => expect(result.current.users[0].username).toBe('page2'));
+      act(() => result.current.setPage(3));
+      await waitFor(() => expect(result.current.users[0].username).toBe('page3'));
+      act(() => result.current.setPage(2));
+      await waitFor(() => expect(result.current.users[0].username).toBe('page2'));
+      await quiet();
+
+      expect(pageParams(urls)).toEqual(['1', '2', '3', '2']);
+    });
+
+    it('keeps the role in every page request', async () => {
+      const urls = servePages();
+      const { result } = await renderLoaded('student');
+
+      act(() => result.current.setPage(2));
+      await waitFor(() => expect(result.current.users[0].username).toBe('page2'));
+
+      expect(urls.map((url) => url.searchParams.get('role'))).toEqual(['student', 'student']);
+    });
+
+    it.each([
+      ['the status filter', (hook) => hook.setStatusFilter(['active']), 'status', 'active'],
+      ['the account type filter', (hook) => hook.setAccountTypeFilter(['parent']), 'account_types', 'parent'],
+      ['the sort column', (hook) => hook.setSortBy('name'), 'sort_by', 'name'],
+      // A column is sorted first, so that flipping its direction is the only change that is made on page 3
+      ['the sort direction', (hook) => hook.setSortDir('desc'), 'sort_dir', 'desc', (hook) => hook.setSortBy('name')],
+    ])('goes back to page 1 when %s changes', async (_name, change, param, value, prepare) => {
+      const urls = servePages();
+      const { result } = await renderLoaded();
+      if (prepare) {
+        act(() => prepare(result.current));
+        await waitFor(() => expect(urls[urls.length - 1].searchParams.get('sort_by')).toBe('name'));
+        await quiet();
+      }
+      act(() => result.current.setPage(3));
+      await waitFor(() => expect(result.current.users[0].username).toBe('page3'));
+      expect(result.current.page).toBe(3);
+
+      act(() => change(result.current));
+
+      await waitFor(() => expect(result.current.page).toBe(1));
+      await waitFor(() => expect(result.current.users[0].username).toBe('page1'));
+      await quiet();
+      const last = urls[urls.length - 1];
+      expect(last.searchParams.get('page')).toBe('1');
+      expect(last.searchParams.get(param)).toBe(value);
+    });
+
+    it('goes back to page 1 when the search term changes', async () => {
+      const urls = servePages();
+      const { result } = await renderLoaded();
+      act(() => result.current.setPage(2));
+      await waitFor(() => expect(result.current.users[0].username).toBe('page2'));
+
+      act(() => result.current.setSearchTerm('amy'));
+
+      await waitFor(() => expect(result.current.page).toBe(1), { timeout: 1500 });
+      await waitFor(() => expect(result.current.users[0].username).toBe('page1'));
+      const last = urls[urls.length - 1];
+      expect(last.searchParams.get('page')).toBe('1');
+      expect(last.searchParams.get('search')).toBe('amy');
+    });
+
+    it('treats a bare array response as a single page', async () => {
+      server.use(http.get('*/api/admin/users', () => HttpResponse.json([{ id: 1 }, { id: 2 }])));
+
+      const { result } = await renderLoaded();
+
+      expect(result.current.users).toHaveLength(2);
+      expect(result.current.totalUsers).toBe(2);
+      expect(result.current.totalPages).toBe(1);
+    });
+  });
+
+  describe('responses that arrive out of order', () => {
+    // Each request waits for its own release, so a test decides in what order the answers arrive.
+    // A search of 'fail' answers with a server error, anything else with one user named after the request.
+    const holdRequests = () => {
+      const held = [];
+      server.use(
+        http.get('*/api/admin/users', async ({ request }) => {
+          const url = new URL(request.url);
+          const search = url.searchParams.get('search') || '';
+          await new Promise((resolve) => held.push({ search, release: resolve }));
+          if (search === 'fail') return new HttpResponse(null, { status: 500 });
+          return HttpResponse.json({
+            users: [{ id: 1, username: `for-${search || 'nothing'}` }],
+            total: 1,
+            pages: 1,
+            current_page: 1,
+          });
+        })
+      );
+      return held;
+    };
+    const requestFor = (held, search) => held.find((entry) => entry.search === search);
+    const mountAndAnswerFirstLoad = async (held) => {
+      const hook = renderHook(() => useUsersManagement());
+      await waitFor(() => expect(held).toHaveLength(1));
+      requestFor(held, '').release();
+      await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
+      return hook;
+    };
+    // Types the two search terms one after the other, so two requests are in flight
+    const searchTwice = async (hook, held, first, second) => {
+      act(() => hook.result.current.setSearchTerm(first));
+      await waitFor(() => expect(requestFor(held, first)).toBeDefined(), { timeout: 1500 });
+      act(() => hook.result.current.setSearchTerm(second));
+      await waitFor(() => expect(requestFor(held, second)).toBeDefined(), { timeout: 1500 });
+    };
+    const settle = () => act(async () => { await new Promise((resolve) => setTimeout(resolve, 60)); });
+
+    it('shows the answer to the latest request even when an older one answers last', async () => {
+      const held = holdRequests();
+      const hook = await mountAndAnswerFirstLoad(held);
+      await searchTwice(hook, held, 'am', 'amy');
+
+      // The newer request is answered first, the older one afterwards
+      requestFor(held, 'amy').release();
+      await waitFor(() => expect(hook.result.current.users[0]?.username).toBe('for-amy'));
+      requestFor(held, 'am').release();
+      await settle();
+
+      expect(hook.result.current.users[0].username).toBe('for-amy');
+      expect(hook.result.current.isRefreshing).toBe(false);
+    });
+
+    it('keeps the loading indicator up until the latest request is answered', async () => {
+      const held = holdRequests();
+      const hook = await mountAndAnswerFirstLoad(held);
+      await searchTwice(hook, held, 'am', 'amy');
+
+      // The older answer comes first: it is dropped and the newer one is still awaited
+      requestFor(held, 'am').release();
+      await settle();
+      expect(hook.result.current.isRefreshing).toBe(true);
+      expect(hook.result.current.users[0].username).toBe('for-nothing');
+
+      requestFor(held, 'amy').release();
+      await waitFor(() => expect(hook.result.current.users[0].username).toBe('for-amy'));
+      expect(hook.result.current.isRefreshing).toBe(false);
+    });
+
+    it('does not let an older request that failed toast over a newer one that worked', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const held = holdRequests();
+      const hook = await mountAndAnswerFirstLoad(held);
+      await searchTwice(hook, held, 'fail', 'amy');
+
+      requestFor(held, 'amy').release();
+      await waitFor(() => expect(hook.result.current.users[0]?.username).toBe('for-amy'));
+      requestFor(held, 'fail').release();
+      await settle();
+
+      expect(toast.error).not.toHaveBeenCalled();
+      expect(hook.result.current.users[0].username).toBe('for-amy');
+      expect(hook.result.current.isRefreshing).toBe(false);
+      console.error.mockRestore();
+    });
+
+    it('still toasts when the latest request is the one that fails', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const held = holdRequests();
+      const hook = await mountAndAnswerFirstLoad(held);
+      await searchTwice(hook, held, 'amy', 'fail');
+
+      requestFor(held, 'amy').release();
+      requestFor(held, 'fail').release();
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to load users list.'));
+
+      expect(toast.error).toHaveBeenCalledTimes(1);
+      expect(hook.result.current.isRefreshing).toBe(false);
+      console.error.mockRestore();
+    });
+  });
+
 });

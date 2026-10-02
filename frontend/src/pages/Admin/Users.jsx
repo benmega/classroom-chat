@@ -184,6 +184,7 @@ const Users = () => {
         isLoading,
         isRefreshing,
         page,
+        setPage,
         totalPages,
         totalUsers,
         activeModal,
@@ -192,7 +193,6 @@ const Users = () => {
         setModalUser,
         formLoading,
         formErrors,
-        fetchUsers,
         handleCreateUser,
         handleAdjustDucks,
         handleAdjustPackets,
@@ -652,7 +652,7 @@ const Users = () => {
                     <div className="pagination-controls">
                         <button 
                             className="pagination-btn" 
-                            onClick={() => fetchUsers(page - 1)}
+                            onClick={() => setPage(page - 1)}
                             disabled={page <= 1 || isRefreshing}
                         >
                             <ChevronLeft size={16} /> Previous
@@ -662,7 +662,7 @@ const Users = () => {
                         </div>
                         <button 
                             className="pagination-btn" 
-                            onClick={() => fetchUsers(page + 1)}
+                            onClick={() => setPage(page + 1)}
                             disabled={page >= totalPages || isRefreshing}
                         >
                             Next <ChevronLeft size={16} className="icon-rotate-180" />

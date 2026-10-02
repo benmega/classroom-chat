@@ -30,6 +30,7 @@ describe('Users Page', () => {
   const mockSetActiveModal = vi.fn();
   const mockSetModalUser = vi.fn();
   const mockFetchUsers = vi.fn();
+  const mockSetPage = vi.fn();
   const mockHandleRemoveUser = vi.fn();
   const mockFetchParentChildren = vi.fn();
   const mockFetchConnectionCard = vi.fn().mockResolvedValue(true);
@@ -39,6 +40,7 @@ describe('Users Page', () => {
     isLoading: false,
     isRefreshing: false,
     page: 1,
+    setPage: mockSetPage,
     totalPages: 1,
     totalUsers: 0,
     activeModal: null,
@@ -155,7 +157,44 @@ describe('Users Page', () => {
     
     const nextBtn = screen.getByText(/Next/i);
     fireEvent.click(nextBtn);
-    expect(mockFetchUsers).toHaveBeenCalledWith(2);
+    // The hook fetches the page once its state changes: the page must not also fetch it itself
+    expect(mockSetPage).toHaveBeenCalledWith(2);
+    expect(mockFetchUsers).not.toHaveBeenCalled();
+  });
+
+  it('goes back a page with Previous', () => {
+    useUsersManagement.mockReturnValue({
+      ...defaultMockState,
+      users: Array.from({ length: 50 }, (_, i) => ({ id: i, username: `user${i}`, role: 'student' })),
+      totalUsers: 150,
+      totalPages: 3,
+      page: 2
+    });
+
+    renderComponent();
+
+    fireEvent.click(screen.getByText(/Previous/i));
+    expect(mockSetPage).toHaveBeenCalledWith(1);
+    expect(mockFetchUsers).not.toHaveBeenCalled();
+  });
+
+  it('cannot page before the first or after the last page, or while a page is loading', () => {
+    useUsersManagement.mockReturnValue({ ...defaultMockState, totalUsers: 100, totalPages: 2, page: 1 });
+    const { unmount } = renderComponent();
+    expect(screen.getByText(/Previous/i).closest('button')).toBeDisabled();
+    expect(screen.getByText(/Next/i).closest('button')).toBeEnabled();
+    unmount();
+
+    useUsersManagement.mockReturnValue({ ...defaultMockState, totalUsers: 100, totalPages: 2, page: 2 });
+    const second = renderComponent();
+    expect(screen.getByText(/Previous/i).closest('button')).toBeEnabled();
+    expect(screen.getByText(/Next/i).closest('button')).toBeDisabled();
+    second.unmount();
+
+    useUsersManagement.mockReturnValue({ ...defaultMockState, totalUsers: 150, totalPages: 3, page: 2, isRefreshing: true });
+    renderComponent();
+    expect(screen.getByText(/Previous/i).closest('button')).toBeDisabled();
+    expect(screen.getByText(/Next/i).closest('button')).toBeDisabled();
   });
 
   it('opens create user modal', () => {

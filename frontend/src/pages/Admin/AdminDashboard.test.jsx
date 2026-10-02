@@ -147,6 +147,31 @@ describe('AdminDashboard', () => {
     expect(screen.getByText('0% of users are currently online')).toBeInTheDocument();
   });
 
+  it('renders an empty system, with no users and no chart history, without failing', () => {
+    useAdminDashboard.mockReturnValue({
+      ...defaultHookReturn,
+      dashboardData: {
+        ...mockDashboardData,
+        top_earners: [],
+        total_users_count: 0,
+        active_users_count: 0,
+        total_ducks: 0,
+        ducks_earned_this_week: 0,
+        pending_users_count: 0,
+        pending_trades_count: 0,
+        user_distribution: { active_students: 0, inactive_students: 0, parents: 0, admins: 0 },
+        chart_data: { dates: [], labels: [], earned: [], spent: [], max_history_days: 0 },
+      },
+    });
+
+    expect(() => renderComponent()).not.toThrow();
+
+    expect(screen.getByText('0% of users are currently online')).toBeInTheDocument();
+    expect(screen.getByTestId('pie-chart')).toHaveAttribute('data-values', '0,0,0,0');
+    expect(screen.getByTestId('line-chart')).toBeInTheDocument();
+    expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
+  });
+
   it('does not show the empty-users text when there are users', () => {
     renderComponent();
     expect(screen.queryByText('No users yet')).not.toBeInTheDocument();

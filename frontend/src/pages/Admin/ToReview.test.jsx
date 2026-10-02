@@ -123,26 +123,41 @@ describe('ToReview Component', () => {
       expect(screen.getByText('Projects')).toBeInTheDocument();
     });
 
-    // Click on 'Course Requests' tab
-    // We don't have the exact label, maybe 'Course & Track Requests' or similar. 
-    // We'll click some tabs that exist based on data.
-    const tabs = screen.getAllByRole("button").filter(b => b.classList.contains("review-tab-item"));
-    if (tabs.length > 1) {
-        fireEvent.click(tabs[1]);
-        fireEvent.click(tabs[2]);
-    }
+    const tab = (label) =>
+      screen.getAllByRole('button').find((b) => b.classList.contains('review-tab-item') && b.textContent.includes(label));
 
-    client.post.mockResolvedValueOnce({ data: { status: 'success' } });
-    const approveBtns = screen.queryAllByRole('button', { name: /Approve/i });
-    if (approveBtns.length > 0) {
-        fireEvent.click(approveBtns[0]);
-    }
+    // 'All Items' lists a card of every kind
+    expect(screen.getByText('Project 1')).toBeInTheDocument();
+    expect(screen.getByText('Cert 1')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Approve Account/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Approve Trade/ })).toBeInTheDocument();
 
-    client.post.mockResolvedValueOnce({ data: { status: 'success' } });
-    const rejectBtns = screen.queryAllByRole('button', { name: /Reject/i });
-    if (rejectBtns.length > 0) {
-        fireEvent.click(rejectBtns[0]);
-    }
+    // Each tab narrows the list to its own kind
+    fireEvent.click(tab('Certificates'));
+    expect(screen.getByText('Cert 1')).toBeInTheDocument();
+    expect(screen.queryByText('Project 1')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Approve Trade/ })).not.toBeInTheDocument();
+
+    fireEvent.click(tab('Projects'));
+    expect(screen.getByText('Project 1')).toBeInTheDocument();
+    expect(screen.queryByText('Cert 1')).not.toBeInTheDocument();
+
+    fireEvent.click(tab('Account Signups'));
+    expect(screen.getByRole('button', { name: /Approve Account/ })).toBeInTheDocument();
+    expect(screen.queryByText('Project 1')).not.toBeInTheDocument();
+
+    fireEvent.click(tab('Duck Trades'));
+    expect(screen.getByRole('button', { name: /Approve Trade/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Approve Account/ })).not.toBeInTheDocument();
+
+    // A tab without items says so
+    fireEvent.click(tab('Course Requests'));
+    expect(screen.queryByRole('button', { name: /Approve Trade/ })).not.toBeInTheDocument();
+    expect(screen.getByText('All Caught Up!')).toBeInTheDocument();
+
+    fireEvent.click(tab('All Items'));
+    expect(screen.getByText('Project 1')).toBeInTheDocument();
+    expect(screen.getByText('Cert 1')).toBeInTheDocument();
   });
 
   it('renders resubmitted badge and previous feedback for resubmitted project', async () => {
@@ -645,6 +660,35 @@ describe('ToReview Component', () => {
 
         await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Certificate not found'));
         expect(screen.getByText('Loops Master')).toBeInTheDocument();
+      });
+
+      it('confirms, then marks every certificate reviewed in one request and empties the list', async () => {
+        await loadItems({ certificates: [...certificates, { id: 22, achievement: { name: 'Loops Expert' }, user: { username: 'dan' }, submitted_at: '2023-01-02T10:00:00' }] }, 'Certificates');
+        client.post.mockResolvedValueOnce({ data: { status: 'success' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /Approve All Certificates/ }));
+
+        await waitFor(() => expect(screen.queryByText('Loops Master')).not.toBeInTheDocument());
+        expect(screen.queryByText('Loops Expert')).not.toBeInTheDocument();
+        expect(showConfirm).toHaveBeenCalledWith(
+          'Are you sure you want to mark all pending certificates as reviewed?',
+          { title: 'Review All Certificates', confirmText: 'Review All' }
+        );
+        expect(client.post).toHaveBeenCalledTimes(1);
+        expect(client.post).toHaveBeenCalledWith('/api/achievements/admin/certificates/reviewed/all');
+        expect(toast.error).not.toHaveBeenCalled();
+      });
+
+      it('does not approve everything when the confirmation is cancelled', async () => {
+        await loadItems({ certificates }, 'Certificates');
+        showConfirm.mockResolvedValue(false);
+
+        fireEvent.click(screen.getByRole('button', { name: /Approve All Certificates/ }));
+
+        await waitFor(() => expect(showConfirm).toHaveBeenCalledTimes(1));
+        expect(client.post).not.toHaveBeenCalled();
+        expect(screen.getByText('Loops Master')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Approve All Certificates/ })).toBeEnabled();
       });
 
       it('shows the server reason when approving all fails', async () => {

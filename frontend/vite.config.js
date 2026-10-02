@@ -1,7 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig, loadEnv } from 'vite'
+import { loadEnv } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
 const frontendDir = path.dirname(fileURLToPath(import.meta.url))
@@ -88,33 +89,13 @@ export default defineConfig({
         'src/test/**',
         '**/*.config.*',
         'src/main.jsx',
-        'src/pages/Admin/AdminAchievements.jsx',
-        'src/pages/Admin/AdminChallenges.jsx',
-        'src/pages/Admin/AdminConnections.jsx',
-        'src/pages/Admin/AdminCourseInstances.jsx',
-        'src/pages/Admin/AdminDocuments.jsx',
-        'src/pages/Admin/AdminStudentActivity.jsx',
-        'src/pages/Admin/AdminUserDashboard.jsx',
-        'src/pages/Admin/AdvancedPanel.jsx',
-        'src/pages/Parent/**',
         'src/pages/Error/ServerOffline.jsx',
-        'src/components/common/ImageUpload.jsx',
-        'src/components/common/ScreenRecorder.jsx',
         'src/components/common/SmartImage.jsx',
-        'src/components/common/Tutorial.jsx',
-        'src/components/common/UserSearchInput.jsx',
-        'src/utils/video.js',
-        'src/pages/General/Achievements.jsx',
-        'src/pages/General/BitShift.jsx',
         'src/pages/General/CourseLevelBreakdown.jsx',
-        'src/pages/General/CourseProgressTree.jsx',
         'src/pages/General/History.jsx',
         'src/pages/General/Landing.jsx',
         'src/pages/General/LandingDesktop.jsx',
         'src/pages/General/LandingMobile.jsx',
-        'src/pages/General/SubmitWork.jsx',
-        'src/hooks/useFeedLogic.js',
-        'src/hooks/useProfile.js',
         'src/hooks/useViewport.js',
       ],
       thresholds: {
