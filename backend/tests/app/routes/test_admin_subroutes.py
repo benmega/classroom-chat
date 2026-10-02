@@ -207,13 +207,6 @@ def test_purge_history_leaves_users_and_classrooms_alone(
     assert db.session.get(Classroom, classroom.id) is not None
 
 
-_ORPHANED_AUDIENCE = (
-    "DEFECT: purge_history bulk-deletes messages without their message_classrooms / "
-    "message_users rows (SQLite does not enforce ON DELETE CASCADE: the app never turns "
-    "PRAGMA foreign_keys on), so the purged messages' audiences stay behind"
-)
-
-
 def _targeted_message(author, classroom, recipient):
     msg = Message(user_id=author.id, content="targeted")
     msg.target_classrooms.append(classroom)
@@ -223,7 +216,6 @@ def _targeted_message(author, classroom, recipient):
     return msg
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason=_ORPHANED_AUDIENCE)
 def test_purge_history_removes_the_targets_of_the_purged_messages(
     client, sample_admin, sample_user, fake_psutil
 ):
@@ -238,12 +230,6 @@ def test_purge_history_removes_the_targets_of_the_purged_messages(
     assert db.session.execute(select(func.count()).select_from(message_users)).scalar() == 0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason=_ORPHANED_AUDIENCE + "; SQLite then reuses message id 1, so the next message "
-    "silently inherits the old audience",
-)
 def test_message_created_after_a_purge_does_not_inherit_the_old_audience(
     client, sample_admin, sample_user, fake_psutil
 ):

@@ -212,13 +212,6 @@ def test_submit_trade_does_not_touch_the_balance_until_approval(client, sample_u
     assert DuckTransaction.query.filter_by(user_id=sample_user_with_ducks.id).count() == 0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="DEFECT: submit_trade never compares the count with the student's duck_balance "
-    "(only the approval does), so a trade for more ducks than they hold is queued and then "
-    "blocks them from submitting another until an admin rejects it",
-)
 @pytest.mark.parametrize("count", [51, 10**30], ids=["just-over", "absurd"])
 def test_submit_trade_rejects_more_ducks_than_the_balance(client, sample_user_with_ducks, count):
     assert sample_user_with_ducks.duck_balance == 50
@@ -235,13 +228,6 @@ def test_submit_trade_rejects_more_ducks_than_the_balance(client, sample_user_wi
     assert DuckTradeLog.query.count() == 0
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="DEFECT: a non-finite count (JSON Infinity / 1e400) makes int() raise OverflowError, "
-    "which submit_trade does not catch with ValueError/TypeError, so the client gets a 500 "
-    "'Server Error' instead of the 400 'Invalid duck count.'",
-)
 @pytest.mark.parametrize("raw", ["Infinity", "-Infinity", "1e400"])
 def test_submit_trade_treats_a_non_finite_count_as_invalid(client, sample_user_with_ducks, raw):
     _login(client, sample_user_with_ducks)

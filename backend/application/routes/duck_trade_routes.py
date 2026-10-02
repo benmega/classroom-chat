@@ -72,9 +72,16 @@ def submit_trade():
                     ),
                     400,
                 )
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, OverflowError):
             return (
                 jsonify({"status": "error", "message": "Invalid duck count."}),
+                400,
+            )
+
+        # Approval would refuse it anyway, and a pending trade blocks the next one
+        if d_ducks > (user.duck_balance or 0):
+            return (
+                jsonify({"status": "error", "message": "Insufficient ducks."}),
                 400,
             )
 
