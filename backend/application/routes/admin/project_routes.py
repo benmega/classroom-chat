@@ -41,8 +41,9 @@ def manage_projects():
 def _complete_linked_challenge(student, project):
     """Complete the Challenge linked to the project's template, if any.
 
-    Projects carry no template id, but template names are unique, so the
-    template is resolved by name. Returns (newly_completed, challenge_slug);
+    The template is resolved by ``project.template_id`` first; projects
+    created before that column existed (or by clients that never set it) fall
+    back to the unique template name. Returns (newly_completed, challenge_slug);
     challenge_slug is the linked challenge whether or not it was new, so the
     admin UI can tell "already completed" from "not linked".
     Never raises: a problem here must not undo the project approval.
@@ -54,7 +55,11 @@ def _complete_linked_challenge(student, project):
     from application.services.challenge_completion import grant_challenge_completion
 
     try:
-        template = ProjectTemplate.query.filter_by(name=project.name).first()
+        template = None
+        if project.template_id:
+            template = db.session.get(ProjectTemplate, project.template_id)
+        if template is None:
+            template = ProjectTemplate.query.filter_by(name=project.name).first()
         if not template or not template.challenge_slug:
             return False, None
         challenge = Challenge.query.filter_by(slug=template.challenge_slug).first()
@@ -184,9 +189,14 @@ def assign_project():
     code_snippet = data.get("code_snippet")
     image_url = data.get("image_url")
 
+    from application.models.project_template import ProjectTemplate
+
+    matched_template = ProjectTemplate.query.filter_by(name=name).first()
+
     project = Project(
         user_id=user_id,
         name=name,
+        template_id=matched_template.id if matched_template else None,
         description=description,
         link=link,
         github_link=github_link,

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Check, ExternalLink, Trophy, Play, Box } from 'lucide-react';
 import client from '../../api/client';
 
 import './CourseProgressTree.css';
 import {
-    ALIGNED_NODES, matchCourse, getDomainConfig, findProjectForLevel
+    ALIGNED_NODES, matchCourse, getDomainConfig, findProjectForLevel,
+    findStudentProjectForTemplate, getStudentProjectStatus
 } from '../../constants/courseProgress';
 
 const COURSE_CONCEPTS = {
@@ -142,18 +143,23 @@ const CourseLevelBreakdown = () => {
     const nodeAliases = selectedNode?.aliases || nodeConfig?.aliases || (selectedNode?.title ? [selectedNode.title] : []);
     const nodeAliasKey = nodeAliases.join('|');
 
+    // The 3D section needs the student's own projects (status + "Continue project"), which the
+    // full profile carries. Fetch the profile when we have no user at all, or (3D only) when the
+    // user passed through navigation state has no projects list. Only ever fetched once.
+    const profileRequested = useRef(false);
     useEffect(() => {
-        if (!userObj && slug) {
-            client.get(`/user/profile/${slug}`)
-                .then(res => {
-                    const target = res.data?.data?.target;
-                    if (target) {
-                        setUserObj(target);
-                    }
-                })
-                .catch(() => {});
-        }
-    }, [slug, userObj]);
+        const needsProfile = !userObj || (is3D && !Array.isArray(userObj.projects));
+        if (!needsProfile || !slug || profileRequested.current) return;
+        profileRequested.current = true;
+        client.get(`/user/profile/${slug}`)
+            .then(res => {
+                const target = res.data?.data?.target;
+                if (target) {
+                    setUserObj(prev => ({ ...(prev || {}), ...target }));
+                }
+            })
+            .catch(() => {});
+    }, [slug, userObj, is3D]);
 
     // 3D Modeling is mini-project based: each challenge has one project template whose
     // `chapter` is this course's name (same lookup the progress tree uses).
@@ -218,6 +224,12 @@ const CourseLevelBreakdown = () => {
         });
     }
     const nextProject = is3D && nextLevel ? findProjectForLevel(nextLevel, projects) : null;
+
+    // The student's own project for a template (null when not started) and its status label.
+    const studentProjects = userObj?.projects;
+    const ownProjectFor = (template) => (is3D ? findStudentProjectForTemplate(template, studentProjects) : null);
+    const nextOwnProject = ownProjectFor(nextProject);
+    const openOwnProject = (ownProject) => navigate(`/project/edit/${ownProject.id}`);
 
 
     return (
@@ -292,10 +304,10 @@ const CourseLevelBreakdown = () => {
                                         <button
                                             type="button"
                                             className="btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none btn-modeling3d"
-                                            onClick={() => openProject(nextProject)}
+                                            onClick={() => (nextOwnProject ? openOwnProject(nextOwnProject) : openProject(nextProject))}
                                         >
                                             <Box size={18} aria-hidden="true" />
-                                            <span>Start project</span>
+                                            <span>{nextOwnProject ? 'Continue project' : 'Start project'}</span>
                                         </button>
                                     )}
                                     {tools.map(tool => (
@@ -393,7 +405,11 @@ const CourseLevelBreakdown = () => {
                 </h3>
                 <div className="levels-grid-checklist d-flex flex-col gap-sm mt-1-5rem">
                     {syllabusRows.length > 0 ? (
-                        syllabusRows.map((lvl, index) => (
+                        syllabusRows.map((lvl, index) => {
+                            const ownProject = ownProjectFor(lvl.project);
+                            const status = getStudentProjectStatus(ownProject);
+                            const actionLabel = lvl.is_completed ? 'View project' : (ownProject ? 'Continue project' : 'Start project');
+                            return (
                             <div
                                 key={index}
                                 className={`level-row-item d-flex justify-between align-center flex-wrap gap-sm p-1rem bg-surface-sec radius-md border-subtle ${lvl.is_completed ? 'status-completed' : 'status-pending'}`}
@@ -443,22 +459,23 @@ const CourseLevelBreakdown = () => {
                                                 borderRadius: '4px',
                                             }}
                                         >
-                                            Pending
+                                            {is3D ? status.label : 'Pending'}
                                         </span>
                                     )}
                                     {lvl.project && !isParent && (
                                         <button
                                             type="button"
                                             className={`btn-project-action ${lvl.is_completed ? 'secondary' : ''}`}
-                                            onClick={() => openProject(lvl.project)}
-                                            aria-label={`${lvl.is_completed ? 'View project' : 'Start project'}: ${lvl.project.name}`}
+                                            onClick={() => (!lvl.is_completed && ownProject ? openOwnProject(ownProject) : openProject(lvl.project))}
+                                            aria-label={`${actionLabel}: ${lvl.project.name}`}
                                         >
-                                            {lvl.is_completed ? 'View project' : 'Start project'}
+                                            {actionLabel}
                                         </button>
                                     )}
                                 </div>
                             </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <p className="text-muted text-center p-2rem bg-surface-sec radius-md w-100">
                             {is3D ? 'Projects coming soon' : 'Empty'}

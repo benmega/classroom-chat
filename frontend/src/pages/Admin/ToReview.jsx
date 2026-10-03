@@ -172,6 +172,9 @@ const ToReview = () => {
             });
 
             if (response.data.status === 'success') {
+                if (action === 'approve' && response.data.challenge_completed === true) {
+                    toast.success('Project approved — 3D challenge completed!');
+                }
                 adminCache.invalidate('admin_to_review');
                 setProjects(prev => prev.filter(p => p.id !== projectId));
                 setProjectComments(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });

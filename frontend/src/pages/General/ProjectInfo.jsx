@@ -9,6 +9,12 @@ import './ProjectInfo.css';
 
 
 
+// The student's project built from this template: by template_id, else by exact name (older projects).
+const findAssigned = (projects, template) => (
+    projects.find(p => p.template_id != null && String(p.template_id) === String(template.id))
+    || projects.find(p => p.template_id == null && p.name === template.name)
+);
+
 const ProjectInfo = () => {
     const { projectId } = useParams();
     const { state } = useLocation();
@@ -46,7 +52,7 @@ const ProjectInfo = () => {
                     const profileRes = await client.get('/user/profile');
                     const userProfile = profileRes.data?.data?.target;
                     if (userProfile && userProfile.projects) {
-                        const assigned = userProfile.projects.find(p => p.name === currentProj.name);
+                        const assigned = findAssigned(userProfile.projects, currentProj);
                         if (assigned) {
                             setAssignedProject(assigned);
                         }
@@ -72,6 +78,7 @@ const ProjectInfo = () => {
         formData.append('name', project.name);
         formData.append('description', project.description || '');
         formData.append('student_id', user.id);
+        formData.append('template_id', project.id);
         
         try {
             const response = await client.post('/user/project/new', formData);
@@ -80,7 +87,7 @@ const ProjectInfo = () => {
                 const profileRes = await client.get('/user/profile');
                 const userProfile = profileRes.data?.data?.target;
                 if (userProfile && userProfile.projects) {
-                    const assigned = userProfile.projects.find(p => p.name === project.name);
+                    const assigned = findAssigned(userProfile.projects, project);
                     if (assigned) {
                         setAssignedProject(assigned);
                     }

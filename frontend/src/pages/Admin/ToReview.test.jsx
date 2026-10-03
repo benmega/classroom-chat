@@ -179,6 +179,59 @@ describe('ToReview Component', () => {
   });
 
 
+  describe('project approval toast', () => {
+    beforeEach(() => {
+      // Drop any unconsumed mockResolvedValueOnce values queued by earlier tests.
+      client.post.mockReset();
+    });
+
+    const mockOneProject = () => {
+      client.get.mockImplementation((url) => {
+        if (url.includes('projects')) {
+          return Promise.resolve({
+            data: { data: { projects: [{ id: 5, name: 'Name Tag Model', submitted_at: '2023-01-01', user_nickname: 'Bob' }] } },
+          });
+        }
+        return Promise.resolve({ data: { data: [] } });
+      });
+    };
+
+    const approveProject = async () => {
+      render(<ToReview />);
+      await screen.findByText('Name Tag Model');
+      fireEvent.change(screen.getByLabelText(/Teacher Feedback/i), { target: { value: 'Nice work' } });
+      fireEvent.click(screen.getByRole('button', { name: /Approve Project/i }));
+    };
+
+    it('shows a challenge-completed toast when the approval completed a 3D challenge', async () => {
+      mockOneProject();
+      client.post.mockResolvedValueOnce({
+        data: { status: 'success', message: 'ok', challenge_completed: true, challenge_slug: 'name-tag-model' },
+      });
+
+      await approveProject();
+
+      await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Project approved — 3D challenge completed!'));
+      await waitFor(() => expect(screen.queryByText('Name Tag Model')).not.toBeInTheDocument());
+    });
+
+    it('shows no toast for an ordinary approval (no linked challenge or already completed)', async () => {
+      mockOneProject();
+      client.post.mockResolvedValueOnce({
+        data: { status: 'success', message: 'ok', challenge_completed: false, challenge_slug: null },
+      });
+
+      await approveProject();
+
+      await waitFor(() => expect(screen.queryByText('Name Tag Model')).not.toBeInTheDocument());
+      expect(client.post).toHaveBeenCalledWith(
+        '/api/admin/handle-project-review/5',
+        expect.objectContaining({ action: 'approve' })
+      );
+      expect(toast.success).not.toHaveBeenCalled();
+    });
+  });
+
   it('initializes from admin_to_review cache immediately and fetches in background', async () => {
     const cachedData = {
       projects: [{ id: 99, name: 'Cached Review Project', submitted_at: '2023-01-01', user_nickname: 'CachedUser' }],

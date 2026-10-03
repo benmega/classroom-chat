@@ -28,6 +28,15 @@ class Project(db.Model):
     status = db.Column(db.String(20), default="pending", nullable=False)
     image_url = db.Column(db.String(255), nullable=True)  # Thumbnail for the card
     created_at = db.Column(db.DateTime, default=db.func.now())
+    # The ProjectTemplate this project was built from (nullable: custom projects
+    # have none). Survives the student renaming the project, so approval can
+    # still complete the template's linked challenge.
+    template_id = db.Column(
+        db.Integer,
+        db.ForeignKey("project_templates.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     def __init__(self, **kwargs):
         if "status" not in kwargs:
@@ -55,6 +64,7 @@ class Project(db.Model):
             "video_transcript": self.video_transcript,
             "image_url": self.image_url,
             "status": self.status,
+            "template_id": self.template_id,
             "user_nickname": self.user.nickname if self.user else "Unknown Student",
             "user_slug": self.user.slug if self.user else None,
             "user_username": self.user.username if self.user else None,
