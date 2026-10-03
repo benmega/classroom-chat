@@ -10,7 +10,6 @@ def setup_models():
     # Import all models to register them with SQLAlchemy
     # These imports are needed for side effects (model registration)
     from .achievements import Achievement
-    from .ai_settings import AISettings
     from .banned_words import BannedWords
     from .challenge import Challenge
     from .challenge_log import ChallengeLog
