@@ -38,6 +38,52 @@ def manage_projects():
     )
 
 
+def _complete_linked_challenge(student, project):
+    """Complete the Challenge linked to the project's template, if any.
+
+    Projects carry no template id, but template names are unique, so the
+    template is resolved by name. Returns (newly_completed, challenge_slug);
+    challenge_slug is the linked challenge whether or not it was new, so the
+    admin UI can tell "already completed" from "not linked".
+    Never raises: a problem here must not undo the project approval.
+    """
+    import logging
+
+    from application.models.challenge import Challenge
+    from application.models.project_template import ProjectTemplate
+    from application.services.challenge_completion import grant_challenge_completion
+
+    try:
+        template = ProjectTemplate.query.filter_by(name=project.name).first()
+        if not template or not template.challenge_slug:
+            return False, None
+        challenge = Challenge.query.filter_by(slug=template.challenge_slug).first()
+        if not challenge:
+            return False, None
+
+        from application.models.configuration import Configuration
+
+        config = Configuration.query.first()
+        multiplier = (config.duck_multiplier if config else 1) or 1
+        if student.has_double_duck:
+            multiplier *= 2
+
+        created = grant_challenge_completion(
+            student,
+            challenge,
+            reason=f"Project approved: {project.name}",
+            duck_multiplier=multiplier,
+            evaluate=False,  # the caller runs evaluate_user right after
+        )
+        return created, challenge.slug
+    except Exception:
+        db.session.rollback()
+        logging.getLogger(__name__).exception(
+            "Failed to complete linked challenge for project %s", project.id
+        )
+        return False, None
+
+
 @admin_bp.route("/handle-project-review/<int:project_id>", methods=["POST"])
 @admin_only
 def handle_project_review(project_id):
@@ -85,6 +131,15 @@ def handle_project_review(project_id):
         project.status = "approved"
         db.session.commit()
 
+        # Mini-project templates can be linked to a Challenge (e.g. the 3D
+        # modeling track): approving the project completes that challenge.
+        challenge_completed = False
+        completed_challenge_slug = None
+        if student:
+            challenge_completed, completed_challenge_slug = (
+                _complete_linked_challenge(student, project)
+            )
+
         if student:
             from application.services.achievement_engine import evaluate_user
 
@@ -101,6 +156,8 @@ def handle_project_review(project_id):
             {
                 "status": "success",
                 "message": f"Project '{project.name}' approved with {packet_reward:.3f} packets.",
+                "challenge_completed": challenge_completed,
+                "challenge_slug": completed_challenge_slug,
             }
         )
 
