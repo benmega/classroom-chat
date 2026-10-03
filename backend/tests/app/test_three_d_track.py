@@ -410,6 +410,35 @@ def test_course_progress_data_includes_3d_breakdown(seeded, sample_user):
     assert names[0] == "How 3D Printers Work"
 
 
+def test_course_progress_breakdown_reports_last_completed_at(seeded, sample_user):
+    from datetime import datetime
+
+    _complete(sample_user, "How 3D Printers Work", "Name Tag Model", "Animation Basics")
+    stamps = {
+        "how-3d-printers-work": datetime(2026, 1, 1, 9, 0, 0),
+        "name-tag-model": datetime(2026, 1, 5, 9, 0, 0),
+        "animation-basics": datetime(2026, 2, 1, 9, 0, 0),
+    }
+    for slug, ts in stamps.items():
+        ChallengeLog.query.filter_by(
+            user_id=sample_user.id, challenge_slug=slug
+        ).update({"timestamp": ts})
+    db.session.commit()
+
+    data = sample_user.get_course_progress_data()["3d-modeling"]
+    by_course = {b["course_id"]: b for b in data["breakdown"]}
+    # Latest completion within each course wins.
+    assert by_course["3d-1"]["last_completed_at"] == "2026-01-05T09:00:00"
+    assert by_course["3d-2"]["last_completed_at"] == "2026-02-01T09:00:00"
+
+
+def test_course_progress_breakdown_last_completed_at_none_without_progress(
+    seeded, sample_user
+):
+    data = sample_user.get_course_progress_data()["3d-modeling"]
+    assert all(b["last_completed_at"] is None for b in data["breakdown"])
+
+
 # --------------------------------------------------------------------- helper
 
 

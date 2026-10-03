@@ -515,6 +515,16 @@ class User(db.Model):
             ).all()
             completed_slugs = {cl.challenge_slug for cl in user_logs}
 
+            # Latest completion time per challenge, used to tell which course the
+            # student most recently made progress in.
+            last_completed_by_slug = {}
+            for cl in user_logs:
+                if cl.timestamp is None:
+                    continue
+                prev = last_completed_by_slug.get(cl.challenge_slug)
+                if prev is None or cl.timestamp > prev:
+                    last_completed_by_slug[cl.challenge_slug] = cl.timestamp
+
             all_challenges = Challenge.query.filter_by(domain=domain).order_by(Challenge.sequence).all()
 
             courses_map = {}
@@ -531,10 +541,16 @@ class User(db.Model):
 
                 levels = []
                 completed_count = 0
+                course_last_completed = None
                 for c in challenges:
                     is_completed = c.slug in completed_slugs
                     if is_completed:
                         completed_count += 1
+                        ts = last_completed_by_slug.get(c.slug)
+                        if ts is not None and (
+                            course_last_completed is None or ts > course_last_completed
+                        ):
+                            course_last_completed = ts
                     levels.append(
                         {"name": c.name, "slug": c.slug, "sequence": c.sequence, "is_completed": is_completed}
                     )
@@ -547,6 +563,11 @@ class User(db.Model):
                             "levels_completed": completed_count,
                             "levels_total": len(levels),
                             "levels": levels,
+                            "last_completed_at": (
+                                course_last_completed.isoformat()
+                                if course_last_completed
+                                else None
+                            ),
                         }
                     )
 
@@ -573,6 +594,11 @@ class User(db.Model):
                 course_name = (
                     courses_dict.get(course_id, course_id) if course_id else "Other"
                 )
+                legacy_times = [
+                    cl.timestamp
+                    for cl in user_logs
+                    if cl.course_id == course_id and cl.timestamp is not None
+                ]
                 breakdown.append(
                     {
                         "course_id": course_id,
@@ -580,6 +606,9 @@ class User(db.Model):
                         "levels_completed": len(levels),
                         "levels_total": len(levels),
                         "levels": levels,
+                        "last_completed_at": (
+                            max(legacy_times).isoformat() if legacy_times else None
+                        ),
                     }
                 )
 
