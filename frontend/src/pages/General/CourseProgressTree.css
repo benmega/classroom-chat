@@ -1149,6 +1149,24 @@
     border-style: solid;
 }
 
+/* Mobile: nodes are stacked in one column, so the absolutely positioned project column would
+   spill over the next card (badly so for the six 3D projects). Lay project buttons out in flow,
+   as a wrapped row under their card. */
+@media (max-width: 1023px) {
+    .skill-node-cell {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .chapter-projects-col {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 10px;
+    }
+}
+
 /* Desktop-only tweaks: the mobile track label is redundant next to the column headers */
 @media (min-width: 1024px) {
     .node-track-label {
