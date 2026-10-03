@@ -1,3 +1,80 @@
+import codecombatLogo from '../assets/codecombat-logo.png';
+import ozariaLogo from '../assets/ozaria-logo.png';
+import modeling3DLogo from '../assets/3d-modeling-logo.webp';
+import tinkercadLogo from '../assets/tinkercad-logo.svg';
+import blenderLogo from '../assets/blender-logo.svg';
+
+/**
+ * Per-domain presentation config. Everything that used to be a ternary chain
+ * in the progress tree / breakdown pages (logo, link, css class, colors) lives here.
+ *
+ * - `cssClass` must be a valid CSS identifier (the domain id '3d-modeling' is not).
+ * - `color` is used for borders/fills/lines (>= 3:1 on white), `textColor` for text on
+ *   tinted backgrounds (>= 4.5:1), `colorHover` for the solid CTA button hover state.
+ * - `url`/`linkLabel` describe the external site a track header links to. When a domain
+ *   has several external tools (3D Modeling) `url` is null and `tools` lists them instead.
+ */
+export const DOMAINS = {
+    codecombat: {
+        id: 'codecombat',
+        label: 'CodeCombat',
+        cssClass: 'codecombat',
+        logo: codecombatLogo,
+        url: 'https://codecombat.com',
+        linkLabel: 'Visit CodeCombat',
+        playUrl: 'https://codecombat.com/play',
+        color: '#2b91af',
+        textColor: '#2b91af',
+        colorHover: '#217088',
+        tint: 'rgba(43, 145, 175, 0.12)',
+        tintBorder: 'rgba(43, 145, 175, 0.2)'
+    },
+    ozaria: {
+        id: 'ozaria',
+        label: 'Ozaria',
+        cssClass: 'ozaria',
+        logo: ozariaLogo,
+        url: 'https://www.ozaria.com',
+        linkLabel: 'Visit Ozaria',
+        playUrl: 'https://ozaria.com/play',
+        color: '#902edb',
+        textColor: '#902edb',
+        colorHover: '#7122ad',
+        tint: 'rgba(144, 46, 219, 0.12)',
+        tintBorder: 'rgba(144, 46, 219, 0.2)'
+    },
+    '3d-modeling': {
+        id: '3d-modeling',
+        label: '3D Modeling',
+        cssClass: 'modeling3d',
+        logo: modeling3DLogo,
+        url: null,
+        linkLabel: null,
+        tools: [
+            { id: 'tinkercad', name: 'Tinkercad', url: 'https://www.tinkercad.com', logo: tinkercadLogo },
+            { id: 'blender', name: 'Blender', url: 'https://www.blender.org', logo: blenderLogo }
+        ],
+        color: '#C2410C',     // orange-700: 5.2:1 vs white text / white bg
+        textColor: '#9A3412', // orange-800: >= 6:1 on the 12% tint
+        colorHover: '#9A3412',
+        tint: 'rgba(194, 65, 12, 0.12)',
+        tintBorder: 'rgba(194, 65, 12, 0.25)'
+    }
+};
+
+export const getDomainConfig = (domain) => DOMAINS[domain] || DOMAINS.codecombat;
+
+/** Which domain (progress source + styling) each track column belongs to. */
+export const TRACK_DOMAINS = {
+    ozaria: 'ozaria',
+    cs: 'codecombat',
+    gd: 'codecombat',
+    wd: 'codecombat',
+    '3d': '3d-modeling'
+};
+
+export const getTrackDomain = (trackId) => TRACK_DOMAINS[trackId] || 'codecombat';
+
 export const TRACKS = [
     { id: 'ozaria', title: 'Ozaria', col: 1 },
     { id: 'cs', title: 'Computer Science', col: 2 },
@@ -25,8 +102,8 @@ export const ALIGNED_NODES = [
     { id: 'cs-6', title: 'Computer Science 6', aliases: ['Computer Science 6', 'CS6'], domain: 'codecombat', track: 'cs', row: 11 },
     
     // 3D Modeling Track (Mini-Project Based)
-    { id: '3d-1', title: 'TinkerCAD 1', aliases: ['TinkerCAD 1', '3D-1'], domain: '3d-modeling', track: '3d', row: 4 },
-    { id: '3d-2', title: 'Blender 1', aliases: ['Blender 1', '3D-2'], domain: '3d-modeling', track: '3d', row: 8 }
+    { id: '3d-1', title: 'TinkerCAD 1', aliases: ['TinkerCAD 1', '3D-1'], domain: '3d-modeling', track: '3d', row: 4, logo: tinkercadLogo, toolName: 'Tinkercad', toolUrl: 'https://www.tinkercad.com' },
+    { id: '3d-2', title: 'Blender 1', aliases: ['Blender 1', '3D-2'], domain: '3d-modeling', track: '3d', row: 8, logo: blenderLogo, toolName: 'Blender', toolUrl: 'https://www.blender.org' }
 ];
 
 export const BRANCH_EDGES = [
@@ -49,7 +126,26 @@ export const matchCourse = (courseName, aliases) => {
     return aliases.some(alias => normalize(alias) === normName);
 };
 
-export const getAncestors = (nodeId, processedNodes) => {
+const normalizeKey = (str) => String(str || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+/**
+ * Pair a project template with the challenge level it completes. The backend adds
+ * `challenge_slug` to the template JSON; without it we fall back to the documented
+ * convention template.name == challenge name.
+ */
+export const levelMatchesProject = (level, project) => {
+    if (!level || !project) return false;
+    if (project.challenge_slug && level.slug) return project.challenge_slug === level.slug;
+    return !!level.name && normalizeKey(level.name) === normalizeKey(project.name);
+};
+
+export const findLevelForProject = (project, levels = []) =>
+    levels.find(level => levelMatchesProject(level, project)) || null;
+
+export const findProjectForLevel = (level, projects = []) =>
+    projects.find(project => levelMatchesProject(level, project)) || null;
+
+export const getAncestors =(nodeId, processedNodes) => {
     const ancestors = new Set([nodeId]);
     let added = true;
     while (added) {
@@ -108,5 +204,6 @@ export const getPrerequisiteTitles = (nodeId, processedNodes) => {
             if (p) titles.push(p.title);
         }
     });
-    return titles.join(" or ");
+    // A branch edge can duplicate the previous node in the same track (e.g. 3d-1 -> 3d-2)
+    return [...new Set(titles)].join(" or ");
 };

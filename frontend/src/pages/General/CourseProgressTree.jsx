@@ -3,19 +3,15 @@ import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { showConfirm } from '../../utils/confirm';
-import { ArrowLeft, Star, ZoomIn, ZoomOut, RotateCcw, CheckCircle, Code, History, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import codecombatLogo from '../../assets/codecombat-logo.png';
-import ozariaLogo from '../../assets/ozaria-logo.png';
-import modeling3DLogo from '../../assets/3d-modeling-logo.jpg';
-import tinkercadLogo from '../../assets/tinkercad-logo.svg';
-import blenderLogo from '../../assets/blender-logo.svg';
+import { ArrowLeft, ZoomIn, ZoomOut, RotateCcw, CheckCircle, Code, Box, History, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import SubmitProgressModal from '../../components/common/SubmitProgressModal';
 import './CourseProgressTree.css';
 
 import {
-    TRACKS, ALIGNED_NODES, BRANCH_EDGES, matchCourse,
-    getAncestors, getDescendants, getPrerequisiteTitles
+    TRACKS, ALIGNED_NODES, matchCourse,
+    getAncestors, getDescendants, getPrerequisiteTitles,
+    getDomainConfig, getTrackDomain, findLevelForProject
 } from '../../constants/courseProgress';
 
 const CourseProgressTree = () => {
@@ -92,6 +88,10 @@ const CourseProgressTree = () => {
 
     const userObj = location.state?.target || fetchedUser;
     const activeTrack = userObj?.active_track || 'cs';
+    // "Claim Ducks" submits CodeCombat/Ozaria certificate URLs, which does not apply to the
+    // project-based 3D track (progress there is awarded when a teacher approves a project),
+    // so the FAB and its modal are hidden for students working on 3D. The History button stays.
+    const showClaimDucks = (userObj?.active_track || authUser?.active_track) !== '3d';
     const pendingRequest = localPendingRequest || userObj?.pending_request;
 
     const progressData = stateProgressData || fetchedProgressData;
@@ -223,9 +223,7 @@ const CourseProgressTree = () => {
                         const y2 = toEl.offsetTop;
 
                         const isActive = fromNode.has_started && toNode.has_started;
-                        let lineDomain = 'codecombat';
-                        if (track.id === 'ozaria') lineDomain = 'ozaria';
-                        if (track.id === '3d') lineDomain = '3d-modeling';
+                        const lineDomain = getDomainConfig(getTrackDomain(track.id)).cssClass;
 
                         newLines.push({ id: `track-${track.id}-${lineIdCounter++}`, x1: x, y1, x2: x, y2, isActive, lineDomain, fromId: fromNode.id, toId: toNode.id, trackId: track.id });
                     }
@@ -273,6 +271,9 @@ const CourseProgressTree = () => {
     };
 
     useEffect(() => {
+        // Wait for the profile fetch so a student whose active track is '3d' (column 5, off-screen
+        // on most desktops) is centered on their own track rather than the default one.
+        if (isFetching) return;
         if (progressData && Object.keys(nodeRefs.current).length > 0 && !hasCenteredActiveTrackRef.current) {
             const activeTrackNodes = processedNodes.filter(n => n.track === activeTrack && !n.is_extra);
             const targetNode = activeTrackNodes.find(n => n.id === recommendedNodeId) || activeTrackNodes[0];
@@ -290,7 +291,7 @@ const CourseProgressTree = () => {
                 }, 300);
             }
         }
-    }, [progressData, activeTrack, recommendedNodeId, processedNodes]);
+    }, [progressData, activeTrack, recommendedNodeId, processedNodes, isFetching]);
 
     useLayoutEffect(() => {
         if (location.state?.highlightCourseName && Object.keys(nodeRefs.current).length > 0 && !hasScrolledRef.current) {
@@ -355,32 +356,61 @@ const CourseProgressTree = () => {
                     const percent = trackNodes.length > 0 ? (totalPercent / trackNodes.length) * 100 : 0;
                     const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
 
-                    const isOzaria = track.id === 'ozaria';
-                    const is3D = track.id === '3d';
-                    const logoSrc = isOzaria ? ozariaLogo : (is3D ? modeling3DLogo : codecombatLogo);
-                    const linkUrl = isOzaria ? 'https://ozeria.com' : (is3D ? 'https://tinkercad.com' : 'https://codecombat.com');
-                    const linkTitle = isOzaria ? 'Visit Ozaria' : (is3D ? 'Visit Tinkercad' : 'Visit CodeCombat');
-
-                    return (
-                        <a 
-                            key={track.id} 
-                            href={linkUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden cursor-pointer ${track.id === activeTrack ? 'active-track-header' : 'de-emphasized-track-header'}`}
-                            title={linkTitle}
-                        >
+                    const domainConfig = getDomainConfig(getTrackDomain(track.id));
+                    const headerClassName = `branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden ${track.id === activeTrack ? 'active-track-header' : 'de-emphasized-track-header'}`;
+                    const headerBody = (
+                        <>
                             <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
                             <div className="pos-rel z-1 d-flex align-center gap-md w-100">
                                 <span className="header-logo-link">
-                                    <img src={logoSrc} alt={track.title} className="header-logo-img-flat" />
+                                    <img src={domainConfig.logo} alt="" className="header-logo-img-flat" />
                                 </span>
                                 <h2 className="d-flex flex-col align-start gap-4px m-0 text-left">
                                     <span>{track.title}</span>
                                     <span className="text-sm opacity-80 fw-normal">{Math.round(percent)}%</span>
                                 </h2>
                             </div>
-                        </a>
+                        </>
+                    );
+
+                    // Single-site tracks: the whole header is one external link.
+                    if (domainConfig.url) {
+                        return (
+                            <a
+                                key={track.id}
+                                href={domainConfig.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`${headerClassName} cursor-pointer`}
+                                title={domainConfig.linkLabel}
+                            >
+                                {headerBody}
+                                <span className="cpt-sr-only"> (opens in new tab)</span>
+                            </a>
+                        );
+                    }
+
+                    // Multi-tool tracks (3D Modeling: Tinkercad + Blender): the header is a plain
+                    // panel with one clearly-named external link per tool (no nested anchors).
+                    return (
+                        <div key={track.id} className={headerClassName}>
+                            {headerBody}
+                            <div className="header-tool-links pos-rel z-1">
+                                {(domainConfig.tools || []).map(tool => (
+                                    <a
+                                        key={tool.id}
+                                        href={tool.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="header-tool-link"
+                                        title={`Open ${tool.name}`}
+                                    >
+                                        <img src={tool.logo} alt="" className="header-tool-logo" />
+                                        <span className="cpt-sr-only">Open {tool.name} (opens in new tab)</span>
+                                    </a>
+                                ))}
+                            </div>
+                        </div>
                     );
                 })}
             </div>
@@ -419,6 +449,12 @@ const CourseProgressTree = () => {
                     const isDimmed = hoveredNodeId && !connectedNodes.has(node.id);
                     const prereqs = !node.has_started ? getPrerequisiteTitles(node.id, processedNodes) : "";
                     const isComplete = node.levels_total && node.levels_completed >= node.levels_total;
+                    const domainConfig = getDomainConfig(node.domain);
+                    const domainClass = domainConfig.cssClass;
+                    const is3D = node.domain === '3d-modeling';
+                    const nodeProjects = chapterProjects[node.id] || [];
+                    const showComingSoon = is3D && !node.is_extra && !node.levels_total && nodeProjects.length === 0;
+                    const ProjectIcon = is3D ? Box : Code;
 
                     return (
                         <div role="button" tabIndex={0}
@@ -432,18 +468,18 @@ const CourseProgressTree = () => {
                             onMouseEnter={() => setHoveredNodeId(node.id)}
                             onMouseLeave={() => setHoveredNodeId(null)}
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }}
-                            onClick={() => navigate(`${location.pathname}/breakdown`, { 
-                                state: { 
+                            onClick={() => navigate(`${location.pathname}/breakdown`, {
+                                state: {
                                     selectedNode: node,
                                     activeTrack: activeTrack,
                                     pendingRequest: pendingRequest,
                                     userObj: userObj
-                                } 
+                                }
                             })}
                         >
                             <div style={{ position: 'relative' }}>
                                 {isAdmin && (
-                                    <button 
+                                    <button
                                         type="button"
                                         className="btn-admin-pass-chapter"
                                         onClick={(e) => handleAdminPass(e, node)}
@@ -453,33 +489,27 @@ const CourseProgressTree = () => {
                                         <CheckCircle size={16} />
                                     </button>
                                 )}
-                                <div className={`skill-card ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''} cursor-pointer`}>
-                                <div 
-                                    className={`skill-card-bg-fill ${node.domain} ${node.levels_total && node.levels_completed >= node.levels_total ? 'complete' : ''}`}
+                                <div className={`skill-card ${domainClass} ${isComplete ? 'complete' : ''} cursor-pointer`}>
+                                <div
+                                    className={`skill-card-bg-fill ${domainClass} ${isComplete ? 'complete' : ''}`}
                                     style={{ width: `${node.levels_total ? Math.min((node.levels_completed / node.levels_total) * 100, 100) : (node.levels_completed > 0 ? 100 : 0)}%` }}
                                 ></div>
-                                {node.levels_total && node.levels_completed >= node.levels_total && (
-                                    <div className={`complete-badge ${node.domain}`} title="100% Complete">
+                                {isComplete && (
+                                    <div className={`complete-badge ${domainClass}`} title="100% Complete">
                                         <CheckCircle size={16} />
                                     </div>
                                 )}
                                 <div className="skill-icon">
-                                    {node.domain === '3d-modeling' ? (
-                                        <img
-                                            src={node.title.toLowerCase().includes('tinkercad') ? tinkercadLogo : blenderLogo}
-                                            alt={`${node.title} logo`}
-                                            className="domain-logo"
-                                            style={{ width: '48px', height: '48px', objectFit: 'contain', background: 'transparent' }}
-                                        />
-                                    ) : (
-                                        <img
-                                            src={node.domain === 'codecombat' ? codecombatLogo : ozariaLogo}
-                                            alt={`${node.domain} logo`}
-                                            className="domain-logo"
-                                        />
-                                    )}
+                                    {/* Decorative: the course title next to it already names the course */}
+                                    <img
+                                        src={node.logo || domainConfig.logo}
+                                        alt=""
+                                        className={`domain-logo ${node.logo ? 'domain-logo-svg' : ''}`}
+                                    />
                                 </div>
                                 <div className="skill-content">
+                                    {/* Mobile only (track headers are hidden below 1024px): gives each card its track context */}
+                                    {trackInfo && <p className="node-track-label">{trackInfo.title}</p>}
                                     <h3>{node.title}</h3>
                                     {node.is_extra && <p className="domain-label">Extra Quest</p>}
                                     {node.levels_completed > 0 && (
@@ -489,26 +519,35 @@ const CourseProgressTree = () => {
                                             </div>
                                         </div>
                                     )}
+                                    {showComingSoon && <p className="node-coming-soon">Projects coming soon</p>}
                                 </div>
                             </div>
                             </div>
-                            
+
                             {/* Project Nodes */}
-                            {chapterProjects[node.id] && chapterProjects[node.id].length > 0 && (
+                            {nodeProjects.length > 0 && (
                                 <div className="chapter-projects-col">
-                                    {chapterProjects[node.id].map(project => (
-                                        <button
-                                            key={project.id}
-                                            className="project-node-btn"
-                                            title={project.name}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/project-info/${project.id}`, { state: { project } });
-                                            }}
-                                        >
-                                            <Code size={20} className="project-icon" />
-                                        </button>
-                                    ))}
+                                    {nodeProjects.map(project => {
+                                        const projectLevel = is3D ? findLevelForProject(project, node.levels) : null;
+                                        const projectDone = !!projectLevel?.is_completed;
+                                        return (
+                                            <button
+                                                key={project.id}
+                                                type="button"
+                                                className={`project-node-btn ${domainClass} ${projectDone ? 'completed' : ''}`}
+                                                title={projectDone ? `${project.name} (completed)` : project.name}
+                                                aria-label={projectDone ? `${project.name} (completed)` : project.name}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/project-info/${project.id}`, { state: { project } });
+                                                }}
+                                            >
+                                                {projectDone
+                                                    ? <CheckCircle size={20} className="project-icon" aria-hidden="true" />
+                                                    : <ProjectIcon size={20} className="project-icon" aria-hidden="true" />}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             )}
 
@@ -628,7 +667,8 @@ const CourseProgressTree = () => {
                             <History size={20} />
                         </Link>
 
-                        <button 
+                        {showClaimDucks && (
+                        <button
                             id="claim-ducks-btn"
                             className="btn-premium" 
                             onClick={() => {
@@ -652,13 +692,16 @@ const CourseProgressTree = () => {
                             <CheckCircle size={18} />
                             {hasUrlInput ? 'Go!!!' : 'Claim Ducks'}
                         </button>
+                        )}
                     </div>
 
-                    <SubmitProgressModal 
-                        isOpen={isSubmitModalOpen} 
-                        onClose={() => setIsSubmitModalOpen(false)} 
-                        onUrlChange={(url) => setHasUrlInput(!!url.trim())}
-                    />
+                    {showClaimDucks && (
+                        <SubmitProgressModal
+                            isOpen={isSubmitModalOpen}
+                            onClose={() => setIsSubmitModalOpen(false)}
+                            onUrlChange={(url) => setHasUrlInput(!!url.trim())}
+                        />
+                    )}
                 </>
             )}
         </div>
