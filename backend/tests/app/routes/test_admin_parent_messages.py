@@ -152,3 +152,155 @@ def test_review_counts_includes_parent_messages(client, app, sample_admin):
     data = resp.get_json()["data"]
     assert "pending_parent_messages" in data
     assert data["pending_parent_messages"] >= 1
+
+
+def _make_parent(username):
+    parent = User(username=username, role="parent")
+    parent.set_password("pass123")
+    db.session.add(parent)
+    db.session.commit()
+    return parent.id
+
+
+def test_list_parent_messages_invalid_status(client, sample_admin):
+    login_as_admin(client, sample_admin)
+
+    resp = client.get("/api/admin/parent-messages?status=bogus")
+    assert resp.status_code == 400
+    assert "Invalid status filter." in resp.get_data(as_text=True)
+
+    # Valid filters still work
+    for status in ("pending", "resolved", "all"):
+        assert client.get(f"/api/admin/parent-messages?status={status}").status_code == 200
+
+
+def test_list_parent_messages_resolved_filter(client, app, sample_admin):
+    login_as_admin(client, sample_admin)
+    with app.app_context():
+        pid = _make_parent("parent_resolved_filter")
+        db.session.add_all([
+            ParentMessage(parent_id=pid, subject="open", body="b", status="pending"),
+            ParentMessage(parent_id=pid, subject="done", body="b", status="resolved"),
+        ])
+        db.session.commit()
+
+    resp = client.get("/api/admin/parent-messages?status=resolved")
+    messages = resp.get_json()["data"]["messages"]
+    assert [m["subject"] for m in messages] == ["done"]
+
+
+def test_list_parent_messages_is_capped(client, app, sample_admin):
+    login_as_admin(client, sample_admin)
+    with app.app_context():
+        pid = _make_parent("parent_cap")
+        db.session.add_all([
+            ParentMessage(parent_id=pid, subject=f"s{i}", body="b", status="pending")
+            for i in range(205)
+        ])
+        db.session.commit()
+
+    resp = client.get("/api/admin/parent-messages?status=all")
+    assert resp.status_code == 200
+    assert len(resp.get_json()["data"]["messages"]) == 200
+
+
+def test_resolve_parent_message_twice_keeps_original_resolution(client, app, sample_admin):
+    from datetime import datetime
+
+    login_as_admin(client, sample_admin)
+    original_time = datetime(2020, 1, 2, 3, 4, 5)
+    with app.app_context():
+        pid = _make_parent("parent_twice")
+        msg = ParentMessage(
+            parent_id=pid,
+            subject="Done already",
+            body="b",
+            status="resolved",
+            resolved_at=original_time,
+            resolved_by_id=None,
+        )
+        db.session.add(msg)
+        db.session.commit()
+        msg_id = msg.id
+
+    resp = client.post(f"/api/admin/parent-messages/{msg_id}/resolve")
+    assert resp.status_code == 200
+    item = resp.get_json()["data"]["item"]
+    assert item["id"] == msg_id
+    assert item["status"] == "resolved"
+
+    with app.app_context():
+        db.session.expire_all()
+        unchanged = db.session.get(ParentMessage, msg_id)
+        assert unchanged.resolved_at == original_time
+        assert unchanged.resolved_by_id is None
+
+
+def _login_parent(client, app, username):
+    with app.app_context():
+        parent = User(username=username, role="parent")
+        parent.set_password("pass123")
+        db.session.add(parent)
+        db.session.commit()
+        pid = parent.id
+    with client.session_transaction() as sess:
+        sess["user"] = pid
+    return pid
+
+
+def test_contact_teacher_null_subject_ok(client, app, sample_admin):
+    pid = _login_parent(client, app, "parent_nullsubj")
+
+    res = client.post("/api/parents/contact-teacher", json={"subject": None, "body": "Hello"})
+    assert res.status_code == 200
+
+    with app.app_context():
+        pmsg = ParentMessage.query.filter_by(parent_id=pid).first()
+        assert pmsg.subject is None
+        assert pmsg.body == "Hello"
+
+
+def test_contact_teacher_null_body_rejected(client, app, sample_admin):
+    _login_parent(client, app, "parent_nullbody")
+
+    res = client.post("/api/parents/contact-teacher", json={"subject": "x", "body": None})
+    assert res.status_code == 400
+
+
+def test_contact_teacher_subject_too_long(client, app, sample_admin):
+    pid = _login_parent(client, app, "parent_longsubj")
+
+    res = client.post(
+        "/api/parents/contact-teacher",
+        json={"subject": "s" * 256, "body": "Hello"},
+    )
+    assert res.status_code == 400
+    assert "Subject is too long" in res.get_data(as_text=True)
+
+    # Exactly 255 is accepted
+    ok = client.post(
+        "/api/parents/contact-teacher",
+        json={"subject": "s" * 255, "body": "Hello"},
+    )
+    assert ok.status_code == 200
+
+    with app.app_context():
+        assert ParentMessage.query.filter_by(parent_id=pid).count() == 1
+
+
+def test_contact_teacher_also_posts_legacy_message(client, app, sample_admin):
+    from application.models.message import Message
+
+    pid = _login_parent(client, app, "parent_legacy")
+
+    res = client.post(
+        "/api/parents/contact-teacher",
+        json={"subject": "Legacy", "body": "Still visible to admins"},
+    )
+    assert res.status_code == 200
+
+    with app.app_context():
+        msg = Message.query.filter_by(user_id=pid).first()
+        assert msg is not None
+        assert "Still visible to admins" in msg.content
+        assert "Legacy" in msg.content

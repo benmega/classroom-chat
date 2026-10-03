@@ -42,7 +42,12 @@ class ParentMessage(db.Model):
     parent = db.relationship(
         "User",
         foreign_keys=[parent_id],
-        backref=db.backref("parent_messages_sent", lazy="selectin", cascade="all, delete-orphan"),
+        backref=db.backref(
+            "parent_messages_sent",
+            lazy="select",
+            cascade="all, delete-orphan",
+            passive_deletes=True,
+        ),
         lazy="joined",
     )
     resolved_by = db.relationship(

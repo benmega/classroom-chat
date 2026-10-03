@@ -931,20 +931,33 @@ def test_admin_certificate_templates_view(client, init_db, test_admin):
         assert response.status_code == 200
 
 
-def test_admin_certificate_templates_upload(client, init_db, test_admin):
+def test_admin_certificate_templates_upload(client, init_db, test_admin, isolated_certificate_templates_dir):
     from io import BytesIO
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
     img_data = b"fake pdf content"
     img_file = (BytesIO(img_data), "template.pdf")
-    with patch("werkzeug.datastructures.FileStorage.save"):
-        response = client.post(
-            "/achievements/admin/certificate_templates/cs-1/upload",
-            data={"template_file": img_file},
-            content_type="multipart/form-data"
-        )
-        assert response.status_code == 200
-        assert response.json["success"] is True
+    response = client.post(
+        "/achievements/admin/certificate_templates/cs-1/upload",
+        data={"template_file": img_file},
+        content_type="multipart/form-data"
+    )
+    assert response.status_code == 200
+    assert response.json["success"] is True
+    # Written to the (temp) configured templates dir, never the real static dir
+    assert (isolated_certificate_templates_dir / "cs-1.pdf").read_bytes() == img_data
+
+
+def test_admin_certificate_templates_lists_3d_courses(client, init_db, test_admin):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+    response = client.get("/achievements/admin/certificate_templates")
+    assert response.status_code == 200
+    templates = response.json.get("data", response.json)["templates"]
+    by_id = {t["id"]: t for t in templates}
+    assert by_id["3d-1"]["name"] == "TinkerCAD 1"
+    assert by_id["3d-2"]["name"] == "Blender 1"
+    assert by_id["3d-1"]["has_template"] is False
 
 
 def test_admin_certificate_templates_test_generate(client, init_db, test_admin):
