@@ -10,14 +10,12 @@ ROUTE_MODULE_PATH = "application.routes.notes_routes"
 
 def test_upload_note_no_auth(client):
     """Ensure unauthorized users cannot upload notes."""
-    # UPDATED URL: /notes/upload
     response = client.post("/notes/upload")
     assert response.status_code == 401
 
 
 def test_upload_note_no_file(logged_in_client):
     """Ensure a 400 error if no file is part of the request."""
-    # UPDATED URL: /notes/upload
     response = logged_in_client.post("/notes/upload", data={})
     assert response.status_code == 400
     assert b"No file provided" in response.data
@@ -37,7 +35,7 @@ def test_upload_note_success(
         init_db.session.commit()
 
     with logged_in_client.session_transaction() as sess:
-        sess["user"] = sample_user.id  # <--- This fixes the lookup error
+        sess["user"] = sample_user.id
 
     file_content = b"fake image bytes"
     file_name = "homework.png"
@@ -108,8 +106,6 @@ def test_upload_note_local_success(logged_in_client, sample_user, init_db):
     assert resp_view.data == b"local note bytes"
     resp_view.close()  # Release file lock on Windows
 
-    # Unauthorized delete
-    # Let's log in as another user to test unauthorized delete:
     from application.models.user import User
 
     other_user = User(username="other_note_user", is_approved=True)
@@ -233,7 +229,7 @@ def test_delete_note_exception(logged_in_client, sample_user, init_db):
 
 def test_kiosk_upload_note_unauthorized(client, sample_user):
     with client.session_transaction() as sess:
-        sess["user"] = sample_user.id  # sample_user is not admin
+        sess["user"] = sample_user.id
 
     response = client.post("/notes/kiosk-upload")
     assert response.status_code == 403

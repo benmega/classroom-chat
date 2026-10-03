@@ -59,11 +59,6 @@ def get_feed():
                 ).filter(message_users.c.user_id == user.id)
                 queries.extend([q2, q3])
 
-            # If a specific classroom filter IS applied, include messages by this user
-            # to ensure they see their own messages in the stream even if they are missing from classroom target somehow
-            # Wait, no, we only want messages targeted at this classroom or global.
-            # But the user might want to see their own global/classroom messages. Those will be caught by q1 and q4.
-
             if user_classroom_ids:
                 q4 = base_query.join(
                     message_classrooms, Message.id == message_classrooms.c.message_id
@@ -138,15 +133,35 @@ def get_me_context():
             from application.models.classroom import Classroom
 
             classrooms = Classroom.query.all()
+            for c in classrooms:
+                c.check_sandbox_expiry()
+            db.session.commit()
             users = User.query.filter(User.role != "parent").all()
 
-            classroom_data = [{"id": c.id, "name": c.name} for c in classrooms]
+            classroom_data = [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "sandbox_active": bool(c.sandbox_active),
+                }
+                for c in classrooms
+            ]
             user_data = [
                 {"id": u.id, "username": u.username, "nickname": u.nickname}
                 for u in users
             ]
         else:
-            classroom_data = [{"id": c.id, "name": c.name} for c in user.classrooms]
+            for c in user.classrooms:
+                c.check_sandbox_expiry()
+            db.session.commit()
+            classroom_data = [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "sandbox_active": bool(c.sandbox_active),
+                }
+                for c in user.classrooms
+            ]
             user_data = []
 
         return jsonify(

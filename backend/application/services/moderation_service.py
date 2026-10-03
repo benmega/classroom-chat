@@ -1,8 +1,4 @@
 """
-File: moderation_service.py
-Type: py
-Summary: Banned-word screening for chat messages.
-
 Matching rules:
   - Case-insensitive, with common leet-speak substitutions normalized
     (e.g. "b4d" matches a banned word "bad").

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '../../test/test-utils';
 import CourseProgressTree from './CourseProgressTree';
+import useAuthStore from '../../store/useAuthStore';
 
 const mockLocation = {
   pathname: '/',
@@ -20,7 +21,9 @@ vi.mock('react-router-dom', async () => {
 describe('CourseProgressTree - Chapter Recommendation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLocation.pathname = '/';
     mockLocation.state = null;
+    useAuthStore.setState({ user: null, isAuthenticated: false });
   });
 
   it('suggests the first chapter (Code Combat Junior) when no progress is made', async () => {
@@ -160,3 +163,53 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     });
   });
 });
+
+describe('CourseProgressTree - Claim Ducks and History FABs Visibility', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLocation.pathname = '/';
+    mockLocation.state = {
+      course_progress: {
+        codecombat: { breakdown: [] },
+        ozaria: { breakdown: [] }
+      }
+    };
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+  });
+
+  it('renders Claim Ducks button and History FAB when viewed by a student on /course-progress/:slug', async () => {
+    mockLocation.pathname = '/course-progress/student-1';
+    useAuthStore.setState({ user: { id: 10, role: 'student', username: 'student1' }, isAuthenticated: true });
+
+    renderWithProviders(<CourseProgressTree />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /claim ducks/i })).toBeInTheDocument();
+      expect(screen.getByTitle('View History')).toBeInTheDocument();
+    });
+  });
+
+  it('does NOT render Claim Ducks button and History FAB when on a parent route such as /parent/course-progress/9', async () => {
+    mockLocation.pathname = '/parent/course-progress/9';
+
+    renderWithProviders(<CourseProgressTree />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /claim ducks/i })).not.toBeInTheDocument();
+      expect(screen.queryByTitle('View History')).not.toBeInTheDocument();
+    });
+  });
+
+  it('does NOT render Claim Ducks button and History FAB when logged in as parent', async () => {
+    mockLocation.pathname = '/course-progress/student-1';
+    useAuthStore.setState({ user: { id: 20, role: 'parent', username: 'parent1' }, isAuthenticated: true });
+
+    renderWithProviders(<CourseProgressTree />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /claim ducks/i })).not.toBeInTheDocument();
+      expect(screen.queryByTitle('View History')).not.toBeInTheDocument();
+    });
+  });
+});
+

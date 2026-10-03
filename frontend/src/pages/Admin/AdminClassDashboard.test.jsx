@@ -1,10 +1,26 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminClassDashboard from './AdminClassDashboard';
 import client from '../../api/client';
 // eslint-disable-next-line
 import toast from 'react-hot-toast';
+
+const socketListeners = {};
+const mockSocket = {
+    on: vi.fn((event, cb) => {
+        socketListeners[event] = cb;
+    }),
+    off: vi.fn((event) => {
+        delete socketListeners[event];
+    }),
+    emit: vi.fn(),
+};
+
+vi.mock('../../hooks/useChatSocket', () => ({
+    getSocket: () => mockSocket,
+    default: () => ({ sendMessage: vi.fn() }),
+}));
 
 vi.mock('../../api/client', () => ({
     default: {
@@ -105,10 +121,8 @@ describe('AdminClassDashboard', () => {
             expect(screen.getByText('Python Level 1')).toBeInTheDocument();
         });
 
-        // Known languages render as an icon with the language as alt text
         expect(screen.getByAltText('Python')).toBeInTheDocument();
 
-        // The roster lives in the People tab
         fireEvent.click(screen.getByRole('tab', { name: 'People' }));
         expect(screen.getByText('John Doe')).toBeInTheDocument();
         expect(screen.getByText('@student1')).toBeInTheDocument();
@@ -135,7 +149,6 @@ describe('AdminClassDashboard', () => {
 
         fireEvent.click(screen.getByRole('tab', { name: 'People' }));
 
-        // Click the UserPlus button to open the modal
         fireEvent.click(screen.getByRole('button', { name: 'Enroll Student' }));
 
         const select = document.getElementById('student-select-list');
@@ -311,7 +324,6 @@ describe('AdminClassDashboard', () => {
         fireEvent.click(screen.getByRole('tab', { name: 'Classwork' }));
 
         expect(screen.getByRole('button', { name: 'Add Connected Course' })).toBeInTheDocument();
-        // Displays course_name when present, falling back to course_id
         expect(screen.getByText('Python Basics')).toBeInTheDocument();
         expect(screen.getByText('course-js')).toBeInTheDocument();
     });
@@ -494,7 +506,6 @@ describe('AdminClassDashboard', () => {
 
         fireEvent.click(screen.getByRole('tab', { name: 'People' }));
 
-        // Open the modal containing join code & enroll
         fireEvent.click(screen.getByRole('button', { name: 'Enroll Student' }));
 
         expect(screen.getAllByText('OLD123').length).toBeGreaterThan(0);
@@ -505,6 +516,102 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/join-code/regenerate');
             expect(screen.getAllByText('NEW456').length).toBeGreaterThan(0);
+        });
+    });
+
+    it('displays Enable Sandbox button when sandbox_active is false and toggles it on', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: false,
+            students: [],
+            course_assignments: []
+        });
+
+        client.post.mockImplementation((url) => {
+            if (url.includes('/sandbox/toggle')) {
+                return Promise.resolve({ data: { success: true, sandbox_active: true } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        const enableBtn = screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i });
+        expect(enableBtn).toBeInTheDocument();
+
+        fireEvent.click(enableBtn);
+
+        await waitFor(() => {
+            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/sandbox/toggle');
+            expect(screen.getByText(/Sandbox Mode Active — All Tests Passed/i)).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /End Sandbox/i })).toBeInTheDocument();
+        });
+    });
+
+    it('displays End Sandbox button when sandbox_active is true and toggles it off', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: true,
+            students: [],
+            course_assignments: []
+        });
+
+        client.post.mockImplementation((url) => {
+            if (url.includes('/sandbox/toggle')) {
+                return Promise.resolve({ data: { success: true, sandbox_active: false } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText(/Sandbox Mode Active — All Tests Passed/i)).toBeInTheDocument();
+        });
+
+        const endBtn = screen.getByRole('button', { name: /End Sandbox/i });
+        expect(endBtn).toBeInTheDocument();
+
+        fireEvent.click(endBtn);
+
+        await waitFor(() => {
+            expect(client.post).toHaveBeenCalledWith('/api/admin/classrooms/cls123/sandbox/toggle');
+            expect(screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i })).toBeInTheDocument();
+        });
+    });
+
+    it('updates sandbox state live when sandbox_status_changed socket event is received', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: false,
+            students: [],
+            course_assignments: []
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i })).toBeInTheDocument();
+        });
+
+        expect(socketListeners['sandbox_status_changed']).toBeDefined();
+        act(() => {
+            socketListeners['sandbox_status_changed']({
+                classroom_id: 'cls123',
+                sandbox_active: true,
+            });
+        });
+
+        await waitFor(() => {
+            expect(screen.getByText(/Sandbox Mode Active — All Tests Passed/i)).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /End Sandbox/i })).toBeInTheDocument();
         });
     });
 });

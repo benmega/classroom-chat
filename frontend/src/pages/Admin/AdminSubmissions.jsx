@@ -13,6 +13,7 @@ import {
 import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
+import adminCache from '../../utils/adminCache';
 import { getApiUrl } from '../../utils/apiUrl';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
@@ -32,20 +33,32 @@ const formatFileSize = (bytes) => {
 };
 
 const AdminSubmissions = () => {
-    const [submissions, setSubmissions] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isProcessing, setIsProcessing] = useState(null);
     const [statusFilter, setStatusFilter] = useState('pending');
+    const cacheKey = `admin_submissions_${statusFilter}`;
+    const cached = adminCache.get(cacheKey);
+    const [submissions, setSubmissions] = useState(() => cached || []);
+    const [isLoading, setIsLoading] = useState(() => !cached);
+    const [isProcessing, setIsProcessing] = useState(null);
     const [noteDrafts, setNoteDrafts] = useState({});
 
     const fetchSubmissions = useCallback(async (status) => {
-        setIsLoading(true);
+        const currentCacheKey = `admin_submissions_${status}`;
+        const cachedSubmissions = adminCache.get(currentCacheKey);
+        if (cachedSubmissions) {
+            setSubmissions(cachedSubmissions);
+            setIsLoading(false);
+        } else {
+            setIsLoading(true);
+        }
+
         try {
             const response = await client.get('/api/admin/submissions', {
                 params: status === 'all' ? {} : { status }
             });
             if (response.data.status === 'success') {
-                setSubmissions(response.data.data.submissions || []);
+                const fetchedList = response.data.data.submissions || [];
+                setSubmissions(fetchedList);
+                adminCache.set(currentCacheKey, fetchedList);
             }
         } catch {
             toast.error('Failed to load student file submissions.');
@@ -66,6 +79,7 @@ const AdminSubmissions = () => {
                 teacher_note: teacherNote
             });
             if (response.data.status === 'success') {
+                adminCache.invalidate('admin_submissions');
                 if (statusFilter === 'pending') {
                     setSubmissions((prev) => prev.filter((s) => s.id !== id));
                 } else {
@@ -99,6 +113,7 @@ const AdminSubmissions = () => {
         try {
             const response = await client.delete(`/api/admin/submissions/${id}`);
             if (response.data.status === 'success') {
+                adminCache.invalidate('admin_submissions');
                 setSubmissions((prev) => prev.filter((s) => s.id !== id));
                 toast.success('Submission deleted.');
             } else {
@@ -145,14 +160,18 @@ const AdminSubmissions = () => {
             <AdminPageHeader title="Inbox" />
 
             <div className="filter-tabs-container">
-                <div className="filter-tabs">
+                <div className="filter-tabs" role="tablist" aria-label="Submission status filter">
                     <button
+                        role="tab"
+                        aria-selected={statusFilter === 'pending'}
                         className={`tab-btn ${statusFilter === 'pending' ? 'active' : ''}`}
                         onClick={() => setStatusFilter('pending')}
                     >
                         Pending
                     </button>
                     <button
+                        role="tab"
+                        aria-selected={statusFilter === 'all'}
                         className={`tab-btn ${statusFilter === 'all' ? 'active' : ''}`}
                         onClick={() => setStatusFilter('all')}
                     >

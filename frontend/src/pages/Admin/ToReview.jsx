@@ -20,10 +20,12 @@ import {
     TrendingUp,
     ChevronDown,
     ChevronUp,
-    Edit
+    Edit,
+    RotateCcw
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import adminCache from '../../utils/adminCache';
 import { getApiUrl } from '../../utils/apiUrl';
 import { showConfirm } from '../../utils/confirm';
 import { formatStaticUrl } from '../../utils/formatters';
@@ -33,36 +35,38 @@ import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
 const ToReview = () => {
-    // Data lists
-    const [projects, setProjects] = useState([]);
-    const [certificates, setCertificates] = useState([]);
-    const [pendingUsers, setPendingUsers] = useState([]);
-    const [trades, setTrades] = useState([]);
-    const [courseRequests, setCourseRequests] = useState([]);
-    const [parentMessages, setParentMessages] = useState([]);
+    const cachedReview = adminCache.get('admin_to_review');
 
-    // Support tables for dropdown lists
-    const [classrooms, setClassrooms] = useState([]);
-    const [courses, setCourses] = useState([]);
+    const [projects, setProjects] = useState(() => cachedReview?.projects || []);
+    const [certificates, setCertificates] = useState(() => cachedReview?.certificates || []);
+    const [pendingUsers, setPendingUsers] = useState(() => cachedReview?.pendingUsers || []);
+    const [trades, setTrades] = useState(() => cachedReview?.trades || []);
+    const [courseRequests, setCourseRequests] = useState(() => cachedReview?.courseRequests || []);
+    const [parentMessages, setParentMessages] = useState(() => cachedReview?.parentMessages || []);
 
-    // App state
-    const [isLoading, setIsLoading] = useState(true);
+    const [classrooms, setClassrooms] = useState(() => cachedReview?.classrooms || []);
+    const [courses, setCourses] = useState(() => cachedReview?.courses || []);
+
+    const [isLoading, setIsLoading] = useState(() => !cachedReview);
     const [activeTab, setActiveTab] = useState('all');
     const [isProcessing, setIsProcessing] = useState(null);
 
-    // Form inputs state
     const [projectComments, setProjectComments] = useState({});
     const [projectRewards, setProjectRewards] = useState({});
     const [selectedClassrooms, setSelectedClassrooms] = useState({});
     const [selectedCourses, setSelectedCourses] = useState({});
     const [expandedCodeSnippets, setExpandedCodeSnippets] = useState({});
 
-    // Bulk Selection State
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [selectedTrades, setSelectedTrades] = useState(new Set());
 
     const fetchAllData = useCallback(async () => {
-        setIsLoading(true);
+        const cached = adminCache.get('admin_to_review');
+        if (cached) {
+            setIsLoading(false);
+        } else {
+            setIsLoading(true);
+        }
 
         try {
             const [
@@ -85,20 +89,35 @@ const ToReview = () => {
                 client.get('/api/admin/parent-messages?status=pending').catch(() => ({ data: { messages: [] } }))
             ]);
 
-            setCertificates(certsRes.data.certificates || certsRes.data.data?.certificates || []);
-            setProjects(projectsRes.data.data?.projects || []);
-            setPendingUsers(usersRes.data.data?.users || []);
-            setTrades(tradesRes.data.data?.trades || []);
-            setCourseRequests(courseRes.data.requests || courseRes.data.data?.requests || []);
-            setParentMessages(parentMessagesRes.data?.data?.messages || parentMessagesRes.data?.messages || []);
-
-            // Set options states
+            const newCerts = certsRes.data.certificates || certsRes.data.data?.certificates || [];
+            const newProjects = projectsRes.data.data?.projects || [];
+            const newUsers = usersRes.data.data?.users || [];
+            const newTrades = tradesRes.data.data?.trades || [];
+            const newRequests = courseRes.data.requests || courseRes.data.data?.requests || [];
+            const newParentMessages = parentMessagesRes.data?.data?.messages || parentMessagesRes.data?.messages || [];
             const clList = classroomsRes.data.data || [];
             const coList = coursesRes.data.data || [];
+
+            setCertificates(newCerts);
+            setProjects(newProjects);
+            setPendingUsers(newUsers);
+            setTrades(newTrades);
+            setCourseRequests(newRequests);
+            setParentMessages(newParentMessages);
             setClassrooms(clList);
             setCourses(coList);
 
-            // Prepopulate selectors with default values
+            adminCache.set('admin_to_review', {
+                certificates: newCerts,
+                projects: newProjects,
+                pendingUsers: newUsers,
+                trades: newTrades,
+                courseRequests: newRequests,
+                parentMessages: newParentMessages,
+                classrooms: clList,
+                courses: coList
+            });
+
             const initialClassrooms = {};
             const initialCourses = {};
             courseRes.data.requests?.forEach(req => {
@@ -131,9 +150,6 @@ const ToReview = () => {
         fetchAllData();
     }, [fetchAllData]);
 
-    // Action Handlers
-
-    // 1. Project Review Actions
     const handleProjectReview = async (projectId, action) => {
         const comment = projectComments[projectId] || '';
         const reward = projectRewards[projectId] !== undefined ? projectRewards[projectId] : 0.006;
@@ -152,9 +168,8 @@ const ToReview = () => {
             });
 
             if (response.data.status === 'success') {
-                
+                adminCache.invalidate('admin_to_review');
                 setProjects(prev => prev.filter(p => p.id !== projectId));
-                // Clean up state
                 setProjectComments(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
                 setProjectRewards(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
             }
@@ -165,7 +180,6 @@ const ToReview = () => {
         }
     };
 
-    // 2. Certificate Review Actions
     const handleCertificateReview = async (certId, action = 'approve') => {
         if (action === 'reject') {
             const review_note = window.prompt('Reason for rejecting? (optional)') || undefined;
@@ -173,6 +187,7 @@ const ToReview = () => {
             try {
                 const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
                 if (response.data.status === 'success') {
+                    adminCache.invalidate('admin_to_review');
                     setCertificates(prev => prev.filter(c => c.id !== certId));
                 }
             } catch {
@@ -203,7 +218,7 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/achievements/admin/certificates/reviewed/all');
             if (response.data.status === 'success') {
-                
+                adminCache.invalidate('admin_to_review');
                 setCertificates([]); 
             }
         } catch {
@@ -213,7 +228,6 @@ const ToReview = () => {
         }
     };
 
-    // 3. User Signup Review Actions
     const handleUserApproval = async (userId, action, isBulk = false) => {
         if (!isBulk && action === 'reject' && !await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', destructive: true })) return;
         if (!isBulk) setIsProcessing(`user-${userId}`);
@@ -222,7 +236,7 @@ const ToReview = () => {
         try {
             const response = await client.post(`/api/admin/${endpoint}`);
             if (response.data.status === 'success') {
-                
+                adminCache.invalidate('admin_to_review');
                 setPendingUsers(prev => prev.filter(u => u.id !== userId));
             }
         } catch {
@@ -253,7 +267,6 @@ const ToReview = () => {
         setIsProcessing(null);
     };
 
-    // 4. Duck Trade Review Actions
     const handleTradeApproval = async (tradeId, action, isBulk = false) => {
         if (!isBulk) setIsProcessing(`trade-${tradeId}`);
         const formData = new FormData();
@@ -263,7 +276,7 @@ const ToReview = () => {
         try {
             const response = await client.post('/api/admin/trade_action', formData);
             if (response.data.status === 'success') {
-                
+                adminCache.invalidate('admin_to_review');
                 setTrades(prev => prev.filter(t => t.id !== tradeId));
             } else {
                 if (!isBulk) toast.error(response.data.message || 'Action failed.');
@@ -293,7 +306,6 @@ const ToReview = () => {
     };
 
 
-    // 6. Course Request Actions
     const handleCourseApproval = async (requestId, action) => {
         setIsProcessing(`course-${requestId}`);
 
@@ -312,7 +324,7 @@ const ToReview = () => {
                     course_id
                 });
                 if (response.data.success) {
-                    
+                    adminCache.invalidate('admin_to_review');
                     setCourseRequests(prev => prev.filter(r => r.id !== requestId));
                 }
             } else {
@@ -340,6 +352,7 @@ const ToReview = () => {
             if (response.data?.status === 'success' || response.data?.message) {
                 toast.success('Parent message marked as resolved.');
                 setParentMessages(prev => prev.filter(m => m.id !== msgId));
+                adminCache.invalidate('admin_to_review');
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to resolve parent message.');
@@ -348,7 +361,6 @@ const ToReview = () => {
         }
     };
 
-    // Helper functions
     const formatBits = (bits) => {
         if (!bits || !Array.isArray(bits)) return '0000 0000';
         const paddedBits = [...bits];
@@ -368,7 +380,6 @@ const ToReview = () => {
     };
 
 
-    // Tabs setup
     const tabs = [
         { id: 'all', label: 'All Items', icon: Inbox, count: projects.length + certificates.length + pendingUsers.length + trades.length + courseRequests.length + parentMessages.length },
         { id: 'messages', label: 'Parent Messages', icon: MessageSquare, count: parentMessages.length },
@@ -389,7 +400,6 @@ const ToReview = () => {
         courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
         parentMessages.forEach(m => unified.push({ ...m, type: 'parent_message', key: `parent-msg-${m.id}`, timestamp: m.created_at || new Date().toISOString() }));
 
-        // Sort descending by timestamp
         return unified.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     };
 
@@ -406,15 +416,20 @@ const ToReview = () => {
 
     const displayItems = getDisplayItems();
 
-    // Render Cards for each item type
-
     const renderProjectCard = (p) => {
         const isExpanded = !!expandedCodeSnippets[p.id];
         return (
             <div className="review-card project-review-card" key={p.key}>
                 <div className="review-card-header">
-                    <div className="card-badge badge-project">
-                        <FolderKanban size={14} /> Project
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div className="card-badge badge-project">
+                            <FolderKanban size={14} /> Project
+                        </div>
+                        {p.teacher_comment && (
+                            <div className="card-badge badge-resubmission">
+                                <RotateCcw size={13} /> Resubmitted
+                            </div>
+                        )}
                     </div>
                     <span className="card-time">
                         <Clock size={12} /> {new Date(p.submitted_at || p.created_at).toLocaleString()}
@@ -513,6 +528,13 @@ const ToReview = () => {
                         </div>
                     )}
 
+                    {p.teacher_comment && (
+                        <div className="resubmission-note-box">
+                            <strong>Previous Feedback / Revision Request:</strong>
+                            <p>{p.teacher_comment}</p>
+                        </div>
+                    )}
+
                     <div className="review-action-section">
                         <div className="feedback-field">
                             <label htmlFor={`feedback-${p.id}`} className="field-label">Teacher Feedback (Required to Approve)</label>
@@ -531,16 +553,16 @@ const ToReview = () => {
                         <div className="reward-field">
                             <div className="reward-label-row">
                                 <label htmlFor={`reward-${p.id}`} className="field-label">Packet Reward</label>
-                                <span className="reward-value">{(projectRewards[p.id] !== undefined ? projectRewards[p.id] : 0.006).toFixed(3)} packets</span>
+                                <span className="reward-value">{(projectRewards[p.id] !== undefined ? projectRewards[p.id] : 0.006).toFixed(4)} packets</span>
                             </div>
                             <div className="slider-container">
                                 <Sliders size={16} className="slider-icon" />
                                 <input 
                                     id={`reward-${p.id}`}
                                     type="range" 
-                                    min="0.000" 
-                                    max="0.050" 
-                                    step="0.001" 
+                                    min="0.0000" 
+                                    max="0.0500" 
+                                    step="0.0001" 
                                     value={projectRewards[p.id] !== undefined ? projectRewards[p.id] : 0.006}
                                     onChange={(e) => setProjectRewards(prev => ({ ...prev, [p.id]: parseFloat(e.target.value) }))}
                                 />

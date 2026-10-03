@@ -5,7 +5,6 @@ import { http, HttpResponse } from 'msw';
 
 describe('useAuthStore', () => {
   beforeEach(() => {
-    // Reset store state
     useAuthStore.setState({
       user: null,
       isAuthenticated: false,
@@ -40,7 +39,6 @@ describe('useAuthStore', () => {
   });
 
   it('checkAuth clears user when not logged in', async () => {
-    // Override handler for this test
     server.use(
       http.get('*/user/api/auth/status', () => {
         return HttpResponse.json({
@@ -97,7 +95,6 @@ describe('useAuthStore', () => {
   });
 
   it('logout clears state', async () => {
-    // Set initial state
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
     
     await useAuthStore.getState().logout();

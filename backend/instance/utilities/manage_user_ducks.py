@@ -1,4 +1,4 @@
-# manage_user_ducks.py
+
 import sys
 
 from application.extensions import db
@@ -27,7 +27,6 @@ def update_user_ducks():
         # Take max of computed challenge earnings and current balance — if the user has
         # a balance that predates the transaction log, earned_ducks must be at least that high.
         user.earned_ducks = max(total_ducks, user.duck_balance)
-        # user.packets = total_ducks / (2**14)  # DEPRECATED: Packets are decoupled from ducks
         updated += 1
 
         print(

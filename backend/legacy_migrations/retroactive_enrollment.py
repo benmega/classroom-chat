@@ -1,10 +1,4 @@
-"""
-File: retroactive_enrollment.py
-Type: py
-Summary: Migrates existing challenge completion logs into classroom enrollments.
-         Students who have successfully submitted a challenge belonging to a
-         classroom are retroactively enrolled in that classroom.
-"""
+
 
 import os
 import sys

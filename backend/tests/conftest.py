@@ -1,8 +1,4 @@
-"""
-File: conftest.py
-Type: py
-Summary: Pytest configuration and fixtures (Restored + New Helpers).
-"""
+
 
 import base64
 import os
@@ -110,10 +106,6 @@ def create_dummy_license():
 
 @pytest.fixture(scope="session")
 def live_server(test_app):  # <--- CHANGED: Request 'test_app' explicitly
-    """
-    Runs the Flask app in a background thread to avoid Windows
-    multiprocessing pickle errors.
-    """
     # Find a free port
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.bind(("localhost", 0))
@@ -560,9 +552,7 @@ def sample_challenges_multi_domain(init_db):
 
 @pytest.fixture
 def mock_render_template(client):
-    """
-    Robust mock for render_template that captures message arguments.
-    """
+    # Robust mock for render_template that captures message arguments.
 
     def side_effect(template_name_or_list, **context):
         if "message" in context:
@@ -583,7 +573,7 @@ def mock_render_template(client):
 
 @pytest.fixture
 def sample_course_instance(init_db, sample_classroom, sample_course):
-    """Creates a course instance linked to a classroom and a course."""
+    # Creates a course instance linked to a classroom and a course.
     instance = CourseInstance(
         id="inst_987654321",
         classroom_id=sample_classroom.id,
@@ -596,7 +586,7 @@ def sample_course_instance(init_db, sample_classroom, sample_course):
 
 @pytest.fixture
 def sample_note(init_db, sample_user):
-    """Creates a sample note entry without actual S3 upload."""
+    # Creates a sample note entry without actual S3 upload.
     note = Note(
         user_id=sample_user.id, filename=f"notes/{sample_user.username}/test_image.png"
     )

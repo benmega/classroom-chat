@@ -19,7 +19,6 @@ def generate_qr_codes():
     app = create_app()
 
     with app.app_context():
-        # Query all users
         users = User.query.all()
 
         if not users:
@@ -35,12 +34,10 @@ def generate_qr_codes():
         print(f"Output directory: {output_dir}\n")
 
         for user in users:
-            # Use slug for profile URL
             if not user.slug:
                 print(f"Warning: User '{user.username}' has no slug. Skipping...")
                 continue
 
-            # Generate profile URL
             profile_url = f"https://blossom.benmega.com/user/profile/{user.slug}"
 
             qr = qrcode.QRCode(
@@ -52,10 +49,8 @@ def generate_qr_codes():
             qr.add_data(profile_url)
             qr.make(fit=True)
 
-            # Generate image
             img = qr.make_image(fill_color="black", back_color="white")
 
-            # Save QR code
             filename = f"{user.slug}_qr.png"
             filepath = os.path.join(output_dir, filename)
             img.save(filepath)

@@ -1,4 +1,4 @@
-# manage_achievements.py
+
 import sys
 
 from application.extensions import db

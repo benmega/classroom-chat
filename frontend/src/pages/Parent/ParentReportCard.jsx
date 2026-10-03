@@ -84,7 +84,6 @@ const ParentReportCard = () => {
         fetchReport();
     }, [studentId, error]);
 
-    // Fetch historical progress data separately after the main report loads
     useEffect(() => {
         if (!studentId || error) return;
         const fetchHistory = async () => {
@@ -201,7 +200,6 @@ const ParentReportCard = () => {
     return (
         <>
         <div className="report-card-page animate-page-entry">
-            {/* ── Header ── */}
             <header className="report-header glass-panel">
                 <div className="report-header-inner">
                     <button
@@ -246,7 +244,6 @@ const ParentReportCard = () => {
                 </div>
             </header>
 
-            {/* ── Body Sections ── */}
             <DesktopNotice />
             
             {isReportEmpty ? (
@@ -260,7 +257,6 @@ const ParentReportCard = () => {
                     <div className="column-left">
                         <CourseProgress target={reportData} isParentView={true} studentId={studentId} />
 
-                        {/* Achievements */}
                         {reportData.unlocked_achievements && reportData.unlocked_achievements.length > 0 && (
                             <section className="dashboard-panel">
                                 <div className="panel-header">
@@ -295,7 +291,6 @@ const ParentReportCard = () => {
 
 
 
-                        {/* Recent Events Feed */}
                         {historyData?.recent_events && historyData.recent_events.length > 0 && (
                             <section className="dashboard-panel">
                                 <div className="panel-header">
@@ -328,7 +323,6 @@ const ParentReportCard = () => {
                             setSelectedProject={setSelectedProject}
                         />
 
-                        {/* Activity / Contribution Graph */}
                         {reportData.contribution_data?.rows?.some(row => row && row.some(cell => cell && cell.level > 0)) && (
                             <section className="dashboard-panel">
                                 <div className="panel-header">

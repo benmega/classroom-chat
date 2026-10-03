@@ -1,8 +1,4 @@
-"""
-File: course_request_routes.py
-Type: py
-Summary: Flask routes for student course instance requests.
-"""
+
 
 from application.extensions import db
 from application.models.course_instance import CourseInstance
@@ -33,7 +29,6 @@ def submit_request():
     if not course_instance_id or not url:
         return jsonify({"success": False, "message": "Missing required fields"}), 400
 
-    # Check if a request already exists for this instance
     existing = CourseInstanceRequest.query.filter_by(
         course_instance_id=course_instance_id
     ).first()

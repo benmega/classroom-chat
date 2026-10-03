@@ -172,6 +172,9 @@ def login():
         SessionLog.start_session(user.id)
         User.set_online(user.id, online=True)
 
+        from application.services.achievement_engine import evaluate_user
+        evaluate_user(user)
+
         return jsonify({"success": True, "role": user.role, "username": user.username})
 
     except ClientError as e:

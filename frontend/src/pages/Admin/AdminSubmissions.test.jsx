@@ -1,3 +1,4 @@
+import adminCache from '../../utils/adminCache';
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -32,6 +33,7 @@ vi.mock('../../components/admin/AdminPageHeader', () => ({
 
 describe('AdminSubmissions Component', () => {
   beforeEach(() => {
+    adminCache.clear();
     vi.clearAllMocks();
   });
 
@@ -75,17 +77,60 @@ describe('AdminSubmissions Component', () => {
       expect(screen.getByText('Here is my file')).toBeInTheDocument();
     });
 
-    // Test input change
     const input = screen.getByPlaceholderText(/optional note/i);
     fireEvent.change(input, { target: { value: 'Good job!' } });
 
-    // Test approve
     client.post.mockResolvedValueOnce({ data: { status: 'success' } });
     fireEvent.click(screen.getByTitle(/Mark Reviewed/i));
 
-    // Test delete
     showConfirm.mockResolvedValue(true);
     client.delete.mockResolvedValueOnce({ data: { status: 'success' } });
     fireEvent.click(screen.getByTitle(/Delete/i));
   });
+
+  it('initializes from admin_submissions cache immediately and fetches in background', async () => {
+    const cachedSubmissions = [
+      {
+        id: 999,
+        username: 'cachedstudent',
+        nickname: 'Cached Student',
+        status: 'pending',
+        timestamp: '2023-01-01T00:00:00Z',
+        original_filename: 'cached.py',
+        file_size: 512,
+        note: 'Cached note',
+      }
+    ];
+    adminCache.set('admin_submissions_pending', cachedSubmissions);
+
+    client.get.mockResolvedValueOnce({
+      data: {
+        status: 'success',
+        data: {
+          submissions: [
+            {
+              id: 1000,
+              username: 'freshstudent',
+              nickname: 'Fresh Student',
+              status: 'pending',
+              timestamp: '2023-01-01T00:00:00Z',
+              original_filename: 'fresh.py',
+              file_size: 1024,
+              note: 'Fresh note',
+            }
+          ]
+        }
+      }
+    });
+
+    render(<AdminSubmissions />);
+
+    expect(screen.getByText('cached.py')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByText('fresh.py')).toBeInTheDocument();
+    });
+    expect(adminCache.get('admin_submissions_pending')).toBeDefined();
+  });
+
 });

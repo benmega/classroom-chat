@@ -266,7 +266,6 @@ def admin_transactions():
             )
         )
 
-    # Order by timestamp descending
     query = query.order_by(DuckTransaction.timestamp.desc())
 
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -300,9 +299,7 @@ def get_review_counts():
 
     pending_users = User.query.filter_by(is_approved=False).filter(User.role != 'admin').count()
     pending_trades = DuckTradeLog.query.filter_by(status="pending").count()
-    pending_projects = Project.query.filter(
-        Project.teacher_comment.is_(None) | (Project.teacher_comment == "")
-    ).count()
+    pending_projects = Project.query.filter(Project.status == "pending").count()
     pending_certificates = UserCertificate.query.filter_by(status="pending").count()
     pending_course_requests = CourseInstanceRequest.query.filter_by(
         status="pending"

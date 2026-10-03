@@ -14,7 +14,6 @@ logging.basicConfig(
 
 def insert_users_from_csv(csv_file_path, overwrite=True):
     try:
-        # Open the CSV file with 'utf-8-sig' encoding to handle BOM
         with open(csv_file_path, mode="r", encoding="utf-8-sig") as file:
             csv_reader = csv.DictReader(file)
             users_to_insert = []
@@ -33,18 +32,16 @@ def insert_users_from_csv(csv_file_path, overwrite=True):
                     if overwrite:
                         existing_user = existing_users[username]
                         existing_user.ip_address = ip_address
-                        existing_user.set_password(password)  # Update password
+                        existing_user.set_password(password)
                         logging.info(f"User {username} updated.")
                     else:
                         logging.info(f"Duplicate found: {username}. Skipping.")
                     continue
 
-                # Create a new User instance if not overwriting
                 user = User(username=username, ip_address=ip_address, is_online=False)
-                user.set_password(password)  # Hash the password
+                user.set_password(password)
                 users_to_insert.append(user)
 
-        # Insert new users in bulk
         if users_to_insert:
             db.session.bulk_save_objects(users_to_insert)
 

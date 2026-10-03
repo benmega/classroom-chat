@@ -678,12 +678,9 @@ class User(db.Model):
         Returns a set of level slugs that the user has completed.
         Used by the skill service to determine Web Dev and other specific course progress.
         """
-        # We assume the ChallengeLog model has a 'level_slug' column.
-        # Using a set removes duplicates.
         return {getattr(log, "challenge_slug", "") for log in self.challenge_logs}
 
 
-# SQLAlchemy event listener to auto-generate slug for new users
 @event.listens_for(User, "before_insert")
 def receive_before_insert(mapper, connection, target):
     """Auto-generate slug before inserting a new user if not already set."""

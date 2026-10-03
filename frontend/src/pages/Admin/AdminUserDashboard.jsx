@@ -4,7 +4,7 @@ import {
     ChevronLeft, Shield, Check, Trash2,
     Save, Key, Plus, Copy, Eye, EyeOff, Activity, ExternalLink,
     Volume2, VolumeX, Gamepad2, Globe, Sparkles, ShieldAlert,
-    Coins, Award, QrCode
+    Coins, Award, QrCode, Box
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -23,7 +23,7 @@ const TRACKS = [
     { id: 'ozaria', label: 'Ozaria', short: 'Ozaria', type: 'image', logo: ozariaLogo, desc: 'Adventure Story & Code' },
     { id: 'gd', label: 'Game Development', short: 'GD', type: 'icon', icon: Gamepad2, desc: 'Game Mechanics & Design' },
     { id: 'wd', label: 'Web Development', short: 'WD', type: 'icon', icon: Globe, desc: 'HTML, CSS & Web Apps' },
-    { id: '3d', label: '3D Modeling', short: '3D', type: 'icon', icon: Code, desc: '3D Modeling & Printing' }
+    { id: '3d', label: '3D Modeling', short: '3D', type: 'icon', icon: Box, desc: '3D Modeling & Printing' }
 ];
 
 const AdminUserDashboard = () => {
@@ -106,15 +106,16 @@ const AdminUserDashboard = () => {
         setDuckAmountInput(String(amount));
     };
 
-    const formatBinary = (val) => {
-        if (val == null) return '0b0';
-        const num = Math.trunc(val);
-        return num < 0 ? `-0b${Math.abs(num).toString(2)}` : `0b${num.toString(2)}`;
+    const formatBaseTen = (val) => {
+        if (val == null) return '0';
+        const num = Number(val);
+        if (isNaN(num)) return '0';
+        return num.toLocaleString(undefined, { maximumFractionDigits: 2 });
     };
 
     const formatDecimal = (val) => {
-        if (val == null) return '0';
-        return Math.trunc(val).toString(10);
+        if (val == null) return '0.0000';
+        return Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 });
     };
 
     const getTrackIdFromCourseSlug = (slug) => {
@@ -135,7 +136,6 @@ const AdminUserDashboard = () => {
 
     return (
         <div className="compact-dashboard admin-user-redesign">
-            {/* Banner for Pending Users */}
             {!user.is_approved && !user.is_admin && (
                 <div className="compact-banner warning-banner">
                     <div className="banner-info">
@@ -149,7 +149,6 @@ const AdminUserDashboard = () => {
                 </div>
             )}
 
-            {/* TOP HERO STATUS BAR */}
             <div className="user-hero-bar">
                 <button className="btn-icon small hero-back" onClick={() => navigate('/admin/users')} title="Back to Users">
                     <ChevronLeft size={18} />
@@ -214,7 +213,6 @@ const AdminUserDashboard = () => {
                 </div>
             </div>
 
-                        {/* TABS */}
             <div className="admin-tabs">
                 <button 
                     className={`admin-tab ${activeTab === 'standard' ? 'active' : ''}`}
@@ -239,10 +237,8 @@ const AdminUserDashboard = () => {
             {activeTab === 'standard' && (
                 <>
 
-                {/* SECTION 1: ACADEMIC & PROGRESS */}
                 {user.role === 'student' && (
                     <div className="admin-section section-grid-inline">
-                        {/* Active Learning Track Full Width */}
                         <div className="compact-panel full-width">
                             <div className="panel-head">Current Learning Track</div>
                             <div className="track-cards-grid">
@@ -274,7 +270,6 @@ const AdminUserDashboard = () => {
                     </div>
                 )}
 
-                {/* SECTION 2: ECONOMY & GAMIFICATION */}
                 {user.role === 'student' && (
                     <div className="admin-section section-grid-inline economy-grid">
 
@@ -296,11 +291,10 @@ const AdminUserDashboard = () => {
 
                             <div className="compact-panel economy-panel">
                                 <div className="panel-head">Balances & Locker</div>
-                                {/* Ducks (Binary) */}
                                 <form onSubmit={handleAdjustDucks} className="economy-row-card">
                                     <div className="econ-header">
-                                        <span className="econ-label">🦆 Ducks (Binary)</span>
-                                        <span className="econ-balance">{formatBinary(user.duck_balance)}</span>
+                                        <span className="econ-label">🦆 Ducks</span>
+                                        <span className="econ-balance">{formatBaseTen(user.duck_balance)}</span>
                                     </div>
                                     <input type="hidden" name="username" value={user.username} />
                                     <div className="econ-preset-pills">
@@ -322,23 +316,21 @@ const AdminUserDashboard = () => {
                                     </button>
                                 </form>
 
-                                {/* Packets (Decimal) */}
                                 <form onSubmit={handleAdjustPackets} className="economy-row-card">
                                     <div className="econ-header">
-                                        <span className="econ-label">📦 Packets (Decimal)</span>
+                                        <span className="econ-label">📦 Packets</span>
                                         <span className="econ-balance">{formatDecimal(user.packets)}</span>
                                     </div>
                                     <input type="hidden" name="username" value={user.username} />
-                                    <input type="number" name="amount" step="1" placeholder="Amount (+/-)" required className="inline-input" />
+                                    <input type="number" name="amount" step="any" placeholder="Amount (+/-)" required className="inline-input" />
                                     <button type="submit" className="btn-compact action-green" disabled={formLoading}>
                                         <Check size={14} /> Adjust
                                     </button>
                                 </form>
 
-                                {/* Locker Drawer (Hex) */}
                                 <form onSubmit={handleSetDrawer} className="economy-row-card">
                                     <div className="econ-header">
-                                        <span className="econ-label">🔒 Locker Drawer (Hex)</span>
+                                        <span className="econ-label">🔒 Locker Drawer</span>
                                         <span className="econ-balance">{user.drawer || 'Not Set'}</span>
                                     </div>
                                     <input type="text" name="drawer" defaultValue={user.drawer || ''} placeholder="e.g. 0x08" maxLength={6} className="inline-input" />
@@ -388,7 +380,6 @@ const AdminUserDashboard = () => {
 
             {activeTab === 'account' && (
                 <>
-{/* SECTION 3: IDENTITY & CONNECTIONS */}
                 <div className="admin-section section-grid-inline">
                     <h3 className="section-title"><Shield size={18} /> Identity & Connections</h3>
                     <div className="compact-panel">
@@ -475,7 +466,6 @@ const AdminUserDashboard = () => {
 
             {activeTab === 'sensitive' && (
                 <>
-{/* SECTION 4: ADMINISTRATION & SECURITY */}
                 <div className="admin-section admin-danger-section section-grid-inline">
                     <h3 className="section-title text-danger"><ShieldAlert size={18} /> Administration & Security</h3>
                     <div className="compact-panel">
@@ -529,7 +519,6 @@ const AdminUserDashboard = () => {
                 </>
             )}
 
-            {/* Printable QR Code for Parent Connection */}
             {user.role === 'student' && connectionCode && (
                 <div className="print-only">
                     <h2>{user.nickname || user.username}</h2>
@@ -539,7 +528,6 @@ const AdminUserDashboard = () => {
                 </div>
             )}
 
-            {/* Modals for Course Actions */}
             <Modal isOpen={showAssignProjectModal} onClose={() => setShowAssignProjectModal(false)} title="Assign Project">
                 <form onSubmit={(e) => {
                     handleAssignProjectSubmit(e);

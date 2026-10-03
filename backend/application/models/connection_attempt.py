@@ -1,8 +1,4 @@
-"""
-File: connection_attempt.py
-Type: py
-Summary: Model to track parent connection code attempts for rate limiting.
-"""
+
 
 from datetime import datetime, timedelta
 
@@ -62,7 +58,6 @@ class ConnectionAttempt(db.Model):
         if attempts_today >= 20:
             return False, "Daily connection limit reached. Please try again tomorrow."
 
-        # Lifetime limit: 100 attempts
         attempts_lifetime = ConnectionAttempt.query.filter_by(
             parent_id=parent_id
         ).count()

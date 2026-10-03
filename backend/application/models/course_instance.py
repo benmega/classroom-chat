@@ -1,8 +1,4 @@
-"""
-File: course_instance.py
-Type: py
-Summary: SQLAlchemy model for specific class instances (e.g., "Sat1030 CS 4 PY").
-"""
+
 
 from datetime import datetime
 
@@ -19,7 +15,6 @@ class CourseInstance(db.Model):
     # This is the _id from the JSON (678b56dc...)
     id = db.Column(db.String(64), primary_key=True)
 
-    # Foreign Keys
     classroom_id = db.Column(
         db.String(64), db.ForeignKey("classrooms.id"), nullable=False
     )

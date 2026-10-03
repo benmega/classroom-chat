@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
-import '../Parent/ConnectChild.css'; // reuse same minimal card styling
+import '../Parent/ConnectChild.css';
 
 const JoinClassroomLink = () => {
     const [searchParams] = useSearchParams();
@@ -21,7 +21,6 @@ const JoinClassroomLink = () => {
         }
 
         if (!isAuthenticated) {
-            // Save code and redirect to login
             localStorage.setItem('pendingClassroomCode', code);
             navigate('/login', { state: { from: location.pathname + location.search } });
             return;

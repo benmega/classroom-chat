@@ -1,0 +1,315 @@
+/* SandboxArcadeModal.css */
+
+.sandbox-arcade-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 1rem;
+  animation: arcadeFadeIn 0.2s ease-out;
+}
+
+@keyframes arcadeFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sandbox-arcade-card {
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1e293b);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 980px;
+  max-height: 90vh;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 20px rgba(37, 99, 235, 0.15);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition: max-width 0.3s ease, height 0.3s ease;
+}
+
+/* Header */
+.arcade-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.5rem 1.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+  background: var(--bg-secondary, #f8fafc);
+  gap: 1rem;
+}
+
+.arcade-header-content {
+  flex: 1;
+}
+
+.arcade-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.arcade-trophy-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
+  animation: arcadeBounce 1.5s infinite alternate;
+}
+
+@keyframes arcadeBounce {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-3px) scale(1.05);
+  }
+}
+
+.arcade-title {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text-primary, #0f172a);
+}
+
+.arcade-milestone-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.3rem 0.75rem;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 9999px;
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--blue-600, #2563eb);
+}
+
+.arcade-btn-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.arcade-btn-close:hover {
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+}
+
+/* Body & Grid */
+.arcade-body {
+  padding: 1.5rem 1.75rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.arcade-games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.arcade-game-card {
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.arcade-game-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.12);
+}
+
+.game-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.game-card-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  line-height: 1.3;
+}
+
+.game-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.star-icon.filled {
+  fill: #f59e0b;
+}
+
+.game-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.game-badge-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.725rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.game-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.arcade-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.arcade-action-btn.play-now {
+  background: var(--blue-600, #2563eb);
+  color: #ffffff;
+  border: none;
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25);
+}
+
+.arcade-action-btn.play-now:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Loading & Empty States */
+.arcade-loading-state,
+.arcade-empty-state,
+.arcade-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.arcade-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: var(--blue-600, #2563eb);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.arcade-empty-icon {
+  color: var(--text-muted, #94a3b8);
+  opacity: 0.6;
+}
+
+.arcade-empty-state h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.arcade-empty-state p {
+  margin: 0;
+  max-width: 400px;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.arcade-btn-retry {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: var(--blue-600, #2563eb);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s ease;
+}
+
+.arcade-btn-retry:hover {
+  background: #1d4ed8;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .arcade-header {
+    padding: 1.25rem 1rem;
+  }
+  .arcade-body {
+    padding: 1rem;
+  }
+  .arcade-title {
+    font-size: 1.2rem;
+  }
+  .arcade-game-card {
+    padding: 1rem;
+  }
+}

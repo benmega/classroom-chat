@@ -1,9 +1,4 @@
-"""
-File: upload_routes.py
-Type: py
-Summary: Authenticated upload endpoints. Accepts only validated images and
-         PDFs, enforces a size cap, and never exposes server file paths.
-"""
+
 
 import base64
 import binascii

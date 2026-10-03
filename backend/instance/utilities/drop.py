@@ -74,7 +74,6 @@ def interactive_drop_table():
         "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
     )
 
-    # List all tables
     tables = list_tables(database_path)
     if not tables:
         print("No tables found in the database.")

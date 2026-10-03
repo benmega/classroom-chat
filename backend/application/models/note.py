@@ -1,8 +1,4 @@
-"""
-File: application/models/note.py
-Type: py
-Summary: Model for storing user notes (images) uploaded to S3.
-"""
+
 
 from datetime import datetime
 
@@ -17,7 +13,6 @@ class Note(db.Model):
     filename = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
     user = db.relationship("User", back_populates="notes")
 
     @property
@@ -25,7 +20,6 @@ class Note(db.Model):
         if not self.filename:
             return ""
 
-        # If it's a full URL already
         if self.filename.startswith("http"):
             return self.filename
 

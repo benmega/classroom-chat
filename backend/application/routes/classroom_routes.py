@@ -1,9 +1,3 @@
-"""
-File: classroom_routes.py
-Type: py
-Summary: Student-facing blueprint for classroom join-code enrollment
-         and enrolled-classroom listing.
-"""
 
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
@@ -47,28 +41,23 @@ def join_classroom():
     if not code:
         return "Join code is required.", 400
 
-    # ── Rate limiting ────────────────────────────────────────────────────────
     is_allowed, error_msg = ClassroomJoinAttempt.check_rate_limits(user_id)
     if not is_allowed:
         ClassroomJoinAttempt.log_attempt(user_id, code, success=False)
         return error_msg, 429
 
-    # ── Code lookup ──────────────────────────────────────────────────────────
     classroom = Classroom.query.filter_by(join_code=code).first()
     if not classroom:
         ClassroomJoinAttempt.log_attempt(user_id, code, success=False)
         return "Invalid classroom code.", 404
 
-    # ── Reserved classroom guard ─────────────────────────────────────────────
     if classroom.id in _RESERVED_IDS:
         return "Cannot join reserved classrooms.", 400
 
-    # ── Already enrolled check ───────────────────────────────────────────────
     if user in classroom.users:
         ClassroomJoinAttempt.log_attempt(user_id, code, success=False)
         return "Already enrolled in this classroom.", 400
 
-    # ── Enroll ───────────────────────────────────────────────────────────────
     classroom.users.append(user)
     db.session.commit()
     ClassroomJoinAttempt.log_attempt(user_id, code, success=True)

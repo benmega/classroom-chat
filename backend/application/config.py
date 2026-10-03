@@ -1,8 +1,4 @@
-"""
-File: config.py
-Type: py
-Summary: Configuration classes and settings for different environments.
-"""
+
 
 import os
 from typing import ClassVar
@@ -20,7 +16,7 @@ class Config:
 
     INSTANCE_FOLDER = os.path.join(BASE_DIR, "backend", "instance")
     STATIC_FOLDER = os.path.join(BASE_DIR, "frontend", "static")
-    TEMPLATE_FOLDER = os.path.join(BASE_DIR, "frontend", "templates")
+    TEMPLATE_FOLDER = os.path.join(BASE_DIR, "frontend", "dist")
 
     SQLALCHEMY_DATABASE_URI = (
         f"sqlite:///{os.path.join(INSTANCE_FOLDER, 'dev_users.db')}"

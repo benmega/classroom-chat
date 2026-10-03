@@ -50,7 +50,6 @@ def get_achievements_json():
     if not current_user:
         return jsonify({"success": False, "error": "User not found!"}), 404
 
-    # Automatically check for new achievements when visiting the page
     from application.models.challenge_log import ChallengeLog
     from application.models.duck_trade import DuckTradeLog
     from application.models.message import Message
@@ -140,7 +139,6 @@ def add_achievement():
             400,
         )
 
-    # Check for existing slug
     existing = Achievement.query.filter_by(slug=slug).first()
     if existing:
         return (
@@ -153,7 +151,6 @@ def add_achievement():
             400,
         )
 
-    # Handle Badge Upload
     badge_file = request.files.get("badge")
     if badge_file and badge_file.filename != "":
         allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
@@ -177,7 +174,6 @@ def add_achievement():
         filepath = os.path.join(badge_dir, filename)
         badge_file.save(filepath)
 
-        # Trigger sprite sheet rebuild
         try:
             tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
             script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
@@ -288,7 +284,6 @@ def submit_certificate():
         data = request.get_json(silent=True) or request.form
         url = data.get("certificate_url")
 
-        # 1. Check URL
         match = re.search(CERT_URL_REGEX, url or "")
         if not match:
             return jsonify({"success": False, "error": "Invalid certificate URL."}), 200
@@ -316,7 +311,6 @@ def submit_certificate():
                 "error": "No matching achievement found for this course."
             }), 200
 
-        # 2. Handle File (Upload or Generate)
         file = request.files.get("certificate_file")
         from flask import current_app
 
@@ -342,7 +336,6 @@ def submit_certificate():
             except Exception as e:
                 return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
 
-        # 3. Create or update cert entry
         cert = UserCertificate.query.filter_by(
             user_id=current_user.id, achievement_id=achievement.id
         ).first()
@@ -369,7 +362,6 @@ def submit_certificate():
 
         db.session.commit()
 
-        # Success return
         return jsonify(
             {"success": True, "message": "Certificate submitted successfully."}
         )
@@ -499,7 +491,6 @@ def download_certificate(cert_id):
         flash("Certificate file not found on the server.", "error")
         return redirect(request.referrer or url_for("achievements.achievements_page"))
 
-    # Helper to construct a nice filename for the download
     download_name = f"{cert.user.nickname}_{cert.achievement.name}.pdf"
 
     return send_from_directory(

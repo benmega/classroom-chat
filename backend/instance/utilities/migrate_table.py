@@ -1,5 +1,4 @@
-# replace_achievements.py
-# Summary: Clears achievements table in target DB and replaces it with rows from source DB.
+
 
 import shutil
 import sqlite3

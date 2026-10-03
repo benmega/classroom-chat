@@ -89,7 +89,7 @@ const Layout = ({ children }) => {
                                             </Link>
                                         </li>
 
-                                        {Math.abs(user.packets) > 0.001 && (
+                                        {Math.abs(user.packets) > 0.00001 && (
                                             <li className="nav-stat-item">
                                                 <Link className="stat-badge packets" to="/shop">
                                                     <Package size={20} className="stat-icon" />
@@ -98,7 +98,7 @@ const Layout = ({ children }) => {
                                                         <span className={`stat-value ${user.packets < 0 ? 'text-error' : ''}`}>
                                                             {Number(user.packets || 0).toLocaleString(undefined, { 
                                                                 minimumFractionDigits: 0, 
-                                                                maximumFractionDigits: 3 
+                                                                maximumFractionDigits: 4 
                                                             })}
                                                         </span>
                                                     </div>

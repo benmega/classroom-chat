@@ -1,10 +1,7 @@
 import { create } from 'zustand';
 import client from '../api/client';
 
-// ---------------------------------------------------------------------------
-// Private helpers — centralise hamburger_override localStorage access so the
-// key string and parsing logic live in exactly one place.
-// ---------------------------------------------------------------------------
+
 const getHamburgerOverride = (username) => {
   const val = localStorage.getItem(`hamburger_override_${username}`);
   return val !== null ? parseFloat(val) : null;

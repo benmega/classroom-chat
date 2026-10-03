@@ -48,6 +48,11 @@ jobs:
               printf 'COGNITO_REDIRECT_URI=%s\n' '${{ secrets.COGNITO_REDIRECT_URI }}'
               printf 'AWS_ACCESS_KEY_ID=%s\n' '${{ secrets.AWS_ACCESS_KEY_ID }}'
               printf 'AWS_SECRET_ACCESS_KEY=%s\n' '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+              printf 'AWS_SES_ACCESS_KEY_ID=%s\n' '${{ secrets.AWS_SES_ACCESS_KEY_ID }}'
+              printf 'AWS_SES_SECRET_ACCESS_KEY=%s\n' '${{ secrets.AWS_SES_SECRET_ACCESS_KEY }}'
+              printf 'AWS_SES_REGION=%s\n' '${{ secrets.AWS_SES_REGION }}'
+              printf 'SES_SENDER_EMAIL=%s\n' '${{ secrets.SES_SENDER_EMAIL }}'
+              printf 'ADMIN_EMAIL_ADDRESS=%s\n' '${{ secrets.ADMIN_EMAIL_ADDRESS }}'
             } > "$APP_DIR/backend/.env"
 
             # Execute the deployment script

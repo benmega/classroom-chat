@@ -1,6 +1,3 @@
-"""
-Unit tests for application initialization (__init__.py) and seed command (commands/seed.py).
-"""
 
 import os
 import sys

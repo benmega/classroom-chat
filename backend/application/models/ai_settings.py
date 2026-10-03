@@ -1,8 +1,4 @@
-"""
-File: ai_settings.py
-Type: py
-Summary: SQLAlchemy model for AI teacher-related settings.
-"""
+
 
 from ..extensions import db
 

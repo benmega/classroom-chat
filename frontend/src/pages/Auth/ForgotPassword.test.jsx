@@ -29,7 +29,6 @@ describe('ForgotPassword', () => {
         );
 
         expect(screen.getByText('Forgot Password')).toBeInTheDocument();        
-        // Ensure email input is not visible for student
         expect(screen.queryByPlaceholderText(/email address/i)).not.toBeInTheDocument();
     });
 

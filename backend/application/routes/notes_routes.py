@@ -134,7 +134,6 @@ def serve_note(filename):
 
     if not os.path.exists(full_path):
         current_app.logger.warning(f"Note not found on disk: {full_path}")
-        # Could return a default image here if we want to avoid 404
 
     return send_from_directory(notes_dir, filename)
 
@@ -195,10 +194,8 @@ def delete_note(note_id):
         return jsonify({"status": "success"})
 
     except Exception as e:
-        # Log the sensitive details securely to your server
         current_app.logger.exception(f"Error deleting note {note_id}: {e!s}")
 
-        # Return a safe, generic message to the frontend
         return (
             jsonify(
                 {

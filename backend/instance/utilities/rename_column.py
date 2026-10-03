@@ -37,12 +37,10 @@ def rename_column(db_path, table_name, old_name, new_name):
 
 
 if __name__ == "__main__":
-    # Path to your database
     database_path = (
         "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
     )
 
-    # Get tables
     tables = get_tables(database_path)
     if not tables:
         print("No tables found in the database.")
@@ -54,7 +52,6 @@ if __name__ == "__main__":
         print("Invalid table name.")
         exit()
 
-    # Get current columns
     columns = get_columns(database_path, table_name)
     print("Current columns:", columns)
 
@@ -68,5 +65,4 @@ if __name__ == "__main__":
         print("Column with that name already exists.")
         exit()
 
-    # Rename column
     rename_column(database_path, table_name, old_name, new_name)

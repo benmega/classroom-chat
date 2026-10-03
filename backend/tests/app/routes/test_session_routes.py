@@ -6,11 +6,9 @@ from application.models.session_log import SessionLog
 
 @pytest.fixture
 def logged_in_client_with_session(client, sample_user):
-    # Log in
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
         sess["_user_id"] = str(sample_user.id)
-    # Start a session log
     SessionLog.start_session(sample_user.id)
     return client
 
@@ -43,7 +41,6 @@ def test_heartbeat_authenticated(
 
 @patch("application.routes.session_routes.get_cloudwatch_client")
 def test_heartbeat_cloudwatch_error(mock_cw_client, logged_in_client_with_session):
-    # Simulate a CloudWatch failure
     mock_cw = MagicMock()
     mock_cw.put_metric_data.side_effect = Exception("CloudWatch down")
     mock_cw_client.return_value = mock_cw

@@ -1,8 +1,3 @@
-# tools/make_sprite_sheet.py
-# Type: Utility Script
-# Location: tools/
-# Summary: Packs all achievement badge images into one sprite sheet and writes CSS mapping.
-
 from math import ceil, sqrt
 from pathlib import Path
 
@@ -56,11 +51,9 @@ def build_sprite():
         css = f".badge-{slug} {{ background-position: -{x}px -{y}px; }}"
         css_rules.append(css)
 
-    # Save sprite
     sheet.save(SPRITE_PATH, "WEBP", quality=80)
     print(f"Sprite saved to {SPRITE_PATH}")
 
-    # Save CSS
     css_header = (
         ".badge {\n"
         f"  width: {ICON_SIZE[0]}px;\n"

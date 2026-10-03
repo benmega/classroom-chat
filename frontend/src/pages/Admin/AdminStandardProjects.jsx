@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
+import adminCache from '../../utils/adminCache';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
 import Modal from '../../components/common/Modal';
+import ImageUpload from '../../components/common/ImageUpload';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
 import './AdminStandardProjects.css';
 
 const AdminStandardProjects = () => {
-    const [projects, setProjects] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const cachedProjects = adminCache.get('admin_standard_projects');
+    const [projects, setProjects] = useState(() => cachedProjects || []);
+    const [isLoading, setIsLoading] = useState(() => !cachedProjects);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
@@ -26,14 +29,22 @@ const AdminStandardProjects = () => {
     }, []);
 
     const fetchProjects = async () => {
-        setIsLoading(true);
+        const cached = adminCache.get('admin_standard_projects');
+        if (cached) {
+            setIsLoading(false);
+        } else {
+            setIsLoading(true);
+        }
+
         try {
             const res = await client.get('/api/project-templates');
             const data = res.data;
             const projectList = 
                 data?.data?.templates || 
                 data?.templates || {};
-            setProjects(Object.values(projectList));
+            const list = Object.values(projectList);
+            setProjects(list);
+            adminCache.set('admin_standard_projects', list);
         } catch (error) {
             console.error('Failed to load standard projects:', error);
             toast.error('Failed to load standard projects.');
@@ -91,7 +102,7 @@ const AdminStandardProjects = () => {
             if (editingProject) {
                 const res = await client.put(`/api/project-templates/${editingProject.id}`, submitData);
                 if (res.data.status === 'success' || res.data.message) {
-                    
+                    adminCache.invalidate('admin_standard_projects');
                     closeModal();
                     fetchProjects();
                 }
@@ -116,7 +127,7 @@ const AdminStandardProjects = () => {
         try {
             const res = await client.delete(`/api/project-templates/${id}`);
             if (res.data.status === 'success' || res.data.message) {
-                
+                adminCache.invalidate('admin_standard_projects');
                 fetchProjects();
             }
         } catch {
@@ -221,9 +232,29 @@ const AdminStandardProjects = () => {
                         </div>
                     </div>
                     <div className="standard-project-form-row">
-                        <div className="form-group">
-                            <label htmlFor="input-189">Default Thumbnail Image URL</label>
-                            <input id="input-189" type="text" value={form.image_url} onChange={e => setForm({...form, image_url: e.target.value})} />
+                        <div className="form-group standard-project-image-group">
+                            <ImageUpload
+                                uploadUrl="/api/project-templates/upload-image"
+                                fieldName="file"
+                                initialImage={form.image_url}
+                                onUploadSuccess={({ new_url }) => setForm(prev => ({ ...prev, image_url: new_url }))}
+                                onRemove={() => setForm(prev => ({ ...prev, image_url: '' }))}
+                                label="Thumbnail Image"
+                                secondaryLabel="PNG, JPG, WebP or GIF (max. 10MB)"
+                            />
+                            <div className="image-url-secondary">
+                                <label htmlFor="input-thumbnail-url" className="image-url-label">
+                                    Or Direct Image URL
+                                </label>
+                                <input 
+                                    id="input-thumbnail-url"
+                                    type="text" 
+                                    value={form.image_url} 
+                                    onChange={e => setForm({...form, image_url: e.target.value})} 
+                                    placeholder="e.g. https://... or /images/..."
+                                    className="admin-input-subtle"
+                                />
+                            </div>
                         </div>
                         <div className="form-group">
                             <label htmlFor="input-concepts">Concepts Covered</label>

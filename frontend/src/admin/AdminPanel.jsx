@@ -43,13 +43,31 @@ import {
     defaultTheme,
 } from 'react-admin';
 import dataProvider from './dataProvider';
+import { QueryClient } from '@tanstack/react-query';
 import { FK_OVERRIDES, HIDDEN_FIELDS, READONLY_FIELDS, RESOURCES } from './adminSchema';
 import client from '../api/client';
+
+const adminQueryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            staleTime: 5 * 60 * 1000, // 5 minutes
+            gcTime: 15 * 60 * 1000,    // 15 minutes
+            refetchOnWindowFocus: false,
+            retry: false,
+        },
+    },
+});
 
 // ─── Schema Fetching ─────────────────────────────────────────────────────────
 
 /** In-memory cache so each resource schema is only fetched once per page load. */
 const _schemaCache = {};
+
+const getCachedSchema = (name) => {
+    if (!_schemaCache[name]) return null;
+    const hidden = HIDDEN_FIELDS[name] || new Set();
+    return _schemaCache[name].filter(c => !hidden.has(c.name));
+};
 
 async function fetchSchema(resourceName) {
     if (_schemaCache[resourceName]) return _schemaCache[resourceName];
@@ -125,14 +143,31 @@ function makeInput(col, resourceName, isCreate = false) {
  * any hidden fields defined in adminSchema.js.
  */
 function useSchema(resourceName) {
-    const [fields, setFields] = useState(null);
+    const [fields, setFields] = useState(() => getCachedSchema(resourceName));
     const [error, setError]   = useState(null);
+    const [prevResource, setPrevResource] = useState(resourceName);
+
+    if (resourceName !== prevResource) {
+        setPrevResource(resourceName);
+        setFields(getCachedSchema(resourceName));
+        setError(null);
+    }
 
     useEffect(() => {
+        const cached = getCachedSchema(resourceName);
+        if (cached) return;
+
+        let isMounted = true;
         const hidden = HIDDEN_FIELDS[resourceName] || new Set();
         fetchSchema(resourceName)
-            .then(cols => setFields(cols.filter(c => !hidden.has(c.name))))
-            .catch(err  => setError(err.message));
+            .then(cols => {
+                if (isMounted) setFields(cols.filter(c => !hidden.has(c.name)));
+            })
+            .catch(err => {
+                if (isMounted) setError(err.message);
+            });
+            
+        return () => { isMounted = false; };
     }, [resourceName]);
 
     return { fields, error };
@@ -229,6 +264,7 @@ const darkTheme = {
 
 const AdminPanel = () => (
     <Admin
+        queryClient={adminQueryClient}
         dataProvider={dataProvider}
         basename="/admin/advanced-crud"
         layout={CustomLayout}

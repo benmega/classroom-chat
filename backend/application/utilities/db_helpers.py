@@ -1,9 +1,3 @@
-"""
-File: db_helpers.py
-Type: py
-Summary: Database helper functions for users, messages, and conversations.
-"""
-
 import logging
 import uuid
 
@@ -169,7 +163,6 @@ def save_message_to_db(
         )
 
         if target_live:
-            # Get currently online users
             online_users = User.query.filter_by(is_online=True).all()
             new_message.target_users.extend(online_users)
 

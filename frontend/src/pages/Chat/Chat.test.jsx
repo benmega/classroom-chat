@@ -1,8 +1,10 @@
-import { screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Chat from './Chat';
 import { renderWithProviders } from '../../test/test-utils';
 import { HttpResponse } from 'msw';
+import client from '../../api/client';
+import toast from 'react-hot-toast';
 
 // ─── Mock dependencies ──────────────────────────────────────────────────────
 
@@ -13,18 +15,30 @@ vi.mock('react-hot-toast', () => ({
   },
 }));
 
-// Mock socket.io-client so no real connections are attempted
-vi.mock('socket.io-client', () => ({
-  io: vi.fn(() => ({
-    connected: false,
-    on: vi.fn(),
-    off: vi.fn(),
-    emit: vi.fn(),
-    disconnect: vi.fn(),
-  })),
+vi.mock('../../api/client', () => ({
+  default: {
+    get: vi.fn(() => Promise.resolve({ data: {} })),
+    post: vi.fn(() => Promise.resolve({ data: {} })),
+  },
 }));
 
-// Mock emoji-picker-react (heavy component, not relevant to logic tests)
+const socketListeners = {};
+const mockSocket = {
+  connected: false,
+  on: vi.fn((event, cb) => {
+    socketListeners[event] = cb;
+  }),
+  off: vi.fn((event) => {
+    delete socketListeners[event];
+  }),
+  emit: vi.fn(),
+  disconnect: vi.fn(),
+};
+
+vi.mock('socket.io-client', () => ({
+  io: vi.fn(() => mockSocket),
+}));
+
 vi.mock('emoji-picker-react', () => ({
   default: ({ onEmojiClick }) => (
     <div data-testid="emoji-picker">
@@ -271,7 +285,6 @@ describe('Chat Component', () => {
 
     expect(screen.getByText('test.png')).toBeInTheDocument();
     
-    // Test removing file
     const removeBtn = screen.getByText('test.png').nextSibling;
     fireEvent.click(removeBtn);
     expect(mockSetFile).toHaveBeenCalledWith(null);
@@ -324,18 +337,18 @@ describe('Chat Component', () => {
     expect(mockSetShowEmojiPicker).toHaveBeenCalledWith(true);
   });
 
-  it('renders emoji picker when showEmojiPicker is true', () => {
+  it('renders emoji picker when showEmojiPicker is true', async () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ showEmojiPicker: true }));
     renderWithProviders(<Chat />);
 
-    expect(screen.getByTestId('emoji-picker')).toBeInTheDocument();
+    expect(await screen.findByTestId('emoji-picker')).toBeInTheDocument();
   });
 
-  it('calls onEmojiClick when an emoji is picked', () => {
+  it('calls onEmojiClick when an emoji is picked', async () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ showEmojiPicker: true }));
     renderWithProviders(<Chat />);
 
-    fireEvent.click(screen.getByText('Pick emoji'));
+    fireEvent.click(await screen.findByText('Pick emoji'));
 
     expect(mockOnEmojiClick).toHaveBeenCalledWith({ emoji: '😊' });
   });
@@ -396,7 +409,6 @@ describe('Chat Component', () => {
     }));
     renderWithProviders(<Chat />);
 
-    // MultiSelectDropdown renders the defaultLabel "Classes"
     expect(screen.getByText(/classes/i)).toBeInTheDocument();
   });
 
@@ -409,7 +421,6 @@ describe('Chat Component', () => {
     }));
     renderWithProviders(<Chat />);
 
-    // Only Math 101 should appear (global is filtered out)
     expect(screen.queryByText('Global')).not.toBeInTheDocument();
   });
 
@@ -496,5 +507,181 @@ describe('Chat Component', () => {
     const postBtn = screen.getByRole('button', { name: /post message/i });
     expect(postBtn).toBeDisabled();
     expect(postBtn).toHaveTextContent(/wait \(25s\)/i);
+  });
+
+  // ─── Sandbox Mode Tests ───────────────────────────────────────────────────
+
+  it('fetches sandbox status on load and displays sticky banner if sandbox_active is true', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [{ id: 'cls123', name: 'Python 1' }],
+    }));
+
+    client.get.mockImplementation(async (url) => {
+      if (url.includes('/sandbox-status')) {
+        return { data: { sandbox_active: true } };
+      }
+      return { data: {} };
+    });
+
+    renderWithProviders(<Chat filterClassroomId="cls123" />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sandbox-chat-banner')).toBeInTheDocument();
+      expect(screen.getByText(/All Tests Passed/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Enter Sandbox Arcade/i })).toBeInTheDocument();
+    });
+  });
+
+  it('opens SandboxArcadeModal when Enter Sandbox Arcade is clicked', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [{ id: 'cls123', name: 'Python 1' }],
+    }));
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: true } });
+      }
+      if (url.includes('/sandbox-games')) {
+        return Promise.resolve({ data: { sandbox_active: true, games: [] } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    renderWithProviders(<Chat filterClassroomId="cls123" />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /enter sandbox arcade/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /enter sandbox arcade/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Sandbox Mode!/i)).toBeInTheDocument();
+    });
+  });
+
+  it('updates isSandboxActive and shows celebratory toast when sandbox_status_changed event is received', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [{ id: 'cls123', name: 'Python 1' }],
+    }));
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: false } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    renderWithProviders(<Chat filterClassroomId="cls123" />);
+
+    await waitFor(() => {
+      expect(client.get).toHaveBeenCalledWith('/api/classrooms/cls123/sandbox-status');
+    });
+
+    expect(screen.queryByText(/All Tests Passed! Sandbox Mode is Active!/i)).not.toBeInTheDocument();
+
+    expect(socketListeners['sandbox_status_changed']).toBeDefined();
+    act(() => {
+      socketListeners['sandbox_status_changed']({
+        classroom_id: 'cls123',
+        sandbox_active: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/All Tests Passed! Sandbox Mode is Active!/i)).toBeInTheDocument();
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringContaining('Sandbox Mode is Active!'),
+        expect.any(Object)
+      );
+    });
+  });
+
+  it('renders sandbox banner for multi-classroom student when a non-first classroom has sandbox active', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [
+        { id: 'cls_alpha', name: 'Alpha Class', sandbox_active: false },
+        { id: 'cls_beta', name: 'Beta Class', sandbox_active: true },
+      ],
+    }));
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('/cls_alpha/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: false } });
+      }
+      if (url.includes('/cls_beta/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: true } });
+      }
+      if (url.includes('/sandbox-games')) {
+        return Promise.resolve({ data: { sandbox_active: true, games: [] } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    renderWithProviders(<Chat />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sandbox-chat-banner')).toBeInTheDocument();
+      expect(screen.getByText(/All Tests Passed! Sandbox Mode is Active!/i)).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /enter sandbox arcade/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Sandbox Mode!/i)).toBeInTheDocument();
+      expect(client.get).toHaveBeenCalledWith('/api/student/classrooms/cls_beta/sandbox-games');
+    });
+  });
+
+  it('updates banner live when socket event arrives for a non-first enrolled classroom', async () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({
+      classrooms: [
+        { id: 'cls_alpha', name: 'Alpha Class' },
+        { id: 'cls_beta', name: 'Beta Class' },
+      ],
+    }));
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('/sandbox-status')) {
+        return Promise.resolve({ data: { sandbox_active: false } });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    renderWithProviders(<Chat />);
+
+    await waitFor(() => {
+      expect(client.get).toHaveBeenCalledWith('/api/classrooms/cls_alpha/sandbox-status');
+      expect(client.get).toHaveBeenCalledWith('/api/classrooms/cls_beta/sandbox-status');
+    });
+
+    expect(screen.queryByTestId('sandbox-chat-banner')).not.toBeInTheDocument();
+
+    expect(socketListeners['sandbox_status_changed']).toBeDefined();
+    act(() => {
+      socketListeners['sandbox_status_changed']({
+        classroom_id: 'cls_beta',
+        sandbox_active: true,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('sandbox-chat-banner')).toBeInTheDocument();
+      expect(toast.success).toHaveBeenCalledWith(
+        expect.stringContaining('Sandbox Mode is Active!'),
+        expect.any(Object)
+      );
+    });
+
+    act(() => {
+      socketListeners['sandbox_status_changed']({
+        classroom_id: 'cls_beta',
+        sandbox_active: false,
+      });
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('sandbox-chat-banner')).not.toBeInTheDocument();
+    });
   });
 });

@@ -10,7 +10,6 @@ import DesktopNotice from '../../components/common/DesktopNotice';
 import './ParentDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
 
-// ── Utility: relative time ────────────────────────────────────────────────────
 const timeAgo = (isoString) => {
     if (!isoString) return null;
     const diff = Date.now() - new Date(isoString).getTime();
@@ -23,13 +22,11 @@ const timeAgo = (isoString) => {
     return `${days}d ago`;
 };
 
-// ── Helper: is within N hours? ────────────────────────────────────────────────
 const isWithinHours = (isoString, hours) => {
     if (!isoString) return false;
     return Date.now() - new Date(isoString).getTime() < hours * 3600000;
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
 const ParentDashboard = () => {
     const navigate = useNavigate();
     const [children, setChildren] = useState([]);
@@ -40,12 +37,10 @@ const ParentDashboard = () => {
     const [isConnecting, setIsConnecting] = useState(false);
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
 
-    // Per-child report and history data
     const [childReports, setChildReports] = useState({});
     const [childHistories, setChildHistories] = useState({});
     const [reportsLoading, setReportsLoading] = useState(false);
 
-    // ── Data Fetching ──────────────────────────────────────────────────────────
     const fetchChildren = useCallback(async () => {
         try {
             const response = await client.get(`/api/parents/children?t=${new Date().getTime()}`);
@@ -101,7 +96,6 @@ const ParentDashboard = () => {
         });
     }, [fetchChildren, fetchChildReports]);
 
-    // ── Connect child ──────────────────────────────────────────────────────────
     const handleConnectChild = async (e) => {
         e.preventDefault();
         setConnectError(null);
@@ -122,7 +116,6 @@ const ParentDashboard = () => {
         }
     };
 
-    // ── Disconnect child ───────────────────────────────────────────────────────
     const handleDisconnect = async (childId, childName) => {
         if (!await showConfirm(`Remove ${childName}?`, { title: 'Remove Child', destructive: true })) return;
         try {
@@ -135,7 +128,6 @@ const ParentDashboard = () => {
         }
     };
 
-    // ── Merge and Prioritize Activity across all children ──────────────────────
     const mergedActivityFeed = useMemo(() => {
         const events = [];
         children.forEach((child) => {
@@ -163,7 +155,6 @@ const ParentDashboard = () => {
             .slice(0, 10);
     }, [children, childHistories]);
 
-    // ── Loading skeleton ───────────────────────────────────────────────────────
     if (isLoading) {
         return (
             <div className="parent-dashboard parent-loading animate-page-entry p-2rem">
@@ -255,10 +246,8 @@ const ParentDashboard = () => {
             <div className="parent-body">
                 
 
-                {/* Cohesive Dashboard Layout */}
                 <div className="dashboard-layout parent-dashboard-layout">
                     
-                    {/* Left Column: Cohesive Activity Feed */}
                     <div className="left-column">
                         <section className="dashboard-panel dashboard-panel-styled">
                             <div className="panel-header-styled">
@@ -294,7 +283,6 @@ const ParentDashboard = () => {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                {/* Child Avatar indicator */}
                                                 <div className="pos-rel d-flex align-center">
                                                     {event.childAvatar && !event.childAvatar.includes('Default_pfp.jpg') ? (
                                                         <img
@@ -309,7 +297,6 @@ const ParentDashboard = () => {
                                                     )}
                                                 </div>
 
-                                                {/* Event Info */}
                                                 <div className="flex-1 min-w-0" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                                                     <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem' }}>
                                                         <span className="fw-bold text-primary">{event.childName}</span>
@@ -324,7 +311,6 @@ const ParentDashboard = () => {
                                     })}
                                 </div>
                             ) : (
-                                /* Encouragement section if there's no activity */
                                 <div className="d-flex flex-col gap-1-25rem">
                                     {children.map((child) => {
                                         const history = childHistories[child.id];
@@ -365,10 +351,8 @@ const ParentDashboard = () => {
                         </section>
                     </div>
 
-                    {/* Right Column: Family List */}
                     <div className="right-column d-flex flex-col gap-1-5rem">
                         
-                        {/* Children List */}
                         <section className="dashboard-panel dashboard-panel-styled-small">
                             <div className="panel-header-styled-small">
                                 <h3 className="panel-title-small">
@@ -438,7 +422,6 @@ const ParentDashboard = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Options Menu Only (No Duck Balance) */}
                                             <div role="button" tabIndex={0} className="d-flex align-center" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => e.stopPropagation()}>
                                                 <div className="child-card-menu pos-rel top-auto right-auto">
                                                     <button
@@ -479,7 +462,6 @@ const ParentDashboard = () => {
                 </div>
             </div>
 
-            {/* Link Another Child Modal */}
             {isLinkModalOpen && (
                 <div role="button" tabIndex={0} 
                     style={{

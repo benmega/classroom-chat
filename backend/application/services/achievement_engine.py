@@ -185,10 +185,10 @@ def evaluate_user(user, force=False):
     if not user:
         return []
 
-    # Throttle: Only evaluate once every 60 minutes unless forced
+    # Throttle: Only evaluate once every 5 minutes unless forced
     if not force and user.last_achievement_evaluation:
         elapsed = (now - user.last_achievement_evaluation).total_seconds()
-        if elapsed < 3600:  # 60 minutes
+        if elapsed < 300:  # 5 minutes
             return []
 
     # Pre-calculate common stats for the entire evaluation pass
@@ -221,7 +221,6 @@ def evaluate_user(user, force=False):
         if check_achievement(user, achievement, stats=stats):
             ua = UserAchievement(user_id=user.id, achievement_id=achievement.id)
             db.session.add(ua)
-            # grant ducks reward
             if achievement.reward > 0:
                 user.add_ducks(
                     achievement.reward, reason=f"Achievement: {achievement.name}"

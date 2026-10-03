@@ -1,8 +1,4 @@
-"""
-File: project_template.py
-Type: py
-Summary: SQLAlchemy model for default project templates.
-"""
+
 
 from ..extensions import db
 

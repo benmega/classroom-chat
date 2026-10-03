@@ -1,9 +1,4 @@
-"""
-merge_sqlite.py
-Type: Python script
-Location: itance/utilities
-Summary: Merge dev.db into prod.db, auto-add missing tables/columns, preserve critical columns configurable per table
-"""
+
 
 import shutil
 import sqlite3

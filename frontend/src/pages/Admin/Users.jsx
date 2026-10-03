@@ -34,7 +34,6 @@ import { getApiUrl } from '../../utils/apiUrl';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 
-// Hooks
 import { useUsersManagement } from '../../hooks/useUsersManagement';
 
 const TABS = [
@@ -134,10 +133,8 @@ const Users = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Tab state – synced with ?role= URL param
     const [activeRole, setActiveRole] = useState(() => {
         const roleParam = searchParams.get('role') ?? '';
-        // Validate it's one of our known roles
         return ['', 'student', 'parent'].includes(roleParam) ? roleParam : '';
     });
 
@@ -188,7 +185,6 @@ const Users = () => {
     const activeSort = { sortBy, sortDir };
     const handleSort = (key, dir) => { setSortBy(key); setSortDir(dir); };
 
-    // Expandable parents state
     const [expandedParents, setExpandedParents] = useState(new Set());
     const [childrenCache, setChildrenCache] = useState({});
 
@@ -198,7 +194,6 @@ const Users = () => {
             next.delete(parentId);
         } else {
             next.add(parentId);
-            // Fetch children on first expand
             if (!childrenCache[parentId]) {
                 try {
                     const res = await client.get(`/api/admin/parents/${parentId}/children`);
@@ -217,7 +212,6 @@ const Users = () => {
 
     const handleUnlinkChild = async (parentId, childId) => {
         await handleToggleChildLink(parentId, childId, true);
-        // Remove locally from cache
         setChildrenCache(prev => ({
             ...prev,
             [parentId]: (prev[parentId] || []).filter(c => c.id !== childId)
@@ -226,7 +220,6 @@ const Users = () => {
 
     const filteredUsers = users;
 
-    // Compute column count based on active tab
     const colCount = activeRole === '' ? 5 : 4;
 
     if (isLoading) return (
@@ -259,7 +252,6 @@ const Users = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                {/* Conditional header buttons by tab */}
                 {activeRole !== 'parent' && (
                     <button className="primary-btn" onClick={() => setActiveModal('create')}>
                         <Plus size={18} /> {activeRole === 'student' ? 'Add Student' : 'Add User'}
@@ -269,7 +261,6 @@ const Users = () => {
                 
             </AdminPageHeader>
 
-            {/* Tab Bar */}
             <div className="admin-role-tabs">
                 {TABS.map(tab => (
                     <button
@@ -394,7 +385,6 @@ const Users = () => {
                         {filteredUsers.length > 0 ? (
                             filteredUsers.map(u => (
                                 <React.Fragment key={u.id}>
-                                    {/* ── All tab row ─────────────────────────────────── */}
                                     {activeRole === '' && (
                                         <tr className={u.role === 'admin' ? 'admin-row' : ''}>
                                             <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
@@ -427,7 +417,7 @@ const Users = () => {
                                                 {u.role === 'student' ? (
                                                     <div className="economy-info">
                                                         <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                                                        <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
+                                                        <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 4 })}</div>
                                                         <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                                     </div>
                                                 ) : (
@@ -454,7 +444,6 @@ const Users = () => {
                                         </tr>
                                     )}
 
-                                    {/* ── Students tab row ────────────────────────────── */}
                                     {activeRole === 'student' && (
                                         <tr>
                                             <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
@@ -475,7 +464,7 @@ const Users = () => {
                                             <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
                                                 <div className="economy-info">
                                                     <div className="duck-count">🦆 {(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                                                    <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</div>
+                                                    <div className="packet-count" style={{ fontSize: '0.8rem', color: (u.packets < 0 ? 'var(--error-color, #ff4444)' : 'var(--text-muted)') }}>📦 {(u.packets ?? 0).toLocaleString(undefined, { maximumFractionDigits: 4 })}</div>
                                                     <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                                 </div>
                                             </td>
@@ -499,7 +488,6 @@ const Users = () => {
                                         </tr>
                                     )}
 
-                                    {/* ── Parents tab row (with expandable children) ── */}
                                     {activeRole === 'parent' && (
                                         <>
                                             <tr>

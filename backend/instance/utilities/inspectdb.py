@@ -34,7 +34,6 @@ def main():
     cursor = conn.cursor()
 
     try:
-        # List all tables
         tables = list_tables(cursor)
         if not tables:
             print("No tables found in the database.")
@@ -44,23 +43,19 @@ def main():
         for idx, table in enumerate(tables, 1):
             print(f"{idx}. {table}")
 
-        # Select a table
         table_choice = int(input("\nEnter the number of the table to inspect: ")) - 1
         table_name = tables[table_choice]
 
-        # Display table schema
         print(f"\nSchema of '{table_name}':")
         schema = display_table_schema(cursor, table_name)
         for column in schema:
             print(column)
 
-        # Display table summary
         print(f"\nSummary of '{table_name}': (First 5 rows)")
         rows = summarize_table(cursor, table_name)
         for row in rows:
             print(row)
 
-        # Search or custom SQL
         while True:
             action = input(
                 "\nChoose an action: (1) Search (2) Run custom SQL (3) Exit: "

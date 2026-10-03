@@ -10,14 +10,10 @@ def generate_kebab_slug(text):
     """Generate a clean kebab-case slug."""
     if not text:
         return ""
-    # Remove suffixes commonly found in Ozaria data
     text = text.replace(" - Locked", "")
     text = text.replace(" - In Progress", "")
-    # Lowercase, replace spaces/underscores with dashes
     slug = re.sub(r"[_\s]+", "-", text.lower())
-    # Remove non-alphanumeric (except dashes)
     slug = re.sub(r"[^a-z0-9-]", "", slug)
-    # Collapse multiple dashes
     slug = re.sub(r"-+", "-", slug).strip("-")
     return slug
 
@@ -37,7 +33,6 @@ def seed_command():
     challenges_csv = os.path.join(base_dir, "level_seed_data.csv")
     instances_csv = os.path.join(base_dir, "course_instances_seed.csv")
 
-    # Seed Course Instances
     if os.path.exists(instances_csv):
         click.echo(f"Seeding course instances from {instances_csv}...")
         inserted_instances = 0
@@ -69,7 +64,6 @@ def seed_command():
     else:
         click.echo(f"File not found: {instances_csv}")
 
-    # Seed Challenges
     if os.path.exists(challenges_csv):
         click.echo(f"Seeding challenges from {challenges_csv}...")
         inserted_challenges = 0
@@ -98,7 +92,6 @@ def seed_command():
                     ).first()
 
                     if challenge:
-                        # Update existing
                         challenge.name = name
                         challenge.domain = domain
                         challenge.slug = csv_slug
@@ -108,7 +101,6 @@ def seed_command():
                         challenge.course_id = course_id
                         updated_challenges += 1
                     else:
-                        # Insert new
                         new_challenge = Challenge(
                             name=name,
                             slug=csv_slug,
@@ -132,7 +124,6 @@ def seed_command():
     else:
         click.echo(f"File not found: {challenges_csv}")
 
-    # Seed Project Templates
     from application.commands.projects_data import PROJECT_SEED_DATA
     from application.models.project_template import ProjectTemplate
 

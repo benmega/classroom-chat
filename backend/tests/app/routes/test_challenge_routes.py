@@ -1,9 +1,3 @@
-"""
-File: test_challenge_routes.py
-Type: py
-Summary: Unit tests for challenge routes Flask routes.
-"""
-
 import re
 from unittest.mock import patch
 
@@ -264,12 +258,10 @@ def test_detect_and_handle_challenge_url_duplicate(init_db):
 
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={course.id}&course-instance={course_instance.id}"
 
-    # Submit challenge first time
     result1 = detect_and_handle_challenge_url(url, sample_user, duck_multiplier=1)
     assert result1["handled"] is True
     assert result1["details"]["success"] is True
 
-    # Try to submit same challenge again
     result2 = detect_and_handle_challenge_url(url, sample_user, duck_multiplier=1)
     assert result2["handled"] is True
     assert result2["details"]["success"] is False
@@ -736,7 +728,6 @@ def test_submit_challenge_switch_track(client, init_db):
 
     url = f"https://codecombat.com/play/level/dungeons-of-kithgard?course={course.id}&course-instance={course_instance.id}"
 
-    # Initial balance
     initial_ducks = sample_user.duck_balance
 
     response = client.post(
@@ -757,3 +748,44 @@ def test_submit_challenge_switch_track(client, init_db):
     db.session.refresh(sample_user)
     assert sample_user.active_track == "cs"
     assert sample_user.duck_balance > initial_ducks
+
+
+def test_submit_challenge_triggers_achievement(client, init_db):
+    """Test that submitting a challenge evaluates achievements and returns new_awards."""
+    from application.models.achievements import Achievement, UserAchievement
+
+    sample_user = UserFactory()
+    ConfigurationFactory()
+
+    course = CourseFactory(name="CS1")
+    course_instance = CourseInstanceFactory(course_id=course.id, classroom_id="cls1")
+    ChallengeFactory(
+        slug="first-steps",
+        domain="codecombat.com",
+        difficulty="medium",
+        value=10,
+        course_id=course.id,
+        is_active=True,
+    )
+
+    ach = Achievement(name="Duck Lover", slug="duck-lover", type="ducks", requirement_value="5", reward=1)
+    db.session.add(ach)
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    url = f"https://codecombat.com/play/level/first-steps?course={course.id}&course-instance={course_instance.id}"
+    response = client.post(
+        "/challenge/submit",
+        json={"url": url, "helpers": ""},
+    )
+
+    assert response.status_code == 200
+    res_json = response.get_json()
+    assert res_json["success"] is True
+    assert "new_awards" in res_json
+    assert any(a["slug"] == "duck-lover" for a in res_json["new_awards"])
+
+    ua = UserAchievement.query.filter_by(user_id=sample_user.id, achievement_id=ach.id).first()
+    assert ua is not None

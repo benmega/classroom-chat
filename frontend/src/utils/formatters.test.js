@@ -33,9 +33,7 @@ describe('formatters', () => {
         });
 
         it('routes local paths correctly', () => {
-            // Absolute path starting with /
             expect(formatStaticUrl('/avatar.png')).toBe('/avatar.png');
-            // Relative path prepends /static/
             expect(formatStaticUrl('logo.png')).toBe('/static/logo.png');
         });
     });
@@ -50,27 +48,21 @@ describe('formatters', () => {
         it('formats relative times correctly', () => {
             const now = new Date();
             
-            // Just now (< 10s)
             const justNow = new Date(now.getTime() - 5000).toISOString();
             expect(formatRelativeTime(justNow)).toBe('Just now');
 
-            // Seconds ago
             const secsAgo = new Date(now.getTime() - 30000).toISOString();
             expect(formatRelativeTime(secsAgo)).toBe('30s ago');
 
-            // Minutes ago
             const minsAgo = new Date(now.getTime() - 5 * 60 * 1000).toISOString();
             expect(formatRelativeTime(minsAgo)).toBe('5m ago');
 
-            // Hours ago
             const hoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString();
             expect(formatRelativeTime(hoursAgo)).toBe('3h ago');
 
-            // Days ago
             const daysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString();
             expect(formatRelativeTime(daysAgo)).toBe('2d ago');
 
-            // More than 7 days ago
             const wayPast = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString();
             expect(formatRelativeTime(wayPast)).not.toBe('Never');
             expect(formatRelativeTime(wayPast)).not.toContain('ago');

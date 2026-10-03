@@ -9,7 +9,6 @@ def admin_only(f):
     def wrapper(*args, **kwargs):
         user_id = session.get("user")
 
-        # Check if this is an API request
         is_api = (
             request.path.startswith("/api/")
             or request.path.startswith("/achievements/")

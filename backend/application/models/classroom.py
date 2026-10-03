@@ -1,8 +1,4 @@
-"""
-File: classroom.py
-Type: py
-Summary: SQLAlchemy model for Classroom and the user_classrooms join table.
-"""
+
 
 import random
 import string
@@ -54,6 +50,8 @@ class Classroom(db.Model):
     language = db.Column(db.String(64), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     join_code = db.Column(db.String(5), unique=True, nullable=True, index=True)
+    sandbox_active = db.Column(db.Boolean, default=False, nullable=False)
+    sandbox_activated_at = db.Column(db.DateTime, nullable=True)
 
     # Course assignments this classroom has ever had
     course_assignments = db.relationship("CourseInstance", backref="classroom")
@@ -88,11 +86,34 @@ class Classroom(db.Model):
             _db.session.commit()
         return self.join_code
 
+    def check_sandbox_expiry(self):
+        """
+        Check if sandbox mode has expired because the day ended.
+        If sandbox is active and was activated on a previous date (UTC),
+        resets sandbox_active to False and sandbox_activated_at to None.
+        Returns True if sandbox is currently active (and not expired), False otherwise.
+        """
+        if self.sandbox_active:
+            if (
+                self.sandbox_activated_at
+                and self.sandbox_activated_at.date() < datetime.utcnow().date()
+            ):
+                self.sandbox_active = False
+                self.sandbox_activated_at = None
+                return False
+            return True
+        return False
+
     def to_dict(self):
         # join_code is intentionally omitted; fetch it via /api/admin/classrooms/<id>/join-code
+        self.check_sandbox_expiry()
         return {
             "id": self.id,
             "name": self.name,
             "language": self.language,
             "student_count": len(self.users) if self.users else 0,
+            "sandbox_active": bool(self.sandbox_active),
+            "sandbox_activated_at": self.sandbox_activated_at.isoformat()
+            if self.sandbox_activated_at
+            else None,
         }

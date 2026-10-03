@@ -7,7 +7,6 @@ import './CourseProgressTree.css';
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
 
-// Extensive educational concepts and descriptions dictionary for parents
 const COURSE_CONCEPTS = {
     'cc-junior': {
         concepts: ['Sequencing', 'Algorithms', 'Simple Loops', 'Problem Solving'],
@@ -95,7 +94,6 @@ const getCourseDetails = (node) => {
     if (node.id && COURSE_CONCEPTS[node.id]) {
         return COURSE_CONCEPTS[node.id];
     }
-    // Default fallback based on domain/name
     const isOz = node.domain === 'ozaria';
     return {
         concepts: isOz ? ['Logic Flow', 'Variables', 'Code Structures'] : ['Syntax', 'Loops', 'Computational Thinking'],
@@ -151,7 +149,6 @@ const CourseLevelBreakdown = () => {
     const gameBaseUrl = isCodeCombat ? 'https://codecombat.com' : 'https://ozaria.com';
     const mainGameLink = `${gameBaseUrl}/play`;
     
-    // Parse level completion status
     const levels = selectedNode.levels || [];
     const nextLevelIndex = levels.findIndex(lvl => !lvl.is_completed);
     const nextLevel = nextLevelIndex !== -1 ? levels[nextLevelIndex] : null;
@@ -172,7 +169,6 @@ const CourseLevelBreakdown = () => {
                 <span>Back</span>
             </button>
 
-            {/* Header Course Card */}
             <div className={`breakdown-header-card glass-panel mb-2rem p-2rem d-flex justify-between align-center flex-wrap gap-lg border-l-thick border-${selectedNode.domain}`}>
                 <div className="d-flex align-center gap-md">
                     <div className="domain-badge-wrapper flex-shrink-0">
@@ -201,13 +197,10 @@ const CourseLevelBreakdown = () => {
                 </div>
             </div>
 
-            {/* Main Redesigned Dashboard Grid */}
             <div className="breakdown-dashboard-grid d-flex gap-lg flex-wrap">
                 
-                {/* COLUMN 1: Student Play & Missed Levels Zone */}
                 <div className="dashboard-column flex-1 d-flex flex-col gap-lg min-w-300px">
                     
-                    {/* Merged Play/Next Level Card */}
                     <div className="glass-panel p-1-5rem d-flex flex-col gap-md pos-rel overflow-hidden border-top-glow">
                         <h3 className="m-0 text-primary d-flex align-center gap-sm">
                             <span>Next Level</span>
@@ -256,12 +249,10 @@ const CourseLevelBreakdown = () => {
                     </div>
                 </div>
 
-                {/* COLUMN 2: Parents Insights Zone */}
                 <div className="dashboard-column flex-1 d-flex flex-col gap-lg min-w-300px">
                     <div className="glass-panel p-1-5rem h-100 d-flex flex-col gap-lg justify-between">
                         <div className="d-flex flex-col gap-md">
 
-                            {/* Friendly Concept Explanation */}
                             <div>
                                 <h4 className="text-sm font-bold text-primary mb-0-25rem">Summary</h4>
                                 <p className="text-secondary text-sm line-height-relaxed m-0">
@@ -269,7 +260,6 @@ const CourseLevelBreakdown = () => {
                                 </p>
                             </div>
 
-                            {/* Concept Badges */}
                             <div>
                                 <div className="d-flex flex-wrap" style={{ gap: '12px' }}>
                                     {courseDetails.concepts.map((concept, idx) => (
@@ -290,7 +280,6 @@ const CourseLevelBreakdown = () => {
 
                         </div>
 
-                        {/* Cognitive Skills List */}
                         <div>
                             <h4 className="text-xs uppercase tracking-wide text-secondary mb-0-5rem d-flex align-center gap-xs">
                                 <span>Skills</span>
@@ -306,7 +295,6 @@ const CourseLevelBreakdown = () => {
 
             </div>
 
-            {/* Full Levels Checklist */}
             <div className="glass-panel p-2rem mt-2rem">
                 <h3 className="mb-1rem text-primary d-flex align-center gap-sm">
                     <span>Syllabus</span>

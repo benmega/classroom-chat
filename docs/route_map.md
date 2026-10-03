@@ -2,88 +2,53 @@
 
 ## Application Routes (Frontend)
 
-Every available page in the React application, its component, and its required user role.
+Every available page in the React application and its required user role, mapped from `App.jsx`.
 
-|Path|Component|Required Role|Sources|
-|-|-|-|-|
-|`/`|`Chat`|Student|`App.jsx`, `Layout.jsx`|
-|`/login`|`Login`|Public (Guest)|`App.jsx`|
-|`/signup`|`Signup`|Public (Guest)|`App.jsx`|
-|`/profile/:slug?`|`Profile`|Student|`App.jsx`, `Layout.jsx`|
-|`/achievements`|`Achievements`|Student|`App.jsx`, `Layout.jsx`|
-|`/bit-shift`|`BitShift`|Student|`App.jsx`, `Layout.jsx`|
-|`/submit-certificate`|`SubmitCertificate`|Student|`App.jsx`, `Layout.jsx`|
-|`/submit-challenge`|`SubmitChallenge`|Student|`App.jsx`, `Layout.jsx`|
-|`/history`|`History`|Student|`App.jsx`, `Layout.jsx`|
-|`/settings`|`EditProfile`|Student|`App.jsx`, `Profile/index.jsx`|
-|`/project/new`|`ManageProject`|Student|`App.jsx`, `Profile/index.jsx`|
-|`/project/edit/:projectId`|`ManageProject`|Student|`App.jsx`, `Profile/index.jsx`|
-|`/shop`|`Shop`|Student|`App.jsx`, `Layout.jsx`|
-|`/parent`|`ParentDashboard`|Parent|`App.jsx`|
-|`/admin`|`AdminDashboard`|Admin|`App.jsx`, `AdminLayout.jsx`|
-|`/admin/dashboard`|`AdminDashboard`|Admin|`App.jsx`|
-|`/admin/course-templates`|`CourseTemplates`|Admin|`App.jsx`, `AdminLayout.jsx`|
-|`/admin/add-achievement`|`AdminAchievements`|Admin|`App.jsx`, `AdminLayout.jsx`|
-|`/admin/documents`|`AdminDocuments`|Admin|`App.jsx`, `AdminLayout.jsx`|
-|`/admin/advanced`|`AdvancedPanel`|Admin|`App.jsx`, `AdminLayout.jsx`|
-|`/admin/courses`|`AdminCourses`|Admin|`App.jsx`, `AdminLayout.jsx`|
+|Path|Required Role|
+|-|-|
+|`/`|Public (Landing)|
+|`/login`|Public (Guest)|
+|`/signup`|Public (Guest)|
+|`/forgot-password`|Public (Guest)|
+|`/reset-password`|Public (Guest)|
+|`/dev-login`|Development Only|
+|`/chat`|Student|
+|`/profile`|Student|
+|`/profile/:slug`|Public (View Profile)|
+|`/course-progress/:slug`|Student / Parent|
+|`/course-progress/:slug/breakdown`|Student / Parent|
+|`/project-info/:projectId`|Student|
+|`/achievements`|Student|
+|`/bit-shift`|Student|
+|`/shop`|Student|
+|`/activity`|Student|
+|`/settings`|Student|
+|`/project/new`|Student|
+|`/project/edit/:projectId`|Student|
+|`/join-class`|Student / Parent|
+|`/parent/dashboard`|Parent|
+|`/parent/report/:studentId`|Parent|
+|`/parent/connect`|Parent / Public|
+|`/admin/dashboard`|Admin|
+|`/admin/to-review`|Admin|
+|`/admin/assign-project`|Admin|
+|`/admin/library`|Admin|
+|`/admin/users`|Admin|
+|`/admin/classes`|Admin|
+|`/admin/classes/:classId`|Admin|
+|`/admin/users/:userId`|Admin|
+|`/admin/submissions`|Admin|
+|`/admin/advanced`|Admin|
+|`/admin/transactions`|Admin|
+|`/admin/student-activity`|Admin|
+|`/admin/classes/:classId/kiosk`|Admin|
+|`/admin/advanced-crud/*`|Admin|
 
 ## Backend API Endpoints
 
-Key functional endpoints identified across backend blueprints.
+The backend routes have been significantly refactored. Please refer to **[`api_reference.md`](./api_reference.md)** for a complete, up-to-date catalog of all backend API endpoints and their corresponding blueprints.
 
-|Path|Handler|Required Role|Blueprint|
-|-|-|-|-|
-|`/user/login`|`login`|Public|`user\_routes.py`|
-|`/user/api/auth/status`|`auth\_status`|Public|`user\_routes.py`|
-|`/user/logout`|`logout`|Public|`user\_routes.py`|
-|`/user/signup`|`signup`|Public|`user\_routes.py`|
-|`/user/profile`|`profile`|Student|`user\_routes.py`|
-|`/user/profile/<slug>`|`view\_user\_profile`|Public|`user\_routes.py`|
-|`/user/edit\_profile`|`edit\_profile`|Student|`user\_routes.py`|
-|`/user/project/new`|`new\_project`|Student|`user\_routes.py`|
-|`/user/project/edit/<id>`|`edit\_project`|Student|`user\_routes.py`|
-|`/admin/dashboard`|`dashboard`|Admin|`admin\_routes.py`|
-|`/admin/approve\_user/<id>`|`approve\_user`|Admin|`admin\_routes.py`|
-|`/admin/reject\_user/<id>`|`reject\_user`|Admin|`admin\_routes.py`|
-|`/admin/update\_duck\_multiplier`|`update\_duck\_multiplier`|**Public (Risk!)**|`admin\_routes.py`|
-|`/admin/project/edit/<id>`|`edit\_project\_details`|**Public (Risk!)**|`admin\_routes.py`|
-|`/message/send\_message`|`send\_message`|Student|`message\_routes.py`|
-|`/message/api/conversations/<id>`|`get\_conversation\_history`|**Public (Risk!)**|`message\_routes.py`|
-|`/message/view\_conversation/`|`view\_conversation`|Public|`message\_routes.py`|
-|`/achievements/`|`achievements\_page`|Student|`achievement\_routes.py`|
-|`/achievements/submit\_certificate`|`submit\_certificate`|Student|`achievement\_routes.py`|
-|`/achievements/view\_certificate/<id>`|`view\_certificate`|Public|`achievement\_routes.py`|
-|`/challenge/submit`|`submit\_challenge`|Student|`challenge\_routes.py`|
-|`/session/heartbeat`|`heartbeat`|Student|`session\_routes.py`|
-
-### Additional API Blueprints
-- **Webhooks**: `api_webhooks.py` (Stripe/External integrations)
-- **Authentication**: `cognito_routes.py` (AWS Cognito SSO), `dev_login_routes.py` (Development auto-login)
-- **Economy**: `duck_trade_routes.py` (Trading), `shop_routes.py` (Storefront purchasing)
-- **Moderation/Teachers**: `notes_routes.py` (Private teacher notes management)
-- **Roles**: `parent_routes.py` (Parent Dashboard APIs)
-- **Portfolios**: `project_template_routes.py` (Template management)
-- **System**: `track_request_routes.py` (Analytics/Logging endpoints)
-
-## Orphaned Routes
-
-|Route|Type|Description|
-|-|-|-|
-|`/settings`|Frontend|No direct link in sidebar/dropdown. Only accessible from the Profile page.|
-|`/admin/dashboard`|Frontend|Exists but navigation links only to `/admin`.|
-|`/admin/set\_username`|Backend|No UI or API call found in the current application.|
-|`/admin/verify\_password`|Backend|Legacy route, not used by the current frontend.|
-|`/admin/clear-partial-history`|Backend|Functional but missing a corresponding button in the Admin UI.|
-|`/admin/strike\_message/<id>`|Backend|Not linked in the Chat or Dashboard UI.|
-
-## Security Discrepancies & Discovered Flaws
-
-|Path|Risk|Fault Description|
-|-|-|-|
-|`/admin/update\_duck\_multiplier`|**Critical**|Missing `@admin\_only` decorator. Any user can manipulate global reward rates.|
-|`/admin/project/edit/<id>`|**High**|Missing `@admin\_only` decorator. Publicly editable project metadata.|
-|`/message/api/conversations/<id>`|**High**|Public access to sensitive private chat histories without ownership check.|
-|`/achievements/view\_certificate/`|**Medium**|Student certificates are served publicly viacert_id.|
-|`/message/view\_conversation/`|**Medium**|Publicly accessible conversation view.|
-|`Profile/index.jsx` Broken Link|**Functional**|Links to `/admin/certificates/view/` which 404s (should be `/achievements/view\_certificate/`).|
+Key changes include:
+- The introduction of a React-Admin CRUD interface at `/admin/advanced-crud` backed by `/admin/crud`.
+- Restructured messaging API without public conversation histories.
+- Unified admin operations under the `admin_bp` blueprint.

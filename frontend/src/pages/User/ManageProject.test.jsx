@@ -56,7 +56,6 @@ describe('ManageProject', () => {
         expect(await screen.findByText('Core Information')).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
         
-        // Navigation buttons
         expect(screen.getByRole('button', { name: /Next/i })).toBeInTheDocument();
     });
 
@@ -108,23 +107,18 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        // Core tab is active initially
         expect(await screen.findByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
 
-        // Click next -> Media tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         
         expect(await screen.findByText(/Media Assets/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/YouTube\/Vimeo URL/i)).toBeInTheDocument();
 
-        // Click next -> Code tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         expect(screen.getByText('Code Showcase')).toBeInTheDocument();
         
-        // Save button appears on the last tab
         expect(screen.getByRole('button', { name: /Create Project/i })).toBeInTheDocument();
 
-        // Click back -> Media tab
         fireEvent.click(screen.getByRole('button', { name: /Back/i }));
         expect(screen.getByText(/Media Assets/i)).toBeInTheDocument();
     });
@@ -136,10 +130,8 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        // Wait for load
         await screen.findByText('Core Information');
 
-        // Go to Media tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
 
         const imageInput = screen.getByLabelText(/Upload Image/i);
@@ -171,11 +163,9 @@ describe('ManageProject', () => {
         await screen.findByPlaceholderText(/What is this project about\? What did you learn\?/i);
         fireEvent.change(screen.getByPlaceholderText(/What is this project about\? What did you learn\?/i), { target: { value: 'My cool desc' } });
         
-        // Go to last tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
 
-        // Submit form
         const submitBtn = screen.getByRole('button', { name: /Create Project/i });
         fireEvent.click(submitBtn);
 
@@ -208,7 +198,6 @@ describe('ManageProject', () => {
 
         await screen.findByText('Core Information');
 
-        // Go to last tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
 
@@ -296,7 +285,6 @@ describe('ManageProject', () => {
 
         await screen.findByText('Core Information');
 
-        // Go to last tab
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
 

@@ -50,8 +50,6 @@ export const useLayout = () => {
                 const lastReadIdVal = localStorage.getItem(key);
                 const lastReadId = lastReadIdVal ? parseInt(lastReadIdVal, 10) : null;
 
-                // TODO: Replace with a lightweight /message/api/unread-count?last_read_id=X
-                // endpoint to avoid transferring full message payloads just for the count.
                 const response = await client.get('/message/api/feed?limit=50', { signal: controller.signal });
                 const feed = response.data.messages || [];
 
@@ -110,7 +108,6 @@ export const useLayout = () => {
                     audio.play().catch(err => console.warn('Quack autoplay prevented:', err));
                 };
 
-                // Play first quack immediately
                 playQuack();
                 quacksPlayed++;
 

@@ -109,3 +109,38 @@
     }
 }
 
+.standard-project-image-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.image-url-secondary {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.image-url-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.admin-input-subtle {
+    font-size: 0.85rem;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid var(--border-subtle, #e2e8f0);
+    border-radius: 6px;
+    background: var(--bg-secondary, #f8fafc);
+    color: var(--text-primary);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.admin-input-subtle:focus {
+    outline: none;
+    border-color: var(--primary-color, #3b82f6);
+    background: var(--bg-primary, #ffffff);
+}
+

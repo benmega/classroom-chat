@@ -32,13 +32,11 @@ def populate_courses_from_csv(folder_path):
                 name = row["File Name"].replace(".html", "")
                 description = row.get("Description", "No description provided.")
                 default_challenge_value = row["challenge_value"]
-                # Use the new Session.get() method
                 course = db.session.get(Course, course_id)
                 if course:
                     print(f"Course with ID {course_id} already exists. Skipping.")
                     continue
 
-                # Create Course instance
                 course = Course(
                     id=course_id,
                     name=name,
@@ -49,7 +47,6 @@ def populate_courses_from_csv(folder_path):
                 )
                 courses.append(course)
 
-            # Add courses and commit changes
             if courses:
                 db.session.add_all(courses)
                 db.session.commit()

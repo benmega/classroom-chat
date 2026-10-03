@@ -10,7 +10,6 @@ const Landing = () => {
     const { isAuthenticated, user } = useAuthStore();
     const { isMobile } = useViewport();
 
-    // If authenticated, automatically go to the appropriate dashboard/home
     useEffect(() => {
         if (isAuthenticated && user) {
             if (user.role === 'parent') {

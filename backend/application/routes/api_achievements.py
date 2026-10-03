@@ -1,8 +1,4 @@
-"""
-File: api_achievements.py
-Type: py
-Summary: Flask routes for api achievements functionality.
-"""
+
 
 from application.models.user import User
 from application.services.achievement_engine import evaluate_user

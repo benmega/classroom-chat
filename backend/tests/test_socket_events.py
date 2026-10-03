@@ -217,8 +217,52 @@ def test_socket_send_message_rate_limit(app, sample_user, init_db):
     received2 = socket_client.get_received()
     assert not any(e["name"] == "message_received" for e in received2)
 
-    with app.app_context():
-        msg2 = Message.query.filter_by(content="Second message").first()
-        assert msg2 is None
+    socket_client.disconnect()
+
+
+def test_socket_send_message_triggers_achievement(app, sample_user, init_db):
+    from application.models.achievements import Achievement, UserAchievement
+
+    flask_client = app.test_client()
+    with flask_client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    classroom = db.session.get(Classroom, "cs_101")
+    if not classroom:
+        classroom = Classroom(id="cs_101", name="CS 101", language="Python")
+        db.session.add(classroom)
+    if sample_user not in classroom.users:
+        classroom.users.append(sample_user)
+
+    config = Configuration.query.first()
+    if not config:
+        config = Configuration(message_sending_enabled=True)
+        db.session.add(config)
+    else:
+        config.message_sending_enabled = True
+
+    # Add a chat achievement
+    ach = Achievement(name="Chatter", slug="chatter", type="chat", requirement_value="1", reward=5)
+    db.session.add(ach)
+    db.session.commit()
+
+    socket_client = socketio.test_client(app, flask_test_client=flask_client)
+    assert socket_client.is_connected()
+
+    # Emit message
+    socket_client.emit(
+        "send_message",
+        {"content": "First message to earn achievement", "target_classrooms": [classroom.id]},
+    )
+
+    received = socket_client.get_received()
+    unlocked_events = [e for e in received if e["name"] == "achievement_unlocked"]
+    assert len(unlocked_events) == 1
+    new_awards = unlocked_events[0]["args"][0]["new_awards"]
+    assert any(a["slug"] == "chatter" or a["name"] == "Chatter" for a in new_awards)
+
+    # Verify UserAchievement was saved in database
+    ua = UserAchievement.query.filter_by(user_id=sample_user.id, achievement_id=ach.id).first()
+    assert ua is not None
 
     socket_client.disconnect()

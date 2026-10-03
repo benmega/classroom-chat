@@ -25,45 +25,22 @@
  * (e.g. "User", "Achievement", "Course") — NOT the SQLAlchemy table name.
  */
 export const FK_OVERRIDES = {
-    // User
     "Conversation.creator_id":      { reference: "User",         displayField: "username" },
     "Conversation.classroom_id":    { reference: "Classroom",    displayField: "name" },
-
-    // Challenge
     "Challenge.classroom_id":       { reference: "Classroom",    displayField: "name" },
-
-    // Message
     "Message.user_id":              { reference: "User",         displayField: "username" },
     "Message.conversation_id":      { reference: "Conversation", displayField: "title" },
-
-    // UserAchievement
     "UserAchievement.user_id":      { reference: "User",         displayField: "username" },
     "UserAchievement.achievement_id":{ reference: "Achievement", displayField: "name" },
-
-    // UserCertificate
     "UserCertificate.user_id":      { reference: "User",         displayField: "username" },
     "UserCertificate.achievement_id":{ reference: "Achievement", displayField: "name" },
-
-    // Project
     "Project.user_id":              { reference: "User",         displayField: "username" },
-
-    // SessionLog
     "SessionLog.user_id":           { reference: "User",         displayField: "username" },
-
-    // Skill
     "Skill.user_id":                { reference: "User",         displayField: "username" },
-
-    // CourseInstance
     "CourseInstance.classroom_id":  { reference: "Classroom",    displayField: "name" },
     "CourseInstance.course_id":     { reference: "Course",       displayField: "name" },
-
-    // DuckTransaction
     "DuckTransaction.user_id":      { reference: "User",         displayField: "username" },
-
-    // ChallengeLog
     "ChallengeLog.course_id":       { reference: "Course",       displayField: "name" },
-
-    // Note
     "Note.user_id":                 { reference: "User",         displayField: "username" },
 };
 

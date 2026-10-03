@@ -34,9 +34,10 @@ powershell scripts/install-hooks.ps1
 1.  **Execute Preflight**: Use `run_command` to execute the preflight script at `scripts/preflight.ps1`.
     - Command: `powershell.exe -ExecutionPolicy Bypass -File scripts/preflight.ps1`
 2.  **Analyze Results**:
-    - If the script outputs `ALL CHECKS PASSED! SAFE TO MERGE.`, then the workflow is complete. Report success to the user and note the test coverage percentages.
-    - If the script fails, identify the failing stage (e.g., Ruff linting, Pytest, Frontend Vitest, ESLint, Database Migrations, or Playwright E2E).
+    - If the script outputs `ALL CHECKS PASSED! SAFE TO MERGE.`, then the workflow is complete. Report success to the user and note the test coverage percentages and the frontend bundle size.
+    - If the script fails, identify the failing stage (e.g., Ruff linting, Mypy, Pytest, Frontend Vitest, Vite Build, ESLint, Database Migrations, or Playwright E2E).
 3.  **Resolve Issues**:
+    - **Build Failures (Vite Build)**: If the simulated strict build fails (e.g., OOM or JS heap limits), it indicates the app is too large for the production server to build. Investigate debloating dependencies or optimizing the build process.
     - **Linting/Formatting (Ruff/ESLint)**: Locate the problematic files and fix the syntax or formatting errors.
       - Ruff auto-fix: `ruff check --fix .` (from repo root)
       - ESLint auto-fix: `npm run lint -- --fix` (from `frontend/`)

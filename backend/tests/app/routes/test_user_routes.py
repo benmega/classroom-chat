@@ -1,9 +1,3 @@
-"""
-File: test_user_routes.py
-Type: py
-Summary: Unit tests for user routes Flask routes, adjusted for recent route refactoring.
-"""
-
 import json
 import uuid
 from datetime import date
@@ -86,8 +80,6 @@ def test_login_success(client, init_db):
 
     with client.session_transaction() as sess:
         assert sess.get("user") == sample_user.id
-        # The conversation_id might be set asynchronously or based on seeded data
-        # If it's missing, we'll check why later, but let's at least check user
 
 
 def test_login_invalid_username(client, init_db):
@@ -399,7 +391,6 @@ def test_edit_profile_picture_no_file(client, init_db):
 def test_delete_profile_picture(client, init_db):
     sample_user = UserFactory()
     """Test deleting profile picture."""
-    # Set a profile picture
     sample_user.profile_picture = "test_picture.png"
     db.session.commit()
 

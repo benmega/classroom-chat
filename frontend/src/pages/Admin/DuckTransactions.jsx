@@ -19,7 +19,6 @@ const DuckTransactions = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     
-    // Read parameters from search query
     const typeParam = searchParams.get('type') || 'all';
     const pageParam = parseInt(searchParams.get('page') || '1', 10);
     const searchParam = searchParams.get('search') || '';
@@ -61,13 +60,11 @@ const DuckTransactions = () => {
         }
     };
 
-    // Refetch when search params change
     useEffect(() => {
         fetchTransactions(pageParam, typeParam, searchParam, dateParam);
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pageParam, typeParam, searchParam, dateParam]);
 
-    // Handle Search Submit
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         setSearchParams({
@@ -78,7 +75,6 @@ const DuckTransactions = () => {
         });
     };
 
-    // Handle Tab/Type filter change
     const handleTypeChange = (newType) => {
         setSearchParams({
             type: newType,
@@ -88,7 +84,6 @@ const DuckTransactions = () => {
         });
     };
 
-    // Handle Page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pages) {
             setSearchParams({
@@ -188,22 +183,27 @@ const DuckTransactions = () => {
                 </div>
             )}
 
-            {/* Filter Tabs */}
             <div className="filter-tabs-container">
-                <div className="filter-tabs">
+                <div className="filter-tabs" role="tablist" aria-label="Transaction type filter">
                     <button 
+                        role="tab"
+                        aria-selected={typeParam === 'all'}
                         className={`tab-btn ${typeParam === 'all' ? 'active' : ''}`}
                         onClick={() => handleTypeChange('all')}
                     >
                         All Transactions
                     </button>
                     <button 
+                        role="tab"
+                        aria-selected={typeParam === 'earned'}
                         className={`tab-btn ${typeParam === 'earned' ? 'active' : ''}`}
                         onClick={() => handleTypeChange('earned')}
                     >
                         Ducks Earned (+)
                     </button>
                     <button 
+                        role="tab"
+                        aria-selected={typeParam === 'spent'}
                         className={`tab-btn ${typeParam === 'spent' ? 'active' : ''}`}
                         onClick={() => handleTypeChange('spent')}
                     >

@@ -1,21 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { 
   Send, 
-  Smile,
-  Globe,
-  Users,
-  Radio,
-  UserPlus,
-  X
+  Smile, 
+  Globe, 
+  Users, 
+  Radio, 
+  UserPlus, 
+  X 
 } from 'lucide-react';
-import EmojiPicker from 'emoji-picker-react';
+const EmojiPicker = React.lazy(() => import('emoji-picker-react'));
+import client from '../../api/client';
+import { getSocket } from '../../hooks/useChatSocket';
+import SandboxArcadeModal from '../../components/chat/SandboxArcadeModal';
 import './Chat.css';
 
 import ChatMessage from '../../components/chat/ChatMessage';
 import MultiSelectDropdown from '../../components/chat/MultiSelectDropdown';
 import Skeleton from '../../components/common/Skeleton';
-
-// Hooks
 import { useFeedLogic } from '../../hooks/useFeedLogic';
 
 const Chat = ({ filterClassroomId = null }) => {
@@ -54,11 +56,103 @@ const Chat = ({ filterClassroomId = null }) => {
 
   const fileInputRef = React.useRef(null);
 
+  const [isArcadeModalOpen, setIsArcadeModalOpen] = useState(false);
+  const [sandboxStatusMap, setSandboxStatusMap] = useState({});
+
+  const targetClassroomIds = React.useMemo(() => {
+    if (filterClassroomId) return [String(filterClassroomId)];
+    return (classrooms || [])
+      .filter(c => c.id !== 'global')
+      .map(c => String(c.id));
+  }, [filterClassroomId, classrooms]);
+
+  useEffect(() => {
+    if (targetClassroomIds.length === 0) return;
+    let isMounted = true;
+
+    classrooms?.forEach((c) => {
+      if (targetClassroomIds.includes(String(c.id)) && c.sandbox_active !== undefined) {
+        setSandboxStatusMap(prev => ({
+          ...prev,
+          [String(c.id)]: Boolean(c.sandbox_active)
+        }));
+      }
+    });
+
+    targetClassroomIds.forEach((cid) => {
+      client.get(`/api/classrooms/${cid}/sandbox-status`)
+        .then((res) => {
+          if (isMounted && res?.data) {
+            setSandboxStatusMap(prev => ({
+              ...prev,
+              [cid]: Boolean(res.data.sandbox_active)
+            }));
+          }
+        })
+        .catch((err) => {
+          console.error(`Failed to fetch sandbox status for classroom ${cid}:`, err);
+        });
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [targetClassroomIds, classrooms]);
+
+  const activeSandboxClassroomId = React.useMemo(() => {
+    if (filterClassroomId) {
+      return sandboxStatusMap[String(filterClassroomId)] ? String(filterClassroomId) : null;
+    }
+    const activeCid = targetClassroomIds.find(cid => sandboxStatusMap[cid] === true);
+    if (activeCid) return activeCid;
+
+    const activeFromClassroom = classrooms?.find(
+      c => targetClassroomIds.includes(String(c.id)) && c.sandbox_active
+    );
+    return activeFromClassroom ? String(activeFromClassroom.id) : null;
+  }, [filterClassroomId, targetClassroomIds, sandboxStatusMap, classrooms]);
+
+  const isSandboxActive = Boolean(activeSandboxClassroomId);
+
+  const modalClassroomId = activeSandboxClassroomId || filterClassroomId || (classrooms && classrooms.find(c => c.id !== 'global')?.id) || user?.classroom_id || null;
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleSandboxStatusChanged = (data) => {
+      if (!data || data.classroom_id === undefined) return;
+      const cid = String(data.classroom_id);
+
+      const isTarget = filterClassroomId
+        ? cid === String(filterClassroomId)
+        : (targetClassroomIds.length === 0 || targetClassroomIds.includes(cid));
+
+      if (isTarget) {
+        const active = Boolean(data.sandbox_active);
+        setSandboxStatusMap(prev => ({
+          ...prev,
+          [cid]: active
+        }));
+
+        if (active) {
+          toast.success('All Tests Passed! Sandbox Mode is Active!', {
+            duration: 5000,
+          });
+        }
+      }
+    };
+
+    socket.on('sandbox_status_changed', handleSandboxStatusChanged);
+    return () => {
+      socket.off('sandbox_status_changed', handleSandboxStatusChanged);
+    };
+  }, [filterClassroomId, targetClassroomIds]);
+
   if (loading) return (
     <div className="feed-loading-skeleton-container p-2rem">
       <span className="d-none">Loading Feed...</span>
       <div className="feed-main w-100">
-        {/* Mock Messages List */}
         <div className="feed-messages-list d-flex flex-col gap-1-5rem">
           {[1, 2, 3].map(i => (
             <div key={i} className="message-wrapper chat-skeleton-message">
@@ -74,7 +168,6 @@ const Chat = ({ filterClassroomId = null }) => {
             </div>
           ))}
         </div>
-        {/* Mock Input Area */}
         <div className="feed-input-area mt-2rem opacity-60">
           <div className="feed-input-wrapper-container chat-skeleton-input">
             <Skeleton height="60px" className="mb-md" />
@@ -91,6 +184,29 @@ const Chat = ({ filterClassroomId = null }) => {
   return (
     <div data-testid="feed-container" className="feed-container">
       <div className="feed-main">
+        {isSandboxActive && (
+          <div 
+            className="sandbox-sticky-banner" 
+            data-testid="sandbox-chat-banner"
+          >
+            <div className="sandbox-sticky-banner-content">
+              <span className="sandbox-sticky-banner-title">
+                All Tests Passed! Sandbox Mode is Active!
+              </span>
+            </div>
+            <button
+              type="button"
+              className="sandbox-sticky-banner-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsArcadeModalOpen(true);
+              }}
+            >
+              Enter Sandbox Arcade
+            </button>
+          </div>
+        )}
+
         <div 
           ref={scrollRef}
           data-testid="feed-messages" className="feed-messages"
@@ -241,13 +357,15 @@ const Chat = ({ filterClassroomId = null }) => {
                         </button>
                         {showEmojiPicker && (
                           <div className="emoji-picker-container emoji-picker-container-absolute">
-                            <EmojiPicker
-                              onEmojiClick={onEmojiClick}
-                              autoFocusSearch={false}
-                              theme="auto"
-                              width={320}
-                              height={400}
-                            />
+                            <React.Suspense fallback={<div>Loading emojis...</div>}>
+                              <EmojiPicker
+                                onEmojiClick={onEmojiClick}
+                                autoFocusSearch={false}
+                                theme="auto"
+                                width={320}
+                                height={400}
+                              />
+                            </React.Suspense>
                           </div>
                         )}
                     </div>
@@ -265,6 +383,11 @@ const Chat = ({ filterClassroomId = null }) => {
           </form>
         </div>
       </div>
+      <SandboxArcadeModal
+        isOpen={isArcadeModalOpen}
+        onClose={() => setIsArcadeModalOpen(false)}
+        classId={modalClassroomId}
+      />
     </div>
   );
 };

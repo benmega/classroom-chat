@@ -1,6 +1,3 @@
-"""
-Unit tests for parent_routes.py
-"""
 from application.extensions import db
 from application.models.user import User
 from tests.factories import AchievementFactory, ProjectFactory, UserAchievementFactory, UserFactory
@@ -75,13 +72,11 @@ def test_connect_via_code_success_and_already_linked(client, app):
     with client.session_transaction() as sess:
         sess["user"] = p_id
 
-    # First attempt: success
     res = client.post("/api/parents/connect/code", json={"code": "LINK4_PTEST"})
     assert res.status_code == 200
     data = res.get_json()
     assert data["data"]["student"]["nickname"] == "Child Four"
 
-    # Second attempt: already linked
     res2 = client.post("/api/parents/connect/code", json={"code": "LINK4_PTEST"})
     assert res2.status_code == 400
     assert "Already linked" in res2.get_json().get("error", "")
@@ -104,7 +99,6 @@ def test_disconnect_student(client, app):
     assert res.status_code == 200
     assert "Successfully disconnected" in res.get_json()["data"]["message"]
 
-    # Trying to disconnect again should return 400
     res2 = client.post(f"/api/parents/disconnect/{c_id}")
     assert res2.status_code == 400
 
@@ -170,15 +164,12 @@ def test_get_student_report_edge_cases(client, app):
     with client.session_transaction() as sess:
         sess["user"] = p_id
 
-    # Not linked student
     res1 = client.get(f"/api/parents/student/{s_id}/report")
     assert res1.status_code == 403
 
-    # Student non-existent in DB
     res2 = client.get("/api/parents/student/99999/report")
     assert res2.status_code == 403
 
-    # Non-parent user
     with client.session_transaction() as sess:
         sess["user"] = c_id
 
@@ -226,14 +217,12 @@ def test_connect_via_code_edge_cases(client, app):
         p_id = parent.id
         s_id = student.id
 
-    # Non-parent user
     with client.session_transaction() as sess:
         sess["user"] = s_id
 
     res1 = client.post("/api/parents/connect/code", json={"code": "SOMECODE"})
     assert res1.status_code == 403
 
-    # Rate limited
     with app.app_context():
         for i in range(5):
             db.session.add(ConnectionAttempt(parent_id=p_id, code_attempted=f"CODE{i}"))
@@ -255,14 +244,12 @@ def test_disconnect_student_edge_cases(client, app):
         p_id = parent.id
         s_id = student.id
 
-    # Non-parent user
     with client.session_transaction() as sess:
         sess["user"] = s_id
 
     res1 = client.post(f"/api/parents/disconnect/{s_id}")
     assert res1.status_code == 403
 
-    # Student non-existent
     with client.session_transaction() as sess:
         sess["user"] = p_id
 
@@ -290,7 +277,6 @@ def test_get_student_history(client, app):
         stranger = UserFactory(role="student")
         db.session.commit()
 
-        # Add history data for child
         tx = DuckTransaction(user_id=child.id, amount=10.0, timestamp=datetime.utcnow())
         ChallengeLogFactory(user_id=child.id, domain="python", challenge_slug="vars-1")
         ach = AchievementFactory(name="Explorer", type="ducks")
@@ -308,18 +294,15 @@ def test_get_student_history(client, app):
     with client.session_transaction() as sess:
         sess["user"] = p_id
 
-    # Success case
     res = client.get(f"/api/parents/student/{c_id}/history")
     assert res.status_code == 200
     hist = res.get_json()["data"]
     assert hist["has_any_activity_ever"] is True
     assert len(hist["recent_events"]) >= 4
 
-    # Unlinked child -> 403
     res_unlinked = client.get(f"/api/parents/student/{s_id}/history")
     assert res_unlinked.status_code == 403
 
-    # Non-parent user -> 403
     with client.session_transaction() as sess:
         sess["user"] = c_id
 
@@ -350,23 +333,19 @@ def test_contact_teacher(client, app):
         p_id = parent.id
         c_id = child.id
 
-    # Non-parent -> 403
     with client.session_transaction() as sess:
         sess["user"] = c_id
     res1 = client.post("/api/parents/contact-teacher", json={"body": "Hello"})
     assert res1.status_code == 403
 
-    # Missing body -> 400
     with client.session_transaction() as sess:
         sess["user"] = p_id
     res2 = client.post("/api/parents/contact-teacher", json={"body": "   "})
     assert res2.status_code == 400
 
-    # Body too long -> 400
     res3 = client.post("/api/parents/contact-teacher", json={"body": "a" * 2001})
     assert res3.status_code == 400
 
-    # Success with subject
     res4 = client.post(
         "/api/parents/contact-teacher",
         json={"subject": "Question", "body": "How is my child doing?"}

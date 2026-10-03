@@ -1,8 +1,4 @@
-"""
-File: meta.py
-Type: py
-Summary: Project metadata utilities and helper functions.
-"""
+
 
 import os
 
@@ -25,7 +21,6 @@ def print_directory_structure(startpath, exclude=None):
     if exclude is None:
         exclude = []
     for root, dirs, files in os.walk(startpath):
-        # Filtering out excluded directories from the dirs list
         dirs[:] = [d for d in dirs if d not in exclude]
         level = root.replace(startpath, "").count(os.sep)
         indent = " " * 4 * level
@@ -46,12 +41,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-# groupChat2/
-# │
-# ├── application/           # Flask code (routes, models, views, etc.)
-# ├── instance/              # SQLite DB files
-# ├── static/                # CSS, JS, images
-# ├── templates/             # Jinja2 HTML templates
-# ├── license/               # License file for freemium check
-# ├── main.py                # Flask entry point
-# └── ...

@@ -1,5 +1,4 @@
-# sync_duck_balance.py
-# Summary: Copies earned_ducks from source DB to duck_balance in target DB by user ID.
+
 
 import shutil
 import sqlite3

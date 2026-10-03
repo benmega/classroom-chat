@@ -23,8 +23,16 @@ def index(path):
 
         return jsonify({"error": "Route not found"}), 404
 
-    from flask import g, render_template
+    from flask import g, get_flashed_messages, render_template
 
     username = g.user.username if hasattr(g, "user") and g.user else None
-    return render_template("index.html", username=username)
+    rendered = render_template("index.html", username=username)
+    flashed = get_flashed_messages()
+    if flashed:
+        flash_html = "".join(f'<div class="toast-body">{m}</div>' for m in flashed)
+        if "</body>" in rendered:
+            rendered = rendered.replace("</body>", f"{flash_html}</body>")
+        else:
+            rendered += flash_html
+    return rendered
 

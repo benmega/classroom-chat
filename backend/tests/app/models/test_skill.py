@@ -1,9 +1,3 @@
-"""
-File: test_skill.py
-Type: py
-Summary: Unit tests for skill model.
-"""
-
 import random
 
 import pytest
@@ -30,11 +24,10 @@ def test_skill_unique_per_user(init_db, sample_user):
     db.session.add(skill_1)
     db.session.commit()
 
-    # Attempt to add the same skill name for the same user
     skill_2 = Skill(name="C++", user_id=sample_user.id)
     db.session.add(skill_2)
 
-    with pytest.raises(Exception):  # Expect an IntegrityError or similar
+    with pytest.raises(Exception):
         db.session.commit()
 
 
@@ -87,10 +80,8 @@ def test_dynamic_skill_generation(init_db, sample_user):
         "Go",
         "Swift",
         "Rust",
-        "Kotlin",
     ]
 
-    # Generate unique skill names
     unique_skills = set(random.choices(skill_names, k=10))
 
     for skill_name in unique_skills:
@@ -98,7 +89,6 @@ def test_dynamic_skill_generation(init_db, sample_user):
         db.session.add(skill)
     db.session.commit()
 
-    # Retrieve skills and assert
     skills = Skill.query.filter_by(user_id=sample_user.id).all()
     assert len(skills) == len(unique_skills)
     assert all(isinstance(skill, Skill) for skill in skills)

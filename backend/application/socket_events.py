@@ -1,14 +1,4 @@
-"""
-File: socket_events.py
-Type: py
-Summary: Socket.IO event handlers — classroom-scoped room joining and routing.
 
-Room naming conventions:
-    classroom:{classroom_id}   — one room per classroom
-    classroom:global           — joined by all authenticated sockets
-    user:{user_id}             — per-user room for push events (enrollment, DMs)
-    admin                      — admins only
-"""
 
 from datetime import datetime
 
@@ -50,22 +40,16 @@ def handle_connect(auth=None):
     if not user:
         return False
 
-    # 1. Personal room (for push events like classroom_enrolled)
     join_room(f"user:{user.id}")
-
-    # 2. Global room — every authenticated user
     join_room(f"classroom:{GLOBAL_CLASSROOM_ID}")
 
-    # 3. One room per enrolled classroom
     enrolled_ids = _get_enrolled_classroom_ids(user.id)
     for cid in enrolled_ids:
         join_room(f"classroom:{cid}")
 
-    # 4. Admin room
     if user.role == 'admin':
         join_room("admin")
 
-    # Mark online
     if user.id not in _active_sessions:
         _active_sessions[user.id] = set()
 
@@ -121,13 +105,11 @@ def handle_send_message(data):
     if not content or len(content) > 4000:
         return {"success": False, "error": "Invalid message length"}
 
-    # Parse targeting parameters from frontend
     is_global = data.get("is_global", False)
     target_live = data.get("target_live", False)
     target_classrooms = data.get("target_classrooms", [])
     target_users = data.get("target_users", [])
 
-    # Server-side validation
     if user.role != 'admin':
         if len(content) > 500:
             return {"success": False, "error": "Message too long"}
@@ -154,17 +136,13 @@ def handle_send_message(data):
         config = Configuration.query.first()
         if config and not config.message_sending_enabled:
             return {"success": False, "error": "Chat is currently disabled"}
-        # Students can't send global messages
         is_global = False
-        # Students can only target their own classrooms
         enrolled_ids = _get_enrolled_classroom_ids(user.id)
-        # Filter target_classrooms to only those the student is enrolled in
         if target_classrooms:
             target_classrooms = [
                 cid for cid in target_classrooms if cid in enrolled_ids
             ]
         else:
-            # Default to all their classrooms if not specified
             target_classrooms = enrolled_ids
 
         # Optional: restrict students from targeting specific users unless explicitly allowed.
@@ -219,18 +197,14 @@ def handle_send_message(data):
         "chat_font_color": msg.chat_font_color,
     }
 
-    # Emit to appropriate rooms
     if is_global:
         emit("message_received", payload, room=f"classroom:{GLOBAL_CLASSROOM_ID}")
     else:
-        # Emit to specific classrooms
         for cid in target_classrooms:
             emit("message_received", payload, room=f"classroom:{cid}")
 
-        # Emit to sender
         emit("message_received", payload, room=f"user:{user.id}")
 
-        # Emit to specifically targeted users
         for uid in target_users:
             if uid != user.id:
                 emit("message_received", payload, room=f"user:{uid}")
@@ -238,11 +212,26 @@ def handle_send_message(data):
         if target_live:
             online_users = User.query.filter_by(is_online=True).all()
             for u in online_users:
-                # Basic dedup: if u in target_users, we already sent
                 if u.id not in target_users and u.id != user.id:
                     emit("message_received", payload, room=f"user:{u.id}")
 
-    return {"success": True}
+    from .services.achievement_engine import evaluate_user
+
+    new_awards = evaluate_user(user)
+    awards_payload = []
+    if new_awards:
+        awards_payload = [
+            {
+                "id": a.id,
+                "name": a.name,
+                "slug": a.slug,
+                "badge": f"/static/images/achievement_badges/{a.slug}.png",
+            }
+            for a in new_awards
+        ]
+        emit("achievement_unlocked", {"new_awards": awards_payload}, room=f"user:{user.id}")
+
+    return {"success": True, "new_awards": awards_payload}
 
 
 def emit_classroom_enrolled(user_id: int, classroom_dict: dict):

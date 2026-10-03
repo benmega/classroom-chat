@@ -14,7 +14,6 @@ def login_as_admin(client, admin_user):
 def test_crud_schema(client, sample_admin):
     login_as_admin(client, sample_admin)
 
-    # Valid resource
     resp = client.get("/api/admin/crud/schema/challenge")
     assert resp.status_code == 200
     assert resp.json["resource"] == "challenge"
@@ -27,13 +26,11 @@ def test_crud_schema(client, sample_admin):
 def test_crud_list_and_one(client, sample_admin):
     login_as_admin(client, sample_admin)
 
-    # List challenges
     resp = client.get("/api/admin/crud/challenge")
     assert resp.status_code == 200
     assert "data" in resp.json
     assert "total" in resp.json
 
-    # Try listing invalid resource
     resp = client.get("/api/admin/crud/nonexistent")
     assert resp.status_code == 404
 
@@ -86,10 +83,29 @@ def test_crud_create_update_delete(client, sample_admin):
     assert resp.status_code == 404
 
 
+def test_crud_classroom(client, sample_admin):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/crud/classroom",
+        json={
+            "id": "TEST_CLS_101",
+            "name": "Test Classroom 101",
+            "language": "Python",
+            "extra_ignored_field": "something",
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json["data"]["id"] == "TEST_CLS_101"
+    assert resp.json["data"]["name"] == "Test Classroom 101"
+
+    del_resp = client.delete("/api/admin/crud/classroom/TEST_CLS_101")
+    assert del_resp.status_code == 200
+
+
 def test_bulk_add_challenges(client, sample_admin):
     login_as_admin(client, sample_admin)
 
-    # Empty payload
     resp = client.post("/api/admin/challenges/bulk_add", json={})
     assert resp.status_code == 400
 
@@ -100,7 +116,6 @@ def test_bulk_add_challenges(client, sample_admin):
     assert resp.status_code == 200
     assert resp.json["data"]["skipped"] == 1
 
-    # Empty challenges set
     resp = client.post(
         "/api/admin/challenges/bulk_add",
         json={"course_id": "1", "domain": "domain", "challenges": []},
@@ -115,12 +130,11 @@ def test_bulk_add_challenges(client, sample_admin):
             "challenges": [
                 {"name": "Bulk 1", "slug": "bulk-1"},
                 {"name": "Bulk 2", "slug": "bulk-2"},
-                {"name": "Invalid"},  # missing slug, should be skipped
+                {"name": "Invalid"},
             ],
         },
     )
     assert resp.status_code == 200
-    # The response is wrapped by api_response decorator!
     data = resp.json["data"]
     assert data["added"] == 2
     assert data["skipped"] == 1
@@ -175,7 +189,6 @@ def test_document_routes(client, sample_admin, test_app):
         assert resp.status_code == 200
         assert resp.headers.get("Content-Disposition") is not None
 
-        # Empty fields
         resp = client.post("/api/admin/delete-document", data={})
         assert resp.status_code == 400
         resp = client.post(
@@ -221,12 +234,10 @@ def test_advanced_ops(client, sample_admin):
 
     login_as_admin(client, sample_admin)
 
-    # stats-extended
     resp = client.get("/api/admin/advanced/stats-extended")
     assert resp.status_code == 200
     assert "memory_usage_mb" in resp.json["data"]
 
-    # purge-history
     resp = client.post("/api/admin/advanced/purge-history")
     assert resp.status_code == 200
     assert resp.json["data"]["deleted_messages"] >= 0

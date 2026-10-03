@@ -373,7 +373,7 @@ def adjust_packets():
 
     user = User.query.filter_by(username=username).first()
     if user:
-        user.packets += amount
+        user.packets = (user.packets or 0.0) + amount
         db.session.commit()
         return jsonify(
             {"success": True, "message": f"Updated {username}'s packets by {amount}."}
@@ -688,7 +688,6 @@ def update_user_details(user_id):
 
     data = request.get_json() or request.form.to_dict()
 
-    # Username
     if data.get("username"):
         new_username = str(data["username"]).strip().lower()
         if new_username != user_obj.username:
@@ -701,29 +700,23 @@ def update_user_details(user_id):
                 return {"error": f"Username '{new_username}' is already taken"}, 409
             user_obj.username = new_username
 
-    # Nickname
     if "nickname" in data:
         new_nick = str(data["nickname"]).strip() if data["nickname"] is not None else ""
         user_obj.nickname = new_nick if new_nick else user_obj.username
         user_obj.slug = user_obj.generate_slug()
 
-    # Active track (current course track)
     if data.get("active_track"):
         user_obj.active_track = str(data["active_track"]).strip()
 
-    # Bio
     if "bio" in data:
         user_obj.bio = str(data["bio"]) if data["bio"] is not None else None
 
-    # Email
     if "email" in data:
         user_obj.email = str(data["email"]).strip() if data["email"] else None
 
-    # Role
     if "role" in data and data["role"] in ["student", "parent", "teacher"]:
         user_obj.role = data["role"]
 
-    # Admin toggle (sent as is_admin boolean from frontend checkbox)
     if "is_admin" in data:
         val = data["is_admin"]
         is_admin_val = val if isinstance(val, bool) else (str(val).lower() == "true")
@@ -732,8 +725,6 @@ def update_user_details(user_id):
         elif user_obj.role == "admin":
             # Demoting from admin — fall back to student
             user_obj.role = "student"
-
-    # Boolean flags & permissions
 
     if "is_approved" in data:
         val = data["is_approved"]
@@ -747,11 +738,9 @@ def update_user_details(user_id):
             val if isinstance(val, bool) else (str(val).lower() == "true")
         )
 
-    # Profile Picture
     if data.get("profile_picture"):
         user_obj.profile_picture = str(data["profile_picture"]).strip()
 
-    # Shop Perk Toggles
     perk_fields = [
         "has_chat_font",
         "chat_font_color",
@@ -867,6 +856,9 @@ def get_classroom_details(classroom_id):
         for assignment in classroom.course_assignments
     ]
 
+    classroom.check_sandbox_expiry()
+    db.session.commit()
+
     return jsonify(
         {
             "classroom": {
@@ -878,6 +870,10 @@ def get_classroom_details(classroom_id):
                 else None,
                 "students": students,
                 "course_assignments": course_assignments,
+                "sandbox_active": bool(classroom.sandbox_active),
+                "sandbox_activated_at": classroom.sandbox_activated_at.isoformat()
+                if classroom.sandbox_activated_at
+                else None,
             }
         }
     )

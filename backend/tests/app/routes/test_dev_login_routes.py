@@ -78,7 +78,6 @@ def test_dev_login_success_get_and_post(client, make_agent_users):
         # Should render HTML template for GET /api/dev-login or /dev-login
         assert b"admin" in resp.data or b"5173" in resp.data
 
-        # POST test
         resp = client.post("/api/dev-login", json={"role": "student"})
         assert resp.status_code == 200
         assert resp.json["success"] is True

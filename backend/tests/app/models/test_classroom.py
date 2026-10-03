@@ -1,9 +1,3 @@
-"""
-File: test_classroom.py
-Type: py
-Summary: Unit tests for Classroom model methods.
-"""
-
 from application.extensions import db
 from application.models.classroom import Classroom
 from tests.factories import ClassroomFactory
@@ -23,7 +17,6 @@ def test_classroom_methods(app):
         assert len(code) == 5
         assert clsroom.join_code == code
 
-        # Calling again returns cached join_code
         assert clsroom.get_join_code() == code
 
         d = clsroom.to_dict()

@@ -59,29 +59,24 @@ def add_column(db_path, table_name, column_name, default_value=None):
 
 
 if __name__ == "__main__":
-    # Path to your database
     database_path = (
         "C:\\Users\\Ben\\PycharmProjects\\groupChat2\\instance\\dev_users.db"
     )
 
-    # Get tables
     tables = get_tables(database_path)
     if not tables:
         print("No tables found in the database.")
         exit()
 
-    # Let user select a table
     print("Available tables:", tables)
     table_name = input("Enter the table name to modify: ").strip()
     if table_name not in tables:
         print("Invalid table name.")
         exit()
 
-    # Get current columns
     columns = get_columns(database_path, table_name)
     print("Current columns in table:", columns)
 
-    # Ask for new column details
     column_name = input("Enter the new column name: ").strip()
     if column_name in columns:
         print("Column already exists.")
@@ -97,5 +92,4 @@ if __name__ == "__main__":
     elif default_value == "":
         default_value = None
 
-    # Add column
     add_column(database_path, table_name, column_name, default_value)

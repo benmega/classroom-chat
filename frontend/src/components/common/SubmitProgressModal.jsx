@@ -132,6 +132,16 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
 
                     resetForm();
                     checkAuth();
+
+                    if (response.data.new_awards?.length) {
+                        response.data.new_awards.forEach((award) => {
+                            toast.success(`Achievement Unlocked: ${award.name}!`, {
+                                icon: '🏆',
+                                duration: 6000,
+                            });
+                        });
+                    }
+
                     if (onClose) onClose();
                 } else {
                     toast.error(response.data.message || 'Submission failed.');

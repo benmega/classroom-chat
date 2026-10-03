@@ -18,7 +18,6 @@ describe('getApiUrl', () => {
     });
 
     it('prepends base URL to the path', () => {
-        // Without VITE_API_URL defined, defaults to empty base URL
         expect(getApiUrl('/test')).toBe('/test');
         expect(getApiUrl('test')).toBe('/test');
     });

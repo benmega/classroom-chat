@@ -63,7 +63,7 @@ describe('App Component', () => {
     window.history.pushState({}, 'Test page', '/');
   });
 
-  it('renders landing page initially when not authenticated', () => {
+  it('renders landing page initially when not authenticated', async () => {
     useAuthStore.mockReturnValue({
       isLoading: false,
       isAuthenticated: false,
@@ -73,7 +73,7 @@ describe('App Component', () => {
     });
 
     renderApp();
-    expect(screen.getByText('Landing Page Mock')).toBeInTheDocument();
+    expect(await screen.findByText('Landing Page Mock')).toBeInTheDocument();
   });
 
   it('renders ServerOffline component when server is offline', () => {
@@ -89,7 +89,7 @@ describe('App Component', () => {
     expect(screen.getByText('Server is Offline Mock')).toBeInTheDocument();
   });
 
-  it('redirects authenticated student away from /login to /chat', () => {
+  it('redirects authenticated student away from /login to /chat', async () => {
     window.history.pushState({}, 'Test page', '/login');
     useAuthStore.mockReturnValue({
       isLoading: false,
@@ -102,7 +102,7 @@ describe('App Component', () => {
     renderApp();
     // Login page should NOT be visible; student should be redirected to chat
     expect(screen.queryByText('Login Page Mock')).not.toBeInTheDocument();
-    expect(screen.getByText('Chat Page Mock')).toBeInTheDocument();
+    expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
   });
 
   it('shows loading spinner when isLoading is true', () => {

@@ -12,21 +12,17 @@ from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
 from tests.factories import ChallengeFactory, UserFactory
 
-# tests/app/models/test_challenge.py
-
 
 def test_complete_challenge(init_db):
     sample_challenge = ChallengeFactory(slug="test-slug")
     sample_user = UserFactory()
     assert ChallengeLog.query.count() == 0
 
-    # Call complete_challenge method
     sample_challenge.complete_challenge(sample_user)
 
     log_entry = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
     assert log_entry is not None
 
-    # UPDATED: Check 'challenge_slug' against 'sample_challenge.slug'
     assert log_entry.challenge_slug == sample_challenge.slug
     assert log_entry.user_id == sample_user.id
 
@@ -52,7 +48,6 @@ def test_slug_auto_set(init_db):
     db.session.add(challenge_without_slug)
     db.session.commit()
 
-    # Assert that the slug was auto-generated based on the name
     assert challenge_without_slug.slug == "Challenge Without Slug"
 
 
@@ -63,7 +58,6 @@ def test_created_at_timestamp(init_db):
     db.session.add(challenge_with_timestamp)
     db.session.commit()
 
-    # Assert that 'created_at' is populated with the current timestamp
     assert challenge_with_timestamp.created_at is not None
     assert isinstance(challenge_with_timestamp.created_at, datetime)
 
@@ -90,7 +84,6 @@ def test_challenge_slug_auto_generation(init_db):
     db.session.add(challenge)
     db.session.commit()
 
-    # The event listener should have copied name to slug
     assert challenge.slug == "Intro to Python Loops"
 
 
@@ -142,7 +135,6 @@ def test_challenge_log_model_structure(init_db):
     db.session.add(log)
     db.session.commit()
 
-    # Retrieve and inspect
     saved_log = ChallengeLog.query.first()
 
     assert hasattr(saved_log, "challenge_slug")
@@ -160,7 +152,7 @@ def test_challenge_name_uniqueness_scoped_by_domain(init_db):
     c2 = Challenge(name="Unique Test Name", slug="slug-c2", domain="www.ozaria.com")
     db.session.add(c1)
     db.session.add(c2)
-    db.session.commit()  # Should succeed
+    db.session.commit()
 
     c3 = Challenge(name="Unique Test Name", slug="slug-c3", domain="codecombat.com")
     db.session.add(c3)

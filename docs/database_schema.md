@@ -37,15 +37,17 @@ The central entity for authentication and student tracking.
 - **`duck_trades` / `duck_transactions`**: History of currency transfers between students and system adjustments.
     - Fields: `id`, `from_user_id`, `to_user_id`, `amount`, `timestamp`, `status`.
 
-### 2.5 User Portfolio
+### 2.5 User Portfolio & Submissions
 - **`projects`**: Student-created projects.
     - Fields: `id`, `name`, `description`, `link`, `user_id` (FK).
-- **`standard_projects`** / **`project_templates`**: Admin-defined project outlines that students can instantiate.
+- **`project_templates`**: Admin-defined project outlines that students can instantiate.
     - Fields: `id`, `title`, `description`, `template_repo`.
 - **`skills`**: Individual skills listed on user profiles.
     - Fields: `id`, `name`, `user_id` (FK).
 - **`user_certificates`**: Official milestones or external certs.
     - Fields: `id`, `user_id` (FK), `certificate_type`, `issued_at`.
+- **`submissions`**: Student submissions for projects or assignments.
+    - Fields: `id`, `user_id` (FK), `project_id` (FK), `status`, `submitted_at`.
 
 ### 2.6 Economy & Shop
 - **`store_items`**: Virtual items available for purchase with Ducks.
@@ -60,17 +62,25 @@ The central entity for authentication and student tracking.
     - Fields: `id`, `name`, `capacity`.
 - **`course_instances`**: A specific cohort of a Course held in a Classroom (e.g., "Python 101 - Fall 2026").
     - Fields: `id`, `course_id` (FK), `classroom_id` (FK), `start_date`, `end_date`.
+- **`course_instance_requests`**: Student requests to join a specific course instance.
+    - Fields: `id`, `user_id` (FK), `course_instance_id` (FK), `status`.
+- **`classroom_join_attempts`**: Logs of students attempting to join a classroom via code.
+    - Fields: `id`, `user_id` (FK), `join_code`, `success`.
 
 ### 2.8 Roles & Connections
-- **`parent_student`**: Linking parent accounts to their children's accounts.
-    - Fields: `id`, `parent_id` (FK), `student_id` (FK), `linked_at`.
+- **`parent_students`**: Linking parent accounts to their children's accounts.
+    - Fields: `parent_id` (FK), `student_id` (FK).
 
-### 2.9 System & Moderation
+### 2.9 System, Moderation & Logging
 - **`notes`**: Private teacher notes attached to a user profile.
     - Fields: `id`, `user_id` (FK), `author_id` (FK), `content`, `created_at`.
 - **`banned_words`**: List of prohibited words for chat moderation.
     - Fields: `id`, `word`, `severity`.
 - **`ai_settings` / `configuration`**: Global settings and AI toggles.
+- **`session_logs`**: Tracking user sessions for analytics.
+    - Fields: `id`, `user_id` (FK), `login_time`, `logout_time`.
+- **`connection_attempts`**: Logging of login attempts.
+    - Fields: `id`, `username`, `ip_address`, `success`, `timestamp`.
 
 
 ---

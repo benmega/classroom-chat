@@ -1,6 +1,5 @@
 import sqlite3
 
-# Mapping of achievement slug to new reward value
 reward_updates = {
     "first-duck": 5,
     "duck-collector": 20,

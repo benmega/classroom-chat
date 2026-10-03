@@ -99,12 +99,10 @@ This document serves as the master UI reference manual containing visual documen
 - **Mobile Viewport**: ![Duck Shop Mobile](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/mobile/mobile_shop.png)
 - **Description**: Virtual storefront where students redeem earned Duck Coins for avatar cosmetics, chat badges, profile banners, and classroom perks.
 
-### 2.8 Submit Work Interface
-- **URL Path**: `/submit-work`
+### 2.8 Submit Work Interface (DEPRECATED)
+- **URL Path**: `/submit-work` (Route removed, users manage projects via `/project/new`)
 - **Access Role**: Student
-- **Desktop Screenshot**: ![Submit Work Desktop](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/student_submit_work.png)
-- **Mobile Viewport**: ![Submit Work Mobile](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/mobile/mobile_submit_work.png)
-- **Description**: Submission studio for uploading project code repositories, external certificates, and coding challenge solutions for teacher evaluation.
+- **Description**: *This route is deprecated and no longer exists.*
 
 ### 2.9 User Settings & Edit Profile
 - **URL Path**: `/settings`
@@ -119,6 +117,11 @@ This document serves as the master UI reference manual containing visual documen
 - **Desktop Screenshot**: ![Create Project Desktop](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/student_create_project.png)
 - **Mobile Viewport**: ![Create Project Mobile](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/mobile/mobile_create_project.png)
 - **Description**: Project creation wizard for providing project titles, descriptions, repository links, demo URLs, cover images, and technology tags.
+
+### 2.11 Activity Feed
+- **URL Path**: `/activity`
+- **Access Role**: Authenticated Users
+- **Description**: Feed of recent student activities, project updates, and achievements.
 
 ---
 
@@ -156,12 +159,10 @@ This document serves as the master UI reference manual containing visual documen
 - **Mobile Viewport**: ![To Review Mobile](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/mobile/mobile_admin_to_review.png)
 - **Description**: Teacher review queue for assessing student code submissions, grading assignments, leaving feedback, and approving rewards.
 
-### 4.3 Admin Projects Catalog
-- **URL Path**: `/admin/projects`
+### 4.3 Admin Projects Catalog (DEPRECATED)
+- **URL Path**: `/admin/projects` (Now redirects to `/admin/to-review`)
 - **Access Role**: Admin
-- **Desktop Screenshot**: ![Admin Projects Desktop](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/admin_projects.png)
-- **Mobile Viewport**: ![Admin Projects Mobile](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/mobile/mobile_admin_projects.png)
-- **Description**: Full directory of student-submitted projects with status filters, student search, and approval toggles.
+- **Description**: *This screen is deprecated. Functionality has moved to the review queue.*
 
 ### 4.4 User Directory Management
 - **URL Path**: `/admin/users`
@@ -177,12 +178,30 @@ This document serves as the master UI reference manual containing visual documen
 - **Mobile Viewport**: ![Admin Classes Mobile](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/mobile/mobile_admin_classes.png)
 - **Description**: Classroom creation and management portal. Displays class join codes, student rosters, assigned teachers, and schedule metadata.
 
-### 4.6 System Analytics Dashboard
-- **URL Path**: `/admin/analytics`
+### 4.6 System Analytics Dashboard (DEPRECATED)
+- **URL Path**: `/admin/analytics` (Now redirects to `/admin/dashboard`)
 - **Access Role**: Admin
-- **Desktop Screenshot**: ![Admin Analytics Desktop](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/admin_analytics.png)
-- **Mobile Viewport**: ![Admin Analytics Mobile](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/screenshots/mobile/mobile_admin_analytics.png)
-- **Description**: Visual analytics charts detailing student activity trends, chat message volume, assignment completions, and duck coin distribution.
+- **Description**: *This screen is deprecated. Analytics are now part of the main dashboard.*
+
+### 4.7 Advanced Admin Panel
+- **URL Path**: `/admin/advanced`
+- **Access Role**: Admin
+- **Description**: Advanced system configuration and management tools.
+
+### 4.8 Duck Transactions
+- **URL Path**: `/admin/transactions`
+- **Access Role**: Admin
+- **Description**: Audit log of all Duck Coin transactions across the system.
+
+### 4.9 Student Activity
+- **URL Path**: `/admin/student-activity`
+- **Access Role**: Admin
+- **Description**: Detailed activity logs and metrics for individual students.
+
+### 4.10 Kiosk Upload
+- **URL Path**: `/admin/classes/:classId/kiosk`
+- **Access Role**: Admin / Teacher
+- **Description**: Kiosk mode interface for bulk uploading assignments or scanning submissions for a specific class.
 
 ---
 

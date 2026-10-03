@@ -12,32 +12,32 @@ const AdminChallenges = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [courses, setCourses] = useState([]);
 
-    // Drill-down view state
+
     const [selectedCourseId, setSelectedCourseId] = useState(null);
 
-    // List view state
+
     const [groupedChallenges, setGroupedChallenges] = useState({});
     const [isLoadingList, setIsLoadingList] = useState(true);
 
-    // Bulk Import Modal state
+
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [parsedChallenges, setParsedChallenges] = useState([]);
     const [fileName, setFileName] = useState('');
 
-    // Single Challenge Modal state
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChallenge, setEditingChallenge] = useState(null);
     const [modalForm, setModalForm] = useState({
         name: '', slug: '', course_id: '', domain: 'codecombat.com', difficulty: 'medium', value: 1, sequence: '', description: ''
     });
 
-    // Add Course Modal state
+
     const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
     const [courseForm, setCourseForm] = useState({
         id: '', name: '', domain: 'codecombat.com', description: ''
     });
 
-    // Drag and Drop state
+
     const dragItem = useRef(null);
     const dragOverItem = useRef(null);
 
@@ -294,7 +294,7 @@ const AdminChallenges = () => {
                         No courses found. Try adding one!
                     </div>
                 ) : selectedCourseId === null ? (
-                    // COURSES VIEW
+
                     <div className="courses-grid">
                         {courseIds.map(courseId => {
                             const courseName = getCourseName(courseId);
@@ -336,7 +336,7 @@ const AdminChallenges = () => {
                         })}
                     </div>
                 ) : (
-                    // COURSE DETAILS VIEW
+
                     <div className="course-details-view">
                         <button className="secondary-btn mb-1rem" onClick={() => setSelectedCourseId(null)} style={{ padding: '0.5rem 1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                             <ArrowLeft size={16} /> Back to Courses

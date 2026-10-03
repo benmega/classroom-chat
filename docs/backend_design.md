@@ -12,7 +12,7 @@ The Classroom Chat backend is a robust Python application built using the Flask 
 - **Security**: [Flask-Limiter](https://flask-limiter.readthedocs.io/), [Flask-WTF (CSRF)](https://flask-wtf.readthedocs.io/), [Cryptography](https://cryptography.io/)
 - **Scheduling**: [Flask-APScheduler](https://github.com/viniciuschiele/flask-apscheduler)
 - **AI Integration**: [OpenAI Python Library](https://github.com/openai/openai-python)
-- **Admin Interface**: [Flask-Admin](https://flask-admin.readthedocs.io/)
+- **Admin Interface**: Custom React Admin UI backed by Flask API routes
 - **Environment**: [python-dotenv](https://github.com/theskumar/python-dotenv)
 
 ---

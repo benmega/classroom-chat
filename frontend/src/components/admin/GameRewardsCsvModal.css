@@ -1,0 +1,140 @@
+/* GameRewardsCsvModal.css */
+
+.csv-modal-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+.csv-modal-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.csv-modal-description {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #64748b);
+  flex: 1;
+  min-width: 220px;
+}
+
+.btn-download-sample {
+  padding: 8px 14px;
+  font-size: 0.825rem;
+}
+
+/* Dropzone */
+.csv-dropzone {
+  border: 2px dashed var(--border-subtle, #cbd5e1);
+  border-radius: 12px;
+  padding: 2rem 1.5rem;
+  background: var(--bg-secondary, #f8fafc);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.csv-dropzone:hover,
+.csv-dropzone.is-dragging {
+  border-color: var(--primary-color, #0eb2bb);
+  background: rgba(14, 178, 187, 0.05);
+}
+
+.csv-dropzone.has-file {
+  cursor: default;
+  border-style: solid;
+  border-color: var(--primary-color, #0eb2bb);
+  padding: 1.25rem;
+}
+
+.csv-dropzone-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-icon {
+  color: var(--primary-color, #0eb2bb);
+}
+
+.prompt-main {
+  margin: 0;
+  font-size: 0.925rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.browse-link {
+  color: var(--primary-accessible, #006d74);
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+/* File Selected */
+.csv-file-selected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+}
+
+.file-info-col {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  overflow: hidden;
+}
+
+.file-icon {
+  color: var(--primary-accessible, #006d74);
+  flex-shrink: 0;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow: hidden;
+}
+
+.file-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+}
+
+.file-size {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.btn-remove-file {
+  background: none;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-remove-file:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: var(--error-color, #dc2626);
+}

@@ -36,7 +36,6 @@ def test_evaluate_user_skills_with_projects_and_challenges(client, init_db):
         db.session.add(cl)
     db.session.commit()
 
-    # Evaluate
     skills = evaluate_user_skills(user)
     assert skills is not None
     assert "Python (Lvl 1)" in skills

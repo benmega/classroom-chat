@@ -208,10 +208,7 @@ const AdminLayout = ({ children }) => {
             </div>
 
             {/* Main Content Area */}
-            <main
-                key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname}
-                className="admin-body animate-page-entry"
-            >
+            <main className="admin-body">
                 {children}
             </main>
         </div>

@@ -5,13 +5,11 @@ Flask/Jinja2 → Flask JSON API + React SPA refactor.
 
 ---
 
-## 1. Directory Layout (EC2 Server)
+## 1. Directory Layout (EC2 Server - Backend Only)
 
 ```
 ~/classroom-chat/
-├── venv/                        # Python virtualenv (at project root, not backend/)
-├── frontend/
-│   └── dist/                    # Built React SPA — served by nginx directly
+├── venv/                        # Python virtualenv (at project root)
 ├── backend/
 │   ├── main.py                  # Gunicorn entrypoint
 │   ├── application/             # Flask app factory + routes
@@ -50,29 +48,20 @@ git checkout deploy
 python3 -m venv venv
 venv/bin/pip install -r backend/requirements.txt
 
-# 3. Install Node.js LTS (via NodeSource — do NOT use apt install npm)
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# 4. Create swap file (prevents npm OOM-kill on low-RAM instances)
+# 3. Create swap file (prevents OOM-kill on low-RAM instances)
 sudo fallocate -l 1G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
-# 5. Create backend/.env (use .env.example as a template)
+# 4. Create backend/.env (use .env.example as a template)
 cp backend/.env.example backend/.env
 nano backend/.env  # fill in real values
 
-# 6. Run migrations to initialise the database schema
+# 5. Run migrations to initialise the database schema
 cd backend/instance/migration
 ../../../venv/bin/python3 migration_script.py
-
-# 7. Build the frontend
-cd ~/classroom-chat/frontend
-npm install && npm run build
-chmod o+x ~ && chmod -R o+r dist/ && find dist/ -type d -exec chmod o+x {} \;
 ```
 
 ---
@@ -102,16 +91,9 @@ Key points:
 
 ---
 
-## 5. Nginx Configuration
+## 5. Nginx Configuration (Backend API Proxy)
 
-There are **two** nginx site configs, both stored in `infrastructure/nginx/` and deployed by `deploy.sh`:
-
-| File | Domain | Purpose |
-|---|---|---|
-| `api-blossom.benmega.com.conf` | `api-blossom.benmega.com` | Backend API proxy → Gunicorn |
-| `blossom.benmega.com.conf` | `blossom.benmega.com` | Frontend SPA static files |
-
-### `api-blossom.benmega.com.conf` — Backend API
+Nginx is used exclusively as a reverse proxy for the API, handling SSL termination for `api-blossom.benmega.com` and forwarding traffic to Gunicorn.
 
 File: `/etc/nginx/sites-available/benmega`
 
@@ -159,54 +141,19 @@ server {
 }
 ```
 
-### `blossom.benmega.com.conf` — Frontend SPA
+> **Note on Frontend Routing**: The frontend SPA (`blossom.benmega.com`) is hosted on **AWS S3** and served globally via **AWS CloudFront**. CloudFront handles SSL termination and redirects, and the S3 bucket is configured to serve `index.html` for client-side routing.
 
-File: `/etc/nginx/sites-available/blossom-frontend`
-
-The `try_files $uri $uri/ /index.html` directive is critical for React Router — without it, direct navigation or hard refresh on any route (e.g. `/admin/submissions`) returns 404 instead of serving the SPA.
-
-```nginx
-server {
-    listen 80;
-    server_name blossom.benmega.com;
-    return 301 https://$host$request_uri;
-}
-
-server {
-    listen 443 ssl;
-    server_name blossom.benmega.com;
-
-    ssl_certificate     /etc/letsencrypt/live/blossom.benmega.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/blossom.benmega.com/privkey.pem;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-
-    root /home/ubuntu/classroom-chat/frontend/dist;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    location ~* \.(js|css|woff2?|ttf|otf|eot|svg|png|jpg|jpeg|gif|ico|webp)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-}
-```
-
+---
 
 ## 6. CI/CD Pipeline (GitHub Actions)
 
-- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes
-  `backend/.env` from GitHub Secrets, then runs `deploy.sh`.
+- **`deploy-frontend.yml`**: Triggers on push to `deploy`. Builds the React SPA and uploads the static assets directly to the AWS S3 bucket.
+- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh`.
 - **`lint.yml`**: ESLint (React) + Ruff (Python) on every PR.
 - **`tests.yml`**: Vitest + Pytest on every PR.
 
 Required GitHub Secrets: `EC2_HOST`, `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
-`ADMIN_USERNAME`, `ADMIN_PASSWORD`, `OPENAI_API_KEY`, `LAMBDA_SECRET`.
-See ISS-158 for the full secrets setup checklist.
+`ADMIN_USERNAME`, `ADMIN_PASSWORD`, `OPENAI_API_KEY`, `LAMBDA_SECRET`, as well as AWS credentials for S3 uploads.
 
 ---
 

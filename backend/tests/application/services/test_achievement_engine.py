@@ -356,3 +356,24 @@ def test_longest_session_minutes(init_db, test_user):
     db.session.commit()
 
     assert longest_session_minutes(test_user.id) >= 29.9
+
+
+def test_evaluate_user_five_minute_throttle(init_db, test_user):
+    """Test that evaluate_user enforces a 5-minute (300-second) throttle."""
+    ach = Achievement(name="Throttle Duck", slug="throttle-duck", type="ducks", requirement_value="5", reward=1)
+    db.session.add(ach)
+    test_user.earned_ducks = 10
+    db.session.commit()
+
+    # Case 1: Last evaluation was 4 minutes ago (240s) -> Should be throttled
+    test_user.last_achievement_evaluation = datetime.utcnow() - timedelta(seconds=240)
+    db.session.commit()
+    awards = evaluate_user(test_user)
+    assert awards == []
+
+    # Case 2: Last evaluation was 5.5 minutes ago (330s) -> Should evaluate
+    test_user.last_achievement_evaluation = datetime.utcnow() - timedelta(seconds=330)
+    db.session.commit()
+    awards = evaluate_user(test_user)
+    assert len(awards) == 1
+    assert awards[0].slug == "throttle-duck"

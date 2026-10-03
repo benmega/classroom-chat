@@ -35,10 +35,8 @@ def test_admin_config_routes(client, sample_admin, init_db):
     assert resp.status_code == 200
     assert resp.json["success"] is True
 
-    # Duplicate banned word
     resp = client.post("/api/admin/add-banned-word", data={"word": "badword"})
     assert resp.status_code == 400
 
-    # Empty word
     resp = client.post("/api/admin/add-banned-word", data={})
     assert resp.status_code == 400

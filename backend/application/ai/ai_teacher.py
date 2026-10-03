@@ -1,7 +1,4 @@
 # application/ai/ai_teacher.py
-"""
-AI Teacher Blueprint for handling AI chat interactions using local LLM via Ollama.
-"""
 
 import logging
 from typing import Dict, List
@@ -14,11 +11,8 @@ from application.models.user import User
 from application.utilities.db_helpers import save_message_to_db
 from sqlalchemy.exc import SQLAlchemyError
 
-# Configure logging
 logger = logging.getLogger(__name__)
 
-
-# Constants
 AI_TEACHER_USER_ID = 0
 AI_TEACHER_USERNAME = "AI Teacher"
 AI_TEACHER_IP = "0.0.0.0"
@@ -51,7 +45,7 @@ def get_or_create_ai_teacher() -> User:
                 id=AI_TEACHER_USER_ID,
                 username=AI_TEACHER_USERNAME,
                 ip_address=AI_TEACHER_IP,
-                password_hash="temp",  # AI user doesn't need real auth
+                password_hash="temp",
             )
             db.session.add(user)
             db.session.commit()
@@ -122,11 +116,9 @@ def format_prompt(
         f"system: You are an AI teacher. Keep all responses under {max_words} words.\n"
     ]
 
-    # Add conversation history
     for msg in conversation_history:
         prompt_parts.append(f"{msg['role']}: {msg['content']}\n")
 
-    # Add current user message
     prompt_parts.append(f"user: {user_message}\n")
     prompt_parts.append("assistant:")
 
@@ -215,20 +207,14 @@ def get_local_llm_response(
         AITeacherError: If response generation fails
     """
     try:
-        # Format the prompt
         prompt = format_prompt(user_message, conversation_history, max_words)
-
-        # Call Ollama API
         ai_response = call_ollama_api(prompt, model)
-
-        # Trim to word limit
         ai_response = trim_response_to_word_limit(ai_response, max_words)
 
-        # Save AI response to database
         save_result = save_message_to_db(
             user_id=AI_TEACHER_USER_ID, message=ai_response, is_global=True
         )
-        if isinstance(save_result, str):  # Error occurred
+        if isinstance(save_result, str):
             raise AITeacherError(f"Failed to save AI response: {save_result}")
 
         logger.info(f"Generated AI response ({len(ai_response.split())} words)")
@@ -254,29 +240,23 @@ def get_ai_response(user_message: str, username: str) -> str:
         The AI response or error message
     """
     try:
-        # Check AI settings
         ai_settings = get_ai_settings()
         if not ai_settings.get("chat_bot_enabled", False):
             return "The AI chatbot is currently disabled."
 
-        # Ensure AI teacher user exists
         get_or_create_ai_teacher()
 
         user = User.query.filter_by(username=username).first()
         if not user:
             return "Error: User not found."
 
-        # Save user message
         save_result = save_message_to_db(
             user_id=user.id, message=user_message, is_global=True
         )
-        if isinstance(save_result, str):  # Error occurred
+        if isinstance(save_result, str):
             return f"Error saving message: {save_result}"
 
-        # Build conversation history
         conversation_history = get_recent_messages(user)
-
-        # Generate AI response
         return get_local_llm_response(user_message, conversation_history)
 
     except AITeacherError as e:

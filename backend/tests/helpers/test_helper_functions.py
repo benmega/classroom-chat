@@ -1,6 +1,3 @@
-"""
-Unit tests for helper_functions.py
-"""
 from datetime import datetime
 
 from application.extensions import db

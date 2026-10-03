@@ -37,6 +37,9 @@ header.guest-mode {
 }
 
 @media (max-width: 800px) {
+    :root {
+        --nav-rail-width: 0px;
+    }
     header.mobile-hidden {
         display: none;
     }
@@ -818,7 +821,7 @@ footer {
         flex-direction: column;
         justify-content: space-between;
         align-items: center;
-        width: 72px;
+        width: var(--nav-rail-width, 72px);
         height: 100dvh;
         background: var(--bg-primary);
         border-right: 1px solid var(--border-subtle);

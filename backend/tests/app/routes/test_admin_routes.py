@@ -1,9 +1,3 @@
-"""
-File: test_admin_routes.py
-Type: py
-Summary: Unit tests for admin routes Flask routes.
-"""
-
 import contextlib
 import json
 from unittest.mock import patch
@@ -63,7 +57,6 @@ def test_set_username_route(client, sample_user, sample_admin):
     assert resp.status_code == 200
     assert resp.get_json()["success"] is True
 
-    # Query inside a context
     with client.application.app_context():
         updated = db.session.get(User, sample_user.id)
         assert updated.username == "new_username"
@@ -288,7 +281,6 @@ def test_admin_transactions(client, test_app, sample_admin, sample_user):
     with test_app.app_context():
         from application.models.duck_transaction import DuckTransaction
 
-        # Clear existing transactions if any to start fresh
         DuckTransaction.query.delete()
 
         tx1 = DuckTransaction(
@@ -398,7 +390,6 @@ def test_admin_transactions_route(client, test_app, sample_user, sample_admin):
         data_spent = resp_spent.get_json()["data"]
         assert all(t["amount"] < 0 for t in data_spent["transactions"])
 
-        # Search filter
         resp_search = client.get("/api/admin/transactions?search=Earned")
         assert resp_search.status_code == 200
         data_search = resp_search.get_json()["data"]
@@ -415,7 +406,6 @@ def test_adjust_packets(client, sample_admin, sample_user, test_app):
     )
     assert resp_unauth.status_code == 401
 
-    # Login as admin
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():
@@ -503,11 +493,74 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
         assert db.session.get(ProjectTemplate, new_id) is None
 
 
+def test_upload_template_image_admin_success(client, sample_admin, test_app):
+    """Test image upload for project templates as admin."""
+    from io import BytesIO
+
+    from PIL import Image
+
+    login_as_admin(client, sample_admin)
+
+    img = Image.new("RGB", (10, 10), color="blue")
+    img_bytes = BytesIO()
+    img.save(img_bytes, format="PNG")
+    img_bytes.seek(0)
+
+    data = {"file": (BytesIO(img_bytes.getvalue()), "thumbnail.png")}
+    resp = client.post(
+        "/api/project-templates/upload-image",
+        data=data,
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == 200
+    res_data = resp.get_json()["data"]
+    assert "new_url" in res_data
+    assert "filename" in res_data
+    assert res_data["new_url"].startswith("/user/project_images/")
+
+
+def test_upload_template_image_unauthorized(client, sample_user):
+    """Test non-admin cannot upload template image."""
+    from io import BytesIO
+
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    data = {"file": (BytesIO(b"fake image data"), "thumbnail.png")}
+    resp = client.post(
+        "/api/project-templates/upload-image",
+        data=data,
+        content_type="multipart/form-data",
+    )
+    assert resp.status_code == 403
+
+
+def test_upload_template_image_invalid_file(client, sample_admin):
+    """Test invalid files and missing files for template image upload."""
+    from io import BytesIO
+
+    login_as_admin(client, sample_admin)
+
+    resp_empty = client.post(
+        "/api/project-templates/upload-image",
+        data={},
+        content_type="multipart/form-data",
+    )
+    assert resp_empty.status_code == 400
+
+    data_txt = {"file": (BytesIO(b"hello text"), "test.txt")}
+    resp_txt = client.post(
+        "/api/project-templates/upload-image",
+        data=data_txt,
+        content_type="multipart/form-data",
+    )
+    assert resp_txt.status_code == 400
+
+
 def test_project_review_packets(client, sample_admin, sample_user, test_app):
     """Test project review packet rewards and retraction."""
     from application.models.project import Project
 
-    # Login as admin
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():
@@ -569,7 +622,105 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
         updated_user3 = db.session.get(User, sample_user.id)
         assert updated_project3.teacher_comment is None
         assert updated_project3.packets_awarded == 0.0
+        assert updated_project3.status == "rejected"
         assert updated_user3.packets == initial_packets
+
+
+def test_project_rejection_and_resubmission_lifecycle(client, sample_admin, sample_user, test_app):
+    """Test that rejecting a project removes it from the pending queue until the student resubmits."""
+    from application.models.project import Project
+    from application.models.user import User
+
+    # 1. Student creates project
+    with test_app.app_context():
+        project = Project(
+            name="Lifecycle Project",
+            description="Initial submission",
+            user_id=sample_user.id,
+        )
+        db.session.add(project)
+        db.session.commit()
+        project_id = project.id
+        initial_packets = sample_user.packets
+
+    # 2. Admin verifies project is in pending queue
+    login_as_admin(client, sample_admin)
+    resp = client.get("/api/admin/manage-projects?filter=pending")
+    assert resp.status_code == 200
+    pending_ids = [p["id"] for p in resp.get_json()["data"]["projects"]]
+    assert project_id in pending_ids
+
+    # 3. Admin rejects project with revision note
+    resp_reject = client.post(
+        f"/api/admin/handle-project-review/{project_id}",
+        json={"action": "reject", "teacher_comment": "Please add more details."},
+    )
+    assert resp_reject.status_code == 200
+
+    db.session.expire_all()
+    with test_app.app_context():
+        p_rejected = db.session.get(Project, project_id)
+        assert p_rejected.status == "rejected"
+        assert p_rejected.teacher_comment == "Please add more details."
+
+    # 4. Project must NOT appear in pending review queue
+    resp_pending_after_reject = client.get("/api/admin/manage-projects?filter=pending")
+    pending_ids_after = [p["id"] for p in resp_pending_after_reject.get_json()["data"]["projects"]]
+    assert project_id not in pending_ids_after
+
+    # 5. Project appears in rejected filter
+    resp_rejected_filter = client.get("/api/admin/manage-projects?filter=rejected")
+    rejected_ids = [p["id"] for p in resp_rejected_filter.get_json()["data"]["projects"]]
+    assert project_id in rejected_ids
+
+    # 6. Student edits project (resubmission)
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    resp_edit = client.post(
+        f"/user/project/edit/{project_id}",
+        data={
+            "name": "Lifecycle Project (Updated)",
+            "description": "Added more details as requested.",
+        },
+    )
+    assert resp_edit.status_code == 200
+
+    db.session.expire_all()
+    with test_app.app_context():
+        p_resubmitted = db.session.get(Project, project_id)
+        assert p_resubmitted.status == "pending"
+        assert p_resubmitted.name == "Lifecycle Project (Updated)"
+
+    # 7. Admin sees project back in pending queue
+    login_as_admin(client, sample_admin)
+    resp_pending_after_resubmit = client.get("/api/admin/manage-projects?filter=pending")
+    pending_ids_resubmitted = [p["id"] for p in resp_pending_after_resubmit.get_json()["data"]["projects"]]
+    assert project_id in pending_ids_resubmitted
+
+    # 8. Admin approves project
+    resp_approve = client.post(
+        f"/api/admin/handle-project-review/{project_id}",
+        json={
+            "action": "approve",
+            "teacher_comment": "Excellent improvements!",
+            "packet_reward": 0.006,
+        },
+    )
+    assert resp_approve.status_code == 200
+
+    db.session.expire_all()
+    with test_app.app_context():
+        p_approved = db.session.get(Project, project_id)
+        u_updated = db.session.get(User, sample_user.id)
+        assert p_approved.status == "approved"
+        assert p_approved.packets_awarded == 0.006
+        assert u_updated.packets == initial_packets + 0.006
+
+    # 9. No longer in pending queue
+    resp_final = client.get("/api/admin/manage-projects?filter=pending")
+    final_pending_ids = [p["id"] for p in resp_final.get_json()["data"]["projects"]]
+    assert project_id not in final_pending_ids
 
 
 def test_parent_child_endpoints(client, test_app, sample_admin):

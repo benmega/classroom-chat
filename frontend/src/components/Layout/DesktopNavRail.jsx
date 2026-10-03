@@ -78,7 +78,7 @@ const DesktopNavRail = ({ user, location, handleLogout }) => {
                     </div>
                 )}
 
-                {Math.abs(user?.packets ?? 0) > 0.001 && (
+                {Math.abs(user?.packets ?? 0) > 0.00001 && (
                     <div className={`nav-rail-item-container ${location.pathname === '/shop' ? 'active' : ''}`}>
                         <div className="nav-rail-indicator" />
                         <Link 

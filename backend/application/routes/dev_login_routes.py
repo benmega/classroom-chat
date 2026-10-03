@@ -1,9 +1,4 @@
 """
-File: dev_login_routes.py
-Type: py
-Summary: Local-only development shortcut login route.
-         Blocked in production and from non-localhost addresses.
-         Agents should use /dev-login for authentication during normal tasks.
 
 WARNING: This route must NEVER be enabled in production.
          It bypasses the standard password-based login flow.
@@ -66,6 +61,9 @@ def _perform_login(user_obj: User, role: str):
     session.permanent = True
     User.set_online(user_obj.id)
     session["conversation_id"] = None
+
+    from application.services.achievement_engine import evaluate_user
+    evaluate_user(user_obj)
 
 
 @dev_login.route("/dev-login", methods=["GET"])

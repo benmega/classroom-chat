@@ -22,6 +22,7 @@ export const useProjectManagement = () => {
         video_url: '',
         code_snippet: '',
         teacher_comment: '',
+        status: 'pending',
         student_id: studentIdParam || ''
     });
     
@@ -69,6 +70,7 @@ export const useProjectManagement = () => {
                         video_url: p.video_url || '',
                         code_snippet: p.code_snippet || '',
                         teacher_comment: p.teacher_comment || '',
+                        status: p.status || 'pending',
                         student_id: p.user_id || ''
                     });
                     if (p.image_url) {
@@ -188,13 +190,14 @@ export const useProjectManagement = () => {
 
         try {
             const url = projectId ? `/user/project/edit/${projectId}` : '/user/project/new';
+            const isResubmit = projectData.status === 'rejected';
             const response = await client.post(url, formData);
 
             if (response.data.status === 'success') {
                 if (response.data.data?.video_processing) {
-                    toast.success('Project saved! Your video is being processed in the background.');
+                    toast.success(isResubmit ? 'Project resubmitted! Your video is being processed in the background.' : 'Project saved! Your video is being processed in the background.');
                 } else {
-                    toast.success(projectId ? 'Project updated!' : 'Project created!');
+                    toast.success(isResubmit ? 'Project resubmitted for review!' : (projectId ? 'Project updated!' : 'Project created!'));
                 }
 
                 if (currentUser?.role === 'admin' && projectData.student_id) {

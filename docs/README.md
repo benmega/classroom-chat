@@ -1,8 +1,6 @@
 # Classroom Chat and Duck System
 
-![Demo Screenshot](assets/demo_screenshot.png)
-
-![Linting Status](https://github.com/your-repo/your-project/actions/workflows/lint.yml/badge.svg)
+![Demo Screenshot](screenshots/student_chat.png)
 
 ## Overview
 Classroom Chat is a web-based application designed to enhance student interaction and engagement during class. It features real-time chat functionality, challenge tracking, and a gamified reward system called "Ducks." Students can complete challenges to earn ducks, which are displayed on their profiles.
@@ -16,26 +14,27 @@ Classroom Chat is a web-based application designed to enhance student interactio
 
 ## Quick Start
 
-- Follow the installation guide: [INSTALLATION.md](docs/INSTALLATION.md)
-- After installing dependencies, run the backend server:
+- Follow the installation guide: [INSTALLATION.md](INSTALLATION.md)
+- After installing dependencies, run the backend server from the `backend` directory:
 
   ```bash
-  flask run
+  cd backend
+  python main.py
   ```
 
 - In another terminal, start the frontend dev server:
 
   ```bash
   cd frontend
-  npm run dev -- --host
+  npm run dev
   ```
 
-- Open the app at http://127.0.0.1:8000.
+- Open the app at http://localhost:5173.
 
 ## Key Technologies
 - Flask (Backend)
 - SQLAlchemy (Database)
-- HTML/CSS + JavaScript (Frontend)
+- React 19 + Vite (Frontend)
 
 ## Getting Started
-For detailed setup instructions, refer to [INSTALLATION.md](docs/INSTALLATION.md).
+For detailed setup instructions, refer to [INSTALLATION.md](INSTALLATION.md).

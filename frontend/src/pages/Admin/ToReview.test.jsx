@@ -1,3 +1,4 @@
+import adminCache from '../../utils/adminCache';
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -44,6 +45,7 @@ beforeEach(() => {
 
 describe('ToReview Component', () => {
   beforeEach(() => {
+    adminCache.clear();
     vi.clearAllMocks();
     showConfirm.mockResolvedValue(true);
     window.prompt = vi.fn(() => 'Test Reason');
@@ -143,6 +145,68 @@ describe('ToReview Component', () => {
     if (rejectBtns.length > 0) {
         fireEvent.click(rejectBtns[0]);
     }
+  });
+
+  it('renders resubmitted badge and previous feedback for resubmitted project', async () => {
+    client.get.mockImplementation((url) => {
+      if (url.includes('projects')) {
+        return Promise.resolve({
+          data: {
+            data: {
+              projects: [
+                {
+                  id: 2,
+                  name: 'Resubmitted Game',
+                  submitted_at: '2023-01-01',
+                  user_nickname: 'Alice',
+                  status: 'pending',
+                  teacher_comment: 'Please add a video and comments'
+                }
+              ]
+            }
+          }
+        });
+      }
+      return Promise.resolve({ data: { data: [] } });
+    });
+
+    render(<ToReview />);
+    await waitFor(() => {
+      expect(screen.getByText('Resubmitted')).toBeInTheDocument();
+      expect(screen.getByText(/Please add a video and comments/)).toBeInTheDocument();
+    });
+  });
+
+
+  it('initializes from admin_to_review cache immediately and fetches in background', async () => {
+    const cachedData = {
+      projects: [{ id: 99, name: 'Cached Review Project', submitted_at: '2023-01-01', user_nickname: 'CachedUser' }],
+      certificates: [],
+      pendingUsers: [],
+      trades: [],
+      courseRequests: [],
+      classrooms: [],
+      courses: []
+    };
+    adminCache.set('admin_to_review', cachedData);
+
+    client.get.mockImplementation((url) => {
+      if (url.includes('projects')) {
+        return Promise.resolve({ data: { data: { projects: [{ id: 100, name: 'Fresh Project', submitted_at: '2023-01-01', user_nickname: 'FreshUser' }] } } });
+      }
+      return Promise.resolve({ data: { data: [] } });
+    });
+
+    render(<ToReview />);
+
+    // Immediately shows cached data without loading state
+    expect(screen.getByText('Cached Review Project')).toBeInTheDocument();
+
+    // Background fetch resolves and updates view
+    await waitFor(() => {
+      expect(screen.getByText('Fresh Project')).toBeInTheDocument();
+    });
+    expect(adminCache.get('admin_to_review')).toBeDefined();
   });
 
   it('renders parent messages tab and resolves a message', async () => {

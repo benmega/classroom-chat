@@ -15,7 +15,7 @@ const FUN_MESSAGES = [
 ];
 
 const WAKEUP_API_URL = 'https://e5fsaweh7l.execute-api.ap-southeast-1.amazonaws.com/server-start';
-const TOTAL_TIME = 300; // 5 minutes
+const TOTAL_TIME = 300;
 
 const ServerOffline = () => {
   const { checkAuth } = useAuthStore();
@@ -46,7 +46,6 @@ const ServerOffline = () => {
       
       startTimeRef.current = Date.now();
       
-      // 1. Progress Bar Interval
       progressIntervalRef.current = setInterval(() => {
         const elapsed = (Date.now() - startTimeRef.current) / 1000;
         const remaining = Math.max(0, TOTAL_TIME - Math.floor(elapsed));
@@ -61,18 +60,15 @@ const ServerOffline = () => {
         }
       }, 100);
 
-      // 2. Fun Messages Switcher
       messageIntervalRef.current = setInterval(() => {
         setCurrentMessageIndex((prev) => (prev + 1) % FUN_MESSAGES.length);
       }, 6000);
 
-      // 3. Backend Polling (Check if server is awake early!)
       pollIntervalRef.current = setInterval(async () => {
         try {
-          // Check auth status directly. If it succeeds, the store updates isServerOffline to false.
           await checkAuth();
         } catch {
-          // Keep polling if it fails
+          // ignore error while polling
         }
       }, 8000);
 
@@ -83,7 +79,6 @@ const ServerOffline = () => {
     }
   };
 
-  // Clean up timers on unmount
   useEffect(() => {
     return () => {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);

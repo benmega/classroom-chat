@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, CheckCircle, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, CheckCircle, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import AccessDenied from '../Error/AccessDenied';
 import NotFound from '../Error/NotFound';
 import useAuthStore from '../../store/useAuthStore';
@@ -9,7 +9,6 @@ import ScreenRecorder from '../../components/common/ScreenRecorder';
 import Skeleton from '../../components/common/Skeleton';
 import { formatStaticUrl } from '../../utils/formatters';
 
-// Hooks
 import { useProjectManagement } from '../../hooks/useProjectManagement';
 
 const ManageProject = () => {
@@ -36,7 +35,7 @@ const ManageProject = () => {
     } = useProjectManagement();
 
     const [isRecorderOpen, setIsRecorderOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState('core'); // 'core', 'media', 'code'
+    const [activeTab, setActiveTab] = useState('core');
     const descRef = useRef(null);
 
     const onRecordingComplete = (blob) => {
@@ -109,8 +108,19 @@ const ManageProject = () => {
         <div className="manage-project-page">
             <form onSubmit={handleSubmit} className="manage-project-form">
                 <div className="manage-project-grid">
-                    {/* LEFT COLUMN: Input Form */}
                     <div className="form-column">
+                        {projectData.status === 'rejected' && (
+                            <div className="revision-notice-banner">
+                                <div className="revision-notice-title">
+                                    <AlertCircle size={18} /> Revision Requested
+                                </div>
+                                {projectData.teacher_comment && (
+                                    <p className="revision-notice-feedback">"{projectData.teacher_comment}"</p>
+                                )}
+                                <p className="revision-notice-subtext">Please make your updates below and save to resubmit your project for review.</p>
+                            </div>
+                        )}
+
                         <div className="form-wizard-header">
                             <div role="button" tabIndex={0} className={`step ${activeTab === 'core' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('core')}>1. Core Info</div>
                             <div role="button" tabIndex={0} className={`step ${activeTab === 'media' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('media')}>2. Media</div>
@@ -257,7 +267,6 @@ const ManageProject = () => {
 
                     </div>
 
-                    {/* RIGHT COLUMN: Live Preview */}
                     <div className="preview-column">
                         <div className="preview-sticky-container">
                             <div className={`preview-card-wrapper highlight-${activeTab}`}>
@@ -286,8 +295,8 @@ const ManageProject = () => {
                                         </p>
                                         
                                         {projectData.teacher_comment && (
-                                            <div className="card-teacher-feedback mt-3">
-                                                <CheckCircle size={14} /> Teacher Note: {projectData.teacher_comment}
+                                            <div className={`card-teacher-feedback mt-3 ${projectData.status === 'rejected' ? 'revision-feedback' : ''}`}>
+                                                {projectData.status === 'rejected' ? <AlertCircle size={14} /> : <CheckCircle size={14} />} {projectData.status === 'rejected' ? 'Revision Note' : 'Teacher Note'}: {projectData.teacher_comment}
                                             </div>
                                         )}
                                     </div>
@@ -312,7 +321,6 @@ const ManageProject = () => {
                     </div>
                 </div>
 
-                {/* Floating Bottom Bar */}
                 <div className="floating-action-bar">
                     <div className="footer-left">
                         <button type="button" onClick={() => navigate('/profile')} className="btn-cancel">
@@ -337,7 +345,7 @@ const ManageProject = () => {
                             </button>
                         ) : (
                             <button type="submit" disabled={isSaving} className="btn-save">
-                                <Save size={18} /> {isSaving ? 'Saving...' : (projectId ? 'Update Project' : 'Create Project')}
+                                <Save size={18} /> {isSaving ? 'Saving...' : (projectData.status === 'rejected' ? 'Resubmit for Review' : (projectId ? 'Update Project' : 'Create Project'))}
                             </button>
                         )}
                     </div>

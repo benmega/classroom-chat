@@ -54,7 +54,6 @@ const BitShift = () => {
         });
     };
 
-    // Auto Bitshift perk: auto-fills binary toggles from the decimal input
     const autoCalculate = () => {
         if (digitalDucks < 1) {
             toast.error('Enter a duck amount first.');
@@ -131,7 +130,16 @@ const BitShift = () => {
                 setBitDuckCounts(Array(7).fill(0));
                 setByteDuckCounts(Array(5).fill(0));
                 setHasAttemptedSubmit(false);
-                checkAuth(); // Refresh user balance
+                checkAuth();
+
+                if (response.data.new_awards?.length) {
+                    response.data.new_awards.forEach((award) => {
+                        toast.success(`Achievement Unlocked: ${award.name}!`, {
+                            icon: '🏆',
+                            duration: 6000,
+                        });
+                    });
+                }
             } else {
                 toast.error(response.data.message || 'Trade failed.');
             }
@@ -282,7 +290,6 @@ const BitShift = () => {
                         </div>
                     )}
 
-                    {/* Live math check indicator — only shown on incorrect attempt */}
                     {(hasAttemptedSubmit && digitalDucks > 0) && (
                         <div className={`math-check-banner ${mathCheckMismatch ? 'mismatch' : 'match'}`}>
                             <span className="math-check-equation">

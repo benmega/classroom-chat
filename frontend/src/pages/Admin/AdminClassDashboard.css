@@ -807,7 +807,7 @@
     width: 100%;
 }
 
-.tab-btn {
+.classroom-tabs .tab-btn {
     background: none;
     border: none;
     color: var(--text-secondary);
@@ -819,17 +819,17 @@
     transition: color var(--transition-fast);
 }
 
-.tab-btn:hover,
-.tab-btn:focus-visible {
+.classroom-tabs .tab-btn:hover,
+.classroom-tabs .tab-btn:focus-visible {
     color: var(--text-primary);
 }
 
-.tab-btn.active {
+.classroom-tabs .tab-btn.active {
     color: var(--primary-accessible, var(--primary-color));
     font-weight: 700;
 }
 
-.tab-btn.active::after {
+.classroom-tabs .tab-btn.active::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -841,7 +841,7 @@
 }
 
 /* Accessibility Focus Indicators */
-.tab-btn:focus-visible,
+.classroom-tabs .tab-btn:focus-visible,
 .back-btn-text:focus-visible,
 .btn-action-sm:focus-visible,
 .secondary-btn:focus-visible,
@@ -1058,7 +1058,7 @@
         display: none;
     }
 
-    .tab-btn {
+    .classroom-tabs .tab-btn {
         flex-shrink: 0;
         padding: 0.85rem 1rem;
         font-size: 0.9rem;
@@ -1103,3 +1103,190 @@
         width: calc(50% - 6px);
     }
 }
+
+/* ==========================================================================
+   Sandbox Mode Control Banner (Admin Class Dashboard)
+   ========================================================================== */
+.admin-sandbox-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+    gap: 1rem;
+    transition: all 0.2s ease;
+}
+
+.sandbox-toolbar-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sandbox-active-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.sandbox-active-badge.glowing {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1.5px solid rgba(16, 185, 129, 0.5);
+    color: var(--success-color, #10b981);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
+    animation: sandboxGreenPulse 2s infinite ease-in-out;
+}
+
+@keyframes sandboxGreenPulse {
+    0%, 100% {
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+        border-color: rgba(16, 185, 129, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 22px rgba(16, 185, 129, 0.6);
+        border-color: rgba(16, 185, 129, 0.9);
+    }
+}
+
+.sandbox-glowing-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: dotBlink 1.5s infinite;
+}
+
+@keyframes dotBlink {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.sandbox-inactive-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.8rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.sandbox-status-label {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.sandbox-status-val {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.sandbox-toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn-sandbox-enable {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: #ffffff;
+    border: none;
+    padding: 0.6rem 1.15rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    transition: all 0.2s ease;
+}
+
+.btn-sandbox-enable:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.45);
+    transform: translateY(-1px);
+}
+
+.btn-sandbox-enable:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-sandbox-end {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error-color, #ef4444);
+    border: 1.5px solid rgba(239, 68, 68, 0.4);
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-sandbox-end:hover:not(:disabled) {
+    background: var(--error-color, #ef4444);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.35);
+}
+
+.btn-sandbox-end:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-sandbox-rewards {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-sandbox-rewards:hover {
+    background: var(--bg-tertiary, #e2e8f0);
+    border-color: var(--primary-accessible, #4f46e5);
+    color: var(--primary-accessible, #4f46e5);
+}
+
+@media (max-width: 768px) {
+    .admin-sandbox-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .sandbox-toolbar-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .btn-sandbox-enable,
+    .btn-sandbox-end,
+    .btn-sandbox-rewards {
+        justify-content: center;
+    }
+}
+

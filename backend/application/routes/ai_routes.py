@@ -1,8 +1,4 @@
-"""
-File: ai_routes.py
-Type: py
-Summary: Flask routes for ai routes functionality.
-"""
+
 
 from application.ai.ai_teacher import get_ai_response
 from application.decorators.login_required import require_login

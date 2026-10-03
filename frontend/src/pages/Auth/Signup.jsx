@@ -10,19 +10,18 @@ const Signup = () => {
     const defaultRole = searchParams.get('role') || 'student';
     
     const [selectedRole, setSelectedRole] = useState(defaultRole);
-    const [mode, setMode] = useState('signup'); // 'signup' or 'verify'
+    const [mode, setMode] = useState('signup');
     
-    // Form state
-    const [username, setUsername] = useState(''); // for student
-    const [email, setEmail] = useState(''); // for parent
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [code, setCode] = useState(''); // for verify
+    const [code, setCode] = useState('');
     
     const [isLoading, setIsLoading] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false); // for student success
+    const [isSuccess, setIsSuccess] = useState(false);
 
     useEffect(() => {
         if (searchParams.get('role')) {
@@ -49,7 +48,6 @@ const Signup = () => {
                     setMode('verify');
                 }
             } else {
-                // Student/Educator
                 const payload = { username, password };
                 if (selectedRole === 'educator') payload.role = 'educator';
                 

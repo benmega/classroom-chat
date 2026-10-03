@@ -68,13 +68,13 @@ See [`testing_and_qa.md`](testing_and_qa.md) for full details:
 cd backend && python -m pytest tests -q
 
 # Frontend
-cd frontend && npx vitest run
+cd frontend && npm run test
 npx playwright install   # first time only
-npx playwright test
+npm run test:e2e
 ```
 
 ## API Documentation
 See [`api_reference.md`](api_reference.md) for the endpoint catalog, or run the backend and browse Swagger UI at `/api/docs`.
 
 ## Production Deployment
-Production runs on EC2 behind nginx, serving the built frontend (`frontend/dist`) via gunicorn/Flask and gated by CI (`tests.yml` + `lint.yml`) on pushes to the `deploy` branch — see [`deploy.sh`](../deploy.sh) and `.github/workflows/deploy.yml` for the full pipeline.
+Production deployment is split between AWS S3/CloudFront for the React frontend and an EC2 instance behind nginx for the Flask backend. Both pipelines are gated by CI (`tests.yml` + `lint.yml`) on pushes to the `deploy` branch — see `.github/workflows/deploy-frontend.yml` and `.github/workflows/deploy.yml` (which triggers `deploy.sh`) for the full pipeline.
