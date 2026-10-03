@@ -72,6 +72,16 @@ def test_app():
         db.drop_all()
 
 
+@pytest.fixture(autouse=True)
+def isolated_certificate_templates_dir(test_app, tmp_path, monkeypatch):
+    """Point certificate template reads/writes at a temp dir so tests never
+    touch the real static/certificate_templates folder."""
+    templates_dir = tmp_path / "certificate_templates"
+    templates_dir.mkdir()
+    monkeypatch.setitem(test_app.config, "CERTIFICATE_TEMPLATES_DIR", str(templates_dir))
+    return templates_dir
+
+
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_temp_db(request):
     def remove_db():

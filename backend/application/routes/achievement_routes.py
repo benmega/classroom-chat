@@ -13,6 +13,7 @@ from application.extensions import db
 from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
+from application.utilities.cert_generator import get_certificate_templates_dir
 from application.utilities.helper_functions import allowed_file
 from flask import (
     Blueprint,
@@ -580,9 +581,11 @@ def admin_certificate_templates():
         {"id": "oz-1", "name": "Ozaria 1"},
         {"id": "oz-2", "name": "Ozaria 2"},
         {"id": "oz-3", "name": "Ozaria 3"},
-        {"id": "oz-4", "name": "Ozaria 4"}
+        {"id": "oz-4", "name": "Ozaria 4"},
+        {"id": "3d-1", "name": "TinkerCAD 1"},
+        {"id": "3d-2", "name": "Blender 1"},
     ]
-    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    templates_dir = get_certificate_templates_dir()
     result = []
     for c in courses:
         path = os.path.join(templates_dir, f"{c['id']}.pdf")
@@ -603,7 +606,7 @@ def admin_certificate_templates_view(course_id):
     from application.utilities.cert_generator import generate_certificate
     from application.utilities.db_helpers import get_canonical_course_slug, resolve_course_id
 
-    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    templates_dir = get_certificate_templates_dir()
     canonical_slug = get_canonical_course_slug(course_id)
     mongo_id = resolve_course_id(course_id)
 
@@ -640,7 +643,7 @@ def admin_certificate_templates_upload(course_id):
     if not file.filename.lower().endswith(".pdf"):
         return jsonify({"status": "error", "success": False, "error": "Only PDF files allowed"}), 400
 
-    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    templates_dir = get_certificate_templates_dir()
     os.makedirs(templates_dir, exist_ok=True)
 
     canonical_slug = get_canonical_course_slug(course_id)

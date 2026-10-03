@@ -5,6 +5,43 @@ import fitz
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+
+
+def get_certificate_templates_dir():
+    """Directory holding per-course certificate template PDFs.
+
+    Configurable via ``app.config["CERTIFICATE_TEMPLATES_DIR"]``; defaults to
+    ``static/certificate_templates`` next to the application package.
+    """
+    from flask import current_app, has_app_context
+
+    if has_app_context():
+        configured = current_app.config.get("CERTIFICATE_TEMPLATES_DIR")
+        if configured:
+            return str(configured)
+    return DEFAULT_TEMPLATES_DIR
+
+
+def _build_default_certificate(new_name):
+    doc = fitz.open()
+    page = doc.new_page(width=842, height=595)  # A4 landscape
+
+    # Center the title
+    title = "Certificate of Completion"
+    font_size_title = 50
+    font = fitz.Font(fontname="helv")
+    title_width = font.text_length(title, fontsize=font_size_title)
+    page.insert_text(fitz.Point((842 - title_width) / 2, 100), title, fontname="helv", fontsize=font_size_title)
+
+    font_size = 44
+    text_length = font.text_length(new_name, fontsize=font_size)
+    x = (842 - text_length) / 2
+    y = 235
+    page.insert_text(fitz.Point(x, y), new_name, fontname="helv", fontsize=font_size, color=(0, 0, 0))
+    return doc
+
+
 def generate_certificate(template_path_or_course_id, output_path, new_name):
     """
     Generates a new certificate by redacting the old name from the template
@@ -15,7 +52,7 @@ def generate_certificate(template_path_or_course_id, output_path, new_name):
     if template_path_or_course_id and not os.path.exists(template_path_or_course_id):
         from application.utilities.db_helpers import get_canonical_course_slug, resolve_course_id
 
-        templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+        templates_dir = get_certificate_templates_dir()
         canonical_slug = get_canonical_course_slug(template_path_or_course_id)
         mongo_id = resolve_course_id(template_path_or_course_id)
 
@@ -28,36 +65,34 @@ def generate_certificate(template_path_or_course_id, output_path, new_name):
                 break
 
 
-    if not template_path or not os.path.exists(template_path):
-        logger.warning(f"Template not found or none: {template_path}. Generating default.")
-        doc = fitz.open()
-        page = doc.new_page(width=842, height=595)  # A4 landscape
+    doc = None
+    if template_path and os.path.exists(template_path):
+        try:
+            doc = fitz.open(template_path)
+            page = doc[0]
+            width = page.rect.width
 
-        # Center the title
-        title = "Certificate of Completion"
-        font_size_title = 50
-        font = fitz.Font(fontname="helv")
-        title_width = font.text_length(title, fontsize=font_size_title)
-        page.insert_text(fitz.Point((842 - title_width) / 2, 100), title, fontname="helv", fontsize=font_size_title)
+            # Insert new text, centered.
+            font_size = 44
+            font = fitz.Font(fontname="helv")
+            text_length = font.text_length(new_name, fontsize=font_size)
+            x = (width - text_length) / 2
+            y = 235  # Baseline
 
-        font_size = 44
-        text_length = font.text_length(new_name, fontsize=font_size)
-        x = (842 - text_length) / 2
-        y = 235
-        page.insert_text(fitz.Point(x, y), new_name, fontname="helv", fontsize=font_size, color=(0, 0, 0))
+            page.insert_text(fitz.Point(x, y), new_name, fontname="helv", fontsize=font_size, color=(0, 0, 0))
+        except Exception as e:
+            logger.warning(f"Template {template_path} could not be used as a PDF ({e}). Generating default.")
+            if doc is not None:
+                try:
+                    doc.close()
+                except Exception:
+                    pass
+            doc = None
     else:
-        doc = fitz.open(template_path)
-        page = doc[0]
-        width = page.rect.width
+        logger.warning(f"Template not found or none: {template_path}. Generating default.")
 
-        # Insert new text, centered.
-        font_size = 44
-        font = fitz.Font(fontname="helv")
-        text_length = font.text_length(new_name, fontsize=font_size)
-        x = (width - text_length) / 2
-        y = 235 # Baseline
-
-        page.insert_text(fitz.Point(x, y), new_name, fontname="helv", fontsize=font_size, color=(0, 0, 0))
+    if doc is None:
+        doc = _build_default_certificate(new_name)
 
     if output_path:
         doc.save(output_path)

@@ -50,3 +50,47 @@ def test_generate_certificate_course_id_fallback(mock_fitz_open, mock_resolve, m
 
     mock_doc.write.assert_called_once()
     mock_doc.close.assert_called_once()
+
+
+def test_generate_certificate_corrupt_template_falls_back_to_default(tmp_path, caplog):
+    bad = tmp_path / "bad.pdf"
+    bad.write_bytes(b"fake pdf content")
+
+    with caplog.at_level("WARNING"):
+        pdf_bytes = generate_certificate(str(bad), None, "John Doe")
+
+    assert pdf_bytes.startswith(b"%PDF")
+    assert "could not be used as a PDF" in caplog.text
+
+
+def test_generate_certificate_corrupt_template_saves_default_to_output(tmp_path):
+    import fitz
+
+    bad = tmp_path / "bad.pdf"
+    bad.write_bytes(b"fake pdf content")
+    out = tmp_path / "out.pdf"
+
+    assert generate_certificate(str(bad), str(out), "John Doe") is None
+    with fitz.open(str(out)) as doc:
+        assert "John Doe" in doc[0].get_text()
+
+
+def test_generate_certificate_resolves_course_id_from_configured_dir(test_app, tmp_path):
+    import fitz
+
+    templates_dir = tmp_path / "tpl"
+    templates_dir.mkdir()
+    src = fitz.open()
+    src.new_page(width=500, height=400)
+    src.save(str(templates_dir / "zz-9.pdf"))
+    src.close()
+
+    with test_app.app_context():
+        test_app.config["CERTIFICATE_TEMPLATES_DIR"] = str(templates_dir)
+        try:
+            pdf_bytes = generate_certificate("zz-9", None, "Jane")
+        finally:
+            test_app.config.pop("CERTIFICATE_TEMPLATES_DIR", None)
+
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+        assert doc[0].rect.width == 500
