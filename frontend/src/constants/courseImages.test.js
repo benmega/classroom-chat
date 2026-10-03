@@ -52,6 +52,15 @@ describe('getCourseHeaderImage', () => {
         expect(getCourseHeaderImage('wd-unknown')).toBe(COURSE_IMAGES['wd-1']);
     });
 
+    it('returns an image for 3D Modeling courses by id, name, domain and prefix', () => {
+        expect(getCourseHeaderImage('3d-1')).toBe(COURSE_IMAGES['3d-1']);
+        expect(getCourseHeaderImage('3d-2')).toBeTruthy();
+        expect(getCourseHeaderImage('unknown', 'TinkerCAD 1')).toBe(COURSE_IMAGES['3d-1']);
+        expect(getCourseHeaderImage('unknown', 'Blender 1')).toBe(COURSE_IMAGES['3d-1']);
+        expect(getCourseHeaderImage('unknown', 'unknown', '3d-modeling')).toBe(DOMAIN_DEFAULT_IMAGES['3d-modeling']);
+        expect(getCourseHeaderImage('3d-unknown')).toBe(COURSE_IMAGES['3d-1']);
+    });
+
     it('returns null if no matches', () => {
         expect(getCourseHeaderImage('random', 'random', 'random')).toBeNull();
     });

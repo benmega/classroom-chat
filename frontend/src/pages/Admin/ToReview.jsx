@@ -34,6 +34,10 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
+// Admin API errors use `{status: "error", data: null, error: "..."}`; older routes use `message`.
+const getApiErrorMessage = (err, fallback) =>
+    err?.response?.data?.error || err?.response?.data?.message || fallback;
+
 const ToReview = () => {
     const cachedReview = adminCache.get('admin_to_review');
 
@@ -174,7 +178,7 @@ const ToReview = () => {
                 setProjectRewards(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to review project.');
+            toast.error(getApiErrorMessage(err, 'Failed to review project.'));
         } finally {
             setIsProcessing(null);
         }
@@ -355,7 +359,12 @@ const ToReview = () => {
                 adminCache.invalidate('admin_to_review');
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to resolve parent message.');
+            if (error.response?.status === 404) {
+                // Message no longer exists (already resolved or deleted) - drop the stale card.
+                setParentMessages(prev => prev.filter(m => m.id !== msgId));
+                adminCache.invalidate('admin_to_review');
+            }
+            toast.error(getApiErrorMessage(error, 'Failed to resolve parent message.'));
         } finally {
             setIsProcessing(null);
         }

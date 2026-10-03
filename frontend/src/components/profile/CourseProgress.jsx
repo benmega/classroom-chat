@@ -6,9 +6,9 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
     const navigate = useNavigate();
     const activeCourses = [];
     if (target.course_progress) {
-        const addActive = (breakdown) => {
+        const addActive = (breakdown, track) => {
             if (!breakdown) return;
-            const started = breakdown.filter(c => c.levels_completed > 0);
+            const started = breakdown.filter(c => c.levels_completed > 0).map(c => ({ ...c, track }));
             const inProgress = started.filter(c => c.levels_total && c.levels_completed < c.levels_total);
             inProgress.forEach(c => activeCourses.push(c));
 
@@ -17,15 +17,17 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
             completed.forEach(c => activeCourses.push(c));
         };
 
-        addActive(target.course_progress.codecombat?.breakdown);
-        addActive(target.course_progress.ozaria?.breakdown);
+        addActive(target.course_progress.codecombat?.breakdown, 'codecombat');
+        addActive(target.course_progress.ozaria?.breakdown, 'ozaria');
+        addActive(target.course_progress['3d-modeling']?.breakdown, '3d');
     }
 
     // De-duplicate if needed and get top 3
     const displayCourses = activeCourses.slice(0, 3);
     const ccLevels = target.cc_levels !== undefined ? target.cc_levels : (target.course_progress?.codecombat?.levels_completed || 0);
     const ozLevels = target.oz_levels !== undefined ? target.oz_levels : (target.course_progress?.ozaria?.levels_completed || 0);
-    const totalLevels = ccLevels + ozLevels;
+    const tdLevels = target.td_levels !== undefined ? target.td_levels : (target.course_progress?.['3d-modeling']?.levels_completed || 0);
+    const totalLevels = ccLevels + ozLevels + tdLevels;
 
     if (totalLevels === 0) return null;
 
@@ -60,7 +62,8 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                 <div className="progress-list">
                     {displayCourses.length > 0 ? displayCourses.map((c, idx) => {
                         const percent = c.levels_total ? Math.round((c.levels_completed / c.levels_total) * 100) : 100;
-                        const isOzaria = c.course_name.toLowerCase().includes('ozaria') || c.course_id?.toLowerCase().includes('ozaria');
+                        const isOzaria = c.track === 'ozaria' || c.course_name.toLowerCase().includes('ozaria') || c.course_id?.toLowerCase().includes('ozaria');
+                        const fillClass = c.track === '3d' ? 'td' : (isOzaria ? 'ozaria' : '');
                         return (
                             <div role="button" tabIndex={0}
                                 key={idx}
@@ -75,7 +78,7 @@ const CourseProgress = ({ target, isParentView = false, studentId = null }) => {
                                     <span>{percent}%</span>
                                 </div>
                                 <div className="progress-track">
-                                    <div className={`progress-fill ${isOzaria ? 'ozaria' : ''}`} style={{ width: `${percent}%` }}></div>
+                                    <div className={`progress-fill ${fillClass}`} style={{ width: `${percent}%` }}></div>
                                 </div>
                                 <small>{c.levels_completed} / {c.levels_total || c.levels_completed} Levels</small>
                             </div>
