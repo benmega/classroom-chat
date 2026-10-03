@@ -26,7 +26,7 @@ Split across `backend/application/routes/admin/*.py` by concern:
 - **`challenge_mgmt.py`**: `POST /challenges/bulk_add`.
 - **`config_routes.py`**: `POST /toggle-message-sending`, `/update_duck_multiplier`, `/add-banned-word`.
 - **`crud_routes.py`**: generic resource CRUD (`/schema/<resource>`, `GET/POST/PUT/DELETE /<resource>[/<id>]`) — backs the `react-admin` panel at `/admin/advanced-crud`.
-- **`advanced_ops.py`**: `POST /advanced/purge-history`, `GET /advanced/stats-extended`.
+- **`advanced_ops.py`**: `POST /advanced/purge-history`.
 
 All admin routes require `admin_only` (a session user whose `role` is `admin`).
 
