@@ -46,7 +46,6 @@ describe('AdvancedPanel', () => {
     render(<AdvancedPanel />);
 
     expect(screen.getByText('Headless Database CRUD')).toBeInTheDocument();
-    expect(screen.getByText('Server Performance Stats')).toBeInTheDocument();
     expect(screen.getByText('System Logs')).toBeInTheDocument();
     expect(screen.getByText('Purge History')).toBeInTheDocument();
     // Swagger/OpenAPI was removed (#85): there is no API Documentation entry.
@@ -93,42 +92,6 @@ describe('AdvancedPanel', () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to fetch system logs.'));
   });
 
-  it('fetches and shows the extended server statistics', async () => {
-    client.get.mockResolvedValue({
-      data: {
-        status: 'success',
-        data: {
-          memory_usage_mb: 128,
-          cpu_percent: 7,
-          uptime_seconds: 7380,
-          table_counts: { users: 3, messages: 12 },
-        },
-      },
-    });
-
-    render(<AdvancedPanel />);
-    fireEvent.click(screen.getByText('Server Performance Stats'));
-
-    await waitFor(() => expect(screen.getByText('Server Statistics')).toBeInTheDocument());
-    expect(client.get).toHaveBeenCalledWith('/api/admin/advanced/stats-extended');
-    expect(screen.getByText('128 MB')).toBeInTheDocument();
-    expect(screen.getByText('2h 3m')).toBeInTheDocument();
-    expect(screen.getByText('users')).toBeInTheDocument();
-    expect(screen.getByText('12')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText('Close'));
-    expect(screen.queryByText('Server Statistics')).not.toBeInTheDocument();
-  });
-
-  it('toasts an error when the statistics cannot be fetched', async () => {
-    client.get.mockRejectedValue(new Error('boom'));
-
-    render(<AdvancedPanel />);
-    fireEvent.click(screen.getByText('Server Performance Stats'));
-
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to fetch server statistics.'));
-  });
-
   it('purges history after confirmation and closes the modal', async () => {
     client.post.mockResolvedValue({ data: { status: 'success' } });
 
@@ -172,15 +135,6 @@ describe('AdvancedPanel', () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Admin access required'));
   });
 
-  it('shows the reason the server gives when the statistics cannot be fetched', async () => {
-    client.get.mockRejectedValue({ response: { status: 500, data: { status: 'error', data: null, error: 'Statistics unavailable' } } });
-
-    render(<AdvancedPanel />);
-    fireEvent.click(screen.getByText('Server Performance Stats'));
-
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Statistics unavailable'));
-  });
-
   it('shows the reason the server gives when the purge fails and keeps the modal open', async () => {
     client.post.mockRejectedValue({ response: { status: 500, data: { error: 'Failed to purge history: database is locked' } } });
 
@@ -193,13 +147,6 @@ describe('AdvancedPanel', () => {
   });
 
   describe('keyboard and dialog semantics', () => {
-    const statsResponse = {
-      data: {
-        status: 'success',
-        data: { memory_usage_mb: 128, cpu_percent: 7, uptime_seconds: 60, table_counts: { users: 3 } },
-      },
-    };
-
     it('shows the logs in a modal dialog named by its title', async () => {
       client.get.mockResolvedValue({ data: { status: 'success', data: { logs: 'line one' } } });
 
@@ -230,7 +177,6 @@ describe('AdvancedPanel', () => {
     // mock drops the focus itself (the button is not disabled yet at that point, which happy-dom needs to blur it).
     it.each([
       ['System Logs', 'System Logs', { data: { status: 'success', data: { logs: 'line one' } } }],
-      ['Server Performance Stats', 'Server Statistics', statsResponse],
     ])('returns focus to the %s button on close although the browser moved it off while the data loaded', async (name, dialogName, response) => {
       const user = userEvent.setup();
       client.get.mockImplementation(() => {
@@ -277,23 +223,6 @@ describe('AdvancedPanel', () => {
       await screen.findByRole('dialog', { name: 'System Logs' });
 
       fireEvent.click(screen.getByRole('button', { name: 'Close modal' }));
-
-      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    });
-
-    it('shows the statistics in a labelled dialog, refreshes them and closes with Escape', async () => {
-      const user = userEvent.setup();
-      client.get.mockResolvedValue(statsResponse);
-
-      render(<AdvancedPanel />);
-      await user.click(screen.getByRole('button', { name: /Server Performance Stats/ }));
-      await screen.findByRole('dialog', { name: 'Server Statistics' });
-
-      screen.getByRole('button', { name: 'Refresh' }).focus();
-      await user.keyboard('{Enter}');
-      await waitFor(() => expect(client.get).toHaveBeenCalledTimes(2));
-
-      await user.keyboard('{Escape}');
 
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });

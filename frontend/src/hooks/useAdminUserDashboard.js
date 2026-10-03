@@ -81,12 +81,13 @@ export const useAdminUserDashboard = (userId) => {
     };
 
     const handlePassChapterConfirm = async () => {
-        if (!await showConfirm("Are you sure you want to pass this chapter? They will receive all achievements, certificates, and ducks.", { title: 'Pass Chapter', confirmText: 'Pass Chapter', destructive: false })) {
+        const choice = await showConfirm("Pass this chapter? The student gets full credit for its levels, all achievements and certificates. Award the ducks for those levels?", { title: 'Pass Chapter', confirmText: 'Pass & award ducks', altText: 'Pass, no ducks', destructive: false });
+        if (!choice) {
             return;
         }
         setPassChapterLoading(true);
         try {
-            const res = await client.post(`/api/admin/user/${userId}/pass_chapter`, { course_id: selectedChapterId });
+            const res = await client.post(`/api/admin/user/${userId}/pass_chapter`, { course_id: selectedChapterId, award_ducks: choice === true });
             if (res.data.success) {
                 
                 setPassPreview(null);

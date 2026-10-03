@@ -4,7 +4,6 @@ import {
     Layers,
     ShieldAlert,
     Terminal,
-    Activity,
     Trash2
 } from 'lucide-react';
 import client from '../../api/client';
@@ -19,24 +18,16 @@ const AdvancedPanel = () => {
     const navigate = useNavigate();
     const [logs, setLogs] = useState('');
     const [showLogModal, setShowLogModal] = useState(false);
-    const [showStatsModal, setShowStatsModal] = useState(false);
     const [showPurgeModal, setShowPurgeModal] = useState(false);
     const [isFetchingLogs, setIsFetchingLogs] = useState(false);
-    const [isFetchingStats, setIsFetchingStats] = useState(false);
     const [isPurging, setIsPurging] = useState(false);
-    const [extendedStats, setExtendedStats] = useState(null);
     const logsButtonRef = useRef(null);
-    const statsButtonRef = useRef(null);
 
     // These two buttons are disabled while their data loads, so the browser has already moved focus off them when
     // the dialog opens and the Modal has no opener to return to. Hand focus back to the button when it closes.
     const closeLogs = () => {
         setShowLogModal(false);
         logsButtonRef.current.focus();
-    };
-    const closeStats = () => {
-        setShowStatsModal(false);
-        statsButtonRef.current.focus();
     };
 
     const fetchLogs = async () => {
@@ -52,22 +43,6 @@ const AdvancedPanel = () => {
             console.error(err);
         } finally {
             setIsFetchingLogs(false);
-        }
-    };
-
-    const fetchExtendedStats = async () => {
-        setIsFetchingStats(true);
-        try {
-            const response = await client.get('/api/admin/advanced/stats-extended');
-            if (response.data.status === 'success') {
-                setExtendedStats(response.data.data);
-                setShowStatsModal(true);
-            }
-        } catch (err) {
-            toast.error(getErrorMessage(err, 'Failed to fetch server statistics.'));
-            console.error(err);
-        } finally {
-            setIsFetchingStats(false);
         }
     };
 
@@ -94,15 +69,6 @@ const AdvancedPanel = () => {
             <div className="advanced-grid">
                 <button className="btn-premium action-button" onClick={() => navigate('/admin/advanced-crud')}>
                     <Layers size={18} /> Headless Database CRUD
-                </button>
-
-                <button
-                    ref={statsButtonRef}
-                    className="btn-utility action-button"
-                    onClick={fetchExtendedStats}
-                    disabled={isFetchingStats}
-                >
-                    <Activity size={18} /> {isFetchingStats ? 'Loading...' : 'Server Performance Stats'}
                 </button>
 
                 <button
@@ -137,47 +103,6 @@ const AdvancedPanel = () => {
                     <button type="button" className="btn-premium" onClick={fetchLogs}>Refresh</button>
                 </div>
             </Modal>
-
-            {extendedStats && (
-                <Modal
-                    isOpen={showStatsModal}
-                    onClose={closeStats}
-                    title={<span className="advanced-modal-title"><Activity size={20} aria-hidden="true" />Server Statistics</span>}
-                    maxWidth="1000px"
-                    bodyClassName="advanced-modal-body"
-                >
-                    <div className="advanced-modal-console">
-                        <div className="stats-grid">
-                            <div className="stat-box">
-                                <span className="label">Memory Usage</span>
-                                <span className="value">{extendedStats.memory_usage_mb} MB</span>
-                            </div>
-                            <div className="stat-box">
-                                <span className="label">CPU Usage</span>
-                                <span className="value">{extendedStats.cpu_percent}%</span>
-                            </div>
-                            <div className="stat-box">
-                                <span className="label">Uptime</span>
-                                <span className="value">{Math.floor(extendedStats.uptime_seconds / 3600)}h {Math.floor((extendedStats.uptime_seconds % 3600) / 60)}m</span>
-                            </div>
-                        </div>
-
-                        <h4>Database Table Counts</h4>
-                        <div className="table-counts">
-                            {Object.entries(extendedStats.table_counts).map(([name, count]) => (
-                                <div key={name} className="table-row">
-                                    <span>{name}</span>
-                                    <strong>{count}</strong>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="advanced-modal-footer">
-                        <button type="button" className="btn-secondary" onClick={closeStats}>Close</button>
-                        <button type="button" className="btn-premium" onClick={fetchExtendedStats}>Refresh</button>
-                    </div>
-                </Modal>
-            )}
 
             <Modal
                 isOpen={showPurgeModal}
