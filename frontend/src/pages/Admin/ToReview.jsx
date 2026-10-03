@@ -34,6 +34,10 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
+// Admin API errors use `{status: "error", data: null, error: "..."}`; older routes use `message`.
+const getApiErrorMessage = (err, fallback) =>
+    err?.response?.data?.error || err?.response?.data?.message || fallback;
+
 const ToReview = () => {
     const cachedReview = adminCache.get('admin_to_review');
 
@@ -42,6 +46,7 @@ const ToReview = () => {
     const [pendingUsers, setPendingUsers] = useState(() => cachedReview?.pendingUsers || []);
     const [trades, setTrades] = useState(() => cachedReview?.trades || []);
     const [courseRequests, setCourseRequests] = useState(() => cachedReview?.courseRequests || []);
+    const [parentMessages, setParentMessages] = useState(() => cachedReview?.parentMessages || []);
 
     const [classrooms, setClassrooms] = useState(() => cachedReview?.classrooms || []);
     const [courses, setCourses] = useState(() => cachedReview?.courses || []);
@@ -75,7 +80,8 @@ const ToReview = () => {
                 tradesRes,
                 courseRes,
                 classroomsRes,
-                coursesRes
+                coursesRes,
+                parentMessagesRes
             ] = await Promise.all([
                 client.get('/api/achievements/admin/certificates').catch(() => ({ data: { certificates: [] } })),
                 client.get('/api/admin/manage-projects?filter=pending').catch(() => ({ data: { data: { projects: [] } } })),
@@ -83,7 +89,8 @@ const ToReview = () => {
                 client.get('/api/admin/pending_trades').catch(() => ({ data: { data: { trades: [] } } })),
                 client.get('/api/course-requests/pending').catch(() => ({ data: { requests: [] } })),
                 client.get('/api/admin/crud/classroom').catch(() => ({ data: { data: [] } })),
-                client.get('/api/admin/crud/course').catch(() => ({ data: { data: [] } }))
+                client.get('/api/admin/crud/course').catch(() => ({ data: { data: [] } })),
+                client.get('/api/admin/parent-messages?status=pending').catch(() => ({ data: { messages: [] } }))
             ]);
 
             const newCerts = certsRes.data.certificates || certsRes.data.data?.certificates || [];
@@ -91,6 +98,7 @@ const ToReview = () => {
             const newUsers = usersRes.data.data?.users || [];
             const newTrades = tradesRes.data.data?.trades || [];
             const newRequests = courseRes.data.requests || courseRes.data.data?.requests || [];
+            const newParentMessages = parentMessagesRes.data?.data?.messages || parentMessagesRes.data?.messages || [];
             const clList = classroomsRes.data.data || [];
             const coList = coursesRes.data.data || [];
 
@@ -99,6 +107,7 @@ const ToReview = () => {
             setPendingUsers(newUsers);
             setTrades(newTrades);
             setCourseRequests(newRequests);
+            setParentMessages(newParentMessages);
             setClassrooms(clList);
             setCourses(coList);
 
@@ -108,6 +117,7 @@ const ToReview = () => {
                 pendingUsers: newUsers,
                 trades: newTrades,
                 courseRequests: newRequests,
+                parentMessages: newParentMessages,
                 classrooms: clList,
                 courses: coList
             });
@@ -162,13 +172,16 @@ const ToReview = () => {
             });
 
             if (response.data.status === 'success') {
+                if (action === 'approve' && response.data.challenge_completed === true) {
+                    toast.success('Project approved — 3D challenge completed!');
+                }
                 adminCache.invalidate('admin_to_review');
                 setProjects(prev => prev.filter(p => p.id !== projectId));
                 setProjectComments(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
                 setProjectRewards(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
             }
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Failed to review project.');
+            toast.error(getApiErrorMessage(err, 'Failed to review project.'));
         } finally {
             setIsProcessing(null);
         }
@@ -339,6 +352,27 @@ const ToReview = () => {
         }
     };
 
+    const handleResolveParentMessage = async (msgId) => {
+        setIsProcessing(`message-${msgId}`);
+        try {
+            const response = await client.post(`/api/admin/parent-messages/${msgId}/resolve`);
+            if (response.data?.status === 'success' || response.data?.message) {
+                toast.success('Parent message marked as resolved.');
+                setParentMessages(prev => prev.filter(m => m.id !== msgId));
+                adminCache.invalidate('admin_to_review');
+            }
+        } catch (error) {
+            if (error.response?.status === 404) {
+                // Message no longer exists (already resolved or deleted) - drop the stale card.
+                setParentMessages(prev => prev.filter(m => m.id !== msgId));
+                adminCache.invalidate('admin_to_review');
+            }
+            toast.error(getApiErrorMessage(error, 'Failed to resolve parent message.'));
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
     const formatBits = (bits) => {
         if (!bits || !Array.isArray(bits)) return '0000 0000';
         const paddedBits = [...bits];
@@ -359,7 +393,8 @@ const ToReview = () => {
 
 
     const tabs = [
-        { id: 'all', label: 'All Items', icon: Inbox, count: projects.length + certificates.length + pendingUsers.length + trades.length + courseRequests.length },
+        { id: 'all', label: 'All Items', icon: Inbox, count: projects.length + certificates.length + pendingUsers.length + trades.length + courseRequests.length + parentMessages.length },
+        { id: 'messages', label: 'Parent Messages', icon: MessageSquare, count: parentMessages.length },
         { id: 'projects', label: 'Projects', icon: FolderKanban, count: projects.length },
         { id: 'certificates', label: 'Certificates', icon: Award, count: certificates.length },
         { id: 'users', label: 'Account Signups', icon: Users, count: pendingUsers.length },
@@ -375,12 +410,14 @@ const ToReview = () => {
         pendingUsers.forEach(u => unified.push({ ...u, type: 'user', key: `user-${u.id}`, timestamp: new Date().toISOString() })); // default fallback
         trades.forEach(t => unified.push({ ...t, type: 'trade', key: `trade-${t.id}`, timestamp: t.timestamp || new Date().toISOString() }));
         courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
+        parentMessages.forEach(m => unified.push({ ...m, type: 'parent_message', key: `parent-msg-${m.id}`, timestamp: m.created_at || new Date().toISOString() }));
 
         return unified.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     };
 
     const getDisplayItems = () => {
         if (activeTab === 'all') return getUnifiedList();
+        if (activeTab === 'messages') return parentMessages.map(m => ({ ...m, type: 'parent_message', key: `parent-msg-${m.id}` }));
         if (activeTab === 'projects') return projects.map(p => ({ ...p, type: 'project', key: `project-${p.id}` }));
         if (activeTab === 'certificates') return certificates.map(c => ({ ...c, type: 'certificate', key: `cert-${c.id}` }));
         if (activeTab === 'users') return pendingUsers.map(u => ({ ...u, type: 'user', key: `user-${u.id}` }));
@@ -908,8 +945,69 @@ const ToReview = () => {
         );
     };
 
+    const renderParentMessageCard = (m) => {
+        return (
+            <div className="review-card parent-message-review-card" key={m.key} data-testid={`parent-message-${m.id}`}>
+                <div className="review-card-header">
+                    <div className="card-badge badge-parent-message">
+                        <MessageSquare size={14} /> Parent Message
+                    </div>
+                    <span className="card-time">
+                        <Clock size={12} /> {m.created_at ? new Date(m.created_at).toLocaleString() : 'Recent'}
+                    </span>
+                </div>
+
+                <div className="card-main-content">
+                    <div className="parent-message-sender-row">
+                        <div className="student-profile">
+                            <div className="avatar-placeholder parent-avatar">
+                                <User size={18} />
+                            </div>
+                            <div>
+                                <h4>{m.parent_name || 'Parent'}</h4>
+                                <span className="student-handle">
+                                    {m.parent_username ? `@${m.parent_username}` : ''}
+                                    {m.parent_email ? ` • ${m.parent_email}` : ''}
+                                </span>
+                            </div>
+                        </div>
+
+                        {m.student_names && m.student_names.length > 0 && (
+                            <div className="parent-student-tags">
+                                {m.student_names.map((name, idx) => (
+                                    <span key={idx} className="student-tag-badge" title={`Child: ${name}`}>
+                                        Child: <strong>{name}</strong>
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="parent-message-body-container">
+                        {m.subject && (
+                            <h3 className="parent-message-subject">{m.subject}</h3>
+                        )}
+                        <p className="parent-message-text">{m.body}</p>
+                    </div>
+
+                    <div className="card-actions" style={{ justifyContent: 'flex-end', marginTop: '1rem' }}>
+                        <button 
+                            className="btn-approve"
+                            onClick={() => handleResolveParentMessage(m.id)}
+                            disabled={isProcessing === `message-${m.id}`}
+                        >
+                            <CheckCircle size={16} /> {isProcessing === `message-${m.id}` ? 'Resolving...' : 'Mark as Resolved'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const renderCard = (item) => {
         switch (item.type) {
+            case 'message':
+            case 'parent_message': return renderParentMessageCard(item);
             case 'project': return renderProjectCard(item);
             case 'certificate': return renderCertificateCard(item);
             case 'user': return renderUserCard(item);

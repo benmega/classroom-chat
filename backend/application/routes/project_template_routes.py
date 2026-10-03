@@ -50,7 +50,8 @@ def create_template():
         image_url=data.get("image_url"),
         difficulty=data.get("difficulty", "Intermediate"),
         concepts=data.get("concepts", []),
-        goals=data.get("goals", [])
+        goals=data.get("goals", []),
+        challenge_slug=(data.get("challenge_slug") or None),
     )
     db.session.add(template)
     db.session.commit()
@@ -100,6 +101,8 @@ def update_template(template_id):
         template.concepts = data.get("concepts")
     if "goals" in data:
         template.goals = data.get("goals")
+    if "challenge_slug" in data:
+        template.challenge_slug = data.get("challenge_slug") or None
 
     db.session.commit()
 

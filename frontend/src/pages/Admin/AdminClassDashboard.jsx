@@ -5,12 +5,13 @@ import toast from 'react-hot-toast';
 import { 
     ChevronLeft, Users, Trash2, 
     Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X, UserPlus,
-    Rocket, Sparkles
+    Rocket, Sparkles, Box
 } from 'lucide-react';
 import { showConfirm } from '../../utils/confirm';
 
 const getCourseIcon = (courseName, courseId) => {
     const text = `${courseName || ''} ${courseId || ''}`.toLowerCase();
+    if (/(^|[^a-z0-9])3d|tinkercad|blender|3d-modeling/.test(text)) return <Box size={24} />;
     if (text.includes('gd') || text.includes('game')) return <Gamepad2 size={24} />;
     if (text.includes('wd') || text.includes('web')) return <Globe size={24} />;
     if (text.includes('cs') || text.includes('computer')) return <Code size={24} />;

@@ -99,4 +99,50 @@ describe('CourseProgress', () => {
 
         expect(screen.getByText('No courses started yet.')).toBeInTheDocument();
     });
+
+    it('shows progress for a 3D-only student with a 3D bar style', () => {
+        const target = {
+            slug: 'student3d',
+            cc_levels: 0,
+            oz_levels: 0,
+            td_levels: 4,
+            course_progress: {
+                codecombat: { breakdown: [] },
+                ozaria: { breakdown: [] },
+                '3d-modeling': {
+                    levels_completed: 4,
+                    breakdown: [
+                        { course_name: 'TinkerCAD 1', course_id: '3d-1', levels_completed: 4, levels_total: 8 }
+                    ]
+                }
+            }
+        };
+
+        const { container } = render(<CourseProgress target={target} />, { wrapper: MemoryRouter });
+
+        expect(container.firstChild).not.toBeNull();
+        expect(screen.getByText('TinkerCAD 1')).toBeInTheDocument();
+        expect(screen.getByText('50%')).toBeInTheDocument();
+        expect(screen.getByText('4')).toBeInTheDocument(); // total levels
+        const fill = container.querySelector('.progress-fill');
+        expect(fill).toHaveClass('td');
+        expect(fill).not.toHaveClass('ozaria');
+    });
+
+    it('derives 3D levels from course_progress when td_levels is absent', () => {
+        const target = {
+            slug: 'student3d',
+            course_progress: {
+                '3d-modeling': {
+                    levels_completed: 2,
+                    breakdown: [
+                        { course_name: 'Blender 1', course_id: '3d-2', levels_completed: 2, levels_total: 4 }
+                    ]
+                }
+            }
+        };
+
+        render(<CourseProgress target={target} />, { wrapper: MemoryRouter });
+        expect(screen.getByText('Blender 1')).toBeInTheDocument();
+    });
 });

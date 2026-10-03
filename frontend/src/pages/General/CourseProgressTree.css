@@ -1,3 +1,30 @@
+/* 3D Modeling track palette (orange). Accent is for borders/fills/lines (>= 3:1), text for
+   copy on the 12% tint (>= 4.5:1). Lighter variants for a dark theme, if one is ever enabled. */
+:root {
+    --modeling3d-accent: #C2410C;
+    --modeling3d-text: #9A3412;
+    --modeling3d-rgb: 194, 65, 12;
+}
+
+:root[data-theme='dark'] {
+    --modeling3d-accent: #FB923C;
+    --modeling3d-text: #FDBA74;
+    --modeling3d-rgb: 251, 146, 60;
+}
+
+/* Visually hidden but available to screen readers */
+.cpt-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .course-progress-page {
     max-width: 100%;
     margin: 0;
@@ -96,6 +123,9 @@
 .skill-card.ozaria {
     border-color: rgba(144, 46, 219, 0.3); /* Ozaria Purple */
 }
+.skill-card.modeling3d {
+    border-color: rgba(var(--modeling3d-rgb), 0.35); /* 3D Modeling Orange */
+}
 
 /* Active nodes */
 .skill-node-cell.active .skill-card.codecombat {
@@ -105,6 +135,11 @@
 
 .skill-node-cell.active .skill-card.ozaria {
     border-color: #902edb;
+    box-shadow: var(--shadow-md);
+}
+
+.skill-node-cell.active .skill-card.modeling3d {
+    border-color: var(--modeling3d-accent);
     box-shadow: var(--shadow-md);
 }
 
@@ -150,6 +185,33 @@
     transition: all 0.2s ease;
 }
 
+.project-node-btn.modeling3d {
+    border-color: var(--modeling3d-accent);
+    color: var(--modeling3d-text);
+}
+
+.project-node-btn.modeling3d:hover {
+    background: var(--modeling3d-accent);
+    color: var(--text-inverse, white);
+}
+
+/* Completed project: solid fill so it reads as "done" at a glance (icon becomes a check) */
+.project-node-btn.completed {
+    background: var(--success-dark, #059669);
+    border-color: var(--success-dark, #059669);
+    color: #ffffff;
+}
+
+.project-node-btn.completed:hover {
+    background: var(--success-dark, #059669);
+    color: #ffffff;
+}
+
+.project-node-btn:focus-visible {
+    outline: 3px solid var(--primary-accessible, #006D74);
+    outline-offset: 2px;
+}
+
 .project-node-btn:hover {
     transform: scale(1.1);
     background: var(--primary-color);
@@ -165,6 +227,13 @@
     object-fit: contain;
 }
 
+/* SVG tool logos (Tinkercad / Blender) have no built-in padding; keep them optically
+   the same size as the PNG logos next to them. */
+.domain-logo.domain-logo-svg {
+    padding: 2px;
+    background: transparent;
+}
+
 /* User wants CodeCombat and Ozaria colors */
 /* Re-add if you want specific borders or subtle backgrounds behind logos */
 
@@ -172,6 +241,23 @@
     margin: 0;
     font-size: 1.1rem;
     color: var(--text-primary);
+}
+
+/* Mobile-only track label (track headers are hidden below 1024px) */
+.node-track-label {
+    margin: 0 0 0.25rem 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.node-coming-soon {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--text-muted);
 }
 
 .domain-label {
@@ -219,6 +305,10 @@
     background: rgba(144, 46, 219, 0.12);
 }
 
+.skill-card-bg-fill.modeling3d {
+    background: rgba(var(--modeling3d-rgb), 0.12);
+}
+
 /* Complete States */
 .skill-card-bg-fill.codecombat.complete {
     background: linear-gradient(90deg, rgba(43, 145, 175, 0.12) 0%, rgba(43, 145, 175, 0.25) 100%);
@@ -226,6 +316,10 @@
 
 .skill-card-bg-fill.ozaria.complete {
     background: linear-gradient(90deg, rgba(144, 46, 219, 0.12) 0%, rgba(144, 46, 219, 0.25) 100%);
+}
+
+.skill-card-bg-fill.modeling3d.complete {
+    background: linear-gradient(90deg, rgba(var(--modeling3d-rgb), 0.12) 0%, rgba(var(--modeling3d-rgb), 0.25) 100%);
 }
 
 .skill-card.codecombat.complete {
@@ -236,6 +330,11 @@
 .skill-card.ozaria.complete {
     border-color: #902edb;
     box-shadow: 0 0 12px rgba(144, 46, 219, 0.25);
+}
+
+.skill-card.modeling3d.complete {
+    border-color: var(--modeling3d-accent);
+    box-shadow: 0 0 12px rgba(var(--modeling3d-rgb), 0.25);
 }
 
 /* Done Checkmark Badge */
@@ -257,6 +356,10 @@
 
 .complete-badge.ozaria {
     color: #902edb;
+}
+
+.complete-badge.modeling3d {
+    color: var(--modeling3d-accent);
 }
 
 @keyframes popIn {
@@ -314,24 +417,28 @@
     }
 
     .skill-tree-container {
+        /* Column geometry is shared by the grid, the headers and the side padding so a
+           narrower desktop only has to override these two variables (see media query below). */
+        --tree-col-width: 520px;
+        --tree-col-gap: 4rem;
         width: max-content;
-        padding-left: calc(50vw - 260px - 4rem);
-        padding-right: calc(50vw - 260px - 4rem);
+        padding-left: calc(50vw - (var(--tree-col-width) / 2) - 4rem);
+        padding-right: calc(50vw - (var(--tree-col-width) / 2) - 4rem);
     }
 
     .skill-tree-grid {
         display: grid;
-        grid-template-columns: repeat(4, 520px);
+        grid-template-columns: repeat(5, var(--tree-col-width));
         grid-auto-rows: auto;
-        gap: 2.5rem 4rem;
+        gap: 2.5rem var(--tree-col-gap);
         width: max-content;
         margin: 0 auto;
     }
 
     .track-headers-container {
         display: grid;
-        grid-template-columns: repeat(4, 520px);
-        gap: 4rem;
+        grid-template-columns: repeat(5, var(--tree-col-width));
+        gap: var(--tree-col-gap);
         width: max-content;
         margin: 0 auto;
     }
@@ -400,6 +507,10 @@
 
     .tree-line.active-line.ozaria {
         stroke: #902edb;
+    }
+
+    .tree-line.active-line.modeling3d {
+        stroke: var(--modeling3d-accent);
     }
 
     .tree-line.active-line.mixed {
@@ -893,6 +1004,10 @@
     border-left: 6px solid #902edb !important;
 }
 
+.breakdown-header-card.border-modeling3d {
+    border-left: 6px solid var(--modeling3d-accent) !important;
+}
+
 .breakdown-logo-img {
     height: 44px;
     width: auto;
@@ -1034,4 +1149,133 @@
     border-style: solid;
 }
 
+/* Mobile: nodes are stacked in one column, so the absolutely positioned project column would
+   spill over the next card (badly so for the six 3D projects). Lay project buttons out in flow,
+   as a wrapped row under their card. */
+@media (max-width: 1023px) {
+    .skill-node-cell {
+        flex-direction: column;
+        align-items: center;
+    }
 
+    .chapter-projects-col {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 10px;
+    }
+}
+
+/* Desktop-only tweaks: the mobile track label is redundant next to the column headers */
+@media (min-width: 1024px) {
+    .node-track-label {
+        display: none;
+    }
+}
+
+/* Laptops / small desktops: five 520px columns are ~2850px wide, which pushes the 3D Modeling
+   column (column 5) far off-screen. Tighter columns (~2260px) keep it within a short scroll.
+   Cards are 40ch (~390px) wide so they still fit a 420px column. */
+@media (min-width: 1024px) and (max-width: 1599px) {
+    .skill-tree-container {
+        --tree-col-width: 420px;
+        --tree-col-gap: 2.5rem;
+    }
+
+    .skill-card,
+    .branch-header.desktop-header {
+        max-width: 100%;
+    }
+}
+
+/* 3D Modeling header: header panel (not a single link) with one link per tool */
+.header-tool-links {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.header-tool-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.header-tool-link:hover {
+    transform: scale(1.1);
+    border-color: var(--modeling3d-accent);
+}
+
+.header-tool-link:focus-visible {
+    outline: 3px solid var(--primary-accessible, #006D74);
+    outline-offset: 2px;
+}
+
+.header-tool-logo {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* 3D Modeling breakdown page CTAs */
+.btn-modeling3d,
+.btn-modeling3d-outline,
+.btn-project-action {
+    font: inherit;
+    cursor: pointer;
+}
+
+.btn-modeling3d {
+    width: 100%;
+    color: #ffffff;
+    background-color: var(--modeling3d-accent);
+}
+
+.btn-modeling3d:hover {
+    background-color: var(--modeling3d-text);
+}
+
+.btn-modeling3d-outline {
+    color: var(--modeling3d-text);
+    background: transparent;
+    border: 2px solid var(--modeling3d-accent);
+}
+
+.btn-modeling3d-outline:hover {
+    background: rgba(var(--modeling3d-rgb), 0.12);
+}
+
+.btn-project-action {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: var(--radius-md);
+    color: #ffffff;
+    background: var(--modeling3d-accent);
+    border: 2px solid var(--modeling3d-accent);
+}
+
+.btn-project-action.secondary {
+    color: var(--modeling3d-text);
+    background: transparent;
+}
+
+.btn-project-action:hover {
+    opacity: 0.9;
+}
+
+.btn-modeling3d:focus-visible,
+.btn-modeling3d-outline:focus-visible,
+.btn-project-action:focus-visible {
+    outline: 3px solid var(--primary-accessible, #006D74);
+    outline-offset: 2px;
+}

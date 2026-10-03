@@ -76,4 +76,22 @@ describe('UserTable Component', () => {
     fireEvent.click(deleteBtns[0]);
     expect(mockOnRemoveUser).toHaveBeenCalledWith('alice');
   });
+
+  it('includes 3D levels in the level total and treats missing td_levels as 0', () => {
+    const users = [
+      { id: 3, username: 'carol', duck_balance: 1, cc_levels: 0, oz_levels: 0, td_levels: 7, is_online: false },
+      { id: 4, username: 'dave', duck_balance: 1, cc_levels: 2, oz_levels: 1, is_online: false },
+    ];
+    render(
+      <UserTable
+        users={users}
+        onAdjustDucks={mockOnAdjustDucks}
+        onResetPassword={mockOnResetPassword}
+        onRemoveUser={mockOnRemoveUser}
+      />
+    );
+
+    expect(screen.getByText('7')).toBeInTheDocument(); // 3D-only student
+    expect(screen.getByText('3')).toBeInTheDocument(); // 2 + 1 + undefined td
+  });
 });

@@ -241,6 +241,8 @@ def get_track_for_course_id(course_id):
     course = Course.query.get(course_id)
     if not course:
         return None
+    if (course.domain or "") == "3d-modeling":
+        return "3d"
     name_upper = course.name.upper()
     if "CHAPTER" in name_upper:
         return "ozaria"

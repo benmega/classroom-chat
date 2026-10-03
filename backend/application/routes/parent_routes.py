@@ -355,9 +355,13 @@ def contact_teacher():
         return {"error": "Access denied. Parent account required."}, 403
 
     data = request.json or {}
-    subject = data.get("subject", "").strip()
-    body = data.get("body", "").strip()
+    if not isinstance(data.get("subject") or "", str) or not isinstance(data.get("body") or "", str):
+        return "Subject and body must be text.", 400
+    subject = (data.get("subject") or "").strip()
+    body = (data.get("body") or "").strip()
 
+    if len(subject) > 255:
+        return "Subject is too long (max 255 characters).", 400
     if not body:
         return "Message body is required.", 400
     if len(body) > 2000:
@@ -380,10 +384,20 @@ def contact_teacher():
         + body
     )
 
-    # Use the existing Message model to create a system message visible to admins
+    # Record the message in the dedicated ParentMessage model for admin review
     from application.extensions import db as _db
     from application.models.message import Message
+    from application.models.parent_message import ParentMessage
 
+    parent_msg = ParentMessage(
+        parent_id=user_obj.id,
+        subject=subject or None,
+        body=body,
+        status="pending",
+    )
+    _db.session.add(parent_msg)
+
+    # Use the existing Message model to create a system message visible to admins
     msg = Message(
         user_id=user_obj.id,
         content=full_content,

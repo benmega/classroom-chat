@@ -326,6 +326,33 @@ def get_parent_connection_code():
     }
 
 
+_TEMPLATE_ID_ABSENT = object()
+
+
+def _read_template_id(data):
+    """Parse the optional ``template_id`` form field.
+
+    Returns ``(value, error)``. ``value`` is ``_TEMPLATE_ID_ABSENT`` when the
+    field was not sent, ``None`` when it was sent empty/"null" (custom project)
+    and otherwise the id of an existing ProjectTemplate. ``error`` is a
+    ``(message, status)`` tuple for invalid input.
+    """
+    from application.models.project_template import ProjectTemplate
+
+    if "template_id" not in data:
+        return _TEMPLATE_ID_ABSENT, None
+    raw = data.get("template_id")
+    if raw is None or str(raw).strip().lower() in ("", "null", "none", "undefined"):
+        return None, None
+    try:
+        template_id = int(str(raw).strip())
+    except (TypeError, ValueError):
+        return None, ("Invalid template.", 400)
+    if not db.session.get(ProjectTemplate, template_id):
+        return None, ("Invalid template.", 400)
+    return template_id, None
+
+
 @user.route("/project/new", methods=["GET", "POST"])
 @require_login
 @api_response
@@ -351,6 +378,16 @@ def new_project():
         if not target_user:
             return "Invalid student selection.", 400
 
+        template_id, template_error = _read_template_id(data)
+        if template_error:
+            return template_error
+        if template_id is _TEMPLATE_ID_ABSENT:
+            # Older clients only send the name: link when it exactly matches.
+            from application.models.project_template import ProjectTemplate
+
+            matched = ProjectTemplate.query.filter_by(name=name).first()
+            template_id = matched.id if matched else None
+
         new_proj = Project(
             name=name,
             description=data.get("description"),
@@ -364,6 +401,7 @@ def new_project():
                 else None
             ),
             user_id=target_user.id,
+            template_id=template_id,
             status="pending",
         )
 
@@ -441,6 +479,10 @@ def edit_project(project_id):
             db.session.commit()
             return {"message": "Project deleted successfully."}
 
+        template_id, template_error = _read_template_id(data)
+        if template_error:
+            return template_error
+
         # Default action is save
         # Strip local paths if somehow accidentally passed
         project.name = data.get("name", "").split("\\")[-1].split("/")[-1]
@@ -449,6 +491,8 @@ def edit_project(project_id):
         project.github_link = data.get("github_link")
         project.video_url = data.get("video_url")
         project.code_snippet = data.get("code_snippet")
+        if template_id is not _TEMPLATE_ID_ABSENT:
+            project.template_id = template_id
 
         if getattr(current_user, "role", "") == "admin":
             if "teacher_comment" in data:

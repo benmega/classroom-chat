@@ -211,4 +211,51 @@ describe('ProjectInfo', () => {
         fireEvent.click(screen.getByText('Back to Map'));
         expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
+    it('sends the template id when assigning', async () => {
+        client.get.mockImplementation((url) => {
+            if (url === '/api/project-templates') {
+                return Promise.resolve({
+                    data: { data: { templates: { 'Test Project': { id: 1, name: 'Test Project', description: 'Desc' } } } }
+                });
+            }
+            if (url === '/user/profile') {
+                return Promise.resolve({ data: { data: { target: { projects: [] } } } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+        client.post.mockResolvedValueOnce({ data: { status: 'success' } });
+
+        renderWithRouter(<ProjectInfo />);
+        fireEvent.click(await screen.findByRole('button', { name: /Assign to me/i }));
+
+        await waitFor(() => expect(client.post).toHaveBeenCalled());
+        const [url, body] = client.post.mock.calls[0];
+        expect(url).toBe('/user/project/new');
+        expect(body.get('template_id')).toBe('1');
+        expect(body.get('name')).toBe('Test Project');
+    });
+
+    it('recognises a renamed project through template_id', async () => {
+        client.get.mockImplementation((url) => {
+            if (url === '/api/project-templates') {
+                return Promise.resolve({
+                    data: { data: { templates: { 'Test Project': { id: 1, name: 'Test Project' } } } }
+                });
+            }
+            if (url === '/user/profile') {
+                return Promise.resolve({
+                    data: { data: { target: { projects: [
+                        { id: '98', name: 'Test Project', template_id: 2 },
+                        { id: '99', name: 'My own name', template_id: 1 },
+                    ] } } }
+                });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<ProjectInfo />);
+
+        const link = await screen.findByText('Manage Project');
+        expect(link.getAttribute('href')).toBe('/project/edit/99');
+    });
 });

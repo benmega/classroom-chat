@@ -205,6 +205,68 @@
     color: #5b21b6;
 }
 
+.badge-parent-message {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.parent-message-sender-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.parent-student-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.student-tag-badge {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: var(--font-xs);
+    color: var(--text-secondary);
+}
+
+.student-tag-badge strong {
+    color: var(--text-primary);
+}
+
+.parent-message-body-container {
+    padding: 14px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.parent-message-subject {
+    margin: 0;
+    font-size: var(--font-sm);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.parent-message-text {
+    margin: 0;
+    font-size: var(--font-sm);
+    line-height: 1.6;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+}
+
+.avatar-placeholder.parent-avatar {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: #fff;
+}
+
 .badge-resubmission {
     background: #fef2f2;
     color: #dc2626;
