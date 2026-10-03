@@ -145,6 +145,35 @@ export const findLevelForProject = (project, levels = []) =>
 export const findProjectForLevel = (level, projects = []) =>
     projects.find(project => levelMatchesProject(level, project)) || null;
 
+/**
+ * The student's own project built from a template: matched by `template_id`, falling back to
+ * an exact name match for projects created before that link existed. Latest project wins.
+ */
+export const findStudentProjectForTemplate = (template, studentProjects) => {
+    if (!template || !Array.isArray(studentProjects)) return null;
+    const matches = studentProjects.filter(p => (
+        (p.template_id != null && String(p.template_id) === String(template.id))
+        || (p.template_id == null && p.name === template.name)
+    ));
+    if (matches.length === 0) return null;
+    return matches.reduce((latest, p) => (Number(p.id) > Number(latest.id) ? p : latest));
+};
+
+/**
+ * Human status for a student's project on a 3D level. A freshly assigned project is also
+ * status "pending" server-side, so it only counts as submitted once it has some deliverable.
+ */
+export const getStudentProjectStatus = (project) => {
+    if (!project) return { key: 'not-started', label: 'Not started' };
+    if (project.status === 'approved') return { key: 'approved', label: 'Approved' };
+    if (project.status === 'rejected') return { key: 'rejected', label: 'Needs changes' };
+    const hasDeliverable = !!(project.link || project.github_link || project.video_url
+        || project.code_snippet || project.image_url);
+    return hasDeliverable
+        ? { key: 'submitted', label: 'Submitted — waiting for teacher' }
+        : { key: 'in-progress', label: 'In progress' };
+};
+
 export const getAncestors =(nodeId, processedNodes) => {
     const ancestors = new Set([nodeId]);
     let added = true;

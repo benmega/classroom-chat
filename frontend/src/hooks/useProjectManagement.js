@@ -78,11 +78,16 @@ export const useProjectManagement = () => {
                         setIsCustomImage(true);
                     }
                     
-                    // Match project name against default templates
+                    // Preselect the template this project was built from: by template_id
+                    // when present, else by exact (case-insensitive) name for older projects.
                     let matchingTemplate = 'custom';
-                    if (p.name) {
-                        const matched = Object.keys(fetchedTemplates).find(t => p.name.toLowerCase().includes(t.toLowerCase()));
-                        if (matched) matchingTemplate = matched;
+                    const templateNames = Object.keys(fetchedTemplates);
+                    if (p.template_id != null) {
+                        const byId = templateNames.find(t => String(fetchedTemplates[t]?.id) === String(p.template_id));
+                        if (byId) matchingTemplate = byId;
+                    } else if (p.name) {
+                        const byName = templateNames.find(t => t.toLowerCase() === p.name.toLowerCase());
+                        if (byName) matchingTemplate = byName;
                     }
                     setSelectedTemplate(matchingTemplate);
                 }
@@ -184,6 +189,16 @@ export const useProjectManagement = () => {
                 formData.append(key, value);
             }
         });
+
+        // Link the project to its template so renaming it later can't break the link.
+        // A custom project is only sent explicitly (as "null") when editing, to clear a link;
+        // on create the server links exact name matches itself.
+        const templateId = selectedTemplate !== 'custom' ? templates[selectedTemplate]?.id : null;
+        if (templateId != null) {
+            formData.append('template_id', templateId);
+        } else if (projectId && Object.keys(templates).length > 0) {
+            formData.append('template_id', 'null');
+        }
 
         if (projectImage) formData.append('project_image', projectImage);
         if (projectVideo) formData.append('project_video', projectVideo);

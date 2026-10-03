@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
+import { Routes, Route } from 'react-router-dom';
 import { renderWithProviders } from '../../test/test-utils';
 import { server } from '../../test/mocks/server';
 import CourseLevelBreakdown from './CourseLevelBreakdown';
@@ -136,7 +137,102 @@ describe('CourseLevelBreakdown - 3D Modeling node', () => {
     renderBreakdown({ ...tinkercadNode, levels: tinkercadNode.levels.filter(l => l.name !== 'Robot Buddy') });
 
     const row = (await screen.findByRole('button', { name: 'Start project: Robot Buddy' })).closest('.level-row-item');
-    expect(within(row).getByText('Pending')).toBeInTheDocument();
+    expect(within(row).getByText('Not started')).toBeInTheDocument();
+    expect(within(row).queryByText('Pending')).not.toBeInTheDocument();
+  });
+});
+
+describe('CourseLevelBreakdown - 3D per-project status and actions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    server.use(http.get('*/api/project-templates', () => HttpResponse.json({ data: { templates } })));
+  });
+
+  const renderWithProjects = (projects, node = tinkercadNode) => {
+    mockLocation.pathname = '/course-progress/student-1/breakdown';
+    mockLocation.state = { selectedNode: node, userObj: { id: 10, active_track: '3d', projects } };
+    return renderWithProviders(<CourseLevelBreakdown />);
+  };
+
+  const rowFor = async (label) => (await screen.findByRole('button', { name: label })).closest('.level-row-item');
+
+  it('shows Not started and Start project when the student has no project', async () => {
+    renderWithProjects([]);
+
+    const row = await rowFor('Start project: Robot Buddy');
+    expect(within(row).getByText('Not started')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start project' })).toBeInTheDocument();
+    expect(screen.queryByText('Continue project')).not.toBeInTheDocument();
+  });
+
+  it('shows submitted-waiting status and Continue project (edit page) for a submitted project', async () => {
+    renderWithProjects([
+      { id: 77, name: 'My Renamed Robot', template_id: 12, status: 'pending', link: 'https://tinkercad.com/things/x' },
+    ]);
+
+    const row = await rowFor('Continue project: Robot Buddy');
+    expect(within(row).getByText('Submitted — waiting for teacher')).toBeInTheDocument();
+    expect(within(row).queryByText('Pending')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start project' })).not.toBeInTheDocument();
+
+    fireEvent.click(within(row).getByRole('button', { name: 'Continue project: Robot Buddy' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/project/edit/77');
+
+    // The Next Project card offers the same Continue action rather than a duplicate start.
+    fireEvent.click(screen.getByRole('button', { name: 'Continue project' }));
+    expect(mockNavigate).toHaveBeenLastCalledWith('/project/edit/77');
+  });
+
+  it('shows In progress for a freshly assigned project with nothing submitted yet', async () => {
+    renderWithProjects([{ id: 5, name: 'Robot Buddy', template_id: null, status: 'pending' }]);
+
+    const row = await rowFor('Continue project: Robot Buddy');
+    expect(within(row).getByText('In progress')).toBeInTheDocument();
+  });
+
+  it('shows Needs changes for a rejected project', async () => {
+    renderWithProjects([{ id: 6, name: 'Robot Buddy', template_id: 12, status: 'rejected', link: 'x' }]);
+
+    const row = await rowFor('Continue project: Robot Buddy');
+    expect(within(row).getByText('Needs changes')).toBeInTheDocument();
+  });
+
+  it('matches by template_id, ignoring projects of other templates and same-name projects linked elsewhere', async () => {
+    renderWithProjects([
+      { id: 8, name: 'Robot Buddy', template_id: 13, status: 'pending', link: 'x' },
+    ]);
+
+    const row = await rowFor('Start project: Robot Buddy');
+    expect(within(row).getByText('Not started')).toBeInTheDocument();
+  });
+
+  it('keeps Done + View project for a completed level', async () => {
+    renderWithProjects([{ id: 9, name: 'Name Plate', template_id: 11, status: 'approved', link: 'x' }]);
+
+    const row = await rowFor('View project: Name Plate');
+    expect(within(row).getByText('Done')).toBeInTheDocument();
+    fireEvent.click(within(row).getByRole('button', { name: 'View project: Name Plate' }));
+    expect(mockNavigate).toHaveBeenCalledWith('/project-info/11', expect.anything());
+  });
+
+  it('fetches the profile for projects when navigation state has none', async () => {
+    let profileCalls = 0;
+    server.use(http.get('*/user/profile/student-1', () => {
+      profileCalls += 1;
+      return HttpResponse.json({
+        data: { target: { id: 10, projects: [{ id: 31, name: 'Whatever', template_id: 12, status: 'pending', link: 'x' }] } },
+      });
+    }));
+    mockLocation.pathname = '/course-progress/student-1/breakdown';
+    mockLocation.state = { selectedNode: tinkercadNode, userObj: { id: 10, active_track: '3d' } };
+    renderWithProviders(
+      <Routes><Route path="/course-progress/:slug/breakdown" element={<CourseLevelBreakdown />} /></Routes>,
+      { route: '/course-progress/student-1/breakdown' }
+    );
+
+    const row = await rowFor('Continue project: Robot Buddy');
+    expect(within(row).getByText('Submitted — waiting for teacher')).toBeInTheDocument();
+    expect(profileCalls).toBe(1);
   });
 });
 
