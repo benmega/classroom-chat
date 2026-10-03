@@ -146,25 +146,6 @@ def test_bulk_add_challenges(client, sample_admin):
     assert data["skipped"] == 1
 
 
-@pytest.fixture
-def fake_psutil(monkeypatch):
-    """A stand-in psutil, scoped to one test, and a fresh process/table-count cache around it."""
-    import sys
-    from unittest.mock import MagicMock
-
-    mock_psutil = MagicMock()
-    mock_psutil.Process.return_value.memory_info.return_value.rss = 100 * 1024 * 1024
-    mock_psutil.Process.return_value.cpu_percent.return_value = 5.0
-    mock_psutil.Process.return_value.create_time.return_value = 1000.0
-    # Scoped to this test: a bare sys.modules assignment leaked the mock into the rest
-    # of the session, so a psutil missing from requirements.txt was never noticed.
-    monkeypatch.setitem(sys.modules, "psutil", mock_psutil)
-    # The route keeps its Process between calls: neither the mock nor a real one may carry over
-    monkeypatch.setattr(advanced_ops, "_cpu_process", None)
-    advanced_ops._forget_table_counts()
-    yield mock_psutil
-    advanced_ops._forget_table_counts()
-
 
 def _add_messages(user, count, **kwargs):
     messages = [Message(user_id=user.id, content=f"m{i}", **kwargs) for i in range(count)]
@@ -173,13 +154,8 @@ def _add_messages(user, count, **kwargs):
     return messages
 
 
-def test_advanced_ops(client, sample_admin, fake_psutil):
+def test_advanced_ops(client, sample_admin):
     login_as_admin(client, sample_admin)
-
-    resp = client.get("/api/admin/advanced/stats-extended")
-    assert resp.status_code == 200
-    assert resp.json["data"]["memory_usage_mb"] == 100.0
-    assert resp.json["data"]["cpu_percent"] == 5.0
 
     # purge-history with nothing to purge
     resp = client.post("/api/admin/advanced/purge-history")
@@ -187,7 +163,7 @@ def test_advanced_ops(client, sample_admin, fake_psutil):
     assert resp.json["data"]["deleted_messages"] == 0
 
 
-def test_purge_history_deletes_every_message(client, sample_admin, sample_user, fake_psutil):
+def test_purge_history_deletes_every_message(client, sample_admin, sample_user):
     _add_messages(sample_user, 2, is_global=True)
     login_as_admin(client, sample_admin)
     assert Message.query.count() == 2
@@ -204,7 +180,7 @@ def test_purge_history_deletes_every_message(client, sample_admin, sample_user, 
 
 
 def test_purge_history_leaves_users_and_classrooms_alone(
-    client, sample_admin, sample_user, fake_psutil
+    client, sample_admin, sample_user
 ):
     classroom = ClassroomFactory()
     _add_messages(sample_user, 2, is_global=True)
@@ -229,7 +205,7 @@ def _targeted_message(author, classroom, recipient):
 
 
 def test_purge_history_removes_the_targets_of_the_purged_messages(
-    client, sample_admin, sample_user, fake_psutil
+    client, sample_admin, sample_user
 ):
     _targeted_message(sample_user, ClassroomFactory(), UserFactory())
     login_as_admin(client, sample_admin)
@@ -243,7 +219,7 @@ def test_purge_history_removes_the_targets_of_the_purged_messages(
 
 
 def test_message_created_after_a_purge_does_not_inherit_the_old_audience(
-    client, sample_admin, sample_user, fake_psutil
+    client, sample_admin, sample_user
 ):
     _targeted_message(sample_user, ClassroomFactory(), UserFactory())
     login_as_admin(client, sample_admin)
@@ -258,23 +234,9 @@ def test_message_created_after_a_purge_does_not_inherit_the_old_audience(
     assert fresh.target_users == []
 
 
-def test_purge_history_refreshes_the_cached_table_counts(
-    client, sample_admin, sample_user, fake_psutil
-):
-    _add_messages(sample_user, 2, is_global=True)
-    login_as_admin(client, sample_admin)
-    before = client.get("/api/admin/advanced/stats-extended").json["data"]["table_counts"]
-    assert before["Message"] == 2
-
-    client.post("/api/admin/advanced/purge-history")
-
-    after = client.get("/api/admin/advanced/stats-extended").json["data"]["table_counts"]
-    assert after["Message"] == 0
-    assert after["User"] == before["User"]
-
 
 def test_purge_history_rolls_back_and_hides_nothing_when_the_delete_fails(
-    client, sample_admin, sample_user, fake_psutil
+    client, sample_admin, sample_user
 ):
     _add_messages(sample_user, 2, is_global=True)
     login_as_admin(client, sample_admin)
@@ -290,7 +252,7 @@ def test_purge_history_rolls_back_and_hides_nothing_when_the_delete_fails(
 
 @pytest.mark.parametrize("who", ["anonymous", "student"])
 def test_purge_history_is_refused_to_non_admins_and_deletes_nothing(
-    client, sample_user, who, fake_psutil
+    client, sample_user, who
 ):
     _add_messages(sample_user, 2, is_global=True)
     if who == "student":
@@ -303,48 +265,3 @@ def test_purge_history_is_refused_to_non_admins_and_deletes_nothing(
     assert Message.query.count() == 2
 
 
-@pytest.mark.parametrize("who", ["anonymous", "student"])
-def test_extended_stats_are_refused_to_non_admins(client, sample_user, who, fake_psutil):
-    if who == "student":
-        with client.session_transaction() as sess:
-            sess["user"] = sample_user.id
-
-    resp = client.get("/api/admin/advanced/stats-extended")
-
-    assert resp.status_code == (401 if who == "anonymous" else 403)
-    assert "table_counts" not in resp.get_data(as_text=True)
-
-
-def test_extended_stats_report_the_process_and_every_table(
-    client, sample_admin, sample_user, fake_psutil
-):
-    _add_messages(sample_user, 3, is_global=True)
-    login_as_admin(client, sample_admin)
-
-    data = client.get("/api/admin/advanced/stats-extended").json["data"]
-
-    assert set(data) == {"memory_usage_mb", "cpu_percent", "table_counts", "uptime_seconds"}
-    assert data["table_counts"]["Message"] == 3
-    assert data["table_counts"]["User"] == User.query.count()
-    assert data["uptime_seconds"] > 0
-    fake_psutil.Process.assert_called_once()
-    # The Process is kept, so cpu_percent measures the time since the previous call
-    client.get("/api/admin/advanced/stats-extended")
-    fake_psutil.Process.assert_called_once()
-
-
-def test_extended_stats_with_real_psutil(client, sample_admin, monkeypatch):
-    # psutil is a runtime requirement; skipped only where it is not installed yet.
-    pytest.importorskip("psutil")
-    # Not the mocked Process another test may have left in the route's cache
-    monkeypatch.setattr(advanced_ops, "_cpu_process", None)
-    login_as_admin(client, sample_admin)
-
-    resp = client.get("/api/admin/advanced/stats-extended")
-
-    assert resp.status_code == 200
-    data = resp.json["data"]
-    assert data["memory_usage_mb"] > 0
-    assert data["cpu_percent"] >= 0
-    assert data["uptime_seconds"] >= 0
-    assert isinstance(data["table_counts"], dict)

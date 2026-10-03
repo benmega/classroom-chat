@@ -1065,10 +1065,14 @@ def pass_chapter(user_id):
         )
         total_ducks += c.scale_value()
 
+    # Ducks are optional: the admin may grant the credit without the reward.
+    award_ducks = data.get("award_ducks", True) is not False
+    awarded_ducks = total_ducks if award_ducks else 0
+
     # Manually bypass duck caps for this admin override
-    if total_ducks > 0:
+    if awarded_ducks > 0:
         user_obj.add_ducks(
-            total_ducks, reason=f"Admin Pass Chapter Override for {course_id}"
+            awarded_ducks, reason=f"Admin Pass Chapter Override for {course_id}"
         )
 
     certificate_achievements = Achievement.query.filter(
@@ -1099,7 +1103,7 @@ def pass_chapter(user_id):
 
     return {
         "success": True,
-        "message": f"Successfully passed {course_id} for user. Awarded {total_ducks} ducks and completed {len(missing_challenges)} challenges.",
+        "message": f"Successfully passed {course_id} for user. Awarded {awarded_ducks} ducks and completed {len(missing_challenges)} challenges.",
     }
 
 @admin_bp.route("/user/<int:user_id>/generate_certificate", methods=["POST"])
