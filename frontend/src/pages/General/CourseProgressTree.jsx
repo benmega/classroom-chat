@@ -88,10 +88,9 @@ const CourseProgressTree = () => {
 
     const userObj = location.state?.target || fetchedUser;
     const activeTrack = userObj?.active_track || 'cs';
-    // "Claim Ducks" submits CodeCombat/Ozaria certificate URLs, which does not apply to the
-    // project-based 3D track (progress there is awarded when a teacher approves a project),
-    // so the FAB and its modal are hidden for students working on 3D. The History button stays.
-    const showClaimDucks = (userObj?.active_track || authUser?.active_track) !== '3d';
+    // The "Claim Ducks" button is left visible for all tracks (including 3D) so students can
+    // submit certificates in case they move tracks or complete extra quests.
+    const showClaimDucks = true;
     const pendingRequest = localPendingRequest || userObj?.pending_request;
 
     const progressData = stateProgressData || fetchedProgressData;
@@ -112,6 +111,7 @@ const CourseProgressTree = () => {
             levels_total: matchingCourse ? matchingCourse.levels_total : null,
             levels: matchingCourse ? matchingCourse.levels : [],
             has_started: matchingCourse && matchingCourse.levels_completed > 0,
+            last_completed_at: matchingCourse ? matchingCourse.last_completed_at || null : null,
         };
     });
 
@@ -130,6 +130,7 @@ const CourseProgressTree = () => {
                     levels_total: c.levels_total,
                     levels: c.levels || [],
                     has_started: true,
+                    last_completed_at: c.last_completed_at || null,
                     is_extra: true
                 });
             }
@@ -147,48 +148,31 @@ const CourseProgressTree = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    const recommendedNodeId = useMemo(() => {
-        const isCompleted = (node) => {
-            return !!node.levels_total && node.levels_completed >= node.levels_total;
-        };
+    // The first incomplete chapter of every track is highlighted as a possible next step.
+    const recommendedNodeIds = useMemo(() => {
+        const isCompleted = (node) => !!node.levels_total && node.levels_completed >= node.levels_total;
+        const ids = new Set();
+        TRACKS.forEach(track => {
+            // processedNodes is sorted by row, so the first match is the topmost incomplete chapter
+            const firstIncomplete = processedNodes.find(n => n.track === track.id && !n.is_extra && !isCompleted(n));
+            if (firstIncomplete) ids.add(firstIncomplete.id);
+        });
+        return ids;
+    }, [processedNodes]);
 
-        const completedNodes = processedNodes.filter(n => !n.is_extra && isCompleted(n));
-
-        if (completedNodes.length > 0) {
-            // Sort completed nodes by row descending to find the last completed node
-            const sortedCompleted = [...completedNodes].sort((a, b) => b.row - a.row);
-            const lastCompletedNode = sortedCompleted[0];
-
-            // 1. Try to find the next node in the same track
-            const trackNodes = processedNodes.filter(n => n.track === lastCompletedNode.track && !n.is_extra);
-            const nextInTrack = trackNodes.find(n => n.row > lastCompletedNode.row && !isCompleted(n));
-            if (nextInTrack) {
-                return nextInTrack.id;
+    // The course with the most recent completed challenge/project is where the camera starts.
+    // Null when the student has no timestamped completions (callers fall back to the active track).
+    const cameraStartNodeId = useMemo(() => {
+        let latestNode = null;
+        let latestTime = -Infinity;
+        processedNodes.forEach(n => {
+            const time = n.last_completed_at ? Date.parse(n.last_completed_at) : NaN;
+            if (!Number.isNaN(time) && time > latestTime) {
+                latestTime = time;
+                latestNode = n;
             }
-
-            // 2. Column is completed, "look down" (find any incomplete node below lastCompletedNode's row)
-            const nextDownNodes = processedNodes.filter(n => n.row > lastCompletedNode.row && !n.is_extra && !isCompleted(n));
-            if (nextDownNodes.length > 0) {
-                // Sort by row ascending to get the closest one down
-                const sortedDown = [...nextDownNodes].sort((a, b) => a.row - b.row);
-                return sortedDown[0].id;
-            }
-
-            // 3. Very last/bottom completed or no next chapter down: go up and find the most farthest down incomplete chapter
-            const allIncomplete = processedNodes.filter(n => !n.is_extra && !isCompleted(n));
-            if (allIncomplete.length > 0) {
-                const sortedIncomplete = [...allIncomplete].sort((a, b) => b.row - a.row);
-                return sortedIncomplete[0].id;
-            }
-        } else {
-            // If none are completed, suggest the first/topmost incomplete chapter
-            const allIncomplete = processedNodes.filter(n => !n.is_extra && !isCompleted(n));
-            if (allIncomplete.length > 0) {
-                const sortedIncomplete = [...allIncomplete].sort((a, b) => a.row - b.row);
-                return sortedIncomplete[0].id;
-            }
-        }
-        return null;
+        });
+        return latestNode ? latestNode.id : null;
     }, [processedNodes]);
 
     const connectedNodes = useMemo(() => {
@@ -251,9 +235,10 @@ const CourseProgressTree = () => {
             const previewData = previewRes.data.data || previewRes.data;
             if (previewData.success) {
                 const p = previewData.preview;
-                const msg = `Preview for passing ${node.title}:\n- Missing Challenges: ${p.challenges_to_complete}\n- Ducks to award: ${p.ducks_to_award}\n- Certificates: ${p.certificates_to_award.join(', ') || 'None'}\n\nAre you sure you want to pass this chapter?`;
-                if (await showConfirm(msg, { title: 'Pass Chapter', destructive: false })) {
-                    const passRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter`, { course_id: node.id });
+                const msg = `Preview for passing ${node.title}:\n- Missing Challenges: ${p.challenges_to_complete}\n- Ducks available: ${p.ducks_to_award}\n- Certificates: ${p.certificates_to_award.join(', ') || 'None'}\n\nThe student gets full credit for these levels and moves on to the next course. Award the ducks for them?`;
+                const choice = await showConfirm(msg, { title: 'Pass Chapter', destructive: false, confirmText: 'Pass & award ducks', altText: 'Pass, no ducks' });
+                if (choice) {
+                    const passRes = await client.post(`/api/admin/user/${userObj.id}/pass_chapter`, { course_id: node.id, award_ducks: choice === true });
                     const passData = passRes.data.data || passRes.data;
                     if (passData.success) {
                         // Clear the cached router state so a reload fetches fresh data from the server
@@ -271,12 +256,16 @@ const CourseProgressTree = () => {
     };
 
     useEffect(() => {
-        // Wait for the profile fetch so a student whose active track is '3d' (column 5, off-screen
-        // on most desktops) is centered on their own track rather than the default one.
+        // Wait for the profile fetch so the camera starts on the student's own most recent
+        // course rather than a default one (3D is column 5, off-screen on most desktops).
         if (isFetching) return;
         if (progressData && Object.keys(nodeRefs.current).length > 0 && !hasCenteredActiveTrackRef.current) {
-            const activeTrackNodes = processedNodes.filter(n => n.track === activeTrack && !n.is_extra);
-            const targetNode = activeTrackNodes.find(n => n.id === recommendedNodeId) || activeTrackNodes[0];
+            let targetNode = processedNodes.find(n => n.id === cameraStartNodeId);
+            if (!targetNode) {
+                // No completion history: start on the student's active track instead.
+                const activeTrackNodes = processedNodes.filter(n => n.track === activeTrack && !n.is_extra);
+                targetNode = activeTrackNodes.find(n => recommendedNodeIds.has(n.id)) || activeTrackNodes[0];
+            }
             
             if (targetNode && nodeRefs.current[targetNode.id]) {
                 hasCenteredActiveTrackRef.current = true;
@@ -291,7 +280,7 @@ const CourseProgressTree = () => {
                 }, 300);
             }
         }
-    }, [progressData, activeTrack, recommendedNodeId, processedNodes, isFetching]);
+    }, [progressData, activeTrack, cameraStartNodeId, recommendedNodeIds, processedNodes, isFetching]);
 
     useLayoutEffect(() => {
         if (location.state?.highlightCourseName && Object.keys(nodeRefs.current).length > 0 && !hasScrolledRef.current) {
@@ -342,7 +331,7 @@ const CourseProgressTree = () => {
                 }}
             >
                 {/* Desktop Headers */}
-                <div className={`track-headers-container ${activeTrack ? 'has-active-track' : ''}`}>
+                <div className="track-headers-container">
                 {TRACKS.map(track => {
                     const trackNodes = processedNodes.filter(n => n.track === track.id && !n.is_extra);
                     let totalPercent = 0;
@@ -357,7 +346,7 @@ const CourseProgressTree = () => {
                     const isComplete = trackNodes.length > 0 && trackNodes.every(n => n.has_started && n.levels_completed >= (n.levels_total || 1));
 
                     const domainConfig = getDomainConfig(getTrackDomain(track.id));
-                    const headerClassName = `branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden ${track.id === activeTrack ? 'active-track-header' : 'de-emphasized-track-header'}`;
+                    const headerClassName = `branch-header glass-panel desktop-header ${isComplete ? 'track-completed' : ''} pos-rel overflow-hidden`;
                     const headerBody = (
                         <>
                             <div className="track-progress-bg" style={{ width: `${percent}%` }}></div>
@@ -415,10 +404,10 @@ const CourseProgressTree = () => {
                 })}
             </div>
 
-            <div className={`skill-tree-grid ${activeTrack ? 'has-active-track' : ''}`} ref={containerRef}>
+            <div className="skill-tree-grid" ref={containerRef}>
                 {/* SVG Overlay for Connections */}
                 {lines.length > 0 && (
-                    <svg className={`skill-tree-svg-overlay ${activeTrack ? 'has-active-track' : ''}`}>
+                    <svg className="skill-tree-svg-overlay">
                         <defs>
                             <linearGradient id="oz-cs-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" stopColor="#902edb" />
@@ -427,7 +416,6 @@ const CourseProgressTree = () => {
                         </defs>
                         {lines.map(line => {
                             const isDimmed = hoveredNodeId && (!connectedNodes.has(line.fromId) || !connectedNodes.has(line.toId));
-                            const isActiveTrackLine = line.trackId === activeTrack;
                             return (
                                 <line
                                     key={line.id}
@@ -435,7 +423,7 @@ const CourseProgressTree = () => {
                                     y1={line.y1}
                                     x2={line.x2}
                                     y2={line.y2}
-                                    className={`tree-line ${line.isActive ? 'active-line' : 'locked-line'} ${line.isActive ? line.lineDomain : ''} ${isDimmed ? 'dimmed' : ''} ${isActiveTrackLine ? 'active-track-line' : 'de-emphasized-track-line'}`}
+                                    className={`tree-line ${line.isActive ? 'active-line' : 'locked-line'} ${line.isActive ? line.lineDomain : ''} ${isDimmed ? 'dimmed' : ''}`}
                                 />
                             );
                         })}
@@ -445,7 +433,7 @@ const CourseProgressTree = () => {
                 {/* Nodes */}
                 {processedNodes.map(node => {
                     const trackInfo = TRACKS.find(t => t.id === node.track);
-                    const isRecommended = node.id === recommendedNodeId;
+                    const isRecommended = recommendedNodeIds.has(node.id);
                     const isDimmed = hoveredNodeId && !connectedNodes.has(node.id);
                     const prereqs = !node.has_started ? getPrerequisiteTitles(node.id, processedNodes) : "";
                     const isComplete = node.levels_total && node.levels_completed >= node.levels_total;
@@ -464,7 +452,7 @@ const CourseProgressTree = () => {
                         <div role="button" tabIndex={0}
                             key={node.id}
                             ref={el => nodeRefs.current[node.id] = el}
-                            data-testid="skill-node-cell" className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''} ${node.track === activeTrack ? 'active-track-node' : 'de-emphasized-track-node'}`}
+                            data-testid="skill-node-cell" className={`skill-node-cell ${node.has_started ? 'active' : 'locked'} ${node.is_extra ? 'extra-node' : ''} ${isRecommended ? 'recommended' : ''} ${isDimmed ? 'dimmed' : ''} ${isComplete ? 'completed' : ''}`}
                             style={{
                                 gridColumn: trackInfo?.col || 1,
                                 gridRow: node.row + 1

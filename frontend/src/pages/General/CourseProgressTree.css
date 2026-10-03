@@ -373,6 +373,58 @@
     }
 }
 
+/* Collapsed completed course cards */
+.skill-card.complete {
+    flex-direction: row;
+    padding: 0.75rem 1rem;
+    text-align: left;
+    min-height: auto;
+}
+
+.skill-card.complete .skill-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    margin: 0;
+}
+
+.skill-card.complete .skill-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.skill-card.complete .skill-content h3 {
+    font-size: 1rem;
+    margin: 0;
+    padding-right: 1.5rem; /* Space for the checkmark */
+}
+
+.skill-card.complete .course-progress-container,
+.skill-card.complete .domain-label,
+.skill-card.complete .node-coming-soon {
+    display: none;
+}
+
+.skill-card.complete .complete-badge {
+    top: 50%;
+    transform: translateY(-50%);
+    animation: popInComplete 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes popInComplete {
+    0% {
+        transform: translateY(-50%) scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+    }
+}
+
 /* Extra node specific styling */
 .skill-node-cell.locked .skill-card {
     border-style: dashed;
@@ -430,6 +482,7 @@
         display: grid;
         grid-template-columns: repeat(5, var(--tree-col-width));
         grid-auto-rows: auto;
+        align-items: start;
         gap: 2.5rem var(--tree-col-gap);
         width: max-content;
         margin: 0 auto;
@@ -455,6 +508,22 @@
         border-radius: var(--radius-xl);
         width: 40ch;
         max-width: 520px;
+    }
+    
+    .skill-card.complete {
+        padding: 1rem 1.5rem;
+        gap: 1.25rem;
+    }
+    
+    .skill-card.complete .skill-icon {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+    
+    .skill-card.complete .skill-content h3 {
+        font-size: 1.15rem;
     }
 
     .skill-icon {
@@ -932,53 +1001,6 @@
 @keyframes scaleUp {
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
-}
-
-/* Active Learning Track Focus & De-emphasis Styles */
-
-/* 1. De-emphasize other tracks on desktop */
-.track-headers-container.has-active-track .branch-header.desktop-header:not(.active-track-header),
-.skill-tree-grid.has-active-track .skill-node-cell:not(.active-track-node) {
-    opacity: 0.35;
-    filter: grayscale(85%) contrast(0.9);
-    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 2. De-emphasize connection lines of other tracks */
-.skill-tree-svg-overlay.has-active-track .tree-line.de-emphasized-track-line {
-    opacity: 0.15;
-    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 3. Focus recovery on hover for accessibility */
-.track-headers-container.has-active-track .branch-header.desktop-header:not(.active-track-header):hover,
-.skill-tree-grid.has-active-track .skill-node-cell:not(.active-track-node):hover {
-    opacity: 0.85;
-    filter: grayscale(20%) contrast(1);
-}
-
-/* 4. Highlight & Accentuate the Active Track Header & Cards */
-.track-headers-container .branch-header.desktop-header.active-track-header {
-    border-color: var(--primary-color, #4a90e2);
-    box-shadow: 0 0 16px rgba(74, 144, 226, 0.25);
-    transform: scale(1.02);
-    z-index: 10;
-}
-
-.skill-node-cell.active-track-node {
-    z-index: 5;
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.skill-node-cell.active-track-node:hover {
-    transform: scale(1.02);
-}
-
-/* 5. Highlight connecting lines of the active track */
-.skill-tree-svg-overlay.has-active-track .tree-line.active-track-line {
-    opacity: 1;
-    stroke-width: 10px;
-    filter: drop-shadow(0 0 2px rgba(74, 144, 226, 0.3));
 }
 
 /* Course Progress Level Breakdown Redesign Styles */

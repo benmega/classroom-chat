@@ -205,60 +205,77 @@ const ParentDashboard = () => {
     if (children.length === 0 && !isLoading) {
         return (
             <div className="parent-dashboard animate-page-entry">
-                <div className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
-                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '420px', width: '100%' }}>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>👋</div>
-                        <h2 style={{ marginBottom: '0.5rem', fontSize: '1.3rem' }}>Welcome to the Parent Portal</h2>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                            Link your child's account to start tracking their progress.
-                        </p>
+                <div className="parent-body parent-empty-body">
+                    <div className="glass-panel parent-empty">
+                        {/* Intro + value proposition: stacks above the connect panel on narrow screens, sits beside it on wide ones. */}
+                        <section className="parent-empty__intro" aria-labelledby="parent-empty-title">
+                            <div className="parent-empty__emoji" aria-hidden="true">👋</div>
+                            <h2 id="parent-empty-title" className="parent-empty__title">Welcome to the Parent Portal</h2>
+                            <p className="parent-empty__lead">
+                                Link your child's account to start tracking their progress.
+                            </p>
 
-                        <div style={{
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-subtle)',
-                            borderRadius: '10px',
-                            padding: '1rem 1.25rem',
-                            marginBottom: '1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.85rem',
-                            lineHeight: 1.6,
-                            color: 'var(--text-secondary)',
-                        }}>
-                            <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>How to get a connection code:</strong>
-                            <ol style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                            <ul className="parent-empty__features">
+                                <li className="parent-empty__feature">
+                                    <span className="parent-empty__feature-icon" aria-hidden="true"><Activity size={18} /></span>
+                                    <span>
+                                        <strong>Activity at a glance</strong>
+                                        <span className="parent-empty__feature-desc">See what they've been working on over the last 30 days.</span>
+                                    </span>
+                                </li>
+                                <li className="parent-empty__feature">
+                                    <span className="parent-empty__feature-icon" aria-hidden="true"><Trophy size={18} /></span>
+                                    <span>
+                                        <strong>Achievements &amp; challenges</strong>
+                                        <span className="parent-empty__feature-desc">Celebrate milestones as they earn them.</span>
+                                    </span>
+                                </li>
+                                <li className="parent-empty__feature">
+                                    <span className="parent-empty__feature-icon" aria-hidden="true"><Folder size={18} /></span>
+                                    <span>
+                                        <strong>Projects &amp; teacher notes</strong>
+                                        <span className="parent-empty__feature-desc">Browse their creations and feedback from class.</span>
+                                    </span>
+                                </li>
+                            </ul>
+                        </section>
+
+                        <section className="parent-empty__connect" aria-labelledby="parent-empty-connect-title">
+                            <h3 id="parent-empty-connect-title" className="parent-empty__connect-title">How to get a connection code</h3>
+                            <ol className="parent-empty__steps">
                                 <li>Ask your child to open the app and go to <strong>Settings</strong>.</li>
                                 <li>They'll see a <strong>Pairing Code</strong> — have them share it with you.</li>
                                 <li>Enter that code below to link their account.</li>
                             </ol>
-                        </div>
 
-                        <form onSubmit={handleConnectChild} className="connect-form d-flex flex-col gap-md">
-                            <input
-                                type="text"
-                                placeholder="Enter code"
-                                value={connectCode}
-                                onChange={(e) => setConnectCode(e.target.value)}
-                                maxLength={10}
-                                className="connect-input"
-                                style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
-                                aria-label="Connection code"
-                                // eslint-disable-next-line jsx-a11y/no-autofocus
-                                autoFocus
-                            />
-                            <button
-                                type="submit"
-                                className="btn-premium"
-                                disabled={isConnecting || !connectCode.trim()}
-                                style={{ width: '100%', justifyContent: 'center' }}
-                            >
-                                {isConnecting ? 'Linking...' : 'Link Child'}
-                            </button>
-                            {connectError && (
-                                <div style={{ fontSize: '0.75rem', color: 'var(--error-color)', marginTop: '0.25rem' }}>
-                                    {connectError}
-                                </div>
-                            )}
-                        </form>
+                            <form onSubmit={handleConnectChild} className="connect-form">
+                                <input
+                                    type="text"
+                                    placeholder="Enter code"
+                                    value={connectCode}
+                                    onChange={(e) => setConnectCode(e.target.value)}
+                                    maxLength={10}
+                                    className="connect-input parent-empty__input"
+                                    aria-label="Connection code"
+                                    aria-invalid={connectError ? 'true' : undefined}
+                                    aria-describedby={connectError ? 'parent-empty-connect-error' : undefined}
+                                    // eslint-disable-next-line jsx-a11y/no-autofocus
+                                    autoFocus
+                                />
+                                <button
+                                    type="submit"
+                                    className="btn-premium connect-submit-btn"
+                                    disabled={isConnecting || !connectCode.trim()}
+                                >
+                                    {isConnecting ? 'Linking...' : 'Link Child'}
+                                </button>
+                                {connectError && (
+                                    <div id="parent-empty-connect-error" className="connect-error-msg">
+                                        {connectError}
+                                    </div>
+                                )}
+                            </form>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -312,10 +329,10 @@ const ParentDashboard = () => {
                                                         <img
                                                             src={getApiUrl(event.childAvatar)}
                                                             alt={event.childName}
-                                                            className="w-24px h-24px radius-50 object-cover"
+                                                            style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }}
                                                         />
                                                     ) : (
-                                                        <div className="child-avatar-initials w-24px h-24px m-0 text-0-7rem">
+                                                        <div className="child-avatar-initials" style={{ width: '24px', height: '24px', margin: 0, fontSize: '0.7rem' }}>
                                                             <User size={14} />
                                                         </div>
                                                     )}

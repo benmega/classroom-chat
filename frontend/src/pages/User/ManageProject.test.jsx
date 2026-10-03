@@ -339,6 +339,8 @@ describe('ManageProject', () => {
             useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
 
             renderNewProject();
+            await screen.findByText('Core Information');
+            fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
 
             expect(await screen.findByText('Admin Controls')).toBeInTheDocument();
             const select = screen.getByLabelText('Assign to Student');
@@ -382,13 +384,16 @@ describe('ManageProject', () => {
                 })
             );
             renderNewProject();
+            await screen.findByText('Core Information');
+            fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'Maze' } });
+            
+            fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
             const select = await screen.findByLabelText('Assign to Student');
             await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(3));
 
             fireEvent.change(select, { target: { value: '6' } });
             fireEvent.change(screen.getByLabelText('Teacher Comment'), { target: { value: 'Well done' } });
-            fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'Maze' } });
-            goToLastTab();
+
             fireEvent.click(screen.getByRole('button', { name: /Create Project/i }));
 
             expect(await screen.findByTestId('student-profile')).toBeInTheDocument();
@@ -440,6 +445,9 @@ describe('ManageProject', () => {
                     </Routes>
                 </MemoryRouter>
             );
+
+            await screen.findByText('Core Information');
+            fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
 
             const select = await screen.findByLabelText('Assign to Student');
             await waitFor(() => expect(select).toHaveValue('6'));

@@ -52,10 +52,12 @@ const ManageProject = () => {
     const handleNext = () => {
         if (activeTab === 'core') setActiveTab('media');
         else if (activeTab === 'media') setActiveTab('code');
+        else if (activeTab === 'code' && currentUser?.role === 'admin') setActiveTab('review');
     };
 
     const handleBack = () => {
-        if (activeTab === 'code') setActiveTab('media');
+        if (activeTab === 'review') setActiveTab('code');
+        else if (activeTab === 'code') setActiveTab('media');
         else if (activeTab === 'media') setActiveTab('core');
     };
 
@@ -125,24 +127,12 @@ const ManageProject = () => {
                             <button type="button" className={`step ${activeTab === 'core' ? 'active' : ''}`} aria-current={activeTab === 'core' ? 'step' : undefined} onClick={() => setActiveTab('core')}>1. Core Info</button>
                             <button type="button" className={`step ${activeTab === 'media' ? 'active' : ''}`} aria-current={activeTab === 'media' ? 'step' : undefined} onClick={() => setActiveTab('media')}>2. Media</button>
                             <button type="button" className={`step ${activeTab === 'code' ? 'active' : ''}`} aria-current={activeTab === 'code' ? 'step' : undefined} onClick={() => setActiveTab('code')}>3. Code</button>
+                            {currentUser?.role === 'admin' && (
+                                <button type="button" className={`step ${activeTab === 'review' ? 'active' : ''}`} aria-current={activeTab === 'review' ? 'step' : undefined} onClick={() => setActiveTab('review')}>4. Review</button>
+                            )}
                         </div>
 
-                        {currentUser?.role === 'admin' && (
-                            <div className="admin-controls-panel">
-                                <h4>Admin Controls</h4>
-                                <div className="form-group">
-                                    <label htmlFor="input-123">Assign to Student</label>
-                                    <select id="input-123" name="student_id" value={projectData.student_id || ''} onChange={handleInputChange} className="form-control" required>
-                                        <option value="">Select Student</option>
-                                        {students.map(s => <option key={s.id} value={s.id}>{s.username}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label htmlFor="input-130">Teacher Comment</label>
-                                    <textarea id="input-130" name="teacher_comment" value={projectData.teacher_comment || ''} onChange={(e) => { handleInputChange(e); adjustTextareaHeight(e.target); }} rows="2" className="form-control admin-textarea" />
-                                </div>
-                            </div>
-                        )}
+
 
                         <div className="form-wizard-content">
                             {activeTab === 'core' && (
@@ -265,6 +255,26 @@ const ManageProject = () => {
                                     </div>
                                 </div>
                             )}
+                            
+                            {activeTab === 'review' && currentUser?.role === 'admin' && (
+                                <div className="form-section fade-in">
+                                    <h3>Review</h3>
+                                    <div className="admin-controls-panel" style={{ marginTop: '1.5rem' }}>
+                                        <h4>Admin Controls</h4>
+                                        <div className="form-group">
+                                            <label htmlFor="input-123">Assign to Student</label>
+                                            <select id="input-123" name="student_id" value={projectData.student_id || ''} onChange={handleInputChange} className="form-control" required>
+                                                <option value="">Select Student</option>
+                                                {students.map(s => <option key={s.id} value={s.id}>{s.username}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="input-130">Teacher Comment</label>
+                                            <textarea id="input-130" name="teacher_comment" value={projectData.teacher_comment || ''} onChange={(e) => { handleInputChange(e); adjustTextareaHeight(e.target); }} rows="2" className="form-control admin-textarea" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                     </div>
@@ -341,7 +351,7 @@ const ManageProject = () => {
                                 <ArrowLeft size={16} /> Back
                             </button>
                         )}
-                        {activeTab !== 'code' ? (
+                        {(currentUser?.role === 'admin' ? activeTab !== 'review' : activeTab !== 'code') ? (
                             <button type="button" className="btn-primary" onClick={handleNext}>
                                 Next <ArrowRight size={16} />
                             </button>

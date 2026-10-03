@@ -26,6 +26,10 @@ beforeEach(() => {
   server.use(http.get('*/api/project-templates', () => HttpResponse.json({ data: { templates: {} } })));
 });
 
+const titleOf = (cell) => cell.querySelector('h3')?.textContent;
+const recommendedTitles = () =>
+  screen.getAllByTestId('skill-node-cell').filter(c => c.classList.contains('recommended')).map(titleOf).sort();
+
 describe('CourseProgressTree - Chapter Recommendation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,7 +38,7 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     useAuthStore.setState({ user: null, isAuthenticated: false });
   });
 
-  it('suggests the first chapter (Code Combat Junior) when no progress is made', async () => {
+  it('highlights the first chapter of every track when no progress is made', async () => {
     mockLocation.state = {
       course_progress: {
         codecombat: { breakdown: [] },
@@ -45,73 +49,52 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
-      const ccJuniorCell = screen.getAllByTestId("skill-node-cell")[0];
-      expect(ccJuniorCell).toHaveClass('recommended');
-      expect(screen.getByText('Code Combat Junior')).toBeInTheDocument();
+      expect(recommendedTitles()).toEqual([
+        'Code Combat Junior',
+        'Game Development 1',
+        'Sky Mountain',
+        'TinkerCAD 1',
+        'Web Development 1',
+      ]);
     });
   });
 
-  it('suggests Computer Science 5 when Computer Science 4 is fully completed', async () => {
+  it('highlights the first incomplete chapter in each track independently', async () => {
     mockLocation.state = {
       course_progress: {
         codecombat: {
           breakdown: [
-            { course_name: 'Computer Science 4', levels_completed: 10, levels_total: 10 },
+            { course_name: 'Code Combat Junior', levels_completed: 5, levels_total: 5 },
             { course_name: 'Introduction to Computer Science', levels_completed: 5, levels_total: 5 },
             { course_name: 'Computer Science 2', levels_completed: 5, levels_total: 5 },
             { course_name: 'Computer Science 3', levels_completed: 5, levels_total: 5 },
-            { course_name: 'Code Combat Junior', levels_completed: 5, levels_total: 5 },
-          ]
-        },
-        ozaria: { breakdown: [] }
-      }
-    };
-
-    renderWithProviders(<CourseProgressTree />);
-
-    await waitFor(() => {
-      const cells = screen.getAllByTestId("skill-node-cell");
-      let cs5Cell = null;
-      cells.forEach(cell => {
-        const h3 = cell.querySelector('h3');
-        if (h3 && h3.textContent === 'Computer Science 5') {
-          cs5Cell = cell;
-        }
-      });
-      expect(cs5Cell).not.toBeNull();
-      expect(cs5Cell).toHaveClass('recommended');
-    });
-  });
-
-  it('suggests Web Development 2 when Web Development 1 is completed', async () => {
-    mockLocation.state = {
-      course_progress: {
-        codecombat: {
-          breakdown: [
+            { course_name: 'Computer Science 4', levels_completed: 10, levels_total: 10 },
             { course_name: 'Web Development 1', levels_completed: 8, levels_total: 8 },
           ]
         },
-        ozaria: { breakdown: [] }
+        ozaria: {
+          breakdown: [
+            { course_name: 'Sky Mountain', levels_completed: 5, levels_total: 5 },
+            { course_name: 'Ozaria Chapter 2', levels_completed: 2, levels_total: 5 },
+          ]
+        }
       }
     };
 
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
-      const cells = screen.getAllByTestId("skill-node-cell");
-      let wd2Cell = null;
-      cells.forEach(cell => {
-        const h3 = cell.querySelector('h3');
-        if (h3 && h3.textContent === 'Web Development 2') {
-          wd2Cell = cell;
-        }
-      });
-      expect(wd2Cell).not.toBeNull();
-      expect(wd2Cell).toHaveClass('recommended');
+      expect(recommendedTitles()).toEqual([
+        'Computer Science 5',   // cs track
+        'Game Development 1',   // gd track: nothing done yet
+        'Ozaria Chapter 2',     // ozaria track: partially done counts as incomplete
+        'TinkerCAD 1',          // 3d track
+        'Web Development 2',    // wd track: WD1 finished
+      ]);
     });
   });
 
-  it('suggests Computer Science 5 when Ozaria Chapter 4 (Ozaria Column) is completed', async () => {
+  it('does not highlight anything in a track that is fully completed', async () => {
     mockLocation.state = {
       course_progress: {
         codecombat: { breakdown: [] },
@@ -129,46 +112,72 @@ describe('CourseProgressTree - Chapter Recommendation', () => {
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
-      const cells = screen.getAllByTestId("skill-node-cell");
-      let cs5Cell = null;
-      cells.forEach(cell => {
-        const h3 = cell.querySelector('h3');
-        if (h3 && h3.textContent === 'Computer Science 5') {
-          cs5Cell = cell;
-        }
-      });
-      expect(cs5Cell).not.toBeNull();
-      expect(cs5Cell).toHaveClass('recommended');
+      const titles = recommendedTitles();
+      expect(titles).toContain('Code Combat Junior');
+      expect(titles).not.toContain('Sky Mountain');
+      expect(titles).not.toContain('Ozaria 4');
     });
   });
 
-  it('suggests the farthest down incomplete chapter when the very bottom chapter (Computer Science 6) is completed', async () => {
+  it('keeps every track fully lit (no de-emphasized tracks)', async () => {
+    mockLocation.state = {
+      course_progress: { codecombat: { breakdown: [] }, ozaria: { breakdown: [] } },
+      target: { id: 10, active_track: 'cs' },
+    };
+
+    const { container } = renderWithProviders(<CourseProgressTree />);
+
+    await waitFor(() => expect(screen.getAllByTestId('skill-node-cell').length).toBeGreaterThan(0));
+    expect(container.querySelector('[class*="de-emphasized"]')).toBeNull();
+    expect(container.querySelector('.has-active-track')).toBeNull();
+  });
+});
+
+describe('CourseProgressTree - Initial camera position', () => {
+  let scrolled;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    scrolled = [];
+    Element.prototype.scrollIntoView = function scrollIntoView() {
+      scrolled.push(titleOf(this));
+    };
+    mockLocation.pathname = '/';
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+  });
+
+  it('starts at the course with the most recent completion, whatever the active track', async () => {
     mockLocation.state = {
       course_progress: {
         codecombat: {
           breakdown: [
-            { course_name: 'Computer Science 6', levels_completed: 10, levels_total: 10 },
-            { course_name: 'Computer Science 5', levels_completed: 10, levels_total: 10 },
+            { course_name: 'Computer Science 2', levels_completed: 3, levels_total: 5, last_completed_at: '2026-01-01T10:00:00' },
+            { course_name: 'Web Development 1', levels_completed: 1, levels_total: 8, last_completed_at: '2026-03-01T10:00:00' },
           ]
         },
         ozaria: {
           breakdown: [
-            { course_name: 'Sky Mountain', levels_completed: 5, levels_total: 5 },
-            { course_name: 'Ozaria Chapter 2', levels_completed: 5, levels_total: 5 },
-            { course_name: 'Ozaria Chapter 3', levels_completed: 5, levels_total: 5 },
+            { course_name: 'Sky Mountain', levels_completed: 1, levels_total: 5, last_completed_at: '2026-02-01T10:00:00' },
           ]
         }
-      }
+      },
+      target: { id: 10, active_track: 'ozaria' },
     };
 
     renderWithProviders(<CourseProgressTree />);
 
-    await waitFor(() => {
-      const cells = screen.getAllByTestId("skill-node-cell").filter(n => n.classList.contains("recommended"));
-      expect(cells.length).toBe(1);
-      const text = cells[0].textContent;
-      expect(text.includes('Ozaria 4') || text.includes('Game Development 3')).toBe(true);
-    });
+    await waitFor(() => expect(scrolled).toEqual(['Web Development 1']), { timeout: 2000 });
+  });
+
+  it('falls back to the first node of the active track without completion history', async () => {
+    mockLocation.state = {
+      course_progress: { codecombat: { breakdown: [] }, ozaria: { breakdown: [] } },
+      target: { id: 10, active_track: 'wd' },
+    };
+
+    renderWithProviders(<CourseProgressTree />);
+
+    await waitFor(() => expect(scrolled).toEqual(['Web Development 1']), { timeout: 2000 });
   });
 });
 
@@ -333,23 +342,13 @@ describe('CourseProgressTree - 3D Modeling track', () => {
     });
   });
 
-  it('hides Claim Ducks (and keeps History) for a student whose active track is 3d', async () => {
+  it('shows Claim Ducks (along with History) for a student whose active track is 3d', async () => {
     renderWithProviders(<CourseProgressTree />);
 
     await waitFor(() => {
       expect(screen.getByTitle('View History')).toBeInTheDocument();
     });
-    expect(screen.queryByRole('button', { name: /claim ducks/i })).not.toBeInTheDocument();
-  });
-
-  it('still shows Claim Ducks for students on other tracks', async () => {
-    mockLocation.state = {
-      course_progress: threeDProgress,
-      target: { id: 10, active_track: 'cs', course_progress: threeDProgress },
-    };
-    renderWithProviders(<CourseProgressTree />);
-
-    expect(await screen.findByRole('button', { name: /claim ducks/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /claim ducks/i })).toBeInTheDocument();
   });
 
   it('renders Box project buttons labelled by project name, with a completed state', async () => {

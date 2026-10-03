@@ -32,6 +32,11 @@ const ConfirmDialog = () => {
         if (resolveRef.current) resolveRef.current(false);
     };
 
+    const handleAlt = () => {
+        setIsOpen(false);
+        if (resolveRef.current) resolveRef.current('alt');
+    };
+
     // Escape (only while this is the innermost dialog, so one stacked over a Modal leaves the Modal open),
     // a Tab trap, and focus back on the opener once answered.
     useModalA11y({ isOpen, onClose: handleCancel, containerRef: dialogRef });
@@ -80,7 +85,7 @@ const ConfirmDialog = () => {
                 <p style={{ margin: '0 0 1.5rem', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
                     {config.message}
                 </p>
-                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                     {/* A destructive confirmation starts on Cancel, any other on Confirm */}
                     <button
                         type="button"
@@ -91,6 +96,16 @@ const ConfirmDialog = () => {
                     >
                         {config.options?.cancelText || 'Cancel'}
                     </button>
+                    {config.options?.altText && (
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={handleAlt}
+                            style={{ flex: 1 }}
+                        >
+                            {config.options.altText}
+                        </button>
+                    )}
                     <button
                         type="button"
                         className={isDestructive ? 'btn-danger' : 'btn-primary'}
