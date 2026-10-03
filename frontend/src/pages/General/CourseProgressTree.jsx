@@ -452,7 +452,11 @@ const CourseProgressTree = () => {
                     const domainConfig = getDomainConfig(node.domain);
                     const domainClass = domainConfig.cssClass;
                     const is3D = node.domain === '3d-modeling';
-                    const nodeProjects = chapterProjects[node.id] || [];
+                    // 3D projects are the course's levels, so list them in course order rather than API (alphabetical) order
+                    const levelSequence = (project) => findLevelForProject(project, node.levels || [])?.sequence ?? Infinity;
+                    const nodeProjects = is3D
+                        ? [...(chapterProjects[node.id] || [])].sort((a, b) => levelSequence(a) - levelSequence(b))
+                        : (chapterProjects[node.id] || []);
                     const showComingSoon = is3D && !node.is_extra && !node.levels_total && nodeProjects.length === 0;
                     const ProjectIcon = is3D ? Box : Code;
 

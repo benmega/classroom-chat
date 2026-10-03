@@ -381,6 +381,24 @@ describe('CourseProgressTree - 3D Modeling track', () => {
     });
   });
 
+  it('lists 3D project buttons in course level order, not API order', async () => {
+    server.use(http.get('*/api/project-templates', () => HttpResponse.json({
+      data: {
+        templates: {
+          a: { id: 3, name: 'Castle', chapter: 'TinkerCAD 1' },
+          b: { id: 2, name: 'Robot Buddy', chapter: 'TinkerCAD 1' },
+          c: { id: 1, name: 'Name Plate', chapter: 'TinkerCAD 1' },
+        },
+      },
+    })));
+    renderWithProviders(<CourseProgressTree />);
+
+    await screen.findByRole('button', { name: 'Castle' });
+    const labels = [...findNode('TinkerCAD 1').querySelectorAll('.project-node-btn')]
+      .map(btn => btn.getAttribute('aria-label'));
+    expect(labels).toEqual(['Name Plate (completed)', 'Robot Buddy', 'Castle']);
+  });
+
   it('does not crash without any 3d-modeling progress data and shows the locked prerequisite', async () => {
     mockLocation.state = {
       course_progress: { codecombat: { breakdown: [] }, ozaria: { breakdown: [] } },
