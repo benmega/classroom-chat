@@ -2,7 +2,7 @@ import contextlib
 import logging
 import os
 
-import fitz
+import pymupdf
 
 logger = logging.getLogger(__name__)
 
@@ -25,21 +25,21 @@ def get_certificate_templates_dir():
 
 
 def _build_default_certificate(new_name):
-    doc = fitz.open()
+    doc = pymupdf.open()
     page = doc.new_page(width=842, height=595)  # A4 landscape
 
     # Center the title
     title = "Certificate of Completion"
     font_size_title = 50
-    font = fitz.Font(fontname="helv")
+    font = pymupdf.Font(fontname="helv")
     title_width = font.text_length(title, fontsize=font_size_title)
-    page.insert_text(fitz.Point((842 - title_width) / 2, 100), title, fontname="helv", fontsize=font_size_title)
+    page.insert_text(pymupdf.Point((842 - title_width) / 2, 100), title, fontname="helv", fontsize=font_size_title)
 
     font_size = 44
     text_length = font.text_length(new_name, fontsize=font_size)
     x = (842 - text_length) / 2
     y = 235
-    page.insert_text(fitz.Point(x, y), new_name, fontname="helv", fontsize=font_size, color=(0, 0, 0))
+    page.insert_text(pymupdf.Point(x, y), new_name, fontname="helv", fontsize=font_size, color=(0, 0, 0))
     return doc
 
 
@@ -69,18 +69,18 @@ def generate_certificate(template_path_or_course_id, output_path, new_name):
     doc = None
     if template_path and os.path.exists(template_path):
         try:
-            doc = fitz.open(template_path)
+            doc = pymupdf.open(template_path)
             page = doc[0]
             width = page.rect.width
 
             # Insert new text, centered.
             font_size = 44
-            font = fitz.Font(fontname="helv")
+            font = pymupdf.Font(fontname="helv")
             text_length = font.text_length(new_name, fontsize=font_size)
             x = (width - text_length) / 2
             y = 235  # Baseline
 
-            page.insert_text(fitz.Point(x, y), new_name, fontname="helv", fontsize=font_size, color=(0, 0, 0))
+            page.insert_text(pymupdf.Point(x, y), new_name, fontname="helv", fontsize=font_size, color=(0, 0, 0))
         except Exception as e:
             logger.warning(f"Template {template_path} could not be used as a PDF ({e}). Generating default.")
             if doc is not None:

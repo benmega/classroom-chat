@@ -10,15 +10,15 @@ def test_generate_certificate_default():
     assert len(pdf_bytes) > 0
 
 @patch('application.utilities.cert_generator.os.path.exists')
-@patch('application.utilities.cert_generator.fitz.open')
-def test_generate_certificate_with_template(mock_fitz_open, mock_exists):
+@patch('application.utilities.cert_generator.pymupdf.open')
+def test_generate_certificate_with_template(mock_pymupdf_open, mock_exists):
     mock_exists.return_value = True
 
     mock_doc = MagicMock()
     mock_page = MagicMock()
     mock_page.rect.width = 842
     mock_doc.__getitem__.return_value = mock_page
-    mock_fitz_open.return_value = mock_doc
+    mock_pymupdf_open.return_value = mock_doc
 
     # Test generating a certificate with a template, saving to output path
     generate_certificate("dummy_template.pdf", "output.pdf", "Jane Doe")
@@ -31,8 +31,8 @@ def test_generate_certificate_with_template(mock_fitz_open, mock_exists):
 @patch('application.utilities.cert_generator.os.path.exists')
 @patch('application.utilities.db_helpers.get_canonical_course_slug')
 @patch('application.utilities.db_helpers.resolve_course_id')
-@patch('application.utilities.cert_generator.fitz.open')
-def test_generate_certificate_course_id_fallback(mock_fitz_open, mock_resolve, mock_slug, mock_exists):
+@patch('application.utilities.cert_generator.pymupdf.open')
+def test_generate_certificate_course_id_fallback(mock_pymupdf_open, mock_resolve, mock_slug, mock_exists):
     # First exists call is for template_path_or_course_id (returns False)
     # Second exists call is for possible_path (returns True)
     mock_exists.side_effect = [False, True, True]
@@ -44,7 +44,7 @@ def test_generate_certificate_course_id_fallback(mock_fitz_open, mock_resolve, m
     mock_page = MagicMock()
     mock_page.rect.width = 842
     mock_doc.__getitem__.return_value = mock_page
-    mock_fitz_open.return_value = mock_doc
+    mock_pymupdf_open.return_value = mock_doc
 
     generate_certificate("invalid_path", None, "Alice")
 
@@ -64,23 +64,23 @@ def test_generate_certificate_corrupt_template_falls_back_to_default(tmp_path, c
 
 
 def test_generate_certificate_corrupt_template_saves_default_to_output(tmp_path):
-    import fitz
+    import pymupdf
 
     bad = tmp_path / "bad.pdf"
     bad.write_bytes(b"fake pdf content")
     out = tmp_path / "out.pdf"
 
     assert generate_certificate(str(bad), str(out), "John Doe") is None
-    with fitz.open(str(out)) as doc:
+    with pymupdf.open(str(out)) as doc:
         assert "John Doe" in doc[0].get_text()
 
 
 def test_generate_certificate_resolves_course_id_from_configured_dir(test_app, tmp_path):
-    import fitz
+    import pymupdf
 
     templates_dir = tmp_path / "tpl"
     templates_dir.mkdir()
-    src = fitz.open()
+    src = pymupdf.open()
     src.new_page(width=500, height=400)
     src.save(str(templates_dir / "zz-9.pdf"))
     src.close()
@@ -92,5 +92,5 @@ def test_generate_certificate_resolves_course_id_from_configured_dir(test_app, t
         finally:
             test_app.config.pop("CERTIFICATE_TEMPLATES_DIR", None)
 
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+    with pymupdf.open(stream=pdf_bytes, filetype="pdf") as doc:
         assert doc[0].rect.width == 500

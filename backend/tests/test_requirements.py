@@ -27,7 +27,6 @@ IMPORT_TO_DIST = {
     "PIL": "pillow",
     "dotenv": "python-dotenv",
     "factory": "factory-boy",
-    "fitz": "pymupdf",
     "jose": "python-jose",
 }
 
