@@ -330,10 +330,6 @@ describe('ManageProject', () => {
                     </Routes>
                 </MemoryRouter>
             );
-        const goToLastTab = () => {
-            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
-            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
-        };
 
         it('shows the admin controls with every student to pick from', async () => {
             useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
