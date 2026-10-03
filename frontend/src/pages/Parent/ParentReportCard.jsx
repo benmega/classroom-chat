@@ -183,7 +183,8 @@ const ParentReportCard = () => {
 
     const ccLevels = reportData.cc_levels !== undefined ? reportData.cc_levels : (reportData.course_progress?.codecombat?.levels_completed || 0);
     const ozLevels = reportData.oz_levels !== undefined ? reportData.oz_levels : (reportData.course_progress?.ozaria?.levels_completed || 0);
-    const totalLevels = ccLevels + ozLevels;
+    const tdLevels = reportData.td_levels !== undefined ? reportData.td_levels : (reportData.course_progress?.['3d-modeling']?.levels_completed || 0);
+    const totalLevels = ccLevels + ozLevels + tdLevels;
 
     const isReportEmpty = 
         totalLevels === 0 &&

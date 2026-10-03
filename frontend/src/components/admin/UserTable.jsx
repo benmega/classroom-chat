@@ -34,7 +34,7 @@ const UserTable = ({ users, onAdjustDucks, onResetPassword, onRemoveUser }) => {
                                 </div>
                             </td>
                             <td><span className="duck-pill">{(u.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })} Ducks</span></td>
-                            <td>{u.cc_levels + u.oz_levels}</td>
+                            <td>{(u.cc_levels || 0) + (u.oz_levels || 0) + (u.td_levels || 0)}</td>
                             <td>
                                 <span className={`status-pill ${u.is_online ? 'online' : 'offline'}`}>
                                     {u.is_online ? 'Online' : 'Offline'}

@@ -411,6 +411,10 @@
     background: var(--success-color);
 }
 
+.progress-fill.td {
+    background: var(--gradient-warning);
+}
+
 .progress-item small {
     color: var(--text-muted);
     font-size: 0.8rem;

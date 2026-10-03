@@ -97,4 +97,44 @@ describe('ParentReportCard Component', () => {
             expect(screen.getByText('Parent Dashboard Page')).toBeInTheDocument();
         });
     });
+
+    it('does not show the empty state for a 3D-only student', async () => {
+        const threeDReport = {
+            ...mockReport,
+            td_levels: 3,
+            cc_levels: 0,
+            oz_levels: 0,
+            slug: 'student3d',
+            course_progress: {
+                codecombat: { levels_completed: 0, breakdown: [] },
+                ozaria: { levels_completed: 0, breakdown: [] },
+                '3d-modeling': {
+                    levels_completed: 3,
+                    breakdown: [
+                        { course_name: 'TinkerCAD 1', course_id: '3d-1', levels_completed: 3, levels_total: 6 }
+                    ]
+                }
+            }
+        };
+        client.get.mockImplementation((url) => {
+            if (url.includes('/report')) return Promise.resolve({ data: { data: threeDReport } });
+            if (url.includes('/history')) {
+                return Promise.resolve({
+                    data: { data: { duck_history: { labels: [], data: [] }, challenge_history: { labels: [], data: [] }, recent_events: [] } }
+                });
+            }
+            return Promise.reject(new Error('Not found'));
+        });
+
+        render(
+            <MemoryRouter initialEntries={['/parent/report/1']}>
+                <Routes>
+                    <Route path="/parent/report/:studentId" element={<ParentReportCard />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('TinkerCAD 1')).toBeInTheDocument();
+        expect(screen.queryByText(/You'll be able to see your child's activity here/i)).not.toBeInTheDocument();
+    });
 });
