@@ -1,4 +1,5 @@
 import os
+
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
@@ -6,6 +7,7 @@ from application.models.message import Message, message_classrooms, message_user
 from sqlalchemy import func, select
 
 from ..admin_routes import admin_bp
+
 
 @admin_bp.route("/advanced/purge-history", methods=["POST"])
 @admin_only
