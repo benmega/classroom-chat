@@ -1,13 +1,13 @@
 ---
 name: test-ui-desktop
-description: Automatically test the Desktop UI for bugs, and document them as Jira-style markdown files in the issues/ directory.
+description: Automatically test the Desktop UI for bugs, and document them as GitHub issues using the `gh` CLI.
 ---
 
 # Desktop UI Bug Testing Workflow
 
 This workflow provides the standardized procedure for finding and recording UI bugs specifically for desktop resolutions.
 
-1.  **Locate**: List the `issues/` directory to identify the last used issue ID (e.g., `iss_033`).
+1.  **Locate**: Use `gh issue list` to review existing issues and ensure you are not creating duplicates.
 2.  **Health Check**: Before starting deep exploration, ensure the `browser` subagent is available (use the `invoke_subagent` tool to start the `browser` subagent if it is not running). Then, perform a simple navigation to `http://localhost:5173/` using the `browser` subagent. 
     - If the browser fails to return a Page ID or throws a CDP error, stop and report "Browser Environment Unstable" to the user.
 3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the `@[/login]` workflow. Summary:
@@ -26,8 +26,8 @@ This workflow provides the standardized procedure for finding and recording UI b
     - **Visual**: Is the desktop layout balanced? Check for overlapping, clipping, or poor alignment on large screens.
     - **Aesthetics**: Does it feel premium, high-quality, and modern?
 6.  **Record**:
-    - For every bug found, create a new file in `issues/iss_NNN_description.md`.
-    - Follow the Jira-style markdown structure specified in the `UI Bug Testing` global skill.
-    - Capture screenshots and link them in the markdown.
+    - For every bug found, create a new GitHub issue using the `gh issue create` command.
+    - Follow the Jira-style markdown structure specified in the `UI Bug Testing` global skill for the issue body.
+    - Capture screenshots and link them in the markdown if possible.
 7.  **Status Check**: If `npm run dev` or `python main.py` triggers an error or warning, record it in a relevant issue.
 8.  **Summary**: Provide a bulleted summary of all newly created issues and their impact levels.

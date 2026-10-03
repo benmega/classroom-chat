@@ -1,13 +1,13 @@
 ---
 name: test-ui-mobile
-description: Automatically test the Mobile UI for bugs, and document them as Jira-style markdown files in the issues/ directory.
+description: Automatically test the Mobile UI for bugs, and document them as Jira-style GitHub issues.
 ---
 
 # Mobile UI Bug Testing Workflow
 
 This workflow provides the standardized procedure for finding and recording UI bugs specifically for mobile resolutions and touch-based interactions.
 
-1.  **Locate**: List the `issues/` directory to identify the last used issue ID (e.g., `iss_033`).
+1.  **Locate**: (Skipped) GitHub will automatically assign an issue ID when created.
 2.  **Health Check**: Before starting deep exploration, perform a simple navigation to `http://localhost:5173/` using `browser_subagent`. 
     - If the browser fails to return a Page ID or throws a CDP error, stop and report "Browser Environment Unstable" to the user.
 3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the `@[/login]` workflow. Summary:
@@ -27,8 +27,8 @@ This workflow provides the standardized procedure for finding and recording UI b
     - **Visual**: Is the mobile layout responsive? Check for horizontal overflow, overlapping elements, or text that is too small to read.
     - **Aesthetics**: Does the mobile experience feel as premium and polished as the desktop version?
 6.  **Record**:
-    - For every bug found, create a new file in `issues/iss_NNN_description.md`.
-    - Follow the Jira-style markdown structure specified in the `UI Bug Testing` global skill.
-    - Capture screenshots and link them in the markdown.
+    - For every bug found, create a new GitHub issue using the `gh issue create` command.
+    - Follow the Jira-style markdown structure specified in the `UI Bug Testing` global skill for the issue body.
+    - Capture screenshots and attach them to the GitHub issue.
 7.  **Status Check**: If `npm run dev` or `python main.py` triggers an error or warning, record it in a relevant issue.
 8.  **Summary**: Provide a bulleted summary of all newly created issues and their impact levels.
