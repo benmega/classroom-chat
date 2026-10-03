@@ -1062,6 +1062,7 @@ def pass_chapter(user_id):
     from application.models.challenge_log import ChallengeLog
     from application.models.user_certificate import UserCertificate
     from application.services.achievement_engine import evaluate_user
+    from application.services.challenge_completion import grant_challenge_completion
 
     user_obj = db.get_or_404(User, user_id)
     data = request.get_json() or {}
@@ -1083,9 +1084,17 @@ def pass_chapter(user_id):
     total_ducks = 0
 
     for c in missing_challenges:
-        # Create log
-        log = ChallengeLog(user_id=user_obj.id, domain=c.domain, challenge_slug=c.slug)
-        db.session.add(log)
+        # Create the log through the shared helper (sets domain + course_id).
+        # Ducks, commit and evaluation are handled once below for the whole
+        # chapter, and an admin override never switches the student's track.
+        grant_challenge_completion(
+            user_obj,
+            c,
+            commit=False,
+            evaluate=False,
+            award_ducks=False,
+            set_active_track=False,
+        )
         total_ducks += c.scale_value()
 
     # Manually bypass duck caps for this admin override

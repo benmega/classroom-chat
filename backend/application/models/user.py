@@ -212,20 +212,11 @@ class User(db.Model):
         if precomputed_progress:
             cc_levels = precomputed_progress.get((self._username, "codecombat.com"), 0)
             oz_levels = precomputed_progress.get((self._username, "www.ozaria.com"), 0)
+            td_levels = precomputed_progress.get((self._username, "3d-modeling"), 0)
 
-            from .challenge import Challenge
-
-            if "codecombat.com" not in self._total_challenges_cache:
-                self._total_challenges_cache["codecombat.com"] = (
-                    Challenge.query.filter_by(domain="codecombat.com").count()
-                )
-            if "www.ozaria.com" not in self._total_challenges_cache:
-                self._total_challenges_cache["www.ozaria.com"] = (
-                    Challenge.query.filter_by(domain="www.ozaria.com").count()
-                )
-
-            cc_total = self._total_challenges_cache["codecombat.com"]
-            oz_total = self._total_challenges_cache["www.ozaria.com"]
+            cc_total = self._get_total_challenges("codecombat.com")
+            oz_total = self._get_total_challenges("www.ozaria.com")
+            td_total = self._get_total_challenges("3d-modeling")
 
             cc_percent = (
                 int(round((cc_levels / cc_total * 100), 0)) if cc_total > 0 else 0
@@ -233,11 +224,16 @@ class User(db.Model):
             oz_percent = (
                 int(round((oz_levels / oz_total * 100), 0)) if oz_total > 0 else 0
             )
+            td_percent = (
+                int(round((td_levels / td_total * 100), 0)) if td_total > 0 else 0
+            )
         else:
             cc_levels = self.get_progress("codecombat.com")
             oz_levels = self.get_progress("www.ozaria.com")
+            td_levels = self.get_progress("3d-modeling")
             cc_percent = self.get_progress_percent("codecombat.com")
             oz_percent = self.get_progress_percent("www.ozaria.com")
+            td_percent = self.get_progress_percent("3d-modeling")
         d = {
             "id": self.id,
             "user_id": self.id,
@@ -260,12 +256,14 @@ class User(db.Model):
             "earned_ducks": self.earned_ducks,
             "packets": self.packets,
             # Progress counters
-            "total_levels": cc_levels + oz_levels,
-            "completed_challenges_count": cc_levels + oz_levels,
+            "total_levels": cc_levels + oz_levels + td_levels,
+            "completed_challenges_count": cc_levels + oz_levels + td_levels,
             "cc_levels": cc_levels,
             "oz_levels": oz_levels,
+            "td_levels": td_levels,
             "cc_percent": cc_percent,
             "oz_percent": oz_percent,
+            "td_percent": td_percent,
             "has_seen_tutorial": self.has_seen_tutorial,
             "has_chat_font": self.has_chat_font,
             "chat_font_color": self.chat_font_color,
@@ -363,6 +361,23 @@ class User(db.Model):
 
     _total_challenges_cache: ClassVar[dict] = {}
 
+    @classmethod
+    def _get_total_challenges(cls, domain):
+        """Number of challenges in a domain, cached per process.
+
+        A total of 0 is deliberately NOT cached: a domain that is seeded while
+        the app is running (e.g. the 3D modeling track) would otherwise stay at
+        0% until the process restarts.
+        """
+        total = cls._total_challenges_cache.get(domain)
+        if total:
+            return total
+        from .challenge import Challenge
+
+        total = Challenge.query.filter_by(domain=domain).count()
+        if total > 0:
+            cls._total_challenges_cache[domain] = total
+        return total
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
@@ -376,14 +391,7 @@ class User(db.Model):
 
     def get_progress_percent(self, domain):
         """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
-        from .challenge import Challenge
-
-        if domain not in self._total_challenges_cache:
-            self._total_challenges_cache[domain] = Challenge.query.filter_by(
-                domain=domain
-            ).count()
-
-        total_challenges = self._total_challenges_cache[domain]
+        total_challenges = self._get_total_challenges(domain)
         from .challenge_log import ChallengeLog
 
         completed_challenges = ChallengeLog.query.filter_by(
