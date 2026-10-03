@@ -355,9 +355,13 @@ def contact_teacher():
         return {"error": "Access denied. Parent account required."}, 403
 
     data = request.json or {}
-    subject = data.get("subject", "").strip()
-    body = data.get("body", "").strip()
+    if not isinstance(data.get("subject") or "", str) or not isinstance(data.get("body") or "", str):
+        return "Subject and body must be text.", 400
+    subject = (data.get("subject") or "").strip()
+    body = (data.get("body") or "").strip()
 
+    if len(subject) > 255:
+        return "Subject is too long (max 255 characters).", 400
     if not body:
         return "Message body is required.", 400
     if len(body) > 2000:
