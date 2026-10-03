@@ -125,6 +125,7 @@ const AdminUserDashboard = () => {
         if (prefix === 'gd') return 'gd';
         if (prefix === 'wd') return 'wd';
         if (prefix === 'oz') return 'ozaria';
+        if (prefix === '3d') return '3d';
         return null;
     };
 
@@ -265,8 +266,6 @@ const AdminUserDashboard = () => {
                                 })}
                             </div>
                         </div>
-
-
                     </div>
                 )}
 
@@ -572,6 +571,8 @@ const AdminUserDashboard = () => {
                         <option value="oz-2">Ozaria 2</option>
                         <option value="oz-3">Ozaria 3</option>
                         <option value="oz-4">Ozaria 4</option>
+                        <option value="3d-1">TinkerCAD 1</option>
+                        <option value="3d-2">Blender 1</option>
                     </select>
                     <button type="button" className="btn-compact primary" onClick={() => {
                         handleGenerateManualCertificate(selectedCertCourse);
@@ -598,8 +599,8 @@ const AdminUserDashboard = () => {
                         <option value="gd2">GD 2</option>
                         <option value="wd1">WD 1</option>
                         <option value="wd2">WD 2</option>
-                        <option value="3d-1">3D-1: TinkerCAD 1</option>
-                        <option value="3d-2">3D-2: Blender 1</option>
+                        <option value="3d-1">TinkerCAD 1</option>
+                        <option value="3d-2">Blender 1</option>
                     </select>
                     <button type="submit" className="btn-compact primary" disabled={passChapterLoading || !selectedChapterId} style={{ justifyContent: 'center', padding: '10px' }}>
                         <Check size={14} /> Preview Pass

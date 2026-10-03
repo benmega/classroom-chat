@@ -476,6 +476,7 @@ const AdminChallenges = () => {
                             <option value="codecombat.com">codecombat.com</option>
                             <option value="studio.code.org">studio.code.org</option>
                             <option value="ozaria.com">ozaria.com</option>
+                            <option value="3d-modeling">3D Modeling</option>
                             <option value="other">other</option>
                         </select>
                     </div>
@@ -528,6 +529,7 @@ const AdminChallenges = () => {
                             <option value="codecombat.com">codecombat.com</option>
                             <option value="studio.code.org">studio.code.org</option>
                             <option value="ozaria.com">ozaria.com</option>
+                            <option value="3d-modeling">3D Modeling</option>
                             <option value="other">other</option>
                         </select>
                     </div>

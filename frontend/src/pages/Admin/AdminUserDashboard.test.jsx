@@ -124,4 +124,35 @@ describe('AdminUserDashboard Component Redesign', () => {
         const duckInputs = screen.getAllByPlaceholderText(/Amount \(\+\/-\)/i);
         expect(duckInputs[0].value).toBe('1');
     });
+
+    it('highlights the 3D Modeling track and recent 3D activity for a 3D student', async () => {
+        const threeDStudent = {
+            ...mockStudent,
+            active_track: '3d',
+            most_recently_completed_challenge_course: '3d-1',
+        };
+        client.get.mockImplementation((url) => {
+            if (url.includes('/api/admin/user/1') && !url.includes('connection_card')) {
+                return Promise.resolve({ data: { user: threeDStudent } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        render(
+            <BrowserRouter>
+                <AdminUserDashboard />
+            </BrowserRouter>
+        );
+
+        await waitFor(() => {
+            expect(screen.getByText('3D Modeling', { selector: '.track-card-name' })).toBeInTheDocument();
+        });
+
+        const card = screen.getByText('3D Modeling', { selector: '.track-card-name' }).closest('.track-card-btn');
+        await waitFor(() => expect(card).toHaveClass('active'));
+        expect(screen.getByText('Computer Science').closest('.track-card-btn')).not.toHaveClass('active');
+
+        // Recent activity badge resolves the 3D track (not hidden because of an unknown prefix)
+        expect(screen.getByText('TinkerCAD 1', { selector: '.course-badge' })).toBeInTheDocument();
+    });
 });
