@@ -35,7 +35,6 @@ const AdminLayout = ({ children }) => {
         pending_certificates: 0,
         pending_course_requests: 0,
         pending_submissions: 0,
-        pending_parent_messages: 0,
         total_incomplete: 0
     });
 

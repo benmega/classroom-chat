@@ -4,6 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ToReview from './ToReview';
 import client from '../../api/client';
+import toast from 'react-hot-toast';
 
 vi.mock('../../api/client', () => ({
   default: {
@@ -268,6 +269,73 @@ describe('ToReview Component', () => {
     // Card is removed from view
     await waitFor(() => {
       expect(screen.queryByText('Attendance inquiry')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('parent message resolve errors', () => {
+    beforeEach(() => {
+      // Drop any queued once-implementations leaked from earlier tests
+      client.get.mockReset();
+      client.post.mockReset();
+    });
+
+    const mockPendingMessage = () => {
+      client.get.mockImplementation((url) => {
+        if (url.includes('/api/admin/crud/classroom') || url.includes('/api/admin/crud/course')) {
+          return Promise.resolve({ data: { data: [] } });
+        }
+        if (url.includes('parent-messages')) {
+          return Promise.resolve({
+            data: {
+              messages: [{
+                id: 202, parent_id: 11, parent_name: 'Sam Parent', parent_username: 'samp',
+                student_names: ['Kid'], subject: 'Stale message', body: 'Hello', status: 'pending',
+                created_at: '2026-09-13T10:00:00Z',
+              }],
+            },
+          });
+        }
+        return Promise.resolve({ data: { data: [] } });
+      });
+    };
+
+    const openMessagesAndResolve = async () => {
+      render(<ToReview />);
+      await waitFor(() => expect(screen.getByText('Parent Messages')).toBeInTheDocument());
+      fireEvent.click(screen.getByText('Parent Messages'));
+      await waitFor(() => expect(screen.getByText('Stale message')).toBeInTheDocument());
+      fireEvent.click(screen.getByRole('button', { name: /Mark as Resolved/i }));
+    };
+
+    it('removes the card, invalidates the cache and shows the API error on 404', async () => {
+      mockPendingMessage();
+      const invalidateSpy = vi.spyOn(adminCache, 'invalidate');
+      client.post.mockRejectedValue({
+        response: { status: 404, data: { status: 'error', data: null, error: 'Message not found' } },
+      });
+
+      await openMessagesAndResolve();
+
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Message not found'));
+      await waitFor(() => expect(screen.queryByText('Stale message')).not.toBeInTheDocument());
+      expect(invalidateSpy).toHaveBeenCalledWith('admin_to_review');
+    });
+
+    it('keeps the card and falls back to message/default text on other errors', async () => {
+      mockPendingMessage();
+      client.post.mockRejectedValueOnce({
+        response: { status: 500, data: { message: 'Legacy failure' } },
+      });
+
+      await openMessagesAndResolve();
+
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Legacy failure'));
+      expect(screen.getByText('Stale message')).toBeInTheDocument();
+
+      client.post.mockRejectedValueOnce({ response: { status: 500, data: {} } });
+      fireEvent.click(screen.getByRole('button', { name: /Mark as Resolved/i }));
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to resolve parent message.'));
+      expect(screen.getByText('Stale message')).toBeInTheDocument();
     });
   });
 });
