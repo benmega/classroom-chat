@@ -1,6 +1,5 @@
 """Keep the requirements files and the imports in the code in step.
 
-The admin stats endpoint imported psutil for a long time without it being in
 requirements.txt: the test mocked the module, so nothing noticed until a clean
 install. These checks read the imports straight from the source with ``ast``
 (including imports inside functions) and compare them with what each
@@ -146,11 +145,6 @@ def test_every_import_is_declared(label, sources, declared, needs_file):
     assert not missing, f"{label} code imports packages that {needs_file} does not list: {missing}"
 
 
-def test_psutil_is_a_runtime_requirement():
-    # Imported lazily by the admin /advanced/stats-extended endpoint.
-    assert "psutil" in RUNTIME
-
-
 def test_no_requirements_file_lists_a_package_twice():
     for name in ("requirements.txt", "requirements-dev.txt", "requirements-tools.txt"):
         names = [_requirement_name(line) for line in _requirement_lines(BACKEND_DIR / name) if not line.startswith("-")]
@@ -169,12 +163,12 @@ def test_runtime_requirements_exclude_dev_and_tool_packages():
 def test_undeclared_import_is_reported(tmp_path):
     # Guards the checker itself: a lazy import of an unlisted package must be found.
     module = tmp_path / "module.py"
-    module.write_text("import os\n\n\ndef stats():\n    import psutil\n    from flask import Flask\n    return psutil, Flask\n")
+    module.write_text("import os\n\n\ndef stats():\n    import numpy\n    from flask import Flask\n    return numpy, Flask\n")
     requirements = tmp_path / "requirements.txt"
     requirements.write_text("# comment\nFlask==3.1.1\nrequests~=2.0  # trailing\n")
     declared = declared_requirements(requirements)
     assert declared == {"flask", "requests"}
-    assert third_party_imports(module, set()) == {"psutil", "flask"}
-    assert undeclared_imports([module], declared, set()) == {str(module): {"psutil"}}
-    assert undeclared_imports([module], declared | {"psutil"}, set()) == {}
-    assert undeclared_imports([module], declared, {"psutil"}) == {}
+    assert third_party_imports(module, set()) == {"numpy", "flask"}
+    assert undeclared_imports([module], declared, set()) == {str(module): {"numpy"}}
+    assert undeclared_imports([module], declared | {"numpy"}, set()) == {}
+    assert undeclared_imports([module], declared, {"numpy"}) == {}
