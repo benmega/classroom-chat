@@ -1,9 +1,18 @@
 # Database Schema - Classroom Chat
 
-This document details the relational database schema, tables, and relationships within the Classroom Chat project.
+This document details the relational database schema, tables, and relationships within the Classroom Chat project. The tables are defined in `backend/application/models/` (SQLAlchemy ORM); when in doubt the models are the source of truth.
 
 ## 1. Overview
 The project uses SQLite (in both local development and production) managed through the **SQLAlchemy ORM**.
+
+- **Development / testing**: SQLite (`DEV_DATABASE_URI`, default `backend/instance/dev_users.db`).
+- **Production**: `DATABASE_URL`, set by `deploy.yml` to the SQLite file `backend/instance/prod_users.db`.
+- **Schema management**: production schema changes go through Alembic (`backend/migrations/`,
+  applied by `deploy.sh` with `flask db upgrade`, followed by `python -m tools.migrate_classroom`
+  and `flask seed`; a brand-new database is first created with `db.create_all()` and stamped to
+  head). `db.create_all()` is otherwise only run outside production (`application/__init__.py`).
+  The full ordered list and the rules for schema and data changes are in the "Database upgrade
+  path" section of [infrastructure_and_devops.md](infrastructure_and_devops.md#8-database-migrations).
 
 ---
 
@@ -12,10 +21,10 @@ The project uses SQLite (in both local development and production) managed throu
 ### 2.1 Users (`users`)
 The central entity for authentication and student tracking.
 - **Primary Key**: `id` (Integer)
-- **Identity**: `username` (Unique), `nickname`, `slug` (Unique)
+- **Identity**: `username` (Unique; the attribute is `_username`), `nickname`, `slug` (Unique), `bio`
 - **Auth**: `password_hash`
 - **Metadata**: `profile_picture`, `ip_address`, `is_online`, `is_admin`, `is_approved`, `created_at`
-- **Gamification**: `duck_balance`, `earned_ducks`, `packets`, `last_daily_duck`
+- **Gamification**: `duck_balance`, `earned_ducks`, `packets`, `last_daily_duck`, `last_achievement_evaluation`
 
 ### 2.2 Conversations & Messages
 - **`conversations`**: Stores chat rooms / thread metadata.
@@ -30,20 +39,20 @@ The central entity for authentication and student tracking.
     - Fields: `id`, `username` (FK), `challenge_slug`, `timestamp`, `domain`.
 
 ### 2.4 Gamification
-- **`achievements`**: Defined badges/milestones.
-    - Fields: `id`, `name`, `description`, `icon`, `points`.
-- **`user_achievements`**: Pivot table marking which users have which badges.
+- **`achievement`**: Defined badges/milestones.
+    - Fields: `id`, `slug` (Unique), `name`, `type`, `reward`, `description`, `requirement_value`, `source`.
+- **`user_achievement`**: Pivot table marking which users have which badges.
     - Fields: `id`, `user_id` (FK), `achievement_id` (FK), `earned_at`.
 - **`duck_trades` / `duck_transactions`**: History of currency transfers between students and system adjustments.
     - Fields: `id`, `from_user_id`, `to_user_id`, `amount`, `timestamp`, `status`.
 
 ### 2.5 User Portfolio & Submissions
 - **`projects`**: Student-created projects.
-    - Fields: `id`, `name`, `description`, `link`, `user_id` (FK).
+    - Fields: `id`, `name`, `description`, `link`, `user_id` (FK), `teacher_comment`, `code_snippet`, `github_link`, `video_url`, `video_transcript`, `image_url`.
 - **`project_templates`**: Admin-defined project outlines that students can instantiate.
     - Fields: `id`, `title`, `description`, `template_repo`.
 - **`skills`**: Individual skills listed on user profiles.
-    - Fields: `id`, `name`, `user_id` (FK).
+    - Fields: `id`, `name`, `user_id` (FK), `category` (language/tool/concept), `icon`, `proficiency` (1 bronze, 2 silver, 3 gold).
 - **`user_certificates`**: Official milestones or external certs.
     - Fields: `id`, `user_id` (FK), `certificate_type`, `issued_at`.
 - **`submissions`**: Student submissions for projects or assignments.
@@ -76,7 +85,8 @@ The central entity for authentication and student tracking.
     - Fields: `id`, `user_id` (FK), `author_id` (FK), `content`, `created_at`.
 - **`banned_words`**: List of prohibited words for chat moderation.
     - Fields: `id`, `word`, `severity`.
-- **`ai_settings` / `configuration`**: Global settings and AI toggles.
+- **`configuration`**: Global settings (message sending toggle, duck multiplier).
+- **`ai_settings`** and **`configuration.ai_teacher_enabled`**: Deprecated. The AI teacher feature was removed; the table and column are kept until a drop migration can be validated against a production DB copy.
 - **`session_logs`**: Tracking user sessions for analytics.
     - Fields: `id`, `user_id` (FK), `login_time`, `logout_time`.
 - **`connection_attempts`**: Logging of login attempts.
@@ -96,7 +106,7 @@ The central entity for authentication and student tracking.
 - **Course Instance -> Students**: (Assumed via relationship) A course cohort contains multiple students.
 
 ### Many-to-Many (via Pivot Tables)
-- **Users <-> Achievements**: Users earn many achievements; achievements are earned by many users. (Handled by `user_achievements`).
+- **Users <-> Achievements**: Users earn many achievements; achievements are earned by many users. (Handled by `user_achievement`).
 - **Parents <-> Students**: A parent can have multiple students; a student can have multiple parents. (Handled by `parent_student`).
 - **Users <-> Conversations**: Participants in a chat. (Generally handled by the `messages` table association or a dedicated `participants` table if implemented).
 

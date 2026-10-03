@@ -27,16 +27,18 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import adminCache from '../../utils/adminCache';
 import { getApiUrl } from '../../utils/apiUrl';
+import { getErrorMessage } from '../../utils/apiError';
 import { showConfirm } from '../../utils/confirm';
 import { formatStaticUrl } from '../../utils/formatters';
+import { safeUrl } from '../../utils/safeUrl';
 import './ToReview.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import Modal from '../../components/common/Modal';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
-// Admin API errors use `{status: "error", data: null, error: "..."}`; older routes use `message`.
-const getApiErrorMessage = (err, fallback) =>
-    err?.response?.data?.error || err?.response?.data?.message || fallback;
+// submitted_at is nullable on certificates; new Date(null/undefined) would show a bogus date.
+const formatSubmittedAt = (value) => (value ? new Date(value).toLocaleString() : 'Unknown date');
 
 const ToReview = () => {
     const cachedReview = adminCache.get('admin_to_review');
@@ -64,6 +66,10 @@ const ToReview = () => {
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [selectedTrades, setSelectedTrades] = useState(new Set());
 
+    // Certificate waiting for a rejection reason; the reason modal is open while this is set.
+    const [rejectingCertId, setRejectingCertId] = useState(null);
+    const [rejectReason, setRejectReason] = useState('');
+
     const fetchAllData = useCallback(async () => {
         const cached = adminCache.get('admin_to_review');
         if (cached) {
@@ -83,7 +89,7 @@ const ToReview = () => {
                 coursesRes,
                 parentMessagesRes
             ] = await Promise.all([
-                client.get('/api/achievements/admin/certificates').catch(() => ({ data: { certificates: [] } })),
+                client.get('/api/achievements/admin/certificates').catch(() => ({ data: { data: { certificates: [] } } })),
                 client.get('/api/admin/manage-projects?filter=pending').catch(() => ({ data: { data: { projects: [] } } })),
                 client.get('/api/admin/pending_users').catch(() => ({ data: { data: { users: [] } } })),
                 client.get('/api/admin/pending_trades').catch(() => ({ data: { data: { trades: [] } } })),
@@ -93,7 +99,7 @@ const ToReview = () => {
                 client.get('/api/admin/parent-messages?status=pending').catch(() => ({ data: { messages: [] } }))
             ]);
 
-            const newCerts = certsRes.data.certificates || certsRes.data.data?.certificates || [];
+            const newCerts = certsRes.data.data?.certificates || [];
             const newProjects = projectsRes.data.data?.projects || [];
             const newUsers = usersRes.data.data?.users || [];
             const newTrades = tradesRes.data.data?.trades || [];
@@ -163,6 +169,17 @@ const ToReview = () => {
             return;
         }
 
+        if (!await showConfirm(
+            action === 'approve'
+                ? `Approve this project and award ${Number(reward).toFixed(4)} packets?`
+                : 'Send this project back for revision? Any packets already awarded will be retracted.',
+            {
+                title: action === 'approve' ? 'Approve Project' : 'Request Revision',
+                confirmText: action === 'approve' ? 'Approve' : 'Request Revision',
+                destructive: action === 'reject'
+            }
+        )) return;
+
         setIsProcessing(`project-${projectId}`);
         try {
             const response = await client.post(`/api/admin/handle-project-review/${projectId}`, {
@@ -181,7 +198,7 @@ const ToReview = () => {
                 setProjectRewards(prev => { const copy = {...prev}; delete copy[projectId]; return copy; });
             }
         } catch (err) {
-            toast.error(getApiErrorMessage(err, 'Failed to review project.'));
+            toast.error(getErrorMessage(err, 'Failed to review project.'));
         } finally {
             setIsProcessing(null);
         }
@@ -189,31 +206,40 @@ const ToReview = () => {
 
     const handleCertificateReview = async (certId, action = 'approve') => {
         if (action === 'reject') {
-            const review_note = window.prompt('Reason for rejecting? (optional)') || undefined;
-            setIsProcessing(`cert-${certId}`);
-            try {
-                const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
-                if (response.data.status === 'success') {
-                    adminCache.invalidate('admin_to_review');
-                    setCertificates(prev => prev.filter(c => c.id !== certId));
-                }
-            } catch {
-                toast.error('Failed to reject certificate.');
-            } finally {
-                setIsProcessing(null);
-            }
+            // The optional reason is collected in a modal; closing it cancels the rejection.
+            setRejectReason('');
+            setRejectingCertId(certId);
             return;
         }
 
+        if (!await showConfirm('Mark this certificate as reviewed and approved? The student will be notified and this cannot be undone.', { title: 'Approve Certificate', confirmText: 'Approve' })) return;
         setIsProcessing(`cert-${certId}`);
         try {
             const response = await client.post(`/api/achievements/admin/certificates/reviewed/${certId}`);
             if (response.data.status === 'success') {
-
+                adminCache.invalidate('admin_to_review');
                 setCertificates(prev => prev.filter(c => c.id !== certId));
             }
-        } catch {
-            toast.error('Failed to approve certificate.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to approve certificate.'));
+        } finally {
+            setIsProcessing(null);
+        }
+    };
+
+    const submitCertificateRejection = async () => {
+        const certId = rejectingCertId;
+        const review_note = rejectReason.trim() || undefined;
+        setRejectingCertId(null);
+        setIsProcessing(`cert-${certId}`);
+        try {
+            const response = await client.post(`/api/achievements/admin/certificates/reject/${certId}`, { review_note });
+            if (response.data.status === 'success') {
+                adminCache.invalidate('admin_to_review');
+                setCertificates(prev => prev.filter(c => c.id !== certId));
+            }
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to reject certificate.'));
         } finally {
             setIsProcessing(null);
         }
@@ -228,15 +254,24 @@ const ToReview = () => {
                 adminCache.invalidate('admin_to_review');
                 setCertificates([]); 
             }
-        } catch {
-            toast.error('Failed to mark all as reviewed.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to mark all as reviewed.'));
         } finally {
             setIsProcessing(null);
         }
     };
 
+    // Bulk runs skip the per-item toasts and report what failed, with the server's reasons, in one toast.
+    const reportBulkFailures = (failures, total, noun) => {
+        if (failures.length === 0) return;
+        const reasons = [...new Set(failures.map(f => f.reason))].join('; ');
+        toast.error(`${failures.length} of ${total} ${noun} could not be processed: ${reasons}`);
+    };
+
+    // 3. User Signup Review Actions
+    // Resolves to null on success (or when the admin cancels), otherwise to the failure reason.
     const handleUserApproval = async (userId, action, isBulk = false) => {
-        if (!isBulk && action === 'reject' && !await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', destructive: true })) return;
+        if (!isBulk && action === 'reject' && !await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', destructive: true })) return null;
         if (!isBulk) setIsProcessing(`user-${userId}`);
         const endpoint = action === 'approve' ? `approve_user/${userId}` : `reject_user/${userId}`;
 
@@ -246,8 +281,11 @@ const ToReview = () => {
                 adminCache.invalidate('admin_to_review');
                 setPendingUsers(prev => prev.filter(u => u.id !== userId));
             }
-        } catch {
-            if (!isBulk) toast.error(`Failed to ${action} user.`);
+            return null;
+        } catch (error) {
+            const reason = getErrorMessage(error, `Failed to ${action} user.`);
+            if (!isBulk) toast.error(reason);
+            return reason;
         } finally {
             if (!isBulk) setIsProcessing(null);
         }
@@ -259,22 +297,32 @@ const ToReview = () => {
         
         setIsProcessing('bulk-user');
         const ids = Array.from(selectedUsers);
-        let successCount = 0;
+        const failures = [];
         for (const id of ids) {
-            try {
-                await handleUserApproval(id, action, true);
-                // eslint-disable-next-line
-                successCount++;
-            } catch (e) {
-                console.error(e);
-            }
+            const reason = await handleUserApproval(id, action, true);
+            if (reason) failures.push({ id, reason });
         }
-        
-        setSelectedUsers(new Set());
+        reportBulkFailures(failures, ids.length, 'users');
+
+        // Anything that failed stays selected so it can be retried.
+        setSelectedUsers(new Set(failures.map(f => f.id)));
         setIsProcessing(null);
     };
 
+    // 4. Duck Trade Review Actions
+    // Resolves to null on success (or when the admin cancels), otherwise to the failure reason.
+    // Bulk runs are confirmed once up front by handleBulkTradeApproval.
     const handleTradeApproval = async (tradeId, action, isBulk = false) => {
+        if (!isBulk && !await showConfirm(
+            action === 'approve'
+                ? 'Approve this trade? The student\'s duck balance will be debited.'
+                : 'Reject this trade? This cannot be undone.',
+            {
+                title: action === 'approve' ? 'Approve Trade' : 'Reject Trade',
+                confirmText: action === 'approve' ? 'Approve' : 'Reject',
+                destructive: action === 'reject'
+            }
+        )) return null;
         if (!isBulk) setIsProcessing(`trade-${tradeId}`);
         const formData = new FormData();
         formData.append('trade_id', tradeId);
@@ -285,11 +333,12 @@ const ToReview = () => {
             if (response.data.status === 'success') {
                 adminCache.invalidate('admin_to_review');
                 setTrades(prev => prev.filter(t => t.id !== tradeId));
-            } else {
-                if (!isBulk) toast.error(response.data.message || 'Action failed.');
             }
-        } catch {
-            if (!isBulk) toast.error('Failed to process trade.');
+            return null;
+        } catch (error) {
+            const reason = getErrorMessage(error, 'Failed to process trade.');
+            if (!isBulk) toast.error(reason);
+            return reason;
         } finally {
             if (!isBulk) setIsProcessing(null);
         }
@@ -297,18 +346,31 @@ const ToReview = () => {
 
     const handleBulkTradeApproval = async (action) => {
         if (selectedTrades.size === 0) return;
-        
+
+        const count = selectedTrades.size;
+        const noun = count === 1 ? 'trade' : 'trades';
+        if (!await showConfirm(
+            action === 'approve'
+                ? `Approve ${count} ${noun}? Each student's duck balance will be debited.`
+                : `Reject ${count} ${noun}? This cannot be undone.`,
+            {
+                title: action === 'approve' ? 'Approve Trades' : 'Reject Trades',
+                confirmText: action === 'approve' ? 'Approve Selected' : 'Reject Selected',
+                destructive: action === 'reject'
+            }
+        )) return;
+
         setIsProcessing('bulk-trade');
         const ids = Array.from(selectedTrades);
+        const failures = [];
         for (const id of ids) {
-            try {
-                await handleTradeApproval(id, action, true);
-            } catch (e) {
-                console.error(e);
-            }
+            const reason = await handleTradeApproval(id, action, true);
+            if (reason) failures.push({ id, reason });
         }
-        
-        setSelectedTrades(new Set());
+        reportBulkFailures(failures, ids.length, 'trades');
+
+        // Anything that failed stays selected so it can be retried.
+        setSelectedTrades(new Set(failures.map(f => f.id)));
         setIsProcessing(null);
     };
 
@@ -346,7 +408,7 @@ const ToReview = () => {
                 }
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to process course request.');
+            toast.error(getErrorMessage(error, 'Failed to process course request.'));
         } finally {
             setIsProcessing(null);
         }
@@ -367,7 +429,7 @@ const ToReview = () => {
                 setParentMessages(prev => prev.filter(m => m.id !== msgId));
                 adminCache.invalidate('admin_to_review');
             }
-            toast.error(getApiErrorMessage(error, 'Failed to resolve parent message.'));
+            toast.error(getErrorMessage(error, 'Failed to resolve parent message.'));
         } finally {
             setIsProcessing(null);
         }
@@ -430,6 +492,11 @@ const ToReview = () => {
 
     const renderProjectCard = (p) => {
         const isExpanded = !!expandedCodeSnippets[p.id];
+        // Student-supplied links: only http(s) URLs (or a site-relative video path) become hrefs.
+        const linkHref = safeUrl(p.link);
+        const githubHref = safeUrl(p.github_link);
+        const videoHref = safeUrl(p.video_url)
+            || (p.video_url?.startsWith('/') && !p.video_url.startsWith('//') ? p.video_url : null);
         return (
             <div className="review-card project-review-card" key={p.key}>
                 <div className="review-card-header">
@@ -489,18 +556,18 @@ const ToReview = () => {
                     </div>
 
                     <div className="project-links">
-                        {p.link && (
-                            <a href={p.link} target="_blank" rel="noopener noreferrer" className="project-link-btn">
+                        {linkHref && (
+                            <a href={linkHref} target="_blank" rel="noopener noreferrer" className="project-link-btn">
                                 <ExternalLink size={14} /> Live Project
                             </a>
                         )}
-                        {p.github_link && (
-                            <a href={p.github_link} target="_blank" rel="noopener noreferrer" className="project-link-btn">
+                        {githubHref && (
+                            <a href={githubHref} target="_blank" rel="noopener noreferrer" className="project-link-btn">
                                 <ExternalLink size={14} /> GitHub Repo
                             </a>
                         )}
-                        {p.video_url && (
-                            <a href={p.video_url} target="_blank" rel="noopener noreferrer" className="project-link-btn video">
+                        {videoHref && (
+                            <a href={videoHref} target="_blank" rel="noopener noreferrer" className="project-link-btn video">
                                 <ExternalLink size={14} /> Watch Recording
                             </a>
                         )}
@@ -620,7 +687,7 @@ const ToReview = () => {
                         <Award size={14} /> Certificate
                     </div>
                     <span className="card-time">
-                        <Clock size={12} /> {new Date(c.submitted_at).toLocaleString()}
+                        <Clock size={12} /> {formatSubmittedAt(c.submitted_at)}
                     </span>
                 </div>
 
@@ -678,8 +745,8 @@ const ToReview = () => {
                             </div>
                         )}
 
-                        {c.url && (
-                            <a href={c.url} target="_blank" rel="noopener noreferrer" className="original-cert-link">
+                        {safeUrl(c.url) && (
+                            <a href={safeUrl(c.url)} target="_blank" rel="noopener noreferrer" className="original-cert-link">
                                 <ExternalLink size={14} /> Original Certificate Link
                             </a>
                         )}
@@ -725,7 +792,7 @@ const ToReview = () => {
             <div className={`review-card user-review-card ${isSelected ? 'selected' : ''}`} key={u.key}>
                 <div className="review-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} aria-label={`Select account signup for @${u.username}`} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
                         <div className="card-badge badge-user">
                             <Users size={14} /> Account Signup
                         </div>
@@ -790,7 +857,7 @@ const ToReview = () => {
             <div className={`review-card trade-review-card ${isSelected ? 'selected' : ''}`} key={t.key}>
                 <div className="review-card-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                        <input type="checkbox" checked={isSelected} onChange={toggleSelect} aria-label={`Select duck trade from @${t.username}`} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
                         <div className="card-badge badge-trade">
                             <ArrowLeftRight size={14} /> Duck Trade
                         </div>
@@ -1103,7 +1170,7 @@ const ToReview = () => {
                     
                     {activeTab === 'users' && displayItems.length > 0 && (
                         <div className="bulk-actions-bar" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, cursor: 'pointer' }}>
                                 <input 
                                     type="checkbox" 
                                     checked={selectedUsers.size === pendingUsers.length && pendingUsers.length > 0} 
@@ -1114,7 +1181,7 @@ const ToReview = () => {
                                     style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                                 />
                                 <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>Select All ({selectedUsers.size})</span>
-                            </div>
+                            </label>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button className="btn-reject" onClick={() => handleBulkUserApproval('reject')} disabled={selectedUsers.size === 0 || isProcessing === 'bulk-user'}>
                                     <XCircle size={16} /> Reject Selected
@@ -1128,7 +1195,7 @@ const ToReview = () => {
 
                     {activeTab === 'trades' && displayItems.length > 0 && (
                         <div className="bulk-actions-bar" style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 16px', borderRadius: '12px', border: '1px solid var(--border-subtle)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, cursor: 'pointer' }}>
                                 <input 
                                     type="checkbox" 
                                     checked={selectedTrades.size === trades.length && trades.length > 0} 
@@ -1139,7 +1206,7 @@ const ToReview = () => {
                                     style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                                 />
                                 <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-main)' }}>Select All ({selectedTrades.size})</span>
-                            </div>
+                            </label>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button className="btn-reject" onClick={() => handleBulkTradeApproval('reject')} disabled={selectedTrades.size === 0 || isProcessing === 'bulk-trade'}>
                                     <XCircle size={16} /> Reject Selected
@@ -1167,6 +1234,26 @@ const ToReview = () => {
                     )}
                 </div>
             </div>
+
+            <Modal isOpen={rejectingCertId !== null} onClose={() => setRejectingCertId(null)} title="Reject Certificate">
+                <form className="admin-form" onSubmit={(e) => { e.preventDefault(); submitCertificateRejection(); }}>
+                    <div className="form-group">
+                        <label htmlFor="cert-reject-reason">Reason (optional)</label>
+                        <textarea
+                            id="cert-reject-reason"
+                            rows={3}
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="Why is this certificate being rejected?"
+                        />
+                        <small>The student sees this note in their activity feed.</small>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch' }}>
+                        <button type="button" className="btn-secondary" style={{ marginTop: '1rem' }} onClick={() => setRejectingCertId(null)}>Cancel</button>
+                        <button type="submit" className="btn-danger" style={{ flex: 1 }}>Reject Certificate</button>
+                    </div>
+                </form>
+            </Modal>
         </div>
     );
 };

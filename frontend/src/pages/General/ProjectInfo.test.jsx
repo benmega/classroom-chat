@@ -78,6 +78,30 @@ describe('ProjectInfo', () => {
         expect(screen.getByText('Test Description')).toBeInTheDocument();
     });
 
+    it('quotes and encodes the cover image url so names with spaces and parentheses work', async () => {
+        client.get.mockImplementation((url) => {
+            if (url === '/api/project-templates') {
+                return Promise.resolve({
+                    data: { data: { templates: { '1': { id: '1', name: 'Test Project', image_url: 'images/projects/Tepun - Text-Based Adventure (2).jpg' } } } }
+                });
+            }
+            if (url === '/user/profile') {
+                return Promise.resolve({
+                    data: { data: { target: { projects: [] } } }
+                });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        const { container } = renderWithRouter(<ProjectInfo />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Test Project')).toBeInTheDocument();
+        });
+        const cover = container.querySelector('.project-header-cover-img');
+        expect(cover.style.backgroundImage).toContain('Tepun%20-%20Text-Based%20Adventure%20%282%29.jpg');
+    });
+
     it('handles error if project template not found', async () => {
         client.get.mockImplementation((url) => {
             if (url === '/api/project-templates') {
@@ -211,6 +235,36 @@ describe('ProjectInfo', () => {
         fireEvent.click(screen.getByText('Back to Map'));
         expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
+
+    it('shows the message of a failed assignment request, whichever field the route uses', async () => {
+        client.get.mockImplementation((url) => {
+            if (url === '/api/project-templates') {
+                return Promise.resolve({
+                    data: { data: { templates: { '1': { id: '1', name: 'Test Project' } } } }
+                });
+            }
+            if (url === '/user/profile') {
+                return Promise.resolve({
+                    data: { data: { target: { projects: [] } } }
+                });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<ProjectInfo />);
+
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Assign to me/i })).toBeInTheDocument();
+        });
+
+        client.post.mockRejectedValueOnce({ response: { data: { success: false, message: 'You already have this project.' } } });
+        fireEvent.click(screen.getByRole('button', { name: /Assign to me/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('You already have this project.');
+        });
+    });
+
     it('sends the template id when assigning', async () => {
         client.get.mockImplementation((url) => {
             if (url === '/api/project-templates') {

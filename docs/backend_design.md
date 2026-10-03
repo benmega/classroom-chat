@@ -11,7 +11,6 @@ The Classroom Chat backend is a robust Python application built using the Flask 
 - **Real-time**: [Flask-SocketIO](https://flask-socketio.readthedocs.io/) (via [gevent](http://www.gevent.org/))
 - **Security**: [Flask-Limiter](https://flask-limiter.readthedocs.io/), [Flask-WTF (CSRF)](https://flask-wtf.readthedocs.io/), [Cryptography](https://cryptography.io/)
 - **Scheduling**: [Flask-APScheduler](https://github.com/viniciuschiele/flask-apscheduler)
-- **AI Integration**: [OpenAI Python Library](https://github.com/openai/openai-python)
 - **Admin Interface**: Custom React Admin UI backed by Flask API routes
 - **Environment**: [python-dotenv](https://github.com/theskumar/python-dotenv)
 
@@ -24,20 +23,24 @@ The app uses the **Application Factory** pattern (`create_app`) located in `appl
 
 ### Modular Routing (Blueprints)
 API endpoints are structured into logical modules using **Flask Blueprints**. This ensures a separation of concerns and maintainable code:
-- **`user`**: Profile management, auth status, and user-specific actions.
-- **`admin`**: System management, duck balance adjustments, and advanced controls.
-- **`message`**: Conversation creation and message history.
-- **`ai`**: Integration with AI teaching logic and settings.
-- **`achievements`**: Badge and milestone tracking.
-- **`upload`**: Handling of profile pictures and static assets.
+- **`user`** (`/user`): Profile management, auth status, and user-specific actions.
+- **`admin`** (`/api/admin`): System management, duck balance adjustments, CRUD and advanced controls.
+- **`message`** (`/message`): Conversation creation and message history (messages are sent via Socket.IO, not HTTP).
+- **`achievements`** and **`achievements_api`** (both under `/api/achievements`): Badges, milestones and certificates.
+- **`notes`** (`/notes`): Note uploads.
 - **`cognito`** / **`dev_login`**: External Authentication flows (AWS Cognito SSO) and development-only auto-login.
 - **`shop`** / **`duck_trade`**: Economy systems for virtual storefront purchases and peer trading.
 - **`parent`**: APIs handling the parent portal data and parent-student linkages.
 - **`api_webhooks`**: Ingress for external systems (e.g., Stripe, analytics).
+- **`challenge`** (`/challenge`): Challenge submission (honor system, CORS for codecombat.com / ozaria.com).
+- **`session`** (`/api/session`): Presence heartbeat.
+- **`server_info`** (`/server`): Health check.
+- **`general`**: Serves the React `index.html` and Vite public assets.
 
+See [api_reference.md](api_reference.md) for the endpoint catalog.
 
 ### Proxy & WSGI Support
-- **ProxyFix**: Configured to trust headers when running behind a reverse proxy (like Nginx).
+- **ProxyFix**: Applied when `TRUSTED_PROXY_COUNT` is above 0 (1 in production behind Nginx, 0 elsewhere), so forwarded headers are never trusted in development.
 - **CORS**: Robustly configured via `flask-cors` to support specific origins and credential sharing (crucial for local development with Vite).
 
 ---
@@ -53,7 +56,7 @@ The system uses **SQLite** via the SQLAlchemy ORM in both development and produc
 
 ### Initialization Strategy
 - **`setup_models()`**: A centralized helper to register all models during app startup.
-- **Automatic Schema Creation**: The app factory checks for the existence of core tables and initializes the database (`db.create_all()`) and a default configuration if missing.
+- **Schema creation**: Outside production the app factory runs `db.create_all()` and seeds defaults. In production `create_all` is skipped; the schema is managed by Alembic (`flask db upgrade`, run by `deploy.sh`). See [database_schema.md](database_schema.md).
 
 ---
 
@@ -62,14 +65,14 @@ The backend implements a multi-layered **Authentication** system:
 - **AWS Cognito / External SSO**: The `cognito_routes` handles robust OAuth/SSO login flows.
 - **Development Login**: The `dev_login_routes` allows for quick authentication bypasses during local development.
 - **Custom Sessions**: For standard users, the app relies on cookie-based Flask sessions.
-- **`require_login` Decorator**: A central security decorator (`application/decorators/login_required.py`) used to protect API routes. It returns a `401 Unauthorized` response for JSON requests or redirects to the login page for browser requests if no session is found.
+- **`require_login` Decorator**: A central security decorator (`application/decorators/login_required.py`) used to protect API routes. It returns a JSON `401 Unauthorized` response, whatever the client accepts, if no session is found.
 - **`before_request` Hook**: Automatically loads the logged-in user from the session into Flask's `g` object for easy access across the application.
-- **CSRF Protection**: Enabled via `Flask-WTF` to prevent cross-site request forgery.
-- **Secure Sessions**: Permanent sessions with a strictly defined timeout (**10 hours**) and secure cookie settings to minimize disruptive logouts during class.
+- **CSRF Protection**: Enabled via `Flask-WTF` in production; disabled in the Development and Testing configs. Some routes are explicitly `csrf.exempt` (for example login, signup and `/challenge/submit`).
+- **Secure Sessions**: Permanent sessions with a strictly defined timeout (**10 hours**) and cookie settings configured in `config.py` to minimize disruptive logouts during class.
 
 ### Rate Limiting
 **Flask-Limiter** is used to prevent abuse and brute-force attacks:
-- **Default Limits**: 50/sec, 500/min, 20000/day.
+- **Default Limits**: 50/sec, 500/min, 20000/day. Logged-in requests are counted per user id, everything else per client address (`rate_limit_key` in `extensions.py`).
 - **Error Handling**: A custom handler returns a JSON response with a "retry-after" message when limits are hit.
 
 
@@ -79,22 +82,20 @@ The backend implements a multi-layered **Authentication** system:
 
 Real-time features are powered by **Socket.io**.
 - **`socket_events.py`**: Contains centralized event handlers for chat messages, user status updates, and notification broadcasts.
-- **Async Mode**: Configured to use `gevent` (`SOCKETIO_ASYNC_MODE` in `application/config.py`); `main.py` applies `gevent.monkey.patch_all()` before the app is imported so the standard library plays nicely with it.
-- **Room Management**: Conversations are isolated into specific socket rooms to ensure broadcast privacy.
+- **Async Mode**: Configured to use `gevent` by default. The `SOCKETIO_ASYNC_MODE` environment variable is read by both `application/config.py` and `main.py` (which loads `.env` first); `main.py` applies `gevent.monkey.patch_all()` before the app is imported so the standard library plays nicely with it.
+- **Sending messages**: The client emits `send_message`; the handler validates and saves the message and emits `message_received` to the target rooms. There is no HTTP send route.
+- **Other events**: `user_status_change`, `classroom_enrolled`, `activity_resolved`, `achievement_unlocked`, `message_deleted`, `sandbox_status_changed`.
+- **Room Management**: Conversations are isolated into specific socket rooms to ensure broadcast privacy. A connection joins `user:<id>`, `classroom:global` and the room of each classroom the user is enrolled in; admins join the room of every classroom plus `admin`. Rooms are fixed at connect time, so enrolling or unenrolling a user, deleting a classroom and changing a user's role re-sync the rooms of their open sockets (`sync_user_rooms`) without a reconnect. Logout disconnects the user's sockets, so one never outlives the login it was opened for.
+- **Presence**: `_active_sessions` (per process) tracks open sockets per user. Socket connects and messages refresh the open `SessionLog.last_seen`, and the stale-session cleanup leaves users with an open socket alone, since pages without the HTTP heartbeat (admin pages) keep their socket open.
 
 ---
 
-## 6. Background Tasks & AI
+## 6. Background Tasks
 
 ### 6.1 Task Scheduling
 **Flask-APScheduler** handles periodic system tasks:
 - **Project Maintenance**: Automatic cleanup or status updates.
 - **System Logs**: Periodic rotation or flushing of temporary session data.
-
-### 6.2 AI Service
-The backend integrates with **OpenAI** to provide an "AI Teacher" experience:
-- **`application/ai/`**: Contains the logic for processing AI-assisted conversations and validating AI-generated feedback.
-- **Global Toggle**: Controlled via the admin panel through the system configuration model.
 
 ---
 
@@ -103,29 +104,36 @@ The backend integrates with **OpenAI** to provide an "AI Teacher" experience:
 ```text
 backend/
 ├── application/       # Core app logic
-│   ├── ai/            # AI teacher services
 │   ├── commands/       # Flask CLI commands (e.g. `flask seed`)
 │   ├── decorators/    # Custom Flask decorators
 │   ├── models/        # SQLAlchemy model definitions
 │   ├── routes/        # API Blueprints (routes/admin/ holds the admin sub-modules)
 │   ├── services/      # Business logic and external wrappers
-│   ├── utilities/     # Internal helpers and formatting
+│   ├── utilities/     # Internal helpers, formatting, spa.py (serves the React index.html)
+│   ├── config.py      # Environment configs
+│   ├── constants.py
 │   ├── socket_events.py  # Socket.IO event handlers
+│   ├── tasks.py       # Scheduled jobs
 │   └── extensions.py  # Shared Flask extension instances
 ├── instance/           # SQLite DB files, logs (gitignored)
 ├── migrations/          # Alembic migrations (Flask-Migrate)
+├── tools/              # Maintenance helpers (migrate_classroom runs on every deploy; the rest are manual)
 ├── tests/               # Pytest suite
 ├── main.py             # Entry point for the Flask application
-└── requirements.txt   # Backend dependencies
+├── requirements.txt       # Runtime dependencies (the only file deploy.sh installs)
+├── requirements-dev.txt   # Runtime + test/lint tooling (pytest, ruff, mypy)
+└── requirements-tools.txt # Runtime + extras for the manual scripts (reportlab, qrcode, playwright)
 ```
 
 Uploaded user assets (profile pictures, project images, certificates) live in `userData/` at the repo root, not under `backend/`.
 
+Every image upload (profile picture and wallpaper, project and template images, notes, achievement badges) goes through `application/utilities/image_upload.py`. It enforces a byte cap (413), checks the content with Pillow (400 for anything that is not a PNG, JPEG, GIF or WebP image), caps the pixel count and animation frames, and names the stored file `<uuid>.<extension of the verified format>` rather than trusting the client's name. The caps are `IMAGE_MAX_BYTES_*`, `MAX_IMAGE_PIXELS` and `IMAGE_MAX_FRAMES` in `config.py`. Profile pictures and project images are re-encoded (EXIF orientation applied, metadata dropped, shrunk to 512 and 1600 px; animated GIF/WebP files are kept as uploaded), badges are normalised to a 256 px `<slug>.png`, and notes keep their original bytes. Replacing or deleting a profile picture, wallpaper or project removes the old file once the change is committed; a project image that a template or another project still uses is kept.
+
 ---
 
 ## 8. Testing Strategy
-- **Tool**: [Pytest](https://pytest.org/) with [pytest-flask](https://github.com/pytest-dev/pytest-flask).
+- **Tool**: [Pytest](https://pytest.org/) (with pytest-cov), installed through `requirements-dev.txt`.
 - **Scope**:
     - **Unit Tests**: Coverage for individual models and utility functions.
     - **Integration Tests**: Verification of API endpoints via the Flask test client.
-    - **Task Tests**: Validating APScheduler jobs and AI service wrappers.
+    - **Task Tests**: Validating APScheduler jobs.

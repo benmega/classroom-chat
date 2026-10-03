@@ -62,7 +62,7 @@
     outline: none;
     border-color: var(--primary-color);
     box-shadow: var(--shadow-glow);
-    background: white;
+    background: var(--bg-primary);
 }
 
 .history-stats {
@@ -227,14 +227,6 @@
     max-width: 400px;
 }
 
-.history-loading {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 10rem 0;
-}
-
 .loader {
     width: 64px;
     height: 64px;
@@ -293,4 +285,3 @@
         grid-template-columns: 1fr;
     }
 }
-

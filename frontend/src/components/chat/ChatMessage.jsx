@@ -9,32 +9,42 @@ const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
     const borderSpeed = '1.5s';
     const isOwnMessage = user && msg && user.id === msg.user_id;
 
+    const avatar = (
+        <div
+            className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}
+            style={msg.has_animated_border ? {
+                '--border-speed': borderSpeed,
+                ...(msg.animated_border_color ? { '--border-color': msg.animated_border_color } : {})
+            } : {}}
+        >
+            {msg.user_profile_pic ? (
+                <SmartImage
+                    src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)}
+                    alt=""
+                    fallbackType="avatar"
+                />
+            ) : (
+                <UserIcon size={20} />
+            )}
+        </div>
+    );
+
     return (
         <div className={`chat-message-group ${isOwnMessage ? 'own-message' : 'other-message'} ${isConsecutive ? 'consecutive' : ''}`}>
             <div className="message-row">
                 {!isConsecutive ? (
-                    <Link 
-                        to={msg.slug ? `/profile/${msg.slug}` : '#'} 
-                        className="avatar-link"
-                    >
-                        <div 
-                            className={`avatar-container ${msg.has_animated_border ? "perk-animated-border" : ""}`}
-                            style={msg.has_animated_border ? { 
-                                '--border-speed': borderSpeed,
-                                ...(msg.animated_border_color ? { '--border-color': msg.animated_border_color } : {})
-                            } : {}}
+                    // Deleted users have no profile to link to: keep the avatar but not a dead link.
+                    msg.slug ? (
+                        <Link
+                            to={`/profile/${msg.slug}`}
+                            className="avatar-link"
+                            aria-label={`View ${msg.user_name || 'user'}'s profile`}
                         >
-                            {msg.user_profile_pic ? (
-                                <SmartImage 
-                                    src={getApiUrl(`/user/profile_pictures/${msg.user_profile_pic}`)} 
-                                    alt={msg.user_name || 'User'} 
-                                    fallbackType="avatar"
-                                />
-                            ) : (
-                                <UserIcon size={20} />
-                            )}
-                        </div>
-                    </Link>
+                            {avatar}
+                        </Link>
+                    ) : (
+                        <div className="avatar-link">{avatar}</div>
+                    )
                 ) : (
                     <div className="chat-avatar-placeholder" />
                 )}
@@ -92,6 +102,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
                                 onClick={() => onDelete(msg.id)}
                                 className="delete-message-btn"
                                 title="Delete Post"
+                                aria-label="Delete post"
                             >
                                 <Trash2 size={16} />
                             </button>

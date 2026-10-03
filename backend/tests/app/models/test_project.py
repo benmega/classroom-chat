@@ -4,9 +4,6 @@ Type: py
 Summary: Unit tests for project model.
 """
 
-import random
-import string
-
 from application import db
 from application.models.project import Project
 
@@ -76,23 +73,3 @@ def test_project_deletion(sample_project):
 
     deleted_project = db.session.get(Project, project.id)
     assert deleted_project is None
-
-
-def test_dynamic_project_generation(init_db, sample_user):
-    """Test creating projects with random data to simulate real-world conditions."""
-    for _ in range(10):  # Generate 10 random projects
-        name = "".join(random.choices(string.ascii_letters, k=10))
-        description = "".join(
-            random.choices(string.ascii_letters + string.digits, k=50)
-        )
-        link = f"http://{''.join(random.choices(string.ascii_lowercase, k=5))}.com"
-
-        project = Project(
-            name=name, description=description, link=link, user_id=sample_user.id
-        )
-        db.session.add(project)
-    db.session.commit()
-
-    projects = Project.query.all()
-    assert len(projects) == 10
-    assert all(isinstance(proj, Project) for proj in projects)

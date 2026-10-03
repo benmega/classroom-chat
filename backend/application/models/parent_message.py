@@ -4,9 +4,8 @@ Type: py
 Summary: Model for storing messages/inquiries sent from parents to teachers/admin.
 """
 
-from datetime import datetime
-
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class ParentMessage(db.Model):
@@ -28,7 +27,7 @@ class ParentMessage(db.Model):
     )  # pending, resolved
     created_at = db.Column(
         db.DateTime,
-        default=datetime.utcnow,
+        default=utcnow_naive,
         index=True,
     )
     resolved_at = db.Column(db.DateTime, nullable=True)

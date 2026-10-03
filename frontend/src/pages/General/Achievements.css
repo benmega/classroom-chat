@@ -141,7 +141,7 @@
 .search-box input:focus {
     border-color: var(--primary-color);
     box-shadow: var(--shadow-glow);
-    background: white;
+    background: var(--bg-primary);
 }
 
 /* ── Category Dropdown ────────────────────────────── */
@@ -171,13 +171,13 @@
 .filter-dropdown-trigger.open {
     border-color: var(--primary-color);
     color: var(--primary-accessible);
-    background: white;
+    background: var(--bg-primary);
 }
 
 .filter-dropdown-trigger.has-selection {
     border-color: var(--primary-color);
     color: var(--primary-accessible);
-    background: white;
+    background: var(--bg-primary);
 }
 
 .filter-dropdown-trigger .chevron {
@@ -199,7 +199,7 @@
 }
 
 .filter-clear-btn:hover {
-    color: var(--danger-color, #dc2626);
+    color: var(--error-color);
 }
 
 .filter-dropdown-menu {
@@ -207,7 +207,7 @@
     top: calc(100% + 6px);
     left: 0;
     z-index: 200;
-    background: var(--bg-primary, white);
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
     box-shadow: var(--shadow-soft);
@@ -318,7 +318,7 @@
 }
 
 .achievement-card {
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 16px;
     padding: 0;
@@ -338,8 +338,8 @@
 }
 
 .achievement-card.earned {
-    border-color: #dcfce7;
-    background: linear-gradient(180deg, var(--bg-primary) 0%, #f0fdf4 100%);
+    border-color: var(--green-100);
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--green-50) 100%);
 }
 
 /* ── Badge image centering ────────────────────────── */
@@ -376,7 +376,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 14px;
-    color: white;
+    color: var(--text-on-primary);
     z-index: 2;
 }
 
@@ -405,7 +405,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    color: #b45309;
+    color: var(--amber-700);
     font-weight: 700;
     font-size: 0.75rem;
 }
@@ -434,14 +434,14 @@
 
 .ach-card-footer.completed {
     justify-content: center;
-    background: #f0fdf4;
-    border-top-color: #dcfce7;
+    background: var(--green-50);
+    border-top-color: var(--green-100);
 }
 
 .ach-completed-text {
     font-size: 0.8rem;
     font-weight: 800;
-    color: #166534;
+    color: var(--green-800);
 }
 
 .ach-progress-container {
@@ -489,7 +489,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    color: #b45309;
+    color: var(--amber-700);
     font-weight: 800;
     font-size: 0.8rem;
     background: var(--bg-tertiary);
@@ -511,24 +511,6 @@
     color: var(--slate-800);
 }
 
-.ach-loading-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 400px;
-    gap: 1.5rem;
-}
-
-.ach-loader {
-    width: 48px;
-    height: 48px;
-    border: 4px solid var(--bg-tertiary);
-    border-top: 4px solid #3b82f6;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
@@ -538,7 +520,4 @@
         grid-template-columns: 1fr;
     }
     
-    .ach-header h1 {
-        font-size: 2rem;
-    }
 }

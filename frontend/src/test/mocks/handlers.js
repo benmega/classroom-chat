@@ -31,13 +31,13 @@ export const handlers = [
     }
 
     return new HttpResponse(
-      JSON.stringify({ error: 'Invalid credentials' }),
+      JSON.stringify({ error: 'Invalid username or password.' }),
       { status: 401 }
     );
   }),
 
   http.get('*/user/logout', () => {
-    return HttpResponse.json({ success: true });
+    return HttpResponse.json({ status: 'success', message: 'Logged out' });
   }),
 
   // Silence session heartbeat requests in tests

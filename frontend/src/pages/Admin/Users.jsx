@@ -27,6 +27,7 @@ import {
     ManageChildrenModal,
     ConnectionCardModal
 } from '../../components/admin/AdminModals';
+import '../../components/admin/AdminShared.css';
 import './Users.css';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -34,7 +35,8 @@ import { getApiUrl } from '../../utils/apiUrl';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 
-import { useUsersManagement } from '../../hooks/useUsersManagement';
+// Hooks
+import { useUsersManagement, USERS_PER_PAGE } from '../../hooks/useUsersManagement';
 
 const TABS = [
     { label: 'All', value: '' },
@@ -53,9 +55,19 @@ const ACCOUNT_TYPE_OPTIONS = [
     { label: 'Student', value: 'student' },
 ];
 
+// The row's cells are clickable for mouse users; this link is what keyboard and screen reader users reach.
+// It stops the click so the cell's own handler does not navigate a second time.
+const UserNameLink = ({ user }) => (
+    <Link to={`/admin/users/${user.id}`} className="name" onClick={(e) => e.stopPropagation()}>
+        {user.nickname || user.username}
+    </Link>
+);
+
 const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, handleRemoveUser, fetchParentChildren, fetchConnectionCard }) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = React.useRef(null);
+    const triggerRef = React.useRef(null);
+    const menuId = React.useId();
 
     React.useEffect(() => {
         const handleClickOutside = (event) => {
@@ -67,15 +79,37 @@ const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, han
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // Escape closes an open menu and puts focus back on the button that opened it
+    React.useEffect(() => {
+        if (!isOpen) return undefined;
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') {
+                setIsOpen(false);
+                triggerRef.current?.focus();
+            }
+        };
+        document.addEventListener("keydown", handleEscape);
+        return () => document.removeEventListener("keydown", handleEscape);
+    }, [isOpen]);
+
     return (
         <div className="action-group">
             
             <div className="kebab-menu-container" ref={menuRef}>
-                <button data-testid="kebab-trigger" className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}>
-                    <MoreVertical size={16} />
+                <button
+                    type="button"
+                    ref={triggerRef}
+                    data-testid="kebab-trigger"
+                    className={`action-btn kebab-trigger ${isOpen ? 'active' : ''}`}
+                    aria-label={`Actions for @${u.username}`}
+                    aria-expanded={isOpen}
+                    aria-controls={isOpen ? menuId : undefined}
+                    onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                >
+                    <MoreVertical size={16} aria-hidden="true" />
                 </button>
                 {isOpen && (
-                    <div className="kebab-dropdown">
+                    <div className="kebab-dropdown" id={menuId}>
                         {u.role === 'student' && (
                             <>
                                 <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); setActiveModal('adjust'); setIsOpen(false); }}>
@@ -148,6 +182,7 @@ const Users = () => {
         isLoading,
         isRefreshing,
         page,
+        setPage,
         totalPages,
         totalUsers,
         activeModal,
@@ -156,7 +191,6 @@ const Users = () => {
         setModalUser,
         formLoading,
         formErrors,
-        fetchUsers,
         handleCreateUser,
         handleAdjustDucks,
         handleAdjustPackets,
@@ -222,6 +256,10 @@ const Users = () => {
 
     const colCount = activeRole === '' ? 5 : 4;
 
+    // Range shown in the pagination footer ("0" when the list is empty)
+    const rangeEnd = Math.min(page * USERS_PER_PAGE, totalUsers);
+    const rangeStart = Math.min((page - 1) * USERS_PER_PAGE + 1, rangeEnd);
+
     if (isLoading) return (
         <div className="admin-users-page">
             <header className="page-header">
@@ -247,6 +285,7 @@ const Users = () => {
                     <Search size={18} />
                     <input 
                         type="text" 
+                        aria-label="Search users"
                         placeholder="Search by name or @username..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -396,7 +435,7 @@ const Users = () => {
                                                         fallbackType="avatar"
                                                     />
                                                     <div className="info">
-                                                        <div className="name">{u.nickname || u.username}</div>
+                                                        <UserNameLink user={u} />
                                                         <div className="handle">@{u.username}</div>
                                                         {u.role === 'student' && u.drawer && <div className="drawer-info drawer-info-text">Drawer: <span className="drawer-code">{u.drawer}</span></div>}
                                                     </div>
@@ -455,7 +494,7 @@ const Users = () => {
                                                         fallbackType="avatar"
                                                     />
                                                     <div className="info">
-                                                        <div className="name">{u.nickname || u.username}</div>
+                                                        <UserNameLink user={u} />
                                                         <div className="handle">@{u.username}</div>
                                                         {u.drawer && <div className="drawer-info drawer-info-text">Drawer: <span className="drawer-code">{u.drawer}</span></div>}
                                                     </div>
@@ -500,7 +539,7 @@ const Users = () => {
                                                             fallbackType="avatar"
                                                         />
                                                         <div className="info">
-                                                            <div className="name">{u.nickname || u.username}</div>
+                                                            <UserNameLink user={u} />
                                                             <div className="handle">@{u.username}</div>
                                                         </div>
                                                     </div>
@@ -513,12 +552,15 @@ const Users = () => {
                                                             : 'Children'
                                                         }
                                                         <button
+                                                            type="button"
                                                             data-testid="expand-btn" className="action-btn expand-btn"
                                                             onClick={() => toggleParentExpand(u.id)}
                                                             title={expandedParents.has(u.id) ? 'Collapse' : 'Expand'}
+                                                            aria-label={`${expandedParents.has(u.id) ? 'Collapse' : 'Expand'} children of @${u.username}`}
+                                                            aria-expanded={expandedParents.has(u.id)}
                                                             style={{ marginLeft: '8px', width: '28px', height: '28px' }}
                                                         >
-                                                            {expandedParents.has(u.id) ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                                                            {expandedParents.has(u.id) ? <ChevronUp size={15} aria-hidden="true" /> : <ChevronDown size={15} aria-hidden="true" />}
                                                         </button>
                                                     </div>
                                                 </td>
@@ -594,12 +636,12 @@ const Users = () => {
                 
                 <div className="pagination-container">
                     <div className="pagination-info">
-                        Showing <strong>{(page - 1) * 50 + 1}-{Math.min(page * 50, totalUsers)}</strong> of <strong>{totalUsers}</strong> users
+                        Showing <strong>{totalUsers === 0 ? 0 : `${rangeStart}-${rangeEnd}`}</strong> of <strong>{totalUsers}</strong> users
                     </div>
                     <div className="pagination-controls">
                         <button 
                             className="pagination-btn" 
-                            onClick={() => fetchUsers(page - 1)}
+                            onClick={() => setPage(page - 1)}
                             disabled={page <= 1 || isRefreshing}
                         >
                             <ChevronLeft size={16} /> Previous
@@ -609,7 +651,7 @@ const Users = () => {
                         </div>
                         <button 
                             className="pagination-btn" 
-                            onClick={() => fetchUsers(page + 1)}
+                            onClick={() => setPage(page + 1)}
                             disabled={page >= totalPages || isRefreshing}
                         >
                             Next <ChevronLeft size={16} className="icon-rotate-180" />

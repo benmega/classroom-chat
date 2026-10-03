@@ -1,5 +1,6 @@
 
 
+from flask import session
 from flask_apscheduler import APScheduler
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -9,10 +10,21 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import MetaData
 
+
+def rate_limit_key():
+    """Bucket logged-in requests per user and everything else per client address.
+
+    Keying by address alone makes a whole classroom behind one NAT share one
+    bucket. Login, signup and the other anonymous routes stay keyed by address.
+    """
+    user_id = session.get("user")
+    return f"user:{user_id}" if user_id else get_remote_address()
+
+
 scheduler = APScheduler()
 csrf = CSRFProtect()
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=rate_limit_key,
     default_limits=[
         "50 per second",
         "500 per minute",

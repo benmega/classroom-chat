@@ -40,3 +40,19 @@ def test_duck_trade_log_methods(app):
 
         trade.reject()
         assert trade.status == "rejected"
+
+
+def test_claim_pending_only_succeeds_for_the_first_caller(sample_duck_trade):
+    trade_id = sample_duck_trade.id
+
+    assert DuckTradeLog.claim_pending(trade_id, "approved") is True
+    db.session.commit()
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+
+    # Already out of 'pending': neither another approval nor a rejection claims it.
+    assert DuckTradeLog.claim_pending(trade_id, "approved") is False
+    assert DuckTradeLog.claim_pending(trade_id, "rejected") is False
+    db.session.commit()
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+
+    assert DuckTradeLog.claim_pending(trade_id + 1000, "approved") is False

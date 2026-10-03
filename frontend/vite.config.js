@@ -1,6 +1,11 @@
-import { defineConfig } from 'vite'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { loadEnv } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react-swc'
 
+// Rewrites named lucide-react imports into per-icon imports so the barrel file is not bundled.
 function lucideOptimize() {
   return {
     name: 'optimize-lucide',
@@ -29,12 +34,70 @@ function lucideOptimize() {
   };
 }
 
+const frontendDir = path.dirname(fileURLToPath(import.meta.url))
+const publicDir = path.join(frontendDir, 'public')
+
+// Flask backend that the dev and preview servers forward API traffic to. Override
+// with VITE_DEV_API (shell variable or frontend/.env, see .env.example).
+const API = loadEnv('development', frontendDir, 'VITE_').VITE_DEV_API || 'http://localhost:8000'
+
+// A production build ships frontend/public, while Flask serves its own frontend/static.
+// Where both hold a /static file, let the public/ copy win so dev and preview show what
+// production shows; everything else (achievement badges, project templates, ...) still
+// comes from the backend. Returning a URL makes Vite serve it instead of proxying.
+const servePublicFirst = (req) => {
+  try {
+    const file = path.join(publicDir, decodeURIComponent(req.url.split('?')[0]))
+    if (file.startsWith(publicDir + path.sep) && fs.statSync(file).isFile()) return req.url
+  } catch {
+    // Not in public/ (or a malformed URL): let the backend answer.
+  }
+}
+
+// Only prefixes the frontend requests belong here. Everything under /api (admin,
+// achievements, dev-login, project-templates, session, ...) is already covered by '/api'.
+const proxy = {
+  '/api': API,
+  '/message': API,
+  '/user': API,
+  '/challenge': API,
+  '/duck_trade': API,
+  '/notes': API,
+  // No direct frontend caller, but the backend returns stored-file URLs under /upload/uploads/.
+  '/upload': API,
+  '/static': { target: API, changeOrigin: true, bypass: servePublicFirst },
+  '/socket.io': {
+    target: API,
+    ws: true,
+    changeOrigin: true,
+  },
+}
+
 export default defineConfig({
   plugins: [react(), lucideOptimize()],
   build: {
     rollupOptions: {
       output: {
-        // Rollup's default chunking is usually more memory efficient during build
+        // Split heavy vendor libs into separate cached chunks.
+        // Each chunk is independently cached — an app code change no longer
+        // busts the MUI / react-admin / chart.js cache in the browser.
+        //
+        // Function form on purpose: the object form drags every transitive
+        // dependency of a listed package into its chunk, so react/jsx-runtime
+        // landed in vendor-charts and @tanstack/react-query (imported eagerly by
+        // main.jsx) in vendor-react-admin. Every page then statically imported
+        // the admin/chart/MUI stack (~300 kB gzip) and /login preloaded it all.
+        // Here each module is assigned by package path, so only the packages the
+        // app shell needs (react, react-dom, react-router, react-query) sit in
+        // the eagerly loaded vendor-react chunk; the others are lazy-only.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler|@tanstack)\//.test(id)) return 'vendor-react'
+          if (/node_modules\/(@mui|@emotion)\//.test(id)) return 'vendor-mui'
+          if (/node_modules\/(chart\.js|react-chartjs-2|@kurkle)\//.test(id)) return 'vendor-charts'
+          if (/node_modules\/(react-admin|ra-[a-z0-9-]+)\//.test(id)) return 'vendor-react-admin'
+          if (/node_modules\/emoji-picker-react\//.test(id)) return 'vendor-emoji'
+        },
       },
     },
   },
@@ -55,33 +118,13 @@ export default defineConfig({
         'src/test/**',
         '**/*.config.*',
         'src/main.jsx',
-        'src/pages/Admin/AdminAchievements.jsx',
-        'src/pages/Admin/AdminChallenges.jsx',
-        'src/pages/Admin/AdminConnections.jsx',
-        'src/pages/Admin/AdminCourseInstances.jsx',
-        'src/pages/Admin/AdminDocuments.jsx',
-        'src/pages/Admin/AdminStudentActivity.jsx',
-        'src/pages/Admin/AdminUserDashboard.jsx',
-        'src/pages/Admin/AdvancedPanel.jsx',
-        'src/pages/Parent/**',
         'src/pages/Error/ServerOffline.jsx',
-        'src/components/common/ImageUpload.jsx',
-        'src/components/common/ScreenRecorder.jsx',
         'src/components/common/SmartImage.jsx',
-        'src/components/common/Tutorial.jsx',
-        'src/components/common/UserSearchInput.jsx',
-        'src/utils/video.js',
-        'src/pages/General/Achievements.jsx',
-        'src/pages/General/BitShift.jsx',
         'src/pages/General/CourseLevelBreakdown.jsx',
-        'src/pages/General/CourseProgressTree.jsx',
         'src/pages/General/History.jsx',
         'src/pages/General/Landing.jsx',
         'src/pages/General/LandingDesktop.jsx',
         'src/pages/General/LandingMobile.jsx',
-        'src/pages/General/SubmitWork.jsx',
-        'src/hooks/useFeedLogic.js',
-        'src/hooks/useProfile.js',
         'src/hooks/useViewport.js',
       ],
       thresholds: {
@@ -92,31 +135,7 @@ export default defineConfig({
       },
     },
   },
-  server: {
-    proxy: {
-      '/api': 'http://localhost:8000',
-      '/track-requests': 'http://localhost:8000',
-      '/admin/track-requests': 'http://localhost:8000',
-      '/message': 'http://localhost:8000',
-      '/user': 'http://localhost:8000',
-      '/session': 'http://localhost:8000',
-      '/upload': 'http://localhost:8000',
-      '/challenge': 'http://localhost:8000',
-      '/ai': 'http://localhost:8000',
-      '/api/admin': 'http://localhost:8000',
-      '/duck_trade': 'http://localhost:8000',
-      '/api/achievements': 'http://localhost:8000',
-      '/notes': 'http://localhost:8000',
-      '/server': 'http://localhost:8000',
-      '/api/dev-login': 'http://localhost:8000',
-      '/api/docs': 'http://localhost:8000',
-      '/api/project-templates': 'http://localhost:8000',
-      '/static': 'http://localhost:8000',
-      '/socket.io': {
-        target: 'http://localhost:8000',
-        ws: true,
-        changeOrigin: true,
-      },
-    },
-  },
+  server: { proxy },
+  // `vite preview` serves the production build (port 4173) and needs the same backend routes.
+  preview: { proxy },
 })

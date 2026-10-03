@@ -20,13 +20,6 @@ def login_as_admin(client, admin_user):
         sess["user"] = admin_user.id
 
 
-@pytest.fixture(autouse=True)
-def clear_total_cache():
-    User._total_challenges_cache.clear()
-    yield
-    User._total_challenges_cache.clear()
-
-
 @pytest.fixture
 def seeded(init_db):
     seed_three_d_track()
@@ -393,13 +386,12 @@ def test_admin_user_list_includes_td_fields(client, sample_admin, sample_user, s
     assert mine["td_percent"] == 11
 
 
-def test_zero_total_is_not_cached(init_db, sample_user):
+def test_totals_follow_a_domain_seeded_while_running(init_db, sample_user):
     assert sample_user.get_progress_percent("3d-modeling") == 0
-    assert "3d-modeling" not in User._total_challenges_cache
     seed_three_d_track()  # seeded while the "process" keeps running
     _complete(sample_user, "Name Tag Model")
     assert sample_user.get_progress_percent("3d-modeling") == 11
-    assert User._total_challenges_cache["3d-modeling"] == 9
+    assert User._challenge_totals()["3d-modeling"] == 9
 
 
 def test_course_progress_data_includes_3d_breakdown(seeded, sample_user):

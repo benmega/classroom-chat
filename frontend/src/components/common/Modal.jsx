@@ -1,72 +1,16 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import useModalA11y from '../../hooks/useModalA11y';
 import './Modal.css';
 
-const Modal = ({ isOpen, onClose, title, children, maxWidth }) => {
+// bodyClassName lets a caller restyle the body, e.g. to drop its padding for a full-bleed console.
+const Modal = ({ isOpen, onClose, title, ariaLabel, children, maxWidth, bodyClassName }) => {
     const modalRef = useRef(null);
+    // Not a fixed id: two modals can be open at once (e.g. a helper dialog over a form).
+    const titleId = useId();
 
-    const onCloseRef = useRef(onClose);
-    useEffect(() => {
-        onCloseRef.current = onClose;
-    }, [onClose]);
-
-    useEffect(() => {
-        if (!isOpen) return;
-
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape') {
-                if (onCloseRef.current) onCloseRef.current();
-            } else if (e.key === 'Tab') {
-                if (!modalRef.current) return;
-                
-                const focusableElements = modalRef.current.querySelectorAll(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                );
-                
-                if (focusableElements.length === 0) return;
-
-                const firstElement = focusableElements[0];
-                const lastElement = focusableElements[focusableElements.length - 1];
-
-                if (e.shiftKey) {
-                    if (document.activeElement === firstElement) {
-                        lastElement.focus();
-                        e.preventDefault();
-                    }
-                } else {
-                    if (document.activeElement === lastElement) {
-                        firstElement.focus();
-                        e.preventDefault();
-                    }
-                }
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        
-        // Focus first element on open
-        if (modalRef.current) {
-             const focusableElements = modalRef.current.querySelectorAll(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            );
-            if (focusableElements.length > 0) {
-                // Focus first element, typically a close button or input
-                focusableElements[0].focus();
-            } else {
-                modalRef.current.focus();
-            }
-        }
-        
-        // Prevent body scroll when modal is open
-        const originalStyle = window.getComputedStyle(document.body).overflow;
-        document.body.style.overflow = 'hidden';
-
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-            document.body.style.overflow = originalStyle;
-        };
-    }, [isOpen]);
+    useModalA11y({ isOpen, onClose, containerRef: modalRef, lockScroll: true });
 
     if (!isOpen) return null;
 
@@ -80,18 +24,19 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth }) => {
                 tabIndex="-1"
                 role="dialog"
                 aria-modal="true"
-                aria-labelledby="modal-title"
+                aria-labelledby={title ? titleId : undefined}
+                aria-label={title ? undefined : ariaLabel}
                 style={maxWidth ? { maxWidth } : undefined}
             >
                 {title ? (
                     <div className="modal-header">
-                        <h3 id="modal-title">{title}</h3>
+                        <h3 id={titleId}>{title}</h3>
                         <button onClick={onClose} className="close-btn" aria-label="Close modal"><X size={20} /></button>
                     </div>
                 ) : (
                     <button onClick={onClose} className="close-btn" aria-label="Close modal" style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 10, background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}><X size={20} /></button>
                 )}
-                <div className="modal-body">
+                <div className={bodyClassName ? `modal-body ${bodyClassName}` : 'modal-body'}>
                     {children}
                 </div>
             </div>

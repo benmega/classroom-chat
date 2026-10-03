@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProjectModal from './ProjectModal';
 
 describe('ProjectModal Component', () => {
@@ -65,12 +66,81 @@ describe('ProjectModal Component', () => {
   it('calls onClose when close button or overlay is clicked', () => {
     render(<ProjectModal project={mockProject} onClose={mockOnClose} />);
 
-    const closeBtn = screen.getByRole('button', { name: '' }); // X icon button
+    const closeBtn = screen.getByRole('button', { name: /close/i });
     fireEvent.click(closeBtn);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
 
     const overlay = document.querySelector('.modal-overlay');
     fireEvent.click(overlay);
     expect(mockOnClose).toHaveBeenCalledTimes(2);
+  });
+
+  describe('dialog behaviour', () => {
+    // No video: an iframe would try to load the embed URL.
+    const noVideoProject = { ...mockProject, video_url: null };
+
+    beforeEach(() => {
+      mockOnClose.mockClear();
+    });
+
+    it('is a modal dialog named after the project', () => {
+      render(<ProjectModal project={noVideoProject} onClose={mockOnClose} />);
+
+      const dialog = screen.getByRole('dialog', { name: 'Awesome Game Project' });
+      expect(dialog).toHaveAttribute('aria-modal', 'true');
+    });
+
+    it('keeps its content reachable by role instead of hiding it inside a button', () => {
+      render(<ProjectModal project={noVideoProject} onClose={mockOnClose} />);
+
+      expect(screen.getByRole('heading', { name: 'Awesome Game Project' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Description/ })).toBeInTheDocument();
+      expect(document.querySelector('.modal-overlay')).toHaveAttribute('role', 'presentation');
+    });
+
+    it('does not close when the dialog itself is clicked', () => {
+      render(<ProjectModal project={noVideoProject} onClose={mockOnClose} />);
+
+      fireEvent.click(screen.getByText('A 2D platformer game built with JavaScript.'));
+      fireEvent.click(screen.getByRole('dialog'));
+
+      expect(mockOnClose).not.toHaveBeenCalled();
+    });
+
+    it('closes on Escape', async () => {
+      const user = userEvent.setup();
+      render(<ProjectModal project={noVideoProject} onClose={mockOnClose} />);
+
+      await user.keyboard('{Escape}');
+
+      expect(mockOnClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('moves focus into the dialog and keeps Tab inside it', async () => {
+      const user = userEvent.setup();
+      render(<ProjectModal project={noVideoProject} onClose={mockOnClose} />);
+
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+
+      const dialog = screen.getByRole('dialog');
+      for (let i = 0; i < 8; i += 1) {
+        await user.tab();
+        expect(dialog).toContainElement(document.activeElement);
+      }
+    });
+
+    it('returns focus to the control that opened it', () => {
+      const opener = document.createElement('button');
+      document.body.appendChild(opener);
+      opener.focus();
+
+      const { rerender } = render(<ProjectModal project={noVideoProject} onClose={mockOnClose} />);
+      expect(opener).not.toHaveFocus();
+
+      rerender(<ProjectModal project={null} onClose={mockOnClose} />);
+
+      expect(opener).toHaveFocus();
+      opener.remove();
+    });
   });
 });

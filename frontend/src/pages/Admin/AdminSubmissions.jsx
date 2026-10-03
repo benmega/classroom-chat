@@ -14,6 +14,7 @@ import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
 import adminCache from '../../utils/adminCache';
+import { getErrorMessage } from '../../utils/apiError';
 import { getApiUrl } from '../../utils/apiUrl';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
@@ -96,7 +97,7 @@ const AdminSubmissions = () => {
                 toast.error(response.data.error || 'Failed to update submission.');
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to update submission.');
+            toast.error(getErrorMessage(error, 'Failed to update submission.'));
         } finally {
             setIsProcessing(null);
         }
@@ -120,7 +121,7 @@ const AdminSubmissions = () => {
                 toast.error(response.data.error || 'Failed to delete submission.');
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to delete submission.');
+            toast.error(getErrorMessage(error, 'Failed to delete submission.'));
         } finally {
             setIsProcessing(null);
         }
@@ -230,6 +231,7 @@ const AdminSubmissions = () => {
                                     <input
                                         type="text"
                                         className="teacher-note-input"
+                                        aria-label={`Note back to ${submission.nickname || submission.username}`}
                                         placeholder="Optional note back to the student..."
                                         value={noteDrafts[submission.id] || ''}
                                         onChange={(e) => handleNoteDraftChange(submission.id, e.target.value)}
@@ -244,26 +246,31 @@ const AdminSubmissions = () => {
                                     href={getApiUrl(`/api/admin/submissions/${submission.id}/download`)}
                                     className="btn-secondary"
                                     title="Download"
+                                    aria-label={`Download ${submission.original_filename}`}
                                 >
-                                    <Download size={18} />
+                                    <Download size={18} aria-hidden="true" />
                                 </a>
                                 {submission.status !== 'reviewed' && (
                                     <button
+                                        type="button"
                                         className="btn-approve"
                                         onClick={() => handleMarkReviewed(submission.id)}
                                         disabled={isProcessing === submission.id}
                                         title="Mark Reviewed"
+                                        aria-label={`Mark ${submission.original_filename} as reviewed`}
                                     >
-                                        <CheckCircle size={18} />
+                                        <CheckCircle size={18} aria-hidden="true" />
                                     </button>
                                 )}
                                 <button
+                                    type="button"
                                     className="btn-reject"
                                     onClick={() => handleDelete(submission.id, submission.original_filename)}
                                     disabled={isProcessing === submission.id}
                                     title="Delete"
+                                    aria-label={`Delete ${submission.original_filename}`}
                                 >
-                                    <Trash2 size={18} />
+                                    <Trash2 size={18} aria-hidden="true" />
                                 </button>
                             </div>
                         </div>

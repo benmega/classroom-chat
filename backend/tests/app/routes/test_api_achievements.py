@@ -1,28 +1,14 @@
 import json
 
-import pytest
 from application import db
-from tests.factories import AchievementFactory, UserFactory
+from tests.factories import AchievementFactory
 
 
-@pytest.fixture
-def test_user(init_db):
-    user = UserFactory()
-    db.session.commit()
-    return user
-
-@pytest.fixture
-def logged_in_client(client, test_user):
-    """A Flask test client that is logged in as test_user."""
-    with client.session_transaction() as sess:
-        sess["user"] = test_user.id
-    return client
-
-def test_check_achievements_success(logged_in_client, init_db, test_user):
+def test_check_achievements_success(logged_in_client, init_db, sample_user):
     """Test successful achievement check with new awards."""
     achievement = AchievementFactory(type="ducks", requirement_value="10")
-    test_user.earned_ducks = 15 # >= 10
-    test_user.duck_balance = 0
+    sample_user.earned_ducks = 15 # >= 10
+    sample_user.duck_balance = 0
     db.session.commit()
 
     response = logged_in_client.get("/api/achievements/check")
@@ -36,10 +22,10 @@ def test_check_achievements_success(logged_in_client, init_db, test_user):
     returned_names = [a["name"] for a in data["new_awards"]]
     assert achievement.name in returned_names
 
-def test_check_achievements_no_new_awards(logged_in_client, init_db, test_user):
+def test_check_achievements_no_new_awards(logged_in_client, init_db, sample_user):
     """Test achievement check when user has no new awards."""
     AchievementFactory(type="ducks", requirement_value="100")
-    test_user.earned_ducks = 5 # < 100
+    sample_user.earned_ducks = 5 # < 100
     db.session.commit()
 
     response = logged_in_client.get("/api/achievements/check")
@@ -69,10 +55,10 @@ def test_check_achievements_user_not_found(client, init_db):
     data = json.loads(response.data)
     assert data["success"] is False
 
-def test_check_achievements_badge_url_format(logged_in_client, init_db, test_user):
+def test_check_achievements_badge_url_format(logged_in_client, init_db, sample_user):
     """Test that badge URLs contain the correct image reference."""
     achievement = AchievementFactory(type="ducks", requirement_value="10")
-    test_user.earned_ducks = 10
+    sample_user.earned_ducks = 10
     db.session.commit()
 
     response = logged_in_client.get("/api/achievements/check")
@@ -89,11 +75,11 @@ def test_check_achievements_badge_url_format(logged_in_client, init_db, test_use
     assert badge_url is not None
     assert f"{achievement.slug}.png" in badge_url
 
-def test_check_achievements_multiple_awards_correct_data(logged_in_client, init_db, test_user):
+def test_check_achievements_multiple_awards_correct_data(logged_in_client, init_db, sample_user):
     """Test that multiple achievements return correct data structure."""
     ach1 = AchievementFactory(type="ducks", requirement_value="10")
     ach2 = AchievementFactory(type="ducks", requirement_value="20")
-    test_user.earned_ducks = 25
+    sample_user.earned_ducks = 25
     db.session.commit()
 
     response = logged_in_client.get("/api/achievements/check")
@@ -105,23 +91,23 @@ def test_check_achievements_multiple_awards_correct_data(logged_in_client, init_
     assert ach1.name in response_names
     assert ach2.name in response_names
 
-def test_check_achievements_evaluate_user_called_correctly(logged_in_client, init_db, test_user):
+def test_check_achievements_evaluate_user_called_correctly(logged_in_client, init_db, sample_user):
     """Test that evaluate_user is actually persisting transactions (replaces mock test)."""
     achievement = AchievementFactory(type="ducks", requirement_value="10", reward=50)
-    test_user.earned_ducks = 15
+    sample_user.earned_ducks = 15
     db.session.commit()
 
     logged_in_client.get("/api/achievements/check")
 
     from application.models.duck_transaction import DuckTransaction
-    txs = DuckTransaction.query.filter_by(user_id=test_user.id).all()
+    txs = DuckTransaction.query.filter_by(user_id=sample_user.id).all()
     assert len(txs) >= 1
     assert any(f"Achievement: {achievement.name}" in tx.reason for tx in txs)
 
-def test_check_achievements_single_award(logged_in_client, init_db, test_user):
+def test_check_achievements_single_award(logged_in_client, init_db, sample_user):
     """Test achievement check with a single new award."""
     achievement = AchievementFactory(type="ducks", requirement_value="15")
-    test_user.earned_ducks = 15
+    sample_user.earned_ducks = 15
     db.session.commit()
 
     response = logged_in_client.get("/api/achievements/check")
@@ -132,10 +118,10 @@ def test_check_achievements_single_award(logged_in_client, init_db, test_user):
     award_names = [a["name"] for a in data["new_awards"]]
     assert achievement.name in award_names
 
-def test_check_achievements_response_structure(logged_in_client, init_db, test_user):
+def test_check_achievements_response_structure(logged_in_client, init_db, sample_user):
     """Test that the response structure matches expected format."""
     achievement = AchievementFactory(type="ducks", requirement_value="100")
-    test_user.earned_ducks = 100
+    sample_user.earned_ducks = 100
     db.session.commit()
 
     response = logged_in_client.get("/api/achievements/check")
@@ -144,7 +130,7 @@ def test_check_achievements_response_structure(logged_in_client, init_db, test_u
     award = next(a for a in data["new_awards"] if a["name"] == achievement.name)
     assert all(k in award for k in ("id", "name", "badge"))
 
-def test_check_achievements_session_persistence(logged_in_client, init_db, test_user):
+def test_check_achievements_session_persistence(logged_in_client, init_db, sample_user):
     """Test that the session is maintained after checking achievements."""
     with logged_in_client.session_transaction() as sess:
         sess["test_key"] = "test_value"
@@ -152,13 +138,13 @@ def test_check_achievements_session_persistence(logged_in_client, init_db, test_
     logged_in_client.get("/api/achievements/check")
 
     with logged_in_client.session_transaction() as sess:
-        assert sess.get("user") == test_user.id
+        assert sess.get("user") == sample_user.id
         assert sess.get("test_key") == "test_value"
 
-def test_check_achievements_with_special_characters_in_slug(logged_in_client, init_db, test_user):
+def test_check_achievements_with_special_characters_in_slug(logged_in_client, init_db, sample_user):
     """Test badge URL generation with special characters in slug."""
     achievement = AchievementFactory(slug="special-achievement_2024", type="ducks", requirement_value="1")
-    test_user.earned_ducks = 1
+    sample_user.earned_ducks = 1
     db.session.commit()
 
     response = logged_in_client.get("/api/achievements/check")
@@ -178,7 +164,7 @@ def test_check_achievements_content_type(logged_in_client, init_db):
     response = logged_in_client.get("/api/achievements/check")
     assert response.content_type == "application/json"
 
-def test_api_achievements_all_integration(logged_in_client, init_db, test_user):
+def test_api_achievements_all_integration(logged_in_client, init_db, sample_user):
     """
     Comprehensive integration test for /api/achievements/all.
     Ensures that the JSON structure and 200 OK status are verified.

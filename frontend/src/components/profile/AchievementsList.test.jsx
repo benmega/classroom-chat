@@ -41,4 +41,25 @@ describe('AchievementsList', () => {
 
         expect(mockNavigate).toHaveBeenCalledWith('/achievements');
     });
+
+    it('formats the earned date', () => {
+        const achievements = [
+            { id: 1, earned_at: '2023-06-15T12:00:00Z', achievement: { name: 'Dated', slug: 'dated' } },
+        ];
+        const { container } = render(<AchievementsList achievements={achievements} />, { wrapper: MemoryRouter });
+
+        expect(container.querySelector('.ach-date').textContent).toBe(new Date('2023-06-15T12:00:00Z').toLocaleDateString());
+    });
+
+    it.each([null, undefined, '', 'not a date'])('shows no date instead of "Invalid Date" for %p', (earnedAt) => {
+        const achievements = [
+            { id: 1, earned_at: earnedAt, achievement: { name: 'Undated', slug: 'undated' } },
+        ];
+        const { container } = render(<AchievementsList achievements={achievements} />, { wrapper: MemoryRouter });
+
+        expect(screen.getByText('Undated')).toBeInTheDocument();
+        expect(container.querySelector('.ach-date')).toBeNull();
+        expect(container).not.toHaveTextContent('Invalid Date');
+        expect(container).not.toHaveTextContent('1970');
+    });
 });

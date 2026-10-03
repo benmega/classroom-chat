@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { 
     Search, 
     ChevronLeft, 
@@ -11,12 +11,12 @@ import {
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import './DuckTransactions.css';
 import Skeleton from '../../components/common/Skeleton';
 
 const DuckTransactions = () => {
-    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     
     const typeParam = searchParams.get('type') || 'all';
@@ -53,7 +53,7 @@ const DuckTransactions = () => {
             }
         } catch (error) {
             console.error('Error fetching transactions:', error);
-            toast.error('Failed to load transactions.');
+            toast.error(getErrorMessage(error, 'Failed to load transactions.'));
         } finally {
             setIsLoading(false);
             
@@ -152,15 +152,16 @@ const DuckTransactions = () => {
 
     return (
         <div className="admin-transactions-page">
-            <div role="button" tabIndex={0} className="back-link" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate('/admin')}>
-                <ArrowLeft size={16} /> Back to Dashboard
-            </div>
+            <Link to="/admin" className="back-link">
+                <ArrowLeft size={16} aria-hidden="true" /> Back to Dashboard
+            </Link>
 
             <AdminPageHeader title={dateParam ? `Duck Breakdown — ${formatDateLabel(dateParam)}` : 'Duck Transactions'}>
                 <form className="search-bar" onSubmit={handleSearchSubmit}>
                     <Search size={18} />
                     <input 
-                        type="text" 
+                        type="text"
+                        aria-label="Search transactions"
                         placeholder="Search by user or reason..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}

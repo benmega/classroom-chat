@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import KioskUpload from './KioskUpload';
 import client from '../../api/client';
+import toast from 'react-hot-toast';
 
 vi.mock('react-router-dom', () => ({
     useParams: () => ({ classId: '123' }),
@@ -98,6 +99,17 @@ describe('KioskUpload Component', () => {
                 '/notes/kiosk-upload',
                 expect.any(FormData)
             );
+        });
+    });
+
+    it('shows the reason the server gives when the classroom cannot be loaded', async () => {
+        client.get.mockRejectedValue({ response: { status: 404, data: { error: 'Classroom not found' } } });
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        render(<KioskUpload />);
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Classroom not found');
         });
     });
 });

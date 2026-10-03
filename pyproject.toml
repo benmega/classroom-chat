@@ -13,7 +13,6 @@ ignore = [
 
     "BLE001",
     "DTZ001",
-    "DTZ003",
     "DTZ005",
     "DTZ006",
     "DTZ007",
@@ -29,5 +28,8 @@ ignore = [
 "backend/application/models/__init__.py" = ["F401"]
 "backend/application/routes/admin_routes.py" = ["F401", "E402"]
 "backend/application/routes/user_routes.py" = ["E402"]
+# Tests build naive-UTC fixtures with datetime.utcnow(); a migration is frozen history.
+"backend/tests/**" = ["DTZ003"]
+"backend/migrations/**" = ["DTZ003"]
 
 

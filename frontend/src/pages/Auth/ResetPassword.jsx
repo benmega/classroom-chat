@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Lock, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
@@ -44,7 +45,7 @@ const ResetPassword = () => {
                 navigate('/login');
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to reset password.');
+            toast.error(getErrorMessage(error, 'Failed to reset password.'));
         } finally {
             setIsLoading(false);
         }
@@ -60,7 +61,7 @@ const ResetPassword = () => {
             <div className="auth-container">
                 <div className="auth-header">
                     <div className="brand-logo">
-                        <img src="/images/logo.ico" alt="Classroom Chat Logo" />
+                        <img src="/images/logo.png" alt="Classroom Chat Logo" />
                     </div>
                     <h1 className="auth-title">Reset Password</h1>
                     <p className="auth-subtitle">
@@ -77,6 +78,8 @@ const ResetPassword = () => {
                                 onChange={(e) => setCode(e.target.value)} 
                                 required
                                 placeholder="6-Digit Verification Code"
+                                aria-label="Verification code"
+                                autoComplete="one-time-code"
                                 className="auth-input"
                             />
                             <ShieldCheck className="input-icon" size={18} />
@@ -91,6 +94,7 @@ const ResetPassword = () => {
                                 onChange={(e) => setNewPassword(e.target.value)} 
                                 required
                                 placeholder="New Password (min 8 chars)"
+                                aria-label="New password"
                                 autoComplete="new-password"
                                 className="auth-input has-password-toggle"
                             />
@@ -99,8 +103,8 @@ const ResetPassword = () => {
                                 type="button" 
                                 className="toggle-password-btn"
                                 onClick={() => setShowPassword(!showPassword)}
-                                aria-label={showPassword ? "Hide password" : "Show password"}
-                                tabIndex="-1"
+                                aria-label="Show password"
+                                aria-pressed={showPassword}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
@@ -115,6 +119,7 @@ const ResetPassword = () => {
                                 onChange={(e) => setConfirmPassword(e.target.value)} 
                                 required
                                 placeholder="Confirm New Password"
+                                aria-label="Confirm new password"
                                 autoComplete="new-password"
                                 className="auth-input has-password-toggle"
                             />
@@ -123,8 +128,8 @@ const ResetPassword = () => {
                                 type="button" 
                                 className="toggle-password-btn"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                                tabIndex="-1"
+                                aria-label="Show password"
+                                aria-pressed={showConfirmPassword}
                             >
                                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>

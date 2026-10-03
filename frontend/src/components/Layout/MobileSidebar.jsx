@@ -21,7 +21,7 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
             <aside className={`mobile-sidebar ${isSidebarOpen ? 'open' : ''}`} aria-label="Navigation">
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
-                        <img src="/images/logo.ico" alt="Logo" />
+                        <img src="/images/logo.png" alt="Logo" />
                     </div>
                     <button className="sidebar-close" onClick={close} aria-label="Close navigation">
                         <X size={24} />

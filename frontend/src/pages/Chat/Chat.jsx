@@ -252,7 +252,7 @@ const Chat = ({ filterClassroomId = null }) => {
                 {file && (
                   <div className="attached-file-chip" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', backgroundColor: 'var(--surface-color)', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem', width: 'fit-content' }}>
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-color)' }}>{file.name}</span>
-                    <button type="button" onClick={() => setFile(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem', color: 'var(--text-muted)' }}>
+                    <button type="button" onClick={() => setFile(null)} aria-label={`Remove ${file.name}`} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.25rem', color: 'var(--text-muted)' }}>
                       <X size={14} />
                     </button>
                   </div>
@@ -264,6 +264,7 @@ const Chat = ({ filterClassroomId = null }) => {
                   onKeyDown={handleTextareaKeyDown}
                   placeholder={cooldown > 0 ? `Please wait ${cooldown}s...` : (file ? `Add a note for your submission...` : `What's on your mind, ${user?.nickname || user?.username || 'Student'}?`)}
                   className="feed-input-field"
+                  aria-label="Write a message"
                   rows={2}
                   maxLength={user?.role === 'admin' ? 4000 : 500}
                   disabled={cooldown > 0}
@@ -341,6 +342,7 @@ const Chat = ({ filterClassroomId = null }) => {
                       className="toolbar-btn"
                       onClick={() => fileInputRef.current?.click()}
                       title="Attach file"
+                      aria-label="Attach file"
                       disabled={cooldown > 0}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-paperclip"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
@@ -351,12 +353,15 @@ const Chat = ({ filterClassroomId = null }) => {
                           className="toolbar-btn"
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                           title="Add emoji"
+                          aria-label="Add emoji"
+                          aria-haspopup="dialog"
+                          aria-expanded={showEmojiPicker}
                           disabled={cooldown > 0}
                         >
                           <Smile size={20} color={showEmojiPicker ? "var(--primary-color)" : "inherit"} />
                         </button>
                         {showEmojiPicker && (
-                          <div className="emoji-picker-container emoji-picker-container-absolute">
+                          <div className="emoji-picker-container emoji-picker-container-absolute" role="dialog" aria-label="Emoji picker">
                             <React.Suspense fallback={<div>Loading emojis...</div>}>
                               <EmojiPicker
                                 onEmojiClick={onEmojiClick}

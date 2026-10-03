@@ -3,8 +3,16 @@ from application.extensions import db
 from application.models.project import Project
 from application.services.email_service import send_admin_email
 from flask import jsonify, request
+from sqlalchemy import case, func
+from sqlalchemy.orm import joinedload
 
 from ..admin_routes import admin_bp
+
+# Page size of the filters other than "pending" when ?limit= is not given, and the largest
+# page any filter can be asked for. The review queue ("pending") is returned whole unless
+# a limit is asked for, because the review page works through all of it.
+DEFAULT_PROJECTS_LIMIT = 100
+MAX_PROJECTS_LIMIT = 200
 
 
 @admin_bp.route("/manage-projects", methods=["GET"])
@@ -12,9 +20,11 @@ from ..admin_routes import admin_bp
 def manage_projects():
     filter_type = request.args.get("filter", "pending")
 
-    pending_count = Project.query.filter(Project.status == "pending").count()
-
-    total_count = Project.query.count()
+    # Both counts in one query
+    pending_count, total_count = db.session.query(
+        func.coalesce(func.sum(case((Project.status == "pending", 1), else_=0)), 0),
+        func.count(Project.id),
+    ).one()
 
     query = Project.query
     if filter_type == "pending":
@@ -24,14 +34,25 @@ def manage_projects():
     elif filter_type == "approved":
         query = query.filter(Project.status == "approved")
 
-    projects = query.order_by(Project.id.desc()).all()
+    limit = request.args.get("limit", type=int)
+    if limit is None:
+        limit = None if filter_type == "pending" else DEFAULT_PROJECTS_LIMIT
+    else:
+        limit = max(1, min(limit, MAX_PROJECTS_LIMIT))
+
+    # to_dict() reads each project's student: load them with the projects
+    query = query.options(joinedload(Project.user)).order_by(Project.id.desc())
+    if limit is not None:
+        page = max(1, request.args.get("page", 1, type=int))
+        query = query.limit(limit).offset((page - 1) * limit)
+    projects = query.all()
 
     return jsonify(
         {
             "status": "success",
             "data": {
                 "projects": [p.to_dict() for p in projects],
-                "pending_count": pending_count,
+                "pending_count": int(pending_count),
                 "total_count": total_count,
             },
         }

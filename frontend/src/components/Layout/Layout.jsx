@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, Package, Archive, HelpCircle, User } from 'lucide-react';
 
@@ -8,6 +8,7 @@ import DuckIcon from '../Icons/DuckIcon';
 import Tutorial from '../common/Tutorial';
 import HamburgerIcon from '../common/HamburgerIcon';
 import ContactTeacherModal from '../common/ContactTeacherModal';
+import ContentLoader from '../common/ContentLoader';
 
 // Sub-components
 import ParentNavRail from './ParentNavRail';
@@ -62,7 +63,7 @@ const Layout = ({ children }) => {
                         <div id="logo-container" className="header-logo-wrap">
                             <Link to={isParent ? "/parent/dashboard" : "/chat"} className="logo-link">
                                 <div className="logo-icon-wrapper">
-                                    <img src="/images/logo.ico" alt="Classroom Chat Logo" className="logo-img" />
+                                    <img src="/images/logo.png" alt="Classroom Chat Logo" className="logo-img" />
                                 </div>
                                 <span className="logo-text">ClassroomChat</span>
                             </Link>
@@ -146,7 +147,9 @@ const Layout = ({ children }) => {
                 </header>
 
                 <main key={location.pathname} className={`${isChatPage ? 'main-full' : ''} animate-page-entry`}>
-                    {children}
+                    <Suspense fallback={<ContentLoader />}>
+                        {children}
+                    </Suspense>
                 </main>
                 
                 {/* Mobile Navigation Sidebar — all authenticated users */}

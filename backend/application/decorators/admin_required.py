@@ -1,7 +1,7 @@
 from functools import wraps
 
 from application.models.user import User
-from flask import jsonify, render_template, request, session
+from flask import jsonify, session
 
 
 def admin_only(f):
@@ -9,25 +9,14 @@ def admin_only(f):
     def wrapper(*args, **kwargs):
         user_id = session.get("user")
 
-        is_api = (
-            request.path.startswith("/api/")
-            or request.path.startswith("/achievements/")
-            or request.is_json
-            or request.accept_mimetypes.accept_json
-        )
-
         if not user_id:
-            if is_api:
-                return jsonify({"error": "Authentication required"}), 401
-            return render_template("index.html")
+            return jsonify({"error": "Authentication required"}), 401
 
         from application.extensions import db
 
         user = db.session.get(User, user_id)
         if not user or user.role != 'admin':
-            if is_api:
-                return jsonify({"error": "Admin access required"}), 403
-            return render_template("index.html")
+            return jsonify({"error": "Admin access required"}), 403
 
         return f(*args, **kwargs)
 

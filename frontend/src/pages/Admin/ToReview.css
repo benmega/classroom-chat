@@ -99,7 +99,7 @@
 
 .tab-badge-count {
     background: var(--border-rich);
-    color: white;
+    color: var(--text-on-primary);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 2px 8px;
@@ -176,33 +176,33 @@
 }
 
 .badge-project {
-    background: #e0f2fe;
-    color: #0369a1;
+    background: var(--sky-100);
+    color: var(--sky-700);
 }
 
 .badge-certificate {
-    background: #fef3c7;
+    background: var(--amber-100);
     color: var(--warning-color);
 }
 
 .badge-user {
-    background: #f3e8ff;
-    color: #6b21a8;
+    background: var(--purple-100);
+    color: var(--purple-800);
 }
 
 .badge-trade {
-    background: #dcfce7;
-    color: #15803d;
+    background: var(--green-100);
+    color: var(--green-700);
 }
 
 .badge-track {
-    background: #ffe4e6;
-    color: #be123c;
+    background: var(--rose-100);
+    color: var(--rose-700);
 }
 
 .badge-course {
-    background: #ede9fe;
-    color: #5b21b6;
+    background: var(--violet-100);
+    color: var(--violet-800);
 }
 
 .badge-parent-message {
@@ -268,14 +268,14 @@
 }
 
 .badge-resubmission {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
+    background: var(--error-subtle);
+    color: var(--error-color);
+    border: 1px solid var(--error-light);
 }
 
 .resubmission-note-box {
     background: var(--bg-secondary);
-    border-left: 3px solid #dc2626;
+    border-left: 3px solid var(--error-color);
     padding: 8px 12px;
     border-radius: 4px;
     font-size: var(--font-sm);
@@ -283,7 +283,7 @@
 }
 
 .resubmission-note-box strong {
-    color: #dc2626;
+    color: var(--error-color);
     display: block;
     margin-bottom: 4px;
     font-size: var(--font-xs);
@@ -385,16 +385,16 @@
 
 .project-link-btn:hover {
     background: var(--primary-accessible);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .project-link-btn.video {
-    background: #fff1f2;
-    color: #be123c;
+    background: var(--rose-50);
+    color: var(--rose-700);
 }
 
 .project-link-btn.video:hover {
-    background: #ffe4e6;
+    background: var(--rose-100);
 }
 
 /* Image Preview */
@@ -431,8 +431,8 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #fee2e2;
-    color: #991b1b;
+    background: var(--red-100);
+    color: var(--red-800);
     font-size: 0.7rem;
     padding: 2px 8px;
     border-radius: 12px;
@@ -597,7 +597,7 @@
     border-radius: var(--radius-md);
     overflow: hidden;
     position: relative;
-    background: white;
+    background: var(--bg-primary);
 }
 
 .cert-preview-thumbnail iframe {
@@ -620,7 +620,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--text-on-primary);
     opacity: 0;
     transition: opacity 0.2s ease;
 }
@@ -853,7 +853,7 @@
 
 .btn-approve {
     background: var(--primary-accessible);
-    color: white;
+    color: var(--text-on-primary);
     box-shadow: 0 2px 8px rgba(0, 109, 116, 0.2);
     flex-grow: 1.5;
 }
@@ -873,7 +873,7 @@
 
 .btn-reject:hover:not(:disabled) {
     background: var(--error-color);
-    color: white;
+    color: var(--text-on-primary);
     transform: translateY(-1px);
 }
 

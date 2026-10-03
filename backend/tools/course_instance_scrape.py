@@ -1,5 +1,6 @@
 import csv
 import os
+from pathlib import Path
 
 import requests
 
@@ -17,8 +18,13 @@ MANUAL_COOKIES = {
     "www.ozaria.com": r"""_ga=GA1.2.1818552674.1665805079; _fbp=fb.1.1665805090786.306764578; __stripe_mid=3291438a-ab74-4a95-81de-083406d17536128861; cf_clearance=hRI_WhIEPkZTlnEFl1Epd83ilpf.LQgn0zUQksuHu3A-1746342968-1.2.1.1-h.o9x1I4k1pRqSONn66lo6oPTH588wxXUV7GWliEzUEpncLGVsAqXGakcPMZPFkVTq0b1TdsgSPxOH3OZb899XLzBRqV.7KyzKsvJHsMwBpUMfJydmzzHr1uYW2h7667M0T76nYtDHIJq.aAQFvvoZwWsbulwqqVba8E46I8F93X6RzO8.kuzwKAZ8O8C_AW.Bulp9ub8SAw3vIH6c1akg7mmQTv_Cc6DXfBzNHopHn4uicVoNDlImOxTrT2ib6ye.cKjiXyqiG9tgD6a0.EECQyWPQ25YporprSESSjESyh20qtAJ3GPT3Cpk4a2LhPzP4jIe1x0h6PgK0ETUPsSo9iexrLFZOOszBxRBDX_W4l4xOJje3MmUEhHE_JjSUQ; _gcl_au=1.1.99809955.1769825755; cookieconsent_status=allow; _twpid=tw.1772528315223.234607693917789933; fs_uid=#RQW5S#a3bde662-d2c5-4d95-97f0-27efdd8fd933:223dff5f-562d-4513-b10c-b3a3bb3847e0:1772855920207::1#b4a47c99#/1801462981; g_state={"i_l":0,"i_ll":1772949191588,"i_e":{"enable_itp_optimization":0},"i_b":"ueRFpjxy+mRQ/nj4ANVr4oeRI7KdT5J0YMOK/dIAFnA"}; shaTagVal=production-2026-03-06-08-18-26; _gid=GA1.2.170334120.1773112752; __stripe_sid=01c1d180-1aff-4ef0-b662-8086d3e29b438cefd7; _ga_6D0ZC7L5M1=GS2.2.s1773115083$o579$g1$t1773115204$j60$l0$h0; codecombat.sess=eyJwYXNzcG9ydCI6eyJ1c2VyIjp7ImlkIjoiNjJkMjNkOTc1ZGFmZDYwMDI1ZjhjNTIwIiwiY3JlYXRlZCI6IjIwMjYtMDMtMTBUMDQ6MTE6MTErMDA6MDAiLCJleHBpcmVzIjoiMjAyNi0wNC0xMFQwNDoxMToxMSswMDowMCJ9fX0=; codecombat.sess.sig=py_y-vsLhi6Q6JeJcfUXDKeaClM; _dd_s=logs=1&id=7343db7a-09f7-4dc7-bcd5-18147f484fb8&created=1773112751474&expire=1773116776795; _gat=1""",
 }
 
-# Output path to your migration folder
-FILENAME = "../instance/migration/course_instances_seed.csv"
+# Output path to your migration folder (anchored on this file, so the script
+# writes to backend/instance/migration whatever the working directory is)
+OUT_DIR = Path(__file__).resolve().parents[1] / "instance" / "migration"
+FILENAME = OUT_DIR / "course_instances_seed.csv"
+
+# Seconds to wait for a response before giving up on a request
+REQUEST_TIMEOUT = 30
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -35,7 +41,7 @@ def fetch_json(url, description, cookie_string):
     req_headers["Cookie"] = cookie_string
 
     try:
-        response = requests.get(url, headers=req_headers)
+        response = requests.get(url, headers=req_headers, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -108,7 +114,7 @@ def main():
         total_rows.extend(domain_rows)
 
     if total_rows:
-        os.makedirs(os.path.dirname(FILENAME), exist_ok=True)
+        os.makedirs(OUT_DIR, exist_ok=True)
 
         # Columns must exactly match the keys in the dict above
         fields = ["id", "classroom_id", "course_id"]

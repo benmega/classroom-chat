@@ -52,6 +52,63 @@
     --slate-800: #1E293B;
     --blue-600: #2563EB;
 
+    /* Palette steps (Tailwind-derived) for admin badges, tints and gradients.
+       Each holds exactly the literal it replaced, so migrating a rule changes nothing visually. */
+    --slate-700: #334155;           /* same value as --text-secondary */
+    --red-100: #FEE2E2;
+    --red-800: #991B1B;
+    --rose-50: #FFF1F2;
+    --rose-100: #FFE4E6;
+    --rose-700: #BE123C;
+    --amber-50: #FFFBEB;
+    --amber-100: #FEF3C7;
+    --amber-950: #451A03;
+    --yellow-200: #FEF08A;
+    --yellow-300: #FDE047;
+    --yellow-700: #A16207;
+    --green-100: #DCFCE7;
+    --green-700: #15803D;
+    --green-800: #166534;
+    --sky-100: #E0F2FE;
+    --sky-500: #0EA5E9;
+    --sky-700: #0369A1;
+    --blue-50: #EFF6FF;
+    --blue-100: #DBEAFE;
+    --blue-200: #BFDBFE;
+    --blue-700: #1D4ED8;
+    --indigo-200: #C7D2FE;
+    --indigo-600: #4F46E5;
+    --indigo-700: #4338CA;
+    --violet-50: #F5F3FF;
+    --violet-100: #EDE9FE;
+    --violet-200: #DDD6FE;
+    --violet-600: #7C3AED;
+    --violet-700: #6D28D9;
+    --violet-800: #5B21B6;
+    --purple-100: #F3E8FF;
+    --purple-700: #7E22CE;
+    --purple-800: #6B21A8;
+    --student-badge-color: #2B91AF; /* text of the admin dashboard student requester badge */
+
+    /* Palette steps that page CSS used as raw hex (value-identical to those literals) */
+    --slate-100: #F1F5F9;
+    --slate-300: #CBD5E1;
+    --slate-400: #94A3B8;
+    --slate-500: #64748B;
+    --green-50: #F0FDF4;
+    --green-500: #22C55E;
+    --green-900: #14532D;
+    --amber-700: #B45309;
+
+    /* White text/icons on gradients, dark overlays and other saturated fills (surfaces use --bg-primary) */
+    --text-on-primary: #FFFFFF;
+
+    /* Contribution graph intensity levels, lightest to darkest */
+    --graph-level-1: #BAE6FD;
+    --graph-level-2: #7DD3FC;
+    --graph-level-3: #38BDF8;
+    --graph-level-4: #0284C7;
+
     /* Gradients — both endpoints pass AA with white text */
     --gradient-primary: linear-gradient(135deg, #007880 0%, #4F52C9 100%);
     --gradient-warning: linear-gradient(135deg, #D97706 0%, #B45309 100%);
@@ -112,4 +169,23 @@
     --transition-fast: 120ms ease;
     --transition-smooth: 200ms ease;
     --transition-bounce: 200ms ease;
+
+    /* admin tokens */
+    --primary-faint: rgba(14, 178, 187, 0.15); /* faint tint of --primary-color (loader track etc.) */
+
+    /* page tokens */
+    /* Tokens that page/component CSS referenced but nothing defined (iss_560). */
+    --primary-color-dark: var(--primary-dark);
+    --primary-alpha: rgba(14, 178, 187, 0.2); /* faint border tint of --primary-color */
+    --highlight-hover: var(--primary-color);   /* AI avatar background, chat link underline on hover */
+    --shadow-glow-primary: var(--shadow-glow);
+
+    /* z-index scale (iss_561/iss_604). Higher value = closer to the viewer.
+       Modals must sit above the header and its dropdowns/sidebars. */
+    --z-header: 1000;
+    --z-dropdown: 1001;   /* dropdowns, mobile overlay */
+    --z-sidebar: 1002;    /* mobile slide-in sidebar */
+    --z-modal: 2000;      /* modal overlays (the shared Modal.css overlay stays above toasts at 10000) */
+    --z-toast: 9999;      /* toasts (react-hot-toast default) */
+    --z-tutorial: 10000;  /* onboarding tutorial overlay */
 }

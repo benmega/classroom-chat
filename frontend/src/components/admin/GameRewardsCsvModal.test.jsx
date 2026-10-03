@@ -110,4 +110,36 @@ describe('GameRewardsCsvModal Component', () => {
 
     expect(toast.error).toHaveBeenCalledWith('Please choose a .csv file');
   });
+
+  describe('failed uploads', () => {
+    const upload = async () => {
+      render(<GameRewardsCsvModal isOpen={true} onClose={vi.fn()} />);
+      const file = new File(['game_name,game_url\nGame1,url1'], 'rewards.csv', { type: 'text/csv' });
+      fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [file] } });
+      fireEvent.click(screen.getByRole('button', { name: /upload csv/i }));
+    };
+
+    beforeEach(() => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    it.each([
+      ['an enveloped error', { status: 'error', data: null, error: 'Missing required column: game_name' }, 'Missing required column: game_name'],
+      ['a message', { success: false, message: 'Invalid CSV file' }, 'Invalid CSV file'],
+    ])('shows the reason the server gives as %s', async (_label, body, expected) => {
+      client.post.mockRejectedValueOnce({ response: { status: 400, data: body } });
+
+      await upload();
+
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith(expected));
+    });
+
+    it('falls back to a generic message when the failure has no body', async () => {
+      client.post.mockRejectedValueOnce(new Error('Network Error'));
+
+      await upload();
+
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to upload CSV.'));
+    });
+  });
 });

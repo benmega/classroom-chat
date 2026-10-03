@@ -6,6 +6,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    text-decoration: none;
     color: var(--text-secondary);
     font-size: 0.9rem;
     font-weight: 600;
@@ -100,7 +101,7 @@
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-family: var(--font-primary);
+    font-family: var(--font-body);
     font-weight: 600;
     font-size: 0.875rem;
     border-radius: 8px;

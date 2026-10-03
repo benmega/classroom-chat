@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Search,
     Menu,
-    Bot,
     MessageSquare,
     AlertTriangle,
     Calendar,
@@ -25,6 +24,7 @@ import { Line, Pie } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import '../../components/admin/AdminShared.css';
 import './AdminDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
 
@@ -49,6 +49,9 @@ ChartJS.register(
     ArcElement
 );
 
+// Keep in sync with MAX_DUCK_MULTIPLIER in backend/application/routes/admin/config_routes.py.
+const MAX_DUCK_MULTIPLIER = 100;
+
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [newWord, setNewWord] = useState('');
@@ -57,16 +60,25 @@ const AdminDashboard = () => {
     const {
         dashboardData,
         isLoading,
+        isRefreshing,
         activeModal,
         setActiveModal,
         formLoading,
+        pendingToggle,
         timeframe,
         setTimeframe,
-        handleToggleAI,
+        fetchDashboardData,
         handleToggleMessages,
         handleUpdateMultiplier,
         handleAddBannedWord
     } = useAdminDashboard();
+
+    // Local text for the multiplier field; re-synced whenever the stored value changes.
+    const storedMultiplier = dashboardData?.config?.duck_multiplier ?? 1;
+    const [multiplierInput, setMultiplierInput] = useState(String(storedMultiplier));
+    useEffect(() => {
+        setMultiplierInput(String(storedMultiplier));
+    }, [storedMultiplier]);
 
     const handleExportTransactions = async () => {
         try {
@@ -94,6 +106,7 @@ const AdminDashboard = () => {
         if (success) {
             setNewWord('');
             setBanReason('');
+            setActiveModal(null);
         }
     };
 
@@ -115,9 +128,30 @@ const AdminDashboard = () => {
         </div>
     );
     
-    if (!dashboardData) return <div className="admin-error">Error loading dashboard.</div>;
+    if (!dashboardData) return (
+        <div className="admin-error admin-error-retry">
+            <span>Error loading dashboard.</span>
+            <button type="button" className="primary-btn" onClick={() => fetchDashboardData()} disabled={isRefreshing}>
+                {isRefreshing ? 'Retrying...' : 'Retry'}
+            </button>
+        </div>
+    );
 
-    const { config, chart_data, all_users } = dashboardData;
+    const { config, chart_data, user_distribution, top_earners } = dashboardData;
+
+    const parsedMultiplier = multiplierInput.trim() === '' ? NaN : Number(multiplierInput);
+    let multiplierError = '';
+    if (!Number.isFinite(parsedMultiplier)) {
+        multiplierError = 'Enter a number.';
+    } else if (parsedMultiplier < 0 || parsedMultiplier > MAX_DUCK_MULTIPLIER) {
+        multiplierError = `Must be between 0 and ${MAX_DUCK_MULTIPLIER}.`;
+    }
+    const canSaveMultiplier = !multiplierError && parsedMultiplier !== storedMultiplier;
+
+    const onSubmitMultiplier = (e) => {
+        e.preventDefault();
+        if (canSaveMultiplier) handleUpdateMultiplier(parsedMultiplier);
+    };
 
     const chartConfig = getChartConfig(chart_data);
 
@@ -142,16 +176,18 @@ const AdminDashboard = () => {
         },
     };
 
-    const engagementPct = all_users.length ? (all_users.filter(u => u.is_online).length / all_users.length * 100) : 0;
+    const engagementPct = dashboardData.total_users_count
+        ? (dashboardData.active_users_count / dashboardData.total_users_count * 100)
+        : 0;
 
     const userDistributionData = {
         labels: ['Active Students', 'Inactive Students', 'Parents', 'Administrators'],
         datasets: [{
             data: [
-                all_users.filter(u => u.is_online && u.role === 'student').length,
-                all_users.filter(u => !u.is_online && u.role === 'student').length,
-                all_users.filter(u => u.role === 'parent').length,
-                all_users.filter(u => u.role === 'admin').length
+                user_distribution.active_students,
+                user_distribution.inactive_students,
+                user_distribution.parents,
+                user_distribution.admins
             ],
             backgroundColor: ['#10B981', '#94A3B8', '#4F52C9', '#0EB2BB'], // success, border-rich, secondary, primary
             borderWidth: 0,
@@ -176,8 +212,9 @@ const AdminDashboard = () => {
                 <div className="main-content">
                     <div className="chart-card card">
                         <div className="chart-header justify-end mb-sm">
-                            <select 
-                                value={timeframe} 
+                            <select
+                                aria-label="Chart timeframe"
+                                value={timeframe}
                                 onChange={(e) => setTimeframe(e.target.value === 'all' ? 'all' : Number(e.target.value))}
                                 className="chart-timeframe-select"
                             >
@@ -195,25 +232,15 @@ const AdminDashboard = () => {
 
                     <div className="admin-controls-card card">
                         <div className="admin-controls-grid">
-                            <button
-                                onClick={handleToggleAI}
-                                className={`action-item ${config?.ai_teacher_enabled ? 'action-item-success' : 'action-item-error'}`}
-                            >
-                                <div className={`icon ${config?.ai_teacher_enabled ? 'icon-success' : 'icon-error'}`}><Bot size={20} /></div>
-                                <div>
-                                    <span className="action-text-main d-block">AI Teacher</span>
-                                    <small className="action-text-sub">{config?.ai_teacher_enabled ? 'Enabled' : 'Disabled'}</small>
-                                </div>
-                            </button>
-                            
                             <button 
                                 onClick={handleToggleMessages}
-                                className={`action-item ${config?.message_sending_enabled ? 'action-item-success' : 'action-item-error'}`}
+                                disabled={pendingToggle}
+                                className={`action-item ${(config?.message_sending_enabled ?? true) ? 'action-item-success' : 'action-item-error'}`}
                             >
-                                <div className={`icon ${config?.message_sending_enabled ? 'icon-success' : 'icon-error'}`}><MessageSquare size={20} /></div>
+                                <div className={`icon ${(config?.message_sending_enabled ?? true) ? 'icon-success' : 'icon-error'}`}><MessageSquare size={20} /></div>
                                 <div>
                                     <span className="action-text-main d-block">Public Messaging</span>
-                                    <small className="action-text-sub">{config?.message_sending_enabled ? 'Enabled' : 'Disabled'}</small>
+                                    <small className="action-text-sub">{(config?.message_sending_enabled ?? true) ? 'Enabled' : 'Disabled'}</small>
                                 </div>
                             </button>
 
@@ -229,16 +256,25 @@ const AdminDashboard = () => {
 
                             <div className="setting-item multiplier">
                                 <label htmlFor="input-299" className="setting-label">Duck Multiplier</label>
-                                <div className="multiplier-input-wrapper">
-                                    <input id="input-299" 
-                                        type="number" 
-                                        step="0.1" 
-                                        defaultValue={config?.duck_multiplier || 1.0} 
-                                        onBlur={(e) => handleUpdateMultiplier(e.target.value)}
+                                <form className="multiplier-input-wrapper" onSubmit={onSubmitMultiplier} noValidate>
+                                    <input id="input-299"
+                                        type="number"
+                                        min="0"
+                                        max={MAX_DUCK_MULTIPLIER}
+                                        step="0.1"
+                                        value={multiplierInput}
+                                        onChange={(e) => setMultiplierInput(e.target.value)}
+                                        aria-invalid={Boolean(multiplierError)}
+                                        aria-describedby={multiplierError ? 'multiplier-error' : undefined}
                                         className="multiplier-input-field"
                                     />
-                                    
-                                </div>
+                                    <button type="submit" className="multiplier-save-btn" disabled={!canSaveMultiplier}>
+                                        Save
+                                    </button>
+                                </form>
+                                {multiplierError && (
+                                    <small id="multiplier-error" className="multiplier-error" role="alert">{multiplierError}</small>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -270,7 +306,8 @@ const AdminDashboard = () => {
                         <h3><Calendar size={20} /> High Value Earners</h3>
                     </div>
                     <div className="top-earners">
-                        {[...all_users].sort((a, b) => b.duck_balance - a.duck_balance).slice(0, 5).map(u => (
+                        {top_earners.length === 0 && <p className="text-muted">No users yet</p>}
+                        {top_earners.map(u => (
                             <div key={u.id} className="earner-item">
                                 <div className="user-info">
                                     <div className="name">{u.nickname || u.username}</div>
@@ -286,7 +323,7 @@ const AdminDashboard = () => {
             <AddBannedWordModal
                 isOpen={activeModal === 'bannedWord'} 
                 onClose={() => setActiveModal(null)} 
-                onSubmit={(e) => { e.preventDefault(); onSubmitBannedWord(e); setActiveModal(null); }} 
+                onSubmit={onSubmitBannedWord}
                 newWord={newWord}
                 setNewWord={setNewWord}
                 loading={formLoading} 

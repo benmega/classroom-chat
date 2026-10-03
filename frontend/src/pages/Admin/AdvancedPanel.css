@@ -29,7 +29,7 @@
 }
 
 .admin-advanced-panel .btn-utility:hover { 
-    background: var(--btn-secondary-hover); 
+    background: var(--btn-secondary-hover);
     color: var(--slate-800);
     transform: translateY(-1px);
 }
@@ -62,7 +62,8 @@
 
 
 
-.admin-advanced-panel .btn-danger {
+.admin-advanced-panel .btn-danger,
+.advanced-modal-footer .btn-danger {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -77,7 +78,8 @@
     transition: all 0.2s;
 }
 
-.admin-advanced-panel .btn-danger:hover {
+.admin-advanced-panel .btn-danger:hover,
+.advanced-modal-footer .btn-danger:hover {
     background: var(--error-color);
     box-shadow: var(--shadow-md);
     transform: translateY(-1px);
@@ -96,53 +98,33 @@
     }
 }
 
-/* Log Modal */
-.log-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.4);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-}
-
-.log-modal {
-    background: white;
-    width: 100%;
-    max-width: 1000px;
-    height: 80vh;
+/* Logs, statistics and purge dialogs. The shared Modal renders into <body>, outside .admin-advanced-panel,
+   so these rules are not scoped to the page. */
+.modal-body.advanced-modal-body {
+    padding: 0;
     display: flex;
     flex-direction: column;
-    padding: 0;
     overflow: hidden;
 }
 
-.log-modal-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-subtle);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.log-modal-header .title-group {
-    display: flex;
+.advanced-modal-title {
+    display: inline-flex;
     align-items: center;
     gap: 12px;
+}
+
+.advanced-modal-title svg {
+    flex-shrink: 0;
     color: var(--primary-accessible);
 }
 
-.log-modal-header h3 {
-    font-size: 1.25rem;
-    font-weight: 800;
-    margin: 0;
-    color: var(--slate-800);
+.advanced-modal-title.danger svg {
+    color: var(--error-color);
 }
 
-.log-content {
-    flex: 1;
+.advanced-modal-console {
+    flex: 1 1 auto;
+    min-height: 50vh;
     overflow: auto;
     padding: 1.5rem;
     background: var(--text-primary);
@@ -152,12 +134,13 @@
     line-height: 1.6;
 }
 
-.log-content pre {
+.advanced-modal-console pre {
     margin: 0;
     white-space: pre-wrap;
 }
 
-.log-modal-footer {
+.advanced-modal-footer {
+    flex-shrink: 0;
     padding: 1rem 1.5rem;
     border-top: 1px solid var(--border-subtle);
     display: flex;
@@ -166,26 +149,14 @@
     background: var(--bg-secondary);
 }
 
-.close-btn {
-    color: var(--text-muted);
-    padding: 8px;
-    border-radius: 8px;
-    transition: all 0.2s;
-}
-
-.close-btn:hover {
-    background: var(--bg-tertiary);
-    color: var(--slate-800);
-}
-
-.log-content .stats-grid {
+.advanced-modal-console .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1.5rem;
     margin-bottom: 2.5rem;
 }
 
-.log-content .stat-box {
+.advanced-modal-console .stat-box {
     background: rgba(255, 255, 255, 0.05);
     padding: 1rem;
     border-radius: 16px;
@@ -195,32 +166,33 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.log-content .stat-box .label {
+/* On the dark console --text-muted is only ~2.4:1, so its sub-text uses --border-rich (~7:1) */
+.advanced-modal-console .stat-box .label {
     font-size: 0.8rem;
-    color: var(--text-muted);
+    color: var(--border-rich);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
 
-.log-content .stat-box .value {
+.advanced-modal-console .stat-box .value {
     font-size: 1.5rem;
     font-weight: 700;
     color: white;
 }
 
-.log-content h4 {
+.advanced-modal-console h4 {
     color: white;
     margin-bottom: 1rem;
     font-size: 1.1rem;
 }
 
-.log-content .table-counts {
+.advanced-modal-console .table-counts {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 10px;
 }
 
-.log-content .table-row {
+.advanced-modal-console .table-row {
     display: flex;
     justify-content: space-between;
     padding: 12px 16px;
@@ -228,12 +200,13 @@
     border-radius: 10px;
 }
 
-.log-content .table-row span { color: var(--text-muted); }
-.log-content .table-row strong { color: var(--primary-accessible); }
+.advanced-modal-console .table-row span { color: var(--border-rich); }
+.advanced-modal-console .table-row strong { color: var(--primary-color); }
 
 /* Purge Confirmation */
-.purge-confirm .log-content {
-    background: white;
+.advanced-modal-console.advanced-modal-danger {
+    min-height: 0;
+    background: var(--bg-primary);
     color: var(--slate-800);
     font-family: inherit;
     font-size: 1.1rem;
@@ -241,20 +214,7 @@
     padding: 3rem 2rem;
 }
 
-.warning-text {
+.advanced-modal-danger .warning-text {
     color: var(--error-color);
     margin-bottom: 1rem;
 }
-
-.log-modal-header.danger {
-    border-bottom: 2px solid var(--error-subtle);
-}
-
-.log-modal-header.danger .title-group {
-    color: var(--error-color);
-}
-
-.purge-confirm {
-    height: auto !important;
-}
-

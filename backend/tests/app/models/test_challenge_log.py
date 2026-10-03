@@ -1,9 +1,17 @@
+"""
+File: test_challenge_log.py
+Type: py
+Summary: Unit tests for challenge log model.
+"""
+
 from datetime import datetime
 
 import pytest
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User
+from application.utilities.helper_functions import utcnow_naive
+from sqlalchemy.exc import IntegrityError
 
 
 def test_challenge_log_creation(sample_challenge_log):
@@ -13,6 +21,7 @@ def test_challenge_log_creation(sample_challenge_log):
     assert db.session.get(User, challenge_log.user_id).username.startswith("user")
     assert challenge_log.domain == "codecombat.com"
 
+    # The fixture generates a slug starting with "challenge-slug-"
     assert challenge_log.challenge_slug.startswith("challenge-slug-")
 
     assert challenge_log.course_id == "12345"
@@ -33,7 +42,7 @@ def test_challenge_log_timestamp(init_db):
     db.session.commit()
 
     assert isinstance(challenge_log.timestamp, datetime)
-    assert challenge_log.timestamp <= datetime.utcnow()
+    assert challenge_log.timestamp <= utcnow_naive()
 
 
 def test_challenge_log_repr(sample_challenge_log):
@@ -44,20 +53,25 @@ def test_challenge_log_repr(sample_challenge_log):
     assert repr_output.startswith("<ChallengeLog(user_id=")
     assert "domain=codecombat.com" in repr_output
 
+    # __repr__ shows the slug, not the challenge name
     assert "slug=" in repr_output
     assert "timestamp=" in repr_output
 
 
 def test_challenge_log_missing_field():
     """Test the behavior when required fields are missing."""
-    with pytest.raises(Exception):
-        challenge_log = ChallengeLog(
-            user_id=123,
-            domain="codecombat.com",
-            challenge_slug=None,
-        )
-        db.session.add(challenge_log)
+    challenge_log = ChallengeLog(
+        user_id=123,
+        domain="codecombat.com",
+        challenge_slug=None,  # Missing required challenge_slug
+    )
+    db.session.add(challenge_log)
+
+    with pytest.raises(IntegrityError):
         db.session.commit()
+    db.session.rollback()
+
+    assert ChallengeLog.query.count() == 0
 
 
 def test_challenge_log_with_optional_fields(init_db):

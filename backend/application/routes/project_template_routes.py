@@ -1,5 +1,3 @@
-import os
-
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
@@ -7,6 +5,7 @@ from application.extensions import db
 from application.models.project_template import ProjectTemplate
 from application.routes.user_routes import handle_project_image_upload
 from application.utilities.helper_functions import allowed_file
+from application.utilities.image_upload import ImageUploadError
 from flask import Blueprint, request, url_for
 
 project_templates_bp = Blueprint("project_templates", __name__)
@@ -141,12 +140,6 @@ def upload_template_image():
     if not allowed_file(file.filename):
         return {"error": "Invalid file format."}, 400
 
-    file.seek(0, os.SEEK_END)
-    file_size = file.tell()
-    file.seek(0)
-    if file_size > 10 * 1024 * 1024:
-        return {"error": "File too large. Maximum size is 10MB."}, 400
-
     try:
         filename = handle_project_image_upload(file)
         if not filename:
@@ -158,5 +151,7 @@ def upload_template_image():
             "image_url": image_url,
             "filename": filename,
         }
+    except ImageUploadError as e:
+        return {"error": e.message}, e.status
     except Exception as e:
         return {"error": f"Error saving image: {e!s}"}, 500

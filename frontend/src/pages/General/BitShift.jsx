@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Package, ArrowRightLeft, CreditCard, Zap } from 'lucide-react';
 import DuckIcon from '../../components/Icons/DuckIcon';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import confetti from 'canvas-confetti';
@@ -141,11 +142,11 @@ const BitShift = () => {
                     });
                 }
             } else {
-                toast.error(response.data.message || 'Trade failed.');
+                toast.error(getErrorMessage({ response }, 'Trade failed.'));
             }
         } catch (error) {
             console.error('Error submitting trade:', error);
-            toast.error(error.response?.data?.message || 'An unexpected error occurred.');
+            toast.error(getErrorMessage(error, 'An unexpected error occurred.'));
         } finally {
             setIsLoading(false);
         }
@@ -171,9 +172,12 @@ const BitShift = () => {
                                     });
                                     setHasAttemptedSubmit(false);
                                 }}
-                                className="d-none"
+                                className="sr-only"
+                                role="switch"
                             />
-                            <label htmlFor="duck-type-toggle" className="toggle-slider" aria-label="Toggle duck type"></label>
+                            <label htmlFor="duck-type-toggle" className="toggle-slider">
+                                <span className="sr-only">Byte mode</span>
+                            </label>
                         </div>
                         <span className={`toggle-text byte-text ${showByteRow ? 'active' : ''}`}>Byte</span>
                     </div>
@@ -199,12 +203,14 @@ const BitShift = () => {
                                     setHasAttemptedSubmit(false);
                                 }}
                                 className="digital-ducks-input"
+                                aria-label="Ducks to trade (decimal)"
+                                aria-describedby="digital-ducks-balance"
                                 min="0"
                                 max={user?.duck_balance || 0}
                                 required
                             />
                             <div className="balance-info-inline">
-                                <span>Cache: {(user?.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</span>
+                                <span id="digital-ducks-balance">Cache: {(user?.duck_balance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 3 })}</span>
                             </div>
                         </div>
                     </div>

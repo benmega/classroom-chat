@@ -9,7 +9,7 @@ const LandingDesktop = () => {
         <div className="landing-page animate-page-entry">
             <nav className="landing-nav glass-panel">
                 <div className="landing-nav-brand">
-                    <img src="/images/logo.ico" alt="Classroom Chat Logo" className="brand-icon w-32px h-32px" />
+                    <img src="/images/logo.png" alt="Classroom Chat Logo" className="brand-icon w-32px h-32px" />
                     <h1>Classroom Chat</h1>
                 </div>
                 <div className="landing-nav-actions">

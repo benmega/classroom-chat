@@ -1,14 +1,23 @@
+import math
 import re
 
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
-from application.models.user import User
+from application.models.user import User, save_new_user
 from application.utilities.db_helpers import get_canonical_course_slug
+from application.utilities.helper_functions import utcnow_naive
 from flask import current_app, jsonify, request
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 
 from ..admin_routes import admin_bp
+
+# Per-request ceilings on admin-entered amounts. They guard against typos and
+# NaN/inf input (which would poison a stored balance), not against large balances.
+MAX_ADMIN_ADJUSTMENT = 10_000
+MAX_INITIAL_DUCKS = 10_000
 
 
 @admin_bp.route("/student_activity", methods=["GET"])
@@ -52,27 +61,14 @@ def student_activity():
 @admin_only
 @api_response
 def pending_users():
-    from application.models.challenge_log import ChallengeLog
-    from sqlalchemy import func
-
-    pending = User.query.filter_by(is_approved=False).filter(User.role != 'admin').all()
-    user_ids = [u.id for u in pending]
-
-    counts = (
-        db.session.query(
-            ChallengeLog.user_id, ChallengeLog.domain, func.count(ChallengeLog.id)
-        )
-        .filter(ChallengeLog.user_id.in_(user_ids))
-        .group_by(ChallengeLog.user_id, ChallengeLog.domain)
+    pending = (
+        User.query.options(selectinload(User.projects))
+        .filter_by(is_approved=False)
+        .filter(User.role != 'admin')
         .all()
     )
 
-    id_to_username = {u.id: u._username for u in pending}
-    precomputed = {
-        (id_to_username[user_id], domain): count for user_id, domain, count in counts
-    }
-
-    return {"users": [u.to_dict_summary(precomputed) for u in pending]}
+    return {"users": User.to_dict_summaries(pending)}
 
 
 @admin_bp.route("/approve_user/<int:user_id>", methods=["POST"])
@@ -180,28 +176,16 @@ def get_users():
             User.id.desc(),
         )
 
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    pagination = query.options(selectinload(User.projects)).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
     users = pagination.items
     user_ids = [u.id for u in users]
-
-    counts = (
-        db.session.query(
-            ChallengeLog.user_id, ChallengeLog.domain, func.count(ChallengeLog.id)
-        )
-        .filter(ChallengeLog.user_id.in_(user_ids))
-        .group_by(ChallengeLog.user_id, ChallengeLog.domain)
-        .all()
-    )
-
-    id_to_username = {u.id: u._username for u in users}
-    precomputed = {
-        (id_to_username[user_id], domain): count for user_id, domain, count in counts
-    }
 
     # Fetch levels completed today (UTC day start to match log timestamps)
     from datetime import datetime, time
 
-    today_start = datetime.combine(datetime.utcnow().date(), time.min)
+    today_start = datetime.combine(utcnow_naive().date(), time.min)
 
     today_counts = (
         db.session.query(ChallengeLog.user_id, func.count(ChallengeLog.id))
@@ -212,14 +196,9 @@ def get_users():
     )
     levels_today_map = dict(today_counts)
 
-    user_data = []
-    for u in users:
-        d = u.to_dict_summary(precomputed)
-        d["levels_today"] = levels_today_map.get(u.id, 0)
-        # Defensive pop redundant but kept for safety with existing patterns
-        for field in ["password_hash", "salt", "ip_address"]:
-            d.pop(field, None)
-        user_data.append(d)
+    user_data = User.to_dict_summaries(users)
+    for d in user_data:
+        d["levels_today"] = levels_today_map.get(d["id"], 0)
 
     return jsonify(
         {
@@ -240,7 +219,10 @@ def get_users():
 @admin_bp.route("/reset_password", methods=["POST"])
 @admin_only
 def reset_password():
-    data = request.json
+    # Accept JSON or form posts; a missing/null/garbage body falls through to the 400 below.
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = request.form
     username = data.get("username")
     new_password = data.get("new_password")
 
@@ -282,6 +264,15 @@ def create_user():
             400,
         )
 
+    if ducks > MAX_INITIAL_DUCKS:
+        return (
+            jsonify(
+                success=False,
+                message=f"Initial ducks must be between 0 and {MAX_INITIAL_DUCKS}",
+            ),
+            400,
+        )
+
     if not re.fullmatch(r"[a-z0-9_]{3,30}", username):
         return (
             jsonify(
@@ -297,8 +288,7 @@ def create_user():
     try:
         new_user = User(username=username)
         new_user.set_password(password)
-        db.session.add(new_user)
-        db.session.flush()  # Get user ID
+        save_new_user(new_user, commit=False)  # Flush to get the user ID
         if ducks > 0:
             new_user.add_ducks(ducks, reason="Initial Balance")
         db.session.commit()
@@ -328,9 +318,29 @@ def remove_user():
         db.session.delete(user)
         db.session.commit()
         return jsonify(success=True, message=f"User '{username}' removed successfully")
+    except IntegrityError:
+        db.session.rollback()
+        current_app.logger.exception("remove_user blocked by related records: %s", username)
+        return (
+            jsonify(
+                success=False,
+                message="User has related records that prevent deletion",
+            ),
+            409,
+        )
     except Exception:
         db.session.rollback()
+        current_app.logger.exception("remove_user failed: %s", username)
         return jsonify(success=False, message="Internal server error"), 500
+
+
+def _amount_error(amount):
+    """Return a message when an admin-entered amount is unusable, else None."""
+    if not math.isfinite(amount):
+        return "Amount must be a finite number"
+    if abs(amount) > MAX_ADMIN_ADJUSTMENT:
+        return f"Amount must be between -{MAX_ADMIN_ADJUSTMENT} and {MAX_ADMIN_ADJUSTMENT}"
+    return None
 
 
 @admin_bp.route("/adjust_ducks", methods=["POST"])
@@ -345,10 +355,18 @@ def adjust_ducks():
             400,
         )
 
+    error = _amount_error(amount)
+    if error:
+        return jsonify({"success": False, "message": error}), 400
+
     user = User.query.filter_by(username=username).first()
     if user:
-        user.add_ducks(amount, reason="Admin Adjustment")
-        db.session.commit()
+        try:
+            user.add_ducks(amount, reason="Admin Adjustment")
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            return jsonify({"success": False, "message": "Internal server error"}), 500
         return jsonify(
             {"success": True, "message": f"Updated {username}'s ducks by {amount}."}
         )
@@ -371,6 +389,10 @@ def adjust_packets():
             400,
         )
 
+    error = _amount_error(amount)
+    if error:
+        return jsonify({"success": False, "message": error}), 400
+
     user = User.query.filter_by(username=username).first()
     if user:
         user.packets = (user.packets or 0.0) + amount
@@ -383,78 +405,6 @@ def adjust_packets():
             jsonify({"success": False, "message": f"User '{username}' not found."}),
             404,
         )
-
-
-@admin_bp.route("/set_username", methods=["POST"])
-@admin_only
-def set_username_route():
-    user_id = request.form.get("user_id", type=int)
-    username = request.form.get("username")
-
-    if not user_id or not username:
-        return jsonify({"success": False, "message": "Missing arguments"}), 400
-
-    if not re.fullmatch(r"[a-z0-9_]{3,30}", username.lower()):
-        return jsonify(
-            success=False,
-            message="Username must be 3-30 chars: lowercase letters, numbers, or underscores only",
-        ), 400
-
-    user = db.session.get(User, user_id)
-    if not user:
-        return jsonify({"success": False, "message": "User not found"}), 404
-
-    import sqlalchemy.exc
-
-    try:
-        user.username = username.lower()
-        db.session.commit()
-        return jsonify({"success": True, "message": "Username set successfully"})
-    except sqlalchemy.exc.IntegrityError:
-        db.session.rollback()
-        return jsonify({"success": False, "message": "Username already exists"}), 409
-
-
-@admin_bp.route("/verify_password", methods=["POST"])
-@admin_only
-def verify_password():
-    password = request.form.get("password")
-    username = request.form.get("username")
-    user_id = request.form.get("user_id", type=int)
-
-    # Tests monkeypatch application.routes.admin_routes.admin_pass to inject a
-    # known value; in normal operation it's None, so we use the real
-    # ADMIN_PASSWORD from config.
-    from application.routes.admin_routes import admin_pass
-
-    app_admin_pass = (
-        admin_pass
-        if admin_pass is not None
-        else current_app.config.get("ADMIN_PASSWORD")
-    )
-
-    if password == app_admin_pass:
-        if user_id and username:
-            if not re.fullmatch(r"[a-z0-9_]{3,30}", username.lower()):
-                return jsonify(
-                    {"success": False, "message": "Invalid username format"}
-                ), 400
-
-            user = db.session.get(User, user_id)
-            if user:
-                import sqlalchemy.exc
-
-                try:
-                    user.username = username.lower()
-                    db.session.commit()
-                except sqlalchemy.exc.IntegrityError:
-                    db.session.rollback()
-                    return jsonify(
-                        {"success": False, "message": "Username already exists"}
-                    ), 409
-        return jsonify({"success": True})
-    else:
-        return jsonify({"success": False}), 401
 
 
 @admin_bp.route("/parents/<int:parent_id>/children", methods=["GET"])
@@ -546,7 +496,7 @@ def get_classrooms_list():
     from application.models.classroom import Classroom
 
     classrooms = Classroom.query.order_by(Classroom.name).all()
-    return {"classrooms": [c.to_dict() for c in classrooms]}
+    return {"classrooms": Classroom.to_dicts(classrooms)}
 
 
 @admin_bp.route("/classrooms/<classroom_id>/connection_cards", methods=["GET"])
@@ -659,9 +609,9 @@ def get_user_details(user_id):
         d.pop(field, None)
 
     # ChallengeLog rows are only ever written at challenge-completion time
-    # (Challenge.complete_challenge, the claim endpoint, admin bulk-pass), so
-    # the newest row by timestamp is the student's most recently completed
-    # challenge; its course_id tells us which course that challenge belongs to.
+    # (the claim endpoint, admin bulk-pass), so the newest row by timestamp is
+    # the student's most recently completed challenge; its course_id tells us
+    # which course that challenge belongs to.
     most_recently_completed_challenge = (
         ChallengeLog.query.filter(
             ChallengeLog.user_id == user_id, ChallengeLog.course_id.isnot(None)
@@ -686,6 +636,7 @@ def update_user_details(user_id):
     if not user_obj:
         return {"error": "User not found"}, 404
 
+    previous_role = user_obj.role
     data = request.get_json() or request.form.to_dict()
 
     if data.get("username"):
@@ -767,6 +718,11 @@ def update_user_details(user_id):
 
     try:
         db.session.commit()
+        if user_obj.role != previous_role:
+            # Promoted/demoted: their open sockets gain or lose the admin rooms
+            from application.socket_events import sync_user_rooms
+
+            sync_user_rooms(user_obj.id)
         d = user_obj.to_dict()
         for field in ["password_hash", "salt", "ip_address"]:
             d.pop(field, None)
@@ -798,7 +754,9 @@ def get_student_parents(student_id):
 @admin_bp.route("/parents/connections", methods=["GET"])
 @admin_only
 def get_parent_child_connections():
-    parents = User.query.filter_by(role="parent").all()
+    parents = (
+        User.query.options(selectinload(User.children)).filter_by(role="parent").all()
+    )
     connections = []
     for parent in parents:
         for child in parent.children:
@@ -943,6 +901,10 @@ def delete_classroom(classroom_id):
 
     db.session.delete(classroom)
     db.session.commit()
+
+    from application.socket_events import close_classroom_room
+
+    close_classroom_room(classroom_id)
     return jsonify({"success": True, "message": "Classroom deleted successfully"})
 
 
@@ -968,6 +930,10 @@ def enroll_student_in_classroom(classroom_id):
         classroom.users.append(student)
         db.session.commit()
 
+        from application.socket_events import emit_classroom_enrolled
+
+        emit_classroom_enrolled(student.id, classroom.to_dict())
+
     return jsonify({"success": True, "message": "Student enrolled successfully"})
 
 
@@ -992,6 +958,10 @@ def unenroll_student_from_classroom(classroom_id):
     if student in classroom.users:
         classroom.users.remove(student)
         db.session.commit()
+
+        from application.socket_events import sync_user_rooms
+
+        sync_user_rooms(student.id)
 
     return jsonify({"success": True, "message": "Student unenrolled successfully"})
 
@@ -1055,8 +1025,6 @@ def pass_chapter_preview(user_id):
 @admin_only
 @api_response
 def pass_chapter(user_id):
-    import datetime
-
     from application.models.achievements import Achievement
     from application.models.challenge import Challenge
     from application.models.challenge_log import ChallengeLog
@@ -1099,16 +1067,9 @@ def pass_chapter(user_id):
 
     # Manually bypass duck caps for this admin override
     if total_ducks > 0:
-        user_obj.earned_ducks += total_ducks
-        user_obj.duck_balance += total_ducks
-        from application.models.duck_transaction import DuckTransaction
-
-        tx = DuckTransaction(
-            user_id=user_obj.id,
-            amount=total_ducks,
-            reason=f"Admin Pass Chapter Override for {course_id}",
+        user_obj.add_ducks(
+            total_ducks, reason=f"Admin Pass Chapter Override for {course_id}"
         )
-        db.session.add(tx)
 
     certificate_achievements = Achievement.query.filter(
         (Achievement.type == "certificate")
@@ -1126,7 +1087,7 @@ def pass_chapter(user_id):
                 achievement_id=cert.id,
                 url="Honorary Degree",
                 status="approved",
-                reviewed_at=datetime.datetime.utcnow(),
+                reviewed_at=utcnow_naive(),
             )
             db.session.add(uc)
 

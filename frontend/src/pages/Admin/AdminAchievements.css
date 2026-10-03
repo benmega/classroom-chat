@@ -3,7 +3,7 @@
 /* Standardized Header handled by AdminPageHeader.css */
 
 /* Form Container */
-.achievement-form-container {
+:where(.admin-achievements-page) .achievement-form-container {
     display: grid;
     grid-template-columns: 1fr 380px;
     gap: 2rem;
@@ -11,7 +11,7 @@
     padding: 2rem;
 }
 
-.achievement-form {
+:where(.admin-achievements-page) .achievement-form {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -54,7 +54,7 @@
 
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--bg-primary);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     outline: none;
 }
@@ -66,7 +66,7 @@
     margin-top: 6px;
 }
 
-.form-row {
+:where(.admin-achievements-page) .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
@@ -77,7 +77,7 @@
     border-top: 1px solid var(--bg-tertiary);
 }
 
-.btn-submit {
+:where(.admin-achievements-page) .btn-submit {
     width: 100%;
     padding: 16px;
     background: var(--primary-color);
@@ -95,14 +95,14 @@
     box-shadow: var(--shadow-lg);
 }
 
-.btn-submit:hover:not(:disabled) {
+:where(.admin-achievements-page) .btn-submit:hover:not(:disabled) {
     background: var(--blue-600);
     transform: translateY(-2px);
     box-shadow: 0 15px 20px -3px rgba(59, 130, 246, 0.3);
 }
 
 /* Preview Panel */
-.achievement-preview-panel {
+:where(.admin-achievements-page) .achievement-preview-panel {
     background: var(--bg-secondary);
     padding: 1.5rem;
     border-radius: 16px;
@@ -111,7 +111,7 @@
     top: 2rem;
 }
 
-.achievement-preview-panel h3 {
+:where(.admin-achievements-page) .achievement-preview-panel h3 {
     margin-bottom: 2rem;
     font-size: 1.1rem;
     font-weight: 700;
@@ -120,8 +120,8 @@
     gap: 10px;
 }
 
-.preview-achievement-card {
-    background: white;
+:where(.admin-achievements-page) .preview-achievement-card {
+    background: var(--bg-primary);
     padding: 1rem;
     border-radius: 16px;
     box-shadow: var(--shadow-md);
@@ -135,10 +135,10 @@
     margin-bottom: 0.75rem;
 }
 
-.preview-badge {
+:where(.admin-achievements-page) .preview-badge {
     width: 64px;
     height: 64px;
-    background: #eff6ff;
+    background: var(--blue-50);
     color: var(--blue-600);
     border-radius: 16px;
     display: flex;
@@ -146,8 +146,8 @@
     justify-content: center;
 }
 
-.reward-tag {
-    background: #fffbeb;
+:where(.admin-achievements-page) .reward-tag {
+    background: var(--amber-50);
     color: var(--warning-color);
     padding: 4px 12px;
     border-radius: 20px;
@@ -155,10 +155,10 @@
     font-size: 0.85rem;
 }
 
-.preview-text h4 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
-.preview-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
+:where(.admin-achievements-page) .preview-text h4 { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+:where(.admin-achievements-page) .preview-text p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
 
-.req-pill {
+:where(.admin-achievements-page) .req-pill {
     display: inline-block;
     padding: 4px 10px;
     background: var(--bg-tertiary);
@@ -168,10 +168,10 @@
     font-weight: 700;
 }
 
-.pro-tip {
+:where(.admin-achievements-page) .pro-tip {
     display: flex;
     gap: 10px;
-    background: #eff6ff;
+    background: var(--blue-50);
     color: var(--primary-accessible);
     padding: 1rem;
     border-radius: 12px;
@@ -179,7 +179,7 @@
 }
 
 @media (max-width: 1100px) {
-    .achievement-form-container {
+    :where(.admin-achievements-page) .achievement-form-container {
         grid-template-columns: 1fr;
     }
 }
@@ -196,7 +196,14 @@
     opacity: 0;
     overflow: hidden;
     position: absolute;
-    z-index: -1;
+}
+
+/* Visible keyboard focus for the visually hidden file input */
+.file-input:focus-visible + .file-label {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    color: var(--primary-color);
+    box-shadow: var(--shadow-glow);
 }
 
 .file-label {
@@ -215,11 +222,11 @@
 
 .file-label:hover {
     border-color: var(--primary-color);
-    background: #eff6ff;
+    background: var(--blue-50);
     color: var(--primary-accessible);
 }
 
-.preview-badge.custom {
+:where(.admin-achievements-page) .preview-badge.custom {
     background: none;
     padding: 0;
     overflow: hidden;
@@ -230,7 +237,7 @@
     justify-content: center;
 }
 
-.preview-badge.custom img {
+:where(.admin-achievements-page) .preview-badge.custom img {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;

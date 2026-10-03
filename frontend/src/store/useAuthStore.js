@@ -1,5 +1,7 @@
 import { create } from 'zustand';
+import toast from 'react-hot-toast';
 import client from '../api/client';
+import { resetSocket } from '../hooks/useChatSocket';
 
 
 const getHamburgerOverride = (username) => {
@@ -11,7 +13,7 @@ const setHamburgerOverride = (username, progress) => {
   localStorage.setItem(`hamburger_override_${username}`, progress);
 };
 
-const useAuthStore = create((set) => ({
+const useAuthStore = create((set, get) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
@@ -80,9 +82,11 @@ const useAuthStore = create((set) => ({
         role: user.role
       };
     } catch (error) {
+      const body = error.response?.data;
+      const serverError = typeof body === 'string' ? body : body?.error;
       return { 
         success: false, 
-        error: error.response?.data?.error || 'Login failed' 
+        error: (typeof serverError === 'string' && serverError) || 'Login failed' 
       };
     }
   },
@@ -107,11 +111,28 @@ const useAuthStore = create((set) => ({
     }
   },
   
+  // The one definition of "signed out": the user and everything derived from them
+  clearSession: () => set({
+    user: null,
+    isAuthenticated: false,
+    hamburgerProgress: 0,
+    unreadCount: 0,
+    lastReadMessageId: null,
+    activityUnreadCount: 0,
+  }),
+
   logout: async () => {
     try {
       await client.get('/user/logout');
+    } catch (error) {
+      // Sign out locally regardless: callers navigate away afterwards, so they must not get a rejection.
+      // The server may still hold the session though, which a reload would pick up again.
+      console.warn('Logout request failed; clearing the local session anyway', error);
+      toast.error('Could not end your session on the server. You may still be signed in after a reload.');
     } finally {
-      set({ user: null, isAuthenticated: false, hamburgerProgress: 0 });
+      // The next login must handshake a fresh socket, not reuse this user's
+      resetSocket();
+      get().clearSession();
     }
   },
   
@@ -124,5 +145,10 @@ const useAuthStore = create((set) => ({
     }
   },
 }));
+
+// However the session ends (logout, a 401, a failed auth check), the chat socket it opened must go too
+useAuthStore.subscribe((state, prev) => {
+  if (prev.isAuthenticated && !state.isAuthenticated) resetSocket();
+});
 
 export default useAuthStore;

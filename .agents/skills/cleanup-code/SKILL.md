@@ -21,11 +21,11 @@ This workflow focuses on improving code quality, maintainability, and architectu
     -   **Missing Error Handling**: Add `try-catch` blocks or descriptive error messages to asynchronous operations.
 
 3.  **Refactoring Pattern**:
-    -   **Architecture Consistency**: Ensure all refactors align with the patterns defined in [frontend_design.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/frontend_design.md) and [backend_design.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/backend_design.md).
+    -   **Architecture Consistency**: Ensure all refactors align with the patterns defined in [frontend_design.md](../../../docs/frontend_design.md) and [backend_design.md](../../../docs/backend_design.md).
     -   **Constants**: Move shared strings and configurations to `src/constants/` or `config/`.
     -   **Utils/Hooks**: Extract logic that is used in more than one place into a custom hook or utility function.
     -   **Styling**: Ensure all colors and spacing use the CSS variables defined in `index.css`.
-    -   **Personality Preservation**: DO NOT formalize casual language or remove fun features. Always refer to [PERSONALITY_GUIDE.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/PERSONALITY_GUIDE.md) to ensure the whimsical tone is preserved.
+    -   **Personality Preservation**: DO NOT formalize casual language or remove fun features. Always refer to [PERSONALITY_GUIDE.md](../../../PERSONALITY_GUIDE.md) to ensure the whimsical tone is preserved.
     -   **Code Cleanliness**: Remove unused imports, console logs (unless for debugging), and dead code.
 
 4.  **Execution**:

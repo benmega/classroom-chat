@@ -5,7 +5,13 @@ import { showConfirm } from '../../utils/confirm';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import adminCache from '../../utils/adminCache';
+import { getErrorMessage } from '../../utils/apiError';
+import Skeleton from '../../components/common/Skeleton';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import useModalA11y from '../../hooks/useModalA11y';
+import './Classes.css';
 
+// The classroom order is a per-browser preference kept in localStorage; classrooms missing from it go last.
 const applySavedOrder = (items) => {
     try {
         const savedOrder = localStorage.getItem('admin_classes_order');
@@ -28,9 +34,6 @@ const applySavedOrder = (items) => {
         return items;
     }
 };
-import Skeleton from '../../components/common/Skeleton';
-import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import './Classes.css';
 
 const LanguageSymbol = ({ language }) => {
     const lang = (language || '').toLowerCase();
@@ -118,6 +121,10 @@ const Classes = () => {
     const [newName, setNewName] = useState('');
     const [newLanguage, setNewLanguage] = useState('Python');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const createModalRef = React.useRef(null);
+
+    // Escape closes the dialog, Tab stays inside it, and focus returns to Add Classroom afterwards
+    useModalA11y({ isOpen: isCreateModalOpen, onClose: () => setIsCreateModalOpen(false), containerRef: createModalRef });
 
     const dragItem = useRef(null);
     const dragOverItem = useRef(null);
@@ -202,7 +209,7 @@ const Classes = () => {
                 fetchClassrooms();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to delete classroom.');
+            toast.error(getErrorMessage(err, 'Failed to delete classroom.'));
         }
     };
 
@@ -229,7 +236,7 @@ const Classes = () => {
             fetchClassrooms();
         } catch (error) {
             console.error('Failed to create classroom:', error);
-            toast.error(error.response?.data?.error || 'Failed to create classroom.');
+            toast.error(getErrorMessage(error, 'Failed to create classroom.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -376,7 +383,7 @@ const Classes = () => {
             </div>
 
             {isCreateModalOpen && (
-                <div data-testid="modal-overlay" className="modal-overlay" role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
+                <div data-testid="modal-overlay" className="modal-overlay" ref={createModalRef} tabIndex={-1} role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
                     <div className="modal-card">
                         <div className="modal-header">
                             <h3 id="modal-title-create-classroom">Create New Classroom</h3>
@@ -395,6 +402,7 @@ const Classes = () => {
                                 <input
                                     type="text"
                                     id="new-class-id"
+                                    data-autofocus
                                     value={newId}
                                     onChange={(e) => setNewId(e.target.value)}
                                     placeholder="e.g. PY101_SPRING"

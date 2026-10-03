@@ -1,11 +1,12 @@
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.connection_attempt import ConnectionAttempt
 from application.models.user import User
+from application.utilities.helper_functions import utcnow_naive
 from flask import Blueprint, request, session
 
 parent = Blueprint("parent", __name__)
@@ -210,7 +211,7 @@ def get_student_history(student_id):
     from application.models.challenge_log import ChallengeLog
     from application.models.duck_transaction import DuckTransaction
 
-    cutoff = datetime.utcnow() - timedelta(days=30)
+    cutoff = utcnow_naive() - timedelta(days=30)
 
     # Check if student has any activity ever
     total_challenges = ChallengeLog.query.filter_by(user_id=student_id).count()

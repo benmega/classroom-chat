@@ -12,8 +12,6 @@ vi.mock('../api/client', () => ({
     },
 }));
 
-import { showConfirm } from '../utils/confirm';
-
 vi.mock('react-hot-toast', () => ({
     default: {
         success: vi.fn(),
@@ -21,15 +19,12 @@ vi.mock('react-hot-toast', () => ({
     },
 }));
 
-vi.mock('../utils/confirm', () => ({
-    showConfirm: vi.fn()
-}));
-
 describe('useAdminDashboard', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         client.get.mockReset();
         client.post.mockReset();
+        adminCache.clear();
     });
 
     it('fetches dashboard data on mount successfully', async () => {
@@ -62,39 +57,40 @@ describe('useAdminDashboard', () => {
         expect(result.current.isLoading).toBe(false);
     });
 
-    it('toggles AI successfully', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockResolvedValueOnce({ data: { success: true, message: 'AI toggled' } });
-        const { result } = renderHook(() => useAdminDashboard());
+    it('toasts and stops loading when the server answers with a 500', async () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+        client.get.mockRejectedValueOnce({ response: { status: 500, data: { status: 'error', error: 'Internal error' } } });
 
+        const { result } = renderHook(() => useAdminDashboard());
         await act(async () => {
             await new Promise(resolve => setTimeout(resolve, 0));
         });
 
-        await act(async () => {
-            await result.current.handleToggleAI();
-        });
-
-        expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-ai');
-        
-        expect(client.get).toHaveBeenCalledTimes(2); // refetch
+        expect(toast.error).toHaveBeenCalledTimes(1);
+        expect(toast.error).toHaveBeenCalledWith('Failed to load dashboard data.');
+        expect(result.current.dashboardData).toBeNull();
+        expect(result.current.isLoading).toBe(false);
+        expect(result.current.isRefreshing).toBe(false);
+        consoleError.mockRestore();
     });
 
-    it('fails to toggle AI', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockRejectedValueOnce(new Error('Network error'));
+    it('keeps the data it has when a later refresh fails', async () => {
+        const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+        client.get.mockResolvedValueOnce({ data: { status: 'success', data: { users: 10 } } });
         const { result } = renderHook(() => useAdminDashboard());
-
         await act(async () => {
             await new Promise(resolve => setTimeout(resolve, 0));
         });
+        client.get.mockRejectedValueOnce({ response: { status: 500 } });
 
         await act(async () => {
-            await result.current.handleToggleAI();
+            await result.current.fetchDashboardData();
         });
 
-        expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-ai');
-        expect(toast.error).toHaveBeenCalledWith('Failed to toggle AI.');
+        expect(toast.error).toHaveBeenCalledWith('Failed to load dashboard data.');
+        expect(result.current.dashboardData).toEqual({ users: 10 });
+        expect(result.current.isRefreshing).toBe(false);
+        consoleError.mockRestore();
     });
 
     it('toggles messages successfully', async () => {
@@ -121,6 +117,76 @@ describe('useAdminDashboard', () => {
 
         expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-message-sending');
         expect(toast.error).toHaveBeenCalledWith('Failed to toggle messaging.');
+        expect(result.current.pendingToggle).toBe(false);
+    });
+
+    it('shows the server reason when the toggle is rejected', async () => {
+        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
+        client.post.mockRejectedValueOnce({ response: { status: 403, data: { error: 'Admin access required' } } });
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await result.current.handleToggleMessages();
+        });
+
+        expect(toast.error).toHaveBeenCalledWith('Admin access required');
+        expect(result.current.pendingToggle).toBe(false);
+    });
+
+    it('ignores a second toggle while the first request is still in flight', async () => {
+        client.get.mockResolvedValue({ data: { status: 'success', data: {} } });
+        let resolvePost;
+        client.post.mockImplementationOnce(() => new Promise((resolve) => { resolvePost = resolve; }));
+        const { result } = renderHook(() => useAdminDashboard());
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        });
+        expect(result.current.pendingToggle).toBe(false);
+
+        let first;
+        let second;
+        await act(async () => {
+            // Both calls see the same render, as a fast double click would.
+            first = result.current.handleToggleMessages();
+            second = result.current.handleToggleMessages();
+        });
+
+        expect(client.post).toHaveBeenCalledTimes(1);
+        expect(result.current.pendingToggle).toBe(true);
+
+        await act(async () => {
+            resolvePost({ data: { success: true } });
+            await Promise.all([first, second]);
+        });
+
+        expect(client.post).toHaveBeenCalledTimes(1);
+        expect(result.current.pendingToggle).toBe(false);
+        // The dashboard was refetched before the toggle was released.
+        expect(client.get).toHaveBeenCalledTimes(2);
+
+        // Once settled, the toggle works again.
+        client.post.mockResolvedValueOnce({ data: { success: true } });
+        await act(async () => {
+            await result.current.handleToggleMessages();
+        });
+        expect(client.post).toHaveBeenCalledTimes(2);
+    });
+
+    it('releases the toggle after a failed request so it can be retried', async () => {
+        client.get.mockResolvedValue({ data: { status: 'success', data: {} } });
+        client.post.mockRejectedValueOnce(new Error('Network error'));
+        client.post.mockResolvedValueOnce({ data: { success: true } });
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await result.current.handleToggleMessages();
+        });
+        await act(async () => {
+            await result.current.handleToggleMessages();
+        });
+
+        expect(client.post).toHaveBeenCalledTimes(2);
+        expect(toast.error).toHaveBeenCalledTimes(1);
     });
 
     it('updates multiplier successfully', async () => {
@@ -148,6 +214,30 @@ describe('useAdminDashboard', () => {
         expect(toast.error).toHaveBeenCalledWith('Failed to update multiplier.');
     });
 
+    it('shows the server reason when the multiplier is rejected', async () => {
+        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
+        client.post.mockRejectedValueOnce({ response: { data: { success: false, error: 'Multiplier must be between 0 and 100' } } });
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await result.current.handleUpdateMultiplier(500);
+        });
+
+        expect(toast.error).toHaveBeenCalledWith('Multiplier must be between 0 and 100');
+    });
+
+    it('shows the reason from an enveloped multiplier error', async () => {
+        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
+        client.post.mockRejectedValueOnce({ response: { data: { status: 'error', data: null, error: 'Invalid multiplier value' } } });
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await result.current.handleUpdateMultiplier('abc');
+        });
+
+        expect(toast.error).toHaveBeenCalledWith('Invalid multiplier value');
+    });
+
     it('adds banned word successfully', async () => {
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         client.post.mockResolvedValueOnce({ data: { success: true, message: 'Word added' } });
@@ -167,11 +257,46 @@ describe('useAdminDashboard', () => {
         client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
         const { result } = renderHook(() => useAdminDashboard());
 
+        let res;
         await act(async () => {
-            await result.current.handleAddBannedWord(' ', 'reason');
+            res = await result.current.handleAddBannedWord(' ', 'reason');
         });
 
         expect(client.post).not.toHaveBeenCalled();
+        expect(res).toBe(false);
+    });
+
+    it('trims the banned word before sending it', async () => {
+        client.get.mockResolvedValue({ data: { status: 'success', data: {} } });
+        client.post.mockResolvedValueOnce({ data: { success: true } });
+        const { result } = renderHook(() => useAdminDashboard());
+
+        await act(async () => {
+            await result.current.handleAddBannedWord('  padded \t', 'reason');
+        });
+
+        const [, formData] = client.post.mock.calls[0];
+        expect(formData.get('word')).toBe('padded');
+        expect(formData.get('reason')).toBe('reason');
+    });
+
+    it('is loading while the banned word request runs', async () => {
+        client.get.mockResolvedValue({ data: { status: 'success', data: {} } });
+        let resolvePost;
+        client.post.mockImplementationOnce(() => new Promise((resolve) => { resolvePost = resolve; }));
+        const { result } = renderHook(() => useAdminDashboard());
+
+        let pending;
+        await act(async () => {
+            pending = result.current.handleAddBannedWord('word', '');
+        });
+        expect(result.current.formLoading).toBe(true);
+
+        await act(async () => {
+            resolvePost({ data: { success: true } });
+            await pending;
+        });
+        expect(result.current.formLoading).toBe(false);
     });
 
     it('fails to add banned word api error', async () => {
@@ -188,410 +313,147 @@ describe('useAdminDashboard', () => {
         expect(res).toBe(false);
     });
 
-    it('validates user creation', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        const { result } = renderHook(() => useAdminDashboard());
+    describe('requests that overlap', () => {
+        // A request the test answers by hand, so it decides in what order the answers arrive
+        const deferred = () => {
+            const handle = {};
+            handle.promise = new Promise((resolve, reject) => {
+                handle.resolve = resolve;
+                handle.reject = reject;
+            });
+            return handle;
+        };
+        const answer = (users) => ({ data: { status: 'success', data: { users } } });
+        const daysOf = (call) => new URL(client.get.mock.calls[call][0], 'http://localhost').searchParams.get('days');
 
-        const form = document.createElement('form');
-        const userIn = document.createElement('input');
-        userIn.name = 'username';
-        userIn.value = 'a';
-        const passIn = document.createElement('input');
-        passIn.name = 'password';
-        passIn.value = '123';
-        form.appendChild(userIn);
-        form.appendChild(passIn);
-
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
+        // Mounts with the 7 day request outstanding, then asks for 30 days while it is still out
+        const startTwoRequests = () => {
+            const week = deferred();
+            const month = deferred();
+            client.get.mockReturnValueOnce(week.promise).mockReturnValueOnce(month.promise);
+            const hook = renderHook(() => useAdminDashboard());
+            act(() => hook.result.current.setTimeframe(30));
+            expect(client.get).toHaveBeenCalledTimes(2);
+            expect(daysOf(0)).toBe('7');
+            expect(daysOf(1)).toBe('30');
+            return { ...hook, week, month };
         };
 
-        await act(async () => {
-            await result.current.handleCreateUser(mockEvent);
+        it('keeps the data of the latest timeframe when an older answer arrives last', async () => {
+            const { result, week, month } = startTwoRequests();
+
+            await act(async () => { month.resolve(answer(30)); });
+            expect(result.current.dashboardData).toEqual({ users: 30 });
+            await act(async () => { week.resolve(answer(7)); });
+
+            expect(result.current.dashboardData).toEqual({ users: 30 });
+            expect(result.current.isLoading).toBe(false);
+            expect(result.current.isRefreshing).toBe(false);
         });
 
-        expect(result.current.formErrors).toEqual({
-            username: '3-30 chars, lowercase, numbers, or underscores.',
-            password: 'Password must be at least 6 characters.'
-        });
-        expect(client.post).not.toHaveBeenCalled();
-    });
+        it('ignores an older answer that arrives first and waits for the latest one', async () => {
+            const { result, week, month } = startTwoRequests();
 
-    it('creates user successfully', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockResolvedValueOnce({ data: { success: true, message: 'User created' } });
-        const { result } = renderHook(() => useAdminDashboard());
+            await act(async () => { week.resolve(answer(7)); });
+            expect(result.current.dashboardData).toBeNull();
+            expect(result.current.isLoading).toBe(true);
+            expect(result.current.isRefreshing).toBe(true);
 
-        const form = document.createElement('form');
-        const userIn = document.createElement('input');
-        userIn.name = 'username';
-        userIn.value = 'testuser';
-        const passIn = document.createElement('input');
-        passIn.name = 'password';
-        passIn.value = 'password123';
-        form.appendChild(userIn);
-        form.appendChild(passIn);
-
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
-
-        await act(async () => {
-            await result.current.handleCreateUser(mockEvent);
+            await act(async () => { month.resolve(answer(30)); });
+            expect(result.current.dashboardData).toEqual({ users: 30 });
+            expect(result.current.isLoading).toBe(false);
+            expect(result.current.isRefreshing).toBe(false);
         });
 
-        expect(client.post).toHaveBeenCalledWith('/api/admin/create_user', expect.any(FormData));
-        
-        expect(result.current.formErrors).toEqual({});
-    });
+        it('does not toast for an older request that failed after a newer one worked', async () => {
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const { result, week, month } = startTwoRequests();
 
-    it('fails to create user api error', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockRejectedValueOnce({ response: { data: { message: 'Username taken' } } });
-        const { result } = renderHook(() => useAdminDashboard());
+            await act(async () => { month.resolve(answer(30)); });
+            await act(async () => { week.reject(new Error('timeout')); });
 
-        const form = document.createElement('form');
-        const userIn = document.createElement('input');
-        userIn.name = 'username';
-        userIn.value = 'testuser';
-        const passIn = document.createElement('input');
-        passIn.name = 'password';
-        passIn.value = 'password123';
-        form.appendChild(userIn);
-        form.appendChild(passIn);
-
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
-
-        await act(async () => {
-            await result.current.handleCreateUser(mockEvent);
+            expect(toast.error).not.toHaveBeenCalled();
+            expect(result.current.dashboardData).toEqual({ users: 30 });
+            expect(result.current.isRefreshing).toBe(false);
+            consoleError.mockRestore();
         });
 
-        expect(toast.error).toHaveBeenCalledWith('Username taken');
-    });
+        it('still toasts when the latest request is the one that fails', async () => {
+            const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+            const { result, week, month } = startTwoRequests();
 
-    it('adjusts ducks validation', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        const { result } = renderHook(() => useAdminDashboard());
+            await act(async () => { week.resolve(answer(7)); });
+            await act(async () => { month.reject(new Error('timeout')); });
 
-        const form = document.createElement('form');
-
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
-
-        await act(async () => {
-            await result.current.handleAdjustDucks(mockEvent);
+            expect(toast.error).toHaveBeenCalledTimes(1);
+            expect(toast.error).toHaveBeenCalledWith('Failed to load dashboard data.');
+            expect(result.current.dashboardData).toBeNull();
+            expect(result.current.isLoading).toBe(false);
+            consoleError.mockRestore();
         });
 
-        expect(result.current.formErrors).toEqual({
-            amount: 'Adjustment amount is required'
+        it('lets a refresh after an action supersede a timeframe request that is still out', async () => {
+            const week = deferred();
+            const refresh = deferred();
+            client.get.mockReturnValueOnce(week.promise).mockReturnValueOnce(refresh.promise);
+            client.post.mockResolvedValueOnce({ data: { success: true } });
+            const { result } = renderHook(() => useAdminDashboard());
+
+            await act(async () => { await result.current.handleUpdateMultiplier(2); });
+            await act(async () => { refresh.resolve(answer(2)); });
+            await act(async () => { week.resolve(answer(7)); });
+
+            expect(result.current.dashboardData).toEqual({ users: 2 });
         });
     });
 
-    it('adjusts ducks successfully', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockResolvedValueOnce({ data: { success: true, message: 'Ducks adjusted' } });
-        const { result } = renderHook(() => useAdminDashboard());
+    describe('admin cache', () => {
+        it('uses cached data immediately and revalidates in the background', async () => {
+            const cachedData = { users: 50, cached: true };
+            adminCache.set('admin_dashboard_7', cachedData);
 
-        const form = document.createElement('form');
-        const amountIn = document.createElement('input');
-        amountIn.name = 'amount';
-        amountIn.value = '10';
-        form.appendChild(amountIn);
+            const freshData = { status: 'success', data: { users: 55, fresh: true } };
+            let resolveFetch;
+            client.get.mockReturnValueOnce(new Promise((resolve) => {
+                resolveFetch = resolve;
+            }));
 
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
+            const { result } = renderHook(() => useAdminDashboard());
 
-        await act(async () => {
-            await result.current.handleAdjustDucks(mockEvent);
+            expect(result.current.dashboardData).toEqual(cachedData);
+            expect(result.current.isLoading).toBe(false);
+            expect(result.current.isRefreshing).toBe(true);
+
+            await act(async () => {
+                resolveFetch({ data: freshData });
+                await new Promise(resolve => setTimeout(resolve, 0));
+            });
+
+            expect(result.current.dashboardData).toEqual({ users: 55, fresh: true });
+            expect(result.current.isRefreshing).toBe(false);
+            expect(adminCache.get('admin_dashboard_7')).toEqual({ users: 55, fresh: true });
         });
 
-        expect(client.post).toHaveBeenCalledWith('/api/admin/adjust_ducks', expect.any(FormData));
-        
-    });
-    
-    it('fails to adjust ducks api error', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockRejectedValueOnce({ response: { data: { message: 'User not found' } } });
-        const { result } = renderHook(() => useAdminDashboard());
+        it('invalidates the cached dashboard when an action changes it', async () => {
+            adminCache.set('admin_dashboard_7', { users: 10 });
+            adminCache.set('admin_dashboard_30', { users: 10 });
+            client.get.mockResolvedValue({ data: { status: 'success', data: { users: 20 } } });
+            client.post.mockResolvedValueOnce({ data: { success: true } });
 
-        const form = document.createElement('form');
-        const amountIn = document.createElement('input');
-        amountIn.name = 'amount';
-        amountIn.value = '10';
-        form.appendChild(amountIn);
+            const { result } = renderHook(() => useAdminDashboard());
 
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
+            await act(async () => {
+                await new Promise(resolve => setTimeout(resolve, 0));
+            });
 
-        await act(async () => {
-            await result.current.handleAdjustDucks(mockEvent);
-        });
+            await act(async () => {
+                await result.current.handleUpdateMultiplier(2);
+            });
 
-        expect(toast.error).toHaveBeenCalledWith('User not found');
-    });
-
-    it('validates reset password', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        const form = document.createElement('form');
-        const userIn = document.createElement('input');
-        userIn.name = 'username';
-        userIn.value = 'testuser';
-        const newPassIn = document.createElement('input');
-        newPassIn.name = 'new_password';
-        newPassIn.value = 'pass123';
-        const confPassIn = document.createElement('input');
-        confPassIn.name = 'confirm_password';
-        confPassIn.value = 'pass456';
-        form.appendChild(userIn);
-        form.appendChild(newPassIn);
-        form.appendChild(confPassIn);
-
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
-
-        await act(async () => {
-            await result.current.handleResetPassword(mockEvent);
-        });
-
-        expect(result.current.formErrors).toEqual({
-            confirm_password: 'Passwords do not match'
+            expect(client.post).toHaveBeenCalledWith('/api/admin/update_duck_multiplier', { multiplier: 2 });
+            // The other timeframe's entry is gone; the current one was refetched and re-cached
+            expect(adminCache.get('admin_dashboard_30')).toBeNull();
+            expect(adminCache.get('admin_dashboard_7')).toEqual({ users: 20 });
         });
     });
-
-    it('resets password successfully', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockResolvedValueOnce({ data: { success: true, message: 'Password reset' } });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        const form = document.createElement('form');
-        const userIn = document.createElement('input');
-        userIn.name = 'username';
-        userIn.value = 'testuser';
-        const newPassIn = document.createElement('input');
-        newPassIn.name = 'new_password';
-        newPassIn.value = 'pass123';
-        const confPassIn = document.createElement('input');
-        confPassIn.name = 'confirm_password';
-        confPassIn.value = 'pass123';
-        form.appendChild(userIn);
-        form.appendChild(newPassIn);
-        form.appendChild(confPassIn);
-
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
-
-        await act(async () => {
-            await result.current.handleResetPassword(mockEvent);
-        });
-
-        expect(client.post).toHaveBeenCalledWith('/api/admin/reset_password', {
-            username: 'testuser',
-            new_password: 'pass123'
-        });
-        
-    });
-    
-    it('fails to reset password api error', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockRejectedValueOnce({ response: { data: { message: 'Reset failed' } } });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        const form = document.createElement('form');
-        const userIn = document.createElement('input');
-        userIn.name = 'username';
-        userIn.value = 'testuser';
-        const newPassIn = document.createElement('input');
-        newPassIn.name = 'new_password';
-        newPassIn.value = 'pass123';
-        const confPassIn = document.createElement('input');
-        confPassIn.name = 'confirm_password';
-        confPassIn.value = 'pass123';
-        form.appendChild(userIn);
-        form.appendChild(newPassIn);
-        form.appendChild(confPassIn);
-
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
-
-        await act(async () => {
-            await result.current.handleResetPassword(mockEvent);
-        });
-
-        expect(toast.error).toHaveBeenCalledWith('Reset failed');
-    });
-
-    it('starts conversation successfully', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockResolvedValueOnce({ status: 201 });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        const form = document.createElement('form');
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
-
-        await act(async () => {
-            await result.current.handleStartConversation(mockEvent);
-        });
-
-        expect(client.post).toHaveBeenCalledWith('/message/start_conversation', expect.any(FormData));
-        
-    });
-
-    it('fails to start conversation', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockRejectedValueOnce(new Error('Network error'));
-        const { result } = renderHook(() => useAdminDashboard());
-
-        const form = document.createElement('form');
-        const mockEvent = {
-            preventDefault: vi.fn(),
-            target: form
-        };
-
-        await act(async () => {
-            await result.current.handleStartConversation(mockEvent);
-        });
-
-        expect(toast.error).toHaveBeenCalledWith('Failed to start conversation.');
-    });
-
-    it('removes user successfully', async () => {
-        // mock window.confirm
-        showConfirm.mockResolvedValue(true);
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockResolvedValueOnce({ data: { success: true, message: 'User removed' } });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        await act(async () => {
-            await result.current.handleRemoveUser('baduser');
-        });
-
-        expect(client.post).toHaveBeenCalledWith('/api/admin/remove_user', expect.any(FormData));
-        
-    });
-
-    it('cancels removing user', async () => {
-        showConfirm.mockResolvedValue(false);
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        await act(async () => {
-            await result.current.handleRemoveUser('baduser');
-        });
-
-        expect(client.post).not.toHaveBeenCalled();
-    });
-
-    it('fails to remove user api error', async () => {
-        showConfirm.mockResolvedValue(true);
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        client.post.mockRejectedValueOnce({ response: { data: { message: 'Remove failed' } } });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        await act(async () => {
-            await result.current.handleRemoveUser('baduser');
-        });
-
-        expect(toast.error).toHaveBeenCalledWith('Remove failed');
-    });
-    
-    it('clears form errors on activeModal change', async () => {
-        client.get.mockResolvedValueOnce({ data: { status: 'success', data: {} } });
-        const { result } = renderHook(() => useAdminDashboard());
-
-        await act(async () => {
-            const form = document.createElement('form');
-            const userIn = document.createElement('input');
-            userIn.name = 'username';
-            userIn.value = 'a'; // invalid
-            const passIn = document.createElement('input');
-            passIn.name = 'password';
-            passIn.value = '123'; // invalid
-            form.appendChild(userIn);
-            form.appendChild(passIn);
-
-            const mockEvent = {
-                preventDefault: vi.fn(),
-                target: form
-            };
-            await result.current.handleCreateUser(mockEvent);
-        });
-        
-        expect(Object.keys(result.current.formErrors).length).toBeGreaterThan(0);
-
-        await act(async () => {
-            result.current.setActiveModal('createUser');
-        });
-        
-        expect(Object.keys(result.current.formErrors).length).toBe(0);
-    });
-
-    it('uses cached data immediately and revalidates in the background', async () => {
-        const cachedData = { users: 50, cached: true };
-        adminCache.set('admin_dashboard_7', cachedData);
-
-        const freshData = { status: 'success', data: { users: 55, fresh: true } };
-        let resolveFetch;
-        client.get.mockReturnValueOnce(new Promise((resolve) => {
-            resolveFetch = resolve;
-        }));
-
-        const { result } = renderHook(() => useAdminDashboard());
-
-        // Cached data is immediately available, isLoading is false, isRefreshing is true
-        expect(result.current.dashboardData).toEqual(cachedData);
-        expect(result.current.isLoading).toBe(false);
-        expect(result.current.isRefreshing).toBe(true);
-
-        // Complete the fetch
-        await act(async () => {
-            resolveFetch({ data: freshData });
-            await new Promise(resolve => setTimeout(resolve, 0));
-        });
-
-        expect(result.current.dashboardData).toEqual({ users: 55, fresh: true });
-        expect(result.current.isRefreshing).toBe(false);
-        expect(adminCache.get('admin_dashboard_7')).toEqual({ users: 55, fresh: true });
-    });
-
-    it('invalidates admin_dashboard cache on mutations', async () => {
-        adminCache.set('admin_dashboard_7', { users: 10 });
-        client.get.mockResolvedValue({ data: { status: 'success', data: { users: 20 } } });
-        client.post.mockResolvedValueOnce({ data: { success: true } });
-
-        const { result } = renderHook(() => useAdminDashboard());
-
-        await act(async () => {
-            await new Promise(resolve => setTimeout(resolve, 0));
-        });
-
-        await act(async () => {
-            await result.current.handleToggleAI();
-        });
-
-        // After mutation and refetch completion, new data is in cache
-        expect(client.post).toHaveBeenCalledWith('/api/admin/toggle-ai');
-    });
-
 });

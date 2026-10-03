@@ -11,7 +11,8 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 
 ### 2.1 Backend Testing
 - **Framework**: [Pytest](https://pytest.org/)
-- **Extensions**: `pytest-flask`, `pytest-playwright`, `pytest-cov`
+- **Extensions**: `pytest-cov`
+- **Setup**: `pip install -r requirements-dev.txt` from `backend/` (the runtime `requirements.txt` plus pytest, pytest-cov, mypy, ruff and factory_boy; production only installs `requirements.txt`).
 - **Type checking**: `mypy` runs in CI (`python -m mypy .` from `backend/`) alongside the test job.
 - **Key Files**:
     - `backend/tests/conftest.py`: Defines fixtures for the app instance, database, and authenticated clients.
@@ -21,7 +22,7 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 - **Strategy**: 
     - Focused on API endpoint validation (status codes, JSON payloads).
     - Database state verification after operations.
-    - Mocking of external services (e.g., OpenAI).
+    - Mocking of external services (e.g., AWS S3, Cognito).
 
 ### 2.2 Frontend Testing
 - **Framework**: [Vitest](https://vitest.dev/)
@@ -42,19 +43,19 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 ---
 
 ## 3. Automation (CI)
-Tests are automatically executed on every push and pull request via GitHub Actions (`.github/workflows/`).
+Tests run automatically via GitHub Actions (`.github/workflows/`).
 
-- **`tests.yml`**: Runs the backend job (mypy + pytest) and the frontend job (`npm run test -- --run`) in parallel. Reusable via `workflow_call` so deploy workflows can gate on it.
-- **`lint.yml`**: Runs Ruff over the backend. (There is currently no dedicated CI job for `eslint`; run `npm run lint` locally before pushing frontend changes.)
+- **`tests.yml`**: On push and pull request to `main`/`master`: runs the backend job (installs `requirements-dev.txt`, then mypy + pytest) and the frontend job (`npm run test -- --coverage`, then the E2E run against a backend started from the runtime-only `requirements.txt`) in parallel. Reusable via `workflow_call` so deploy workflows can gate on it.
+- **`lint.yml`**: On every pull request and on pushes to `main`/`master`/`working`: runs Ruff over the backend and ESLint (`npm run lint`) over the frontend as two separate jobs. Reusable via `workflow_call` so deploy workflows can gate on it. It is still worth running `npm run lint` locally before pushing frontend changes.
 - **`deploy.yml` / `deploy-frontend.yml`**: Deploy to EC2 / S3+CloudFront on pushes to the `deploy` branch, gated on `tests.yml` and `lint.yml` passing first.
 
 ---
 
 ## 4. UI/UX Bug Auditing
 Classroom Chat uses a specialized human-in-the-loop auditing process for UI bugs:
-1. **Automated Crawling**: Playwright scripts navigate common user paths.
+1. **Automated Crawling**: Playwright scripts navigate common user paths (the Python ones need `pip install -r requirements-tools.txt` from `backend/`).
 2. **Visual Audit**: Screenshots are captured for key pages (Profile, Chat, Admin).
-3. **Issue Creation**: Visual or functional bugs are documented as Jira-style markdown files in the `issues/` directory for systematic resolution.
+3. **Issue Creation**: Visual or functional bugs are filed as GitHub Issues (`gh issue create`; see [issue_resolver_guide.md](issue_resolver_guide.md)) for systematic resolution.
 
 ---
 

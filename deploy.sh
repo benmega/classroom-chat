@@ -37,7 +37,10 @@ DB_BACKUP_FILE="$BACKUP_DIR/pre_deploy_$TIMESTAMP.db"
 # Health check
 HEALTHCHECK_URL="http://127.0.0.1:8000/server/health"
 HEALTHCHECK_TIMEOUT=5
-HEALTHCHECK_RETRIES=5
+# Gunicorn can take a while to import and create the app on a small instance, so
+# allow about a minute (20 attempts, 3 s apart) before declaring failure.
+HEALTHCHECK_RETRIES=20
+HEALTHCHECK_INTERVAL=3
 
 DRY_RUN="${DRY_RUN:-0}"
 
@@ -139,7 +142,7 @@ fi
 echo "Building frontend..."
 (
     cd "$APP_DIR/frontend"
-    run npm install
+    run npm ci
     run npm run build
 )
 
@@ -162,7 +165,12 @@ fi
 if [[ -f "$DB_FILE" ]]; then
     echo "Backing up database..."
     run mkdir -p "$BACKUP_DIR"
-    run cp "$DB_FILE" "$DB_BACKUP_FILE"
+    # Online backup: gunicorn is still serving, so a plain cp of the live file can be torn.
+    # If the backup API fails for any reason, fall back to cp so a backup always exists.
+    if ! run "$PYTHON_BIN" -c "import sqlite3,sys; s=sqlite3.connect(sys.argv[1]); d=sqlite3.connect(sys.argv[2]); s.backup(d); d.close(); s.close()" "$DB_FILE" "$DB_BACKUP_FILE"; then
+        echo "WARNING: SQLite online backup failed; falling back to a plain file copy."
+        run cp "$DB_FILE" "$DB_BACKUP_FILE"
+    fi
     echo "Backup stored at $DB_BACKUP_FILE"
 fi
 
@@ -292,7 +300,7 @@ until curl -fsS --max-time "$HEALTHCHECK_TIMEOUT" "$HEALTHCHECK_URL" > /dev/null
 
     echo "Attempt $ATTEMPT/$HEALTHCHECK_RETRIES failed. Retrying..."
     ATTEMPT=$((ATTEMPT + 1))
-    sleep 2
+    sleep "$HEALTHCHECK_INTERVAL"
 done
 
 echo "Health check passed. Deploy successful!"

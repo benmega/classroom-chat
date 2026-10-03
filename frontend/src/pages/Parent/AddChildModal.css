@@ -178,7 +178,8 @@
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    outline: none;
+    outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
+    outline-offset: 2px;
     border-color: var(--primary-color, #0f766e);
     box-shadow: 0 0 0 1px var(--primary-color, #0f766e);
 }

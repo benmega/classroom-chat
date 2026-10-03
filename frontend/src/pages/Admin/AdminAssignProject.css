@@ -17,8 +17,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
+    background: var(--blue-50);
+    border: 1px solid var(--blue-200);
     padding: 10px 14px;
     border-radius: 10px;
 }

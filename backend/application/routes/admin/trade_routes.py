@@ -35,6 +35,12 @@ def pending_trades():
     return {"trades": trades_list}
 
 
+def _already_processed():
+    return jsonify(
+        {"status": "error", "message": "Trade has already been processed"}
+    ), 400
+
+
 @admin_bp.route("/trade_action", methods=["POST"])
 @admin_only
 def trade_action():
@@ -46,23 +52,29 @@ def trade_action():
         return jsonify({"status": "error", "message": "Trade not found"}), 404
 
     if trade.status != "pending":
-        return jsonify(
-            {"status": "error", "message": "Trade has already been processed"}
-        ), 400
+        return _already_processed()
 
     if action == "approve":
         user = User.query.filter_by(id=trade.user_id).first()
         if not user:
             return jsonify({"status": "error", "message": "User not found"}), 404
 
-        if user.duck_balance < trade.digital_ducks:
-            return jsonify({"status": "error", "message": "Insufficient ducks"}), 400
+        # Claim the trade and take the ducks in one transaction, both as
+        # conditional UPDATEs: a concurrent approval/rejection loses the claim,
+        # and a balance spent in the meantime fails the min_balance guard, so
+        # the ducks can neither be deducted twice nor overdrawn.
+        if not DuckTradeLog.claim_pending(trade.id, "approved"):
+            db.session.rollback()
+            return _already_processed()
 
-        user.add_ducks(
+        deducted = user.add_ducks(
             -trade.digital_ducks,
             reason=f"Trade Approval: {trade.bit_ducks} Bits, {trade.byte_ducks} Bytes",
+            min_balance=0,
         )
-        trade.approve()
+        if not deducted:
+            db.session.rollback()
+            return jsonify({"status": "error", "message": "Insufficient ducks"}), 400
         db.session.commit()
 
         from application.services.achievement_engine import evaluate_user
@@ -72,7 +84,9 @@ def trade_action():
         return jsonify({"status": "success", "message": "Trade approved"})
 
     elif action == "reject":
-        trade.reject()
+        if not DuckTradeLog.claim_pending(trade.id, "rejected"):
+            db.session.rollback()
+            return _already_processed()
         db.session.commit()
         return jsonify({"status": "success", "message": "Trade rejected"})
 

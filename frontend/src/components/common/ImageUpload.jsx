@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import './ImageUpload.css';
 import SmartImage from './SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
+import { getErrorMessage } from '../../utils/apiError';
 
 /**
  * ImageUpload Component
@@ -130,13 +131,13 @@ const ImageUpload = ({
         toast.success('Image uploaded successfully');
         onUploadSuccess({ new_url, filename });
       } else {
-        toast.error(response.data.error || 'Upload failed');
+        toast.error(getErrorMessage({ response }, 'Upload failed'));
       }
     } catch (err) {
       if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED') return;
       if (!isMountedRef.current) return;
       console.error('Upload error:', err);
-      const errorMessage = err.response?.data?.error || 'Server error during upload';
+      const errorMessage = getErrorMessage(err, 'Server error during upload');
       toast.error(errorMessage);
     } finally {
       if (isMountedRef.current) {
@@ -160,10 +161,11 @@ const ImageUpload = ({
         <span className="image-upload-label">{label}</span>
       </div>
       
-      <div role="button" tabIndex={0} 
+      {/* Clicking anywhere in the drop area is a mouse shortcut; the file input inside is the keyboard control. */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
+      <div
         className={`image-upload-container ${isUploading ? 'uploading' : ''} ${isDragging ? 'dragging' : ''} ${success ? 'success' : ''}`}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} 
-        onClick={() => !isUploading && fileInputRef.current?.click()}
+        onClick={(e) => { if (!isUploading && e.target !== fileInputRef.current) fileInputRef.current?.click(); }}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -173,7 +175,8 @@ const ImageUpload = ({
           ref={fileInputRef} 
           onChange={handleFileChange} 
           accept="image/*"
-          hidden 
+          className="sr-only"
+          aria-label={label}
         />
         
         {preview ? (

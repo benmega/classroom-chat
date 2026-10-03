@@ -4,6 +4,8 @@ Type: py
 Summary: SQLAlchemy model for duck trade logs and statuses.
 """
 
+from sqlalchemy import update
+
 from ..extensions import db
 
 
@@ -30,6 +32,23 @@ class DuckTradeLog(db.Model):
         """Explicit constructor to handle keyword arguments correctly."""
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+    @classmethod
+    def claim_pending(cls, trade_id, new_status):
+        """Atomically move a trade out of 'pending' (conditional UPDATE).
+
+        Returns True only for the one caller whose UPDATE matched a pending row,
+        so concurrent approvals/rejections of the same trade cannot both win.
+        Does not commit: the caller owns the transaction and can roll the claim
+        back if the rest of the work fails.
+        """
+        result = db.session.execute(
+            update(cls)
+            .where(cls.id == trade_id, cls.status == "pending")
+            .values(status=new_status)
+            .execution_options(synchronize_session=False)
+        )
+        return result.rowcount == 1
 
     def approve(self):
         self.status = "approved"

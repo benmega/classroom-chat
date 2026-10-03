@@ -52,3 +52,6 @@ Key changes include:
 - The introduction of a React-Admin CRUD interface at `/admin/advanced-crud` backed by `/admin/crud`.
 - Restructured messaging API without public conversation histories.
 - Unified admin operations under the `admin_bp` blueprint.
+
+Chat messages are not sent over HTTP. The client emits the Socket.IO `send_message` event
+(`useChatSocket.js`); the server handles it in `socket_events.py`.

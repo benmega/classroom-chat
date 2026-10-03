@@ -1,34 +1,37 @@
 """
 File: helper_functions.py
 Type: py
-Summary: General utility helpers for file uploads and database commits.
+Summary: General utility helpers for file uploads and formatting.
 """
+
+import logging
+from datetime import datetime, timezone
 
 from application.config import Config
 
+logger = logging.getLogger(__name__)
 
-def request_database_commit():
+
+def utcnow_naive():
+    """Current UTC time as a naive datetime.
+
+    Replaces the deprecated datetime.utcnow(). The result stays naive on purpose:
+    the DateTime columns it is compared with and stored in carry no timezone.
     """
-    Attempts to commit changes to the database session.
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
-    Returns:
-    bool: True if the commit was successful, False if an exception occurred.
+
+def utc_today():
+    """Today's date in UTC.
+
+    Use this instead of date.today() (the server's local date) wherever the day is
+    compared with, or stored next to, the UTC timestamps the app keeps.
     """
-    from application import db
-
-    try:
-        db.session.commit()
-        return True
-    except Exception as e:
-        db.session.rollback()
-        print(f"Database error during commit: {e}")
-        return False
+    return datetime.now(timezone.utc).date()
 
 
 def allowed_file(filename, allowed_extensions=None):
     if allowed_extensions is None:
-        from application.config import Config
-
         allowed_extensions = Config.ALLOWED_EXTENSIONS
 
     return "." in filename and filename.rsplit(".", 1)[1].lower() in allowed_extensions
@@ -40,7 +43,7 @@ def get_s3_client():
     import boto3
 
     try:
-        kwargs = {"region_name": os.environ.get("AWS_REGION", "ap-southeast-1")}
+        kwargs = {"region_name": os.environ.get("AWS_REGION", Config.AWS_REGION)}
         if os.environ.get("AWS_ACCESS_KEY_ID") and os.environ.get(
             "AWS_SECRET_ACCESS_KEY"
         ):
@@ -49,9 +52,7 @@ def get_s3_client():
 
         return boto3.client("s3", **kwargs)
     except Exception:
-        import traceback
-
-        traceback.print_exc()
+        logger.exception("Could not create the S3 client")
         return None
 
 
@@ -74,32 +75,6 @@ def format_number(value, precision=0):
         return f"{int(float(value)):,}"
     except (ValueError, TypeError):
         return str(value)
-
-
-def cleanup_missing_user_pfps():
-    """
-    Checks all users' profile pictures and resets them to 'Default_pfp.jpg'
-    if the referenced file does not exist on disk.
-    """
-    import os
-
-    from application.models.user import User
-
-    upload_folder = os.path.join(Config.UPLOAD_FOLDER, "profile_pictures")
-    users = User.query.all()
-    fixed_count = 0
-
-    for u in users:
-        if u.profile_picture and u.profile_picture != "Default_pfp.jpg":
-            file_path = os.path.join(upload_folder, u.profile_picture)
-            if not os.path.exists(file_path):
-                u.profile_picture = "Default_pfp.jpg"
-                fixed_count += 1
-
-    if fixed_count > 0:
-        request_database_commit()
-
-    return fixed_count
 
 
 def safe_parse_datetime(val):

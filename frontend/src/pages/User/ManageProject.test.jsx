@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ManageProject from './ManageProject';
@@ -145,8 +146,10 @@ describe('ManageProject', () => {
     });
 
     it('creates project successfully and navigates to profile', async () => {
+        let sent;
         server.use(
-            http.post('*/user/project/new', async () => {
+            http.post('*/user/project/new', async ({ request }) => {
+                sent = Object.fromEntries(await request.formData());
                 return HttpResponse.json({ status: 'success', data: { project: { id: 2 } } });
             })
         );
@@ -172,17 +175,21 @@ describe('ManageProject', () => {
         expect(screen.getByRole('button', { name: /Saving.../i })).toBeInTheDocument();
 
         await waitFor(() => {
-            
             expect(screen.getByTestId('profile-page')).toBeInTheDocument();
         });
+        // What the form sent: the typed description, and no student, which only an admin assigns
+        expect(sent.description).toBe('My cool desc');
+        expect(toast.success).toHaveBeenCalledWith('Project created!');
     });
 
     it('updates project successfully', async () => {
+        let sent;
         server.use(
             http.get('*/user/project/edit/1', async () => {
                 return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'Old Name' } } });
             }),
-            http.post('*/user/project/edit/1', async () => {
+            http.post('*/user/project/edit/1', async ({ request }) => {
+                sent = Object.fromEntries(await request.formData());
                 return HttpResponse.json({ status: 'success' });
             })
         );
@@ -204,9 +211,10 @@ describe('ManageProject', () => {
         const submitBtn = screen.getByRole('button', { name: /Update Project/i });
         fireEvent.click(submitBtn);
 
-        await waitFor(() => {
-            
-        });
+        // Back on the profile page, with the project saved under its own id
+        expect(await screen.findByTestId('profile-page')).toBeInTheDocument();
+        expect(sent.name).toBe('Old Name');
+        expect(toast.success).toHaveBeenCalledWith('Project updated!');
     });
 
     it('deletes project after confirmation', async () => {
@@ -292,6 +300,243 @@ describe('ManageProject', () => {
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('Failed to create');
+        });
+    });
+
+    describe('admin controls', () => {
+        const students = [
+            { id: 5, username: 'amy', slug: 'amy-slug' },
+            { id: 6, username: 'bob', slug: 'bob-slug' },
+        ];
+        let studentListRequests;
+
+        beforeEach(() => {
+            studentListRequests = 0;
+            server.use(
+                http.get('*/user/project/new', () => {
+                    studentListRequests += 1;
+                    return HttpResponse.json({ status: 'success', data: { students } });
+                })
+            );
+        });
+
+        const renderNewProject = () =>
+            render(
+                <MemoryRouter initialEntries={['/manage-project']}>
+                    <Routes>
+                        <Route path="/manage-project" element={<ManageProject />} />
+                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/profile/:slug" element={<div data-testid="student-profile">Student profile</div>} />
+                    </Routes>
+                </MemoryRouter>
+            );
+        const goToLastTab = () => {
+            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+        };
+
+        it('shows the admin controls with every student to pick from', async () => {
+            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
+
+            renderNewProject();
+
+            expect(await screen.findByText('Admin Controls')).toBeInTheDocument();
+            const select = screen.getByLabelText('Assign to Student');
+            await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(3));
+            expect(within(select).getByRole('option', { name: 'Select Student' })).toBeInTheDocument();
+            expect(within(select).getByRole('option', { name: 'amy' })).toBeInTheDocument();
+            expect(within(select).getByRole('option', { name: 'bob' })).toBeInTheDocument();
+            expect(select).toBeRequired();
+            expect(screen.getByLabelText('Teacher Comment')).toBeInTheDocument();
+            expect(studentListRequests).toBe(1);
+        });
+
+        it('shows no admin controls to a student, and never asks for the student list', async () => {
+            renderNewProject();
+
+            await screen.findByText('Core Information');
+
+            expect(screen.queryByText('Admin Controls')).not.toBeInTheDocument();
+            expect(screen.queryByLabelText('Assign to Student')).not.toBeInTheDocument();
+            expect(screen.queryByLabelText('Teacher Comment')).not.toBeInTheDocument();
+            expect(studentListRequests).toBe(0);
+        });
+
+        it('shows no admin controls to a parent either', async () => {
+            useAuthStore.setState({ user: { id: 2, username: 'mum', role: 'parent' } });
+            renderNewProject();
+
+            await screen.findByText('Core Information');
+
+            expect(screen.queryByText('Admin Controls')).not.toBeInTheDocument();
+            expect(studentListRequests).toBe(0);
+        });
+
+        it('sends the chosen student and the teacher comment, then opens that student\'s profile', async () => {
+            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
+            let sent;
+            server.use(
+                http.post('*/user/project/new', async ({ request }) => {
+                    sent = Object.fromEntries(await request.formData());
+                    return HttpResponse.json({ status: 'success', data: { project: { id: 9 } } });
+                })
+            );
+            renderNewProject();
+            const select = await screen.findByLabelText('Assign to Student');
+            await waitFor(() => expect(within(select).getAllByRole('option')).toHaveLength(3));
+
+            fireEvent.change(select, { target: { value: '6' } });
+            fireEvent.change(screen.getByLabelText('Teacher Comment'), { target: { value: 'Well done' } });
+            fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'Maze' } });
+            goToLastTab();
+            fireEvent.click(screen.getByRole('button', { name: /Create Project/i }));
+
+            expect(await screen.findByTestId('student-profile')).toBeInTheDocument();
+            expect(sent.student_id).toBe('6');
+            expect(sent.teacher_comment).toBe('Well done');
+            expect(sent.name).toBe('Maze');
+        });
+
+        it('lets an admin rename a project that came from a template, which a student cannot', async () => {
+            server.use(
+                http.get('*/user/project/edit/1', () =>
+                    HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'Template A', user_id: 5 } } })
+                )
+            );
+            const open = () =>
+                render(
+                    <MemoryRouter initialEntries={['/manage-project/1']}>
+                        <Routes>
+                            <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                        </Routes>
+                    </MemoryRouter>
+                );
+
+            const studentView = open();
+            await screen.findByText('Core Information');
+            expect(screen.getByLabelText('Project Name')).toHaveAttribute('readonly');
+            studentView.unmount();
+
+            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
+            open();
+            await screen.findByText('Core Information');
+            expect(screen.getByLabelText('Project Name')).not.toHaveAttribute('readonly');
+        });
+
+        it('shows the admin the owner and the earlier teacher comment of the project being edited', async () => {
+            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
+            server.use(
+                http.get('*/user/project/edit/1', () =>
+                    HttpResponse.json({
+                        status: 'success',
+                        data: { project: { id: 1, name: 'Maze', user_id: 6, teacher_comment: 'Needs comments' } },
+                    })
+                )
+            );
+            render(
+                <MemoryRouter initialEntries={['/manage-project/1']}>
+                    <Routes>
+                        <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                    </Routes>
+                </MemoryRouter>
+            );
+
+            const select = await screen.findByLabelText('Assign to Student');
+            await waitFor(() => expect(select).toHaveValue('6'));
+            expect(screen.getByLabelText('Teacher Comment')).toHaveValue('Needs comments');
+        });
+    });
+
+    describe('keyboard and screen reader access', () => {
+        const openProject = async () => {
+            render(
+                <MemoryRouter initialEntries={['/manage-project']}>
+                    <ManageProject />
+                </MemoryRouter>
+            );
+            await screen.findByText('Core Information');
+        };
+
+        it('makes the wizard steps real buttons and marks the current one', async () => {
+            await openProject();
+
+            const core = screen.getByRole('button', { name: '1. Core Info' });
+            const media = screen.getByRole('button', { name: '2. Media' });
+            const code = screen.getByRole('button', { name: '3. Code' });
+            [core, media, code].forEach((step) => {
+                expect(step.tagName).toBe('BUTTON');
+                expect(step).toHaveAttribute('type', 'button');
+            });
+            expect(core).toHaveAttribute('aria-current', 'step');
+            expect(media).not.toHaveAttribute('aria-current');
+            expect(code).not.toHaveAttribute('aria-current');
+        });
+
+        it('switches steps with the mouse and keeps aria-current in step', async () => {
+            await openProject();
+
+            fireEvent.click(screen.getByRole('button', { name: '2. Media' }));
+            expect(await screen.findByText('Media Assets')).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: '2. Media' })).toHaveAttribute('aria-current', 'step');
+            expect(screen.getByRole('button', { name: '1. Core Info' })).not.toHaveAttribute('aria-current');
+
+            fireEvent.click(screen.getByRole('button', { name: '3. Code' }));
+            expect(screen.getByText('Code Showcase')).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: '3. Code' })).toHaveAttribute('aria-current', 'step');
+
+            fireEvent.click(screen.getByRole('button', { name: '1. Core Info' }));
+            expect(screen.getByText('Core Information')).toBeInTheDocument();
+        });
+
+        it('switches steps from the keyboard', async () => {
+            const user = userEvent.setup();
+            await openProject();
+
+            screen.getByRole('button', { name: '2. Media' }).focus();
+            await user.keyboard('{Enter}');
+            expect(await screen.findByText('Media Assets')).toBeInTheDocument();
+
+            await user.tab();
+            expect(screen.getByRole('button', { name: '3. Code' })).toHaveFocus();
+            await user.keyboard(' ');
+            expect(screen.getByText('Code Showcase')).toBeInTheDocument();
+        });
+
+        it('names the video URL field', async () => {
+            await openProject();
+            fireEvent.click(screen.getByRole('button', { name: '2. Media' }));
+
+            const field = await screen.findByRole('textbox', { name: 'Video URL (YouTube or Vimeo)' });
+            expect(field).toHaveAttribute('placeholder', 'YouTube/Vimeo URL');
+        });
+
+        it('names the code snippet field', async () => {
+            await openProject();
+            fireEvent.click(screen.getByRole('button', { name: '3. Code' }));
+
+            expect(await screen.findByRole('textbox', { name: 'Code snippet' })).toHaveAttribute('name', 'code_snippet');
+        });
+
+        it('keeps both file inputs focusable (visually hidden, not display:none)', async () => {
+            const user = userEvent.setup();
+            await openProject();
+            fireEvent.click(screen.getByRole('button', { name: '2. Media' }));
+            await screen.findByText('Media Assets');
+
+            const image = screen.getByLabelText(/Upload Image/i);
+            const video = screen.getByLabelText(/Upload Video/i);
+            [image, video].forEach((input) => {
+                expect(input).toHaveClass('sr-only');
+                expect(input).not.toHaveAttribute('hidden');
+            });
+
+            screen.getByRole('button', { name: '3. Code' }).focus();
+            await user.tab();
+            expect(image).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('textbox', { name: 'Video URL (YouTube or Vimeo)' })).toHaveFocus();
+            await user.tab();
+            expect(video).toHaveFocus();
         });
     });
 });

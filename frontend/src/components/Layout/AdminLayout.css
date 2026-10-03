@@ -15,6 +15,12 @@
     --admin-accent:         #2563EB;   /* blue-600 — white text: 5.17:1 ✓ (was #3b82f6, 3.68:1 ✗) */
     --admin-accent-glow:    rgba(37, 99, 235, 0.35);
     --admin-accent-hover:   rgba(37, 99, 235, 0.15);
+    --admin-logo-hover:     #60a5fa;   /* blue-400 */
+    --admin-danger:         #f87171;   /* red-400 */
+    --admin-danger-hover:   #fca5a5;   /* red-300 */
+    --admin-badge-from:     #ef4444;   /* red-500 */
+    --admin-badge-to:       #b91c1c;   /* red-700 */
+    --admin-tooltip-text:   #f8fafc;   /* slate-50 */
     --admin-rail-width:     72px;
     --admin-top-bar-height: 56px;
 }
@@ -46,7 +52,7 @@
     border-right: 1px solid var(--admin-dark-border);
     padding: 1rem 0;
     flex-shrink: 0;
-    z-index: 1010;
+    z-index: var(--z-sidebar);
     overflow: visible;
     position: relative;
 }
@@ -81,7 +87,7 @@
 }
 
 .admin-rail-logo:hover {
-    border-color: #60a5fa;
+    border-color: var(--admin-logo-hover);
 }
 
 .admin-rail-logo:hover img {
@@ -240,13 +246,13 @@
 
 /* Logout button */
 .admin-logout-btn {
-    color: #f87171;
+    color: var(--admin-danger);
     opacity: 0.8;
 }
 
 .admin-logout-btn:hover {
     background: rgba(248, 113, 113, 0.12);
-    color: #fca5a5;
+    color: var(--admin-danger-hover);
     opacity: 1;
     border-radius: var(--radius-md);
 }
@@ -268,7 +274,7 @@
     position: absolute;
     top: -6px;
     right: -6px;
-    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    background: linear-gradient(135deg, var(--admin-badge-from), var(--admin-badge-to));
     color: white;
     font-size: 0.58rem;
     font-weight: 800;
@@ -318,7 +324,7 @@
     top: 50%;
     transform: translateY(-50%) translateX(-6px);
     background: rgba(15, 23, 42, 0.95);
-    color: #f8fafc;
+    color: var(--admin-tooltip-text);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.75rem;
@@ -412,7 +418,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.65);
-    z-index: 1009;
+    z-index: var(--z-dropdown);
 }
 
 /* Mobile close button inside sidebar */

@@ -1,39 +1,23 @@
+import math
+
 from application.decorators.admin_required import admin_only
 from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
+from application.services import moderation_service
 from flask import jsonify, request
 
 from ..admin_routes import admin_bp
 
-
-@admin_bp.route("/toggle-ai", methods=["POST"])
-@admin_only
-def toggle_ai():
-    config = Configuration.query.first()
-    if config is None:
-        config = Configuration(ai_teacher_enabled=False)
-        db.session.add(config)
-
-    config.ai_teacher_enabled = not config.ai_teacher_enabled
-    db.session.commit()
-
-    return jsonify(
-        {
-            "success": True,
-            "message": f"AI Teacher has been {'enabled' if config.ai_teacher_enabled else 'disabled'}",
-            "status": config.ai_teacher_enabled,
-        }
-    )
+# Upper bound for the global duck multiplier; it scales challenge rewards, so it
+# must stay finite and non-negative (a negative value would deduct ducks).
+MAX_DUCK_MULTIPLIER = 100
 
 
 @admin_bp.route("/toggle-message-sending", methods=["POST"])
 @admin_only
 def toggle_message_sending():
-    config = Configuration.query.first()
-    if config is None:
-        config = Configuration(message_sending_enabled=False)
-        db.session.add(config)
+    config = Configuration.get_or_create()
 
     config.message_sending_enabled = not config.message_sending_enabled
     db.session.commit()
@@ -50,7 +34,9 @@ def toggle_message_sending():
 @admin_bp.route("/update_duck_multiplier", methods=["POST"])
 @admin_only
 def update_duck_multiplier():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = {}
     new_multiplier = data.get("multiplier")
 
     if new_multiplier is None:
@@ -58,13 +44,23 @@ def update_duck_multiplier():
 
     try:
         new_multiplier = float(new_multiplier)
-        config = Configuration.query.first()
-        if config is None:
-            return jsonify({"success": False, "error": "Configuration not found"}), 404
+        if not math.isfinite(new_multiplier) or not (
+            0 <= new_multiplier <= MAX_DUCK_MULTIPLIER
+        ):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Multiplier must be between 0 and {MAX_DUCK_MULTIPLIER}",
+                    }
+                ),
+                400,
+            )
+        config = Configuration.get_or_create()
         config.duck_multiplier = new_multiplier
         db.session.commit()
         return jsonify({"success": True, "new_multiplier": new_multiplier})
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, OverflowError):
         return jsonify({"success": False, "error": "Invalid multiplier value"}), 400
     except Exception:
         db.session.rollback()
@@ -74,7 +70,7 @@ def update_duck_multiplier():
 @admin_bp.route("/add-banned-word", methods=["POST"])
 @admin_only
 def add_banned_word():
-    word = request.form.get("word")
+    word = (request.form.get("word") or "").strip()
     reason = request.form.get("reason", None)
 
     if not word:
@@ -86,6 +82,7 @@ def add_banned_word():
     new_banned_word = BannedWords(word=word, reason=reason)
     db.session.add(new_banned_word)
     db.session.commit()
+    moderation_service.clear_cache()
 
     return jsonify(
         {"success": True, "message": f"'{word}' has been added to banned words"}

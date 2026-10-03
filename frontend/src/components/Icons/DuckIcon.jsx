@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 /**
  * DuckIcon - A clean, professional SVG rubber duck icon.
@@ -6,6 +6,9 @@ import React from 'react';
  * Designed to be crisp at small sizes (20-32px).
  */
 const DuckIcon = ({ size = 24, className = '', color = 'currentColor', style = {} }) => {
+  // Each icon needs its own gradient id: with a shared one, hiding or removing the first icon breaks the others' fill.
+  const gradientId = `duckGradient-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+
   return (
     <svg
       width={size}
@@ -13,6 +16,8 @@ const DuckIcon = ({ size = 24, className = '', color = 'currentColor', style = {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      focusable="false"
       className={`duck-icon ${className}`}
       style={{
         display: 'inline-block',
@@ -24,7 +29,7 @@ const DuckIcon = ({ size = 24, className = '', color = 'currentColor', style = {
     >
       {/* Defined Gradient for a premium look */}
       <defs>
-        <radialGradient id="duckGradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(13 10) rotate(45) scale(15)">
+        <radialGradient id={gradientId} cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(13 10) rotate(45) scale(15)">
           <stop stopColor="white" stopOpacity="0.3" />
           <stop offset="1" stopColor="white" stopOpacity="0" />
         </radialGradient>
@@ -39,14 +44,14 @@ const DuckIcon = ({ size = 24, className = '', color = 'currentColor', style = {
       {/* Body Highlight */}
       <path 
         d="M15.5 13.5C15.5 16.5 13.5 19.5 9.5 19.5C5.5 19.5 3.5 16.5 3.5 13.5C3.5 10.5 5.5 9 8.5 9" 
-        fill="url(#duckGradient)" 
+        fill={`url(#${gradientId})`}
       />
 
       {/* Head */}
       <circle cx="16.5" cy="8.5" r="4" fill={color} />
       
       {/* Head Highlight */}
-      <circle cx="16.5" cy="8.5" r="4" fill="url(#duckGradient)" />
+      <circle cx="16.5" cy="8.5" r="4" fill={`url(#${gradientId})`} />
 
       {/* Beak */}
       <path 

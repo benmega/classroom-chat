@@ -1,9 +1,8 @@
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminClassDashboard from './AdminClassDashboard';
 import client from '../../api/client';
-// eslint-disable-next-line
 import toast from 'react-hot-toast';
 
 const socketListeners = {};
@@ -612,6 +611,103 @@ describe('AdminClassDashboard', () => {
         await waitFor(() => {
             expect(screen.getByText(/Sandbox Mode Active — All Tests Passed/i)).toBeInTheDocument();
             expect(screen.getByRole('button', { name: /End Sandbox/i })).toBeInTheDocument();
+        });
+    });
+
+    it('shows the reason the server gives when the sandbox cannot be toggled', async () => {
+        mockClassroomApi({
+            id: 'cls123',
+            name: 'Python Level 1',
+            sandbox_active: false,
+            students: [],
+            course_assignments: []
+        });
+        client.post.mockRejectedValueOnce({
+            response: { status: 403, data: { status: 'error', data: null, error: 'Admin access required' } }
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /Declare "All Tests Passed" \/ Enable Sandbox/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Admin access required');
+        });
+    });
+
+    it('shows the reason the server gives when a student cannot be unenrolled', async () => {
+        mockClassroomApi(
+            {
+                id: 'cls123',
+                name: 'Python Level 1',
+                students: [{ id: 10, username: 'student1', nickname: 'John Doe', is_online: true }],
+                course_assignments: []
+            },
+            [{ id: 10, username: 'student1', nickname: 'John Doe', role: 'student' }]
+        );
+        showConfirm.mockResolvedValue(true);
+        client.post.mockRejectedValueOnce({
+            response: { status: 404, data: { success: false, error: 'Student is not enrolled' } }
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+        fireEvent.click(screen.getByRole('tab', { name: 'People' }));
+        fireEvent.click(screen.getByRole('button', { name: /Remove/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Student is not enrolled');
+        });
+    });
+
+    describe('accessible names', () => {
+        const classroom = {
+            id: 'cls123',
+            name: 'Python Level 1',
+            students: [
+                { id: 10, username: 'student1', nickname: 'John Doe', is_online: true },
+                { id: 11, username: 'student2', nickname: 'Jane Doe', is_online: false },
+            ],
+            course_assignments: []
+        };
+
+        it('names the rename field and its save button, and saves the new name', async () => {
+            mockClassroomApi(classroom);
+            client.put.mockResolvedValue({ data: { success: true } });
+            renderWithRouter(<AdminClassDashboard />);
+            await screen.findByText('Python Level 1');
+
+            fireEvent.click(screen.getByRole('button', { name: 'Edit classroom name' }));
+            fireEvent.change(screen.getByRole('textbox', { name: 'Classroom name' }), { target: { value: 'Python Level 2' } });
+            const save = screen.getByRole('button', { name: 'Save classroom name' });
+            expect(save).toHaveAttribute('type', 'button');
+            fireEvent.click(save);
+
+            await waitFor(() => expect(client.put).toHaveBeenCalledWith(
+                '/api/admin/classrooms/cls123',
+                expect.objectContaining({ name: 'Python Level 2' })
+            ));
+        });
+
+        it('tells screen readers whether each student on the roster is online, not just by the colour of a dot', async () => {
+            mockClassroomApi(classroom, [
+                { id: 10, username: 'student1', nickname: 'John Doe', role: 'student' },
+                { id: 11, username: 'student2', nickname: 'Jane Doe', role: 'student' },
+            ]);
+            renderWithRouter(<AdminClassDashboard />);
+            await screen.findByText('Python Level 1');
+
+            fireEvent.click(screen.getByRole('tab', { name: 'People' }));
+
+            const online = screen.getByText('John Doe').closest('.roster-item');
+            const offline = screen.getByText('Jane Doe').closest('.roster-item');
+            expect(within(online).getByRole('img', { name: 'Online' })).toHaveAttribute('title', 'Online');
+            expect(within(offline).getByRole('img', { name: 'Offline' })).toHaveAttribute('title', 'Offline');
         });
     });
 });

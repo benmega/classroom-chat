@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import client from '../api/client';
 import { showConfirm } from '../utils/confirm';
+import { getErrorMessage } from '../utils/apiError';
+import { useAdminUserActions } from './useAdminUserActions';
 import toast from 'react-hot-toast';
 import adminCache from '../utils/adminCache';
 
@@ -9,6 +11,8 @@ export const buildUsersCacheKey = (role, page, search, status, accountTypes, sor
     const accountPart = Array.isArray(accountTypes) ? accountTypes.join(',') : (accountTypes || '');
     return `admin_users_${role || ''}_${page}_${search || ''}_${statusPart}_${accountPart}_${sortBy || ''}_${sortDir || ''}`;
 };
+
+export const USERS_PER_PAGE = 50;
 
 export const useUsersManagement = (role = '') => {
     const initialKey = buildUsersCacheKey(role, 1, '', [], [], '', 'asc');
@@ -50,10 +54,16 @@ export const useUsersManagement = (role = '') => {
         setPage(1);
     }, [debouncedSearchTerm, statusFilter, accountTypeFilter, sortBy, sortDir]);
 
+    // Search, filters, sort and page each start a request, and answers can arrive in any order.
+    // Only the latest request may update the list, or an older answer would overwrite a newer one.
+    const latestRequestRef = useRef(0);
+
     const fetchUsers = useCallback(async (targetPage = page) => {
+        const requestId = ++latestRequestRef.current;
+        const isLatest = () => requestId === latestRequestRef.current;
         setIsRefreshing(true);
         try {
-            let url = `/api/admin/users?page=${targetPage}&per_page=50`;
+            let url = `/api/admin/users?page=${targetPage}&per_page=${USERS_PER_PAGE}`;
             if (role) {
                 url += `&role=${role}`;
             }
@@ -70,6 +80,7 @@ export const useUsersManagement = (role = '') => {
                 url += `&sort_by=${sortBy}&sort_dir=${sortDir}`;
             }
             const response = await client.get(url);
+            if (!isLatest()) return;
             const data = response.data;
             
             if (Array.isArray(data)) {
@@ -80,15 +91,19 @@ export const useUsersManagement = (role = '') => {
                 setUsers(data.users || []);
                 setTotalUsers(data.total || 0);
                 setTotalPages(data.pages || 1);
-                setPage(data.current_page || 1);
+                // The page is not read back from the response: the server only echoes the one asked for,
+                // and setting it here would re-run the page effect and request the same page twice.
                 if (data.stats) setStats(data.stats);
             }
         } catch (error) {
+            if (!isLatest()) return;
             console.error('Error fetching users:', error);
             toast.error('Failed to load users list.');
         } finally {
-            setIsLoading(false);
-            setIsRefreshing(false);
+            if (isLatest()) {
+                setIsLoading(false);
+                setIsRefreshing(false);
+            }
         }
     }, [page, debouncedSearchTerm, role, statusFilter, accountTypeFilter, sortBy, sortDir]);
 
@@ -96,123 +111,32 @@ export const useUsersManagement = (role = '') => {
         fetchUsers(page);
     }, [fetchUsers, page]);
 
+    const { createUser, adjustDucks, adjustPackets, resetPassword, removeUser } = useAdminUserActions({ setFormLoading, setFormErrors });
+
+    // After a modal action succeeds: close the modal and reload the current page.
+    const closeAndRefresh = () => {
+        setActiveModal(null);
+        fetchUsers(page);
+    };
+
     const handleCreateUser = async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        const username = formData.get('username')?.trim() || '';
-        const password = formData.get('password')?.trim() || '';
-        formData.set('username', username);
-        formData.set('password', password);
-        
-        const errors = {};
-        if (!username) errors.username = 'Username is required';
-        if (!password) errors.password = 'Initial password is required';
-        
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-        
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/create_user', formData);
-            if (response.data.success) {
-                adminCache.invalidate('admin_users');
-                setActiveModal(null);
-                fetchUsers(page);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to create user.');
-        } finally {
-            setFormLoading(false);
-        }
+        await createUser(new FormData(e.target), closeAndRefresh);
     };
 
     const handleAdjustDucks = async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        
-        if (!formData.get('amount')) {
-            setFormErrors({ amount: 'Adjustment amount is required' });
-            return;
-        }
-
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/adjust_ducks', formData);
-            if (response.data.success) {
-                adminCache.invalidate('admin_users');
-                setActiveModal(null);
-                fetchUsers(page);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to adjust ducks.');
-        } finally {
-            setFormLoading(false);
-        }
+        await adjustDucks(new FormData(e.target), closeAndRefresh);
     };
 
     const handleAdjustPackets = async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        
-        if (!formData.get('amount')) {
-            setFormErrors({ amount: 'Adjustment amount is required' });
-            return;
-        }
-
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/adjust_packets', formData);
-            if (response.data.success) {
-                adminCache.invalidate('admin_users');
-                setActiveModal(null);
-                fetchUsers(page);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to adjust packets.');
-        } finally {
-            setFormLoading(false);
-        }
+        await adjustPackets(new FormData(e.target), closeAndRefresh);
     };
 
     const handleResetPassword = async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData);
-        
-        const errors = {};
-        if (!data.new_password) errors.new_password = 'New password is required';
-        if (!data.confirm_password) errors.confirm_password = 'Confirmation is required';
-        if (data.new_password && data.confirm_password && data.new_password !== data.confirm_password) {
-            errors.confirm_password = 'Passwords do not match';
-        }
-
-        if (Object.keys(errors).length > 0) {
-            setFormErrors(errors);
-            return;
-        }
-
-        setFormErrors({});
-        setFormLoading(true);
-        try {
-            const response = await client.post('/api/admin/reset_password', {
-                username: data.username,
-                new_password: data.new_password
-            });
-            if (response.data.success) {
-                adminCache.invalidate('admin_users');
-                setActiveModal(null);
-                fetchUsers(page);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to reset password.');
-        } finally {
-            setFormLoading(false);
-        }
+        await resetPassword(Object.fromEntries(new FormData(e.target)), closeAndRefresh);
     };
 
     const handleSetDrawer = async (e, forceOverwrite = false) => {
@@ -240,16 +164,17 @@ export const useUsersManagement = (role = '') => {
                 fetchUsers(page);
             }
         } catch (error) {
-            const errorData = error.response?.data;
-            if (errorData?.conflict && errorData?.current_owner) {
+            // set_drawer is an @api_response route, so the conflict details sit next to `error`.
+            const conflict = error.response?.data;
+            if (conflict?.conflict && conflict?.current_owner) {
                 // Duplicate drawer assignment detected
-                const confirmed = await showConfirm(`That drawer is already assigned to @${errorData.current_owner}. Do you want to take it over and remove that student's drawer assignment to move it over to this student, or cancel?`, { title: 'Drawer Conflict', confirmText: 'Take Over', destructive: true });
+                const confirmed = await showConfirm(`That drawer is already assigned to @${conflict.current_owner}. Do you want to take it over and remove that student's drawer assignment to move it over to this student, or cancel?`, { title: 'Drawer Conflict', confirmText: 'Take Over', destructive: true });
                 if (confirmed) {
                     // recursively call with force=true, passing the original target
                     return handleSetDrawer(formElement, true);
                 }
             } else {
-                toast.error(errorData?.message || 'Failed to set drawer.');
+                toast.error(getErrorMessage(error, 'Failed to set drawer.'));
             }
         } finally {
             setFormLoading(false);
@@ -257,34 +182,28 @@ export const useUsersManagement = (role = '') => {
     };
 
     const handleRemoveUser = async (username) => {
-        if (!await showConfirm(`Are you sure you want to PERMANENTLY remove @${username}?`, { title: 'Remove User', destructive: true })) return;
-        
-        try {
-            const formData = new FormData();
-            formData.append('username', username);
-            const response = await client.post('/api/admin/remove_user', formData);
-            if (response.data.success) {
-                adminCache.invalidate('admin_users');
-                fetchUsers(page);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to remove user.');
-        }
+        await removeUser(username, () => fetchUsers(page));
     };
 
     const handleToggleChat = async (userId) => {
         try {
             const response = await client.post(`/api/admin/user/${userId}/toggle-chat`);
+            // The cached lists hold the old value
             adminCache.invalidate('admin_users');
-            
-            
-            setUsers(prevUsers => 
-                prevUsers.map(user => 
-                    user.id === userId ? { ...user, can_chat: response.data.can_chat } : user
+
+            // toggle-chat is an @api_response route, so the new value sits under `data`.
+            const canChat = response.data.data?.can_chat;
+            // Optimistically update the specific user in the users array
+            setUsers(prevUsers =>
+                prevUsers.map(user =>
+                    user.id === userId ? { ...user, can_chat: canChat } : user
                 )
             );
+
+            // Optionally re-fetch to ensure consistency if other fields changed
+            // fetchUsers(page);
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to toggle chat status.');
+            toast.error(getErrorMessage(error, 'Failed to toggle chat status.'));
         }
     };
 
@@ -312,7 +231,7 @@ export const useUsersManagement = (role = '') => {
                 await fetchParentChildren(parentId);
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to toggle student link.');
+            toast.error(getErrorMessage(error, 'Failed to toggle student link.'));
         } finally {
             setFormLoading(false);
         }

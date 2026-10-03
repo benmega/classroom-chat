@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useId } from 'react';
 import { X } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
+import useModalA11y from '../../hooks/useModalA11y';
 import './AddChildModal.css';
 
 const AddChildModal = ({ isOpen, onClose, onAdded }) => {
     const [code, setCode] = useState('');
     const [codeError, setCodeError] = useState(null);
     const [isSubmittingCode, setIsSubmittingCode] = useState(false);
+    const dialogRef = useRef(null);
+    const titleId = useId();
+
+    useModalA11y({ isOpen, onClose, containerRef: dialogRef });
 
     if (!isOpen) return null;
 
@@ -21,18 +27,18 @@ const AddChildModal = ({ isOpen, onClose, onAdded }) => {
             onClose();
             setCode('');
         } catch (err) {
-            setCodeError(err.response?.data?.error || 'Failed to connect. Invalid code?');
+            setCodeError(getErrorMessage(err, 'Failed to connect. Invalid code?'));
         } finally {
             setIsSubmittingCode(false);
         }
     };
 
     return (
-        <div role="button" tabIndex={0} className="modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onClose}>
-            <div role="button" tabIndex={0} className="add-child-modal" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
+        <div role="presentation" className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+            <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="add-child-modal">
                 <div className="modal-header">
-                    <h2>Connect Your Child</h2>
-                    <button className="close-btn" onClick={onClose}><X size={20} /></button>
+                    <h2 id={titleId}>Connect Your Child</h2>
+                    <button className="close-btn" onClick={onClose} aria-label="Close"><X size={20} /></button>
                 </div>
                 
                 <div className="modal-body">

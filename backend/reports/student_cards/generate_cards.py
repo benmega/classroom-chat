@@ -1,6 +1,19 @@
+"""Generate printable student QR cards (PDF).
+
+Needs the optional script packages (reportlab, qrcode): pip install -r requirements-tools.txt
+"""
+
+import argparse
 import io
 import os
-from datetime import datetime, timedelta, timezone
+import sys
+from datetime import date, timedelta
+from pathlib import Path
+
+# Allow running this file directly: it lives in backend/reports/student_cards/,
+# so put backend/ on the path to import the application and the tools package.
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(BACKEND_DIR))
 
 import qrcode
 from application import create_app
@@ -10,13 +23,24 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
+from tools.profile_urls import build_profile_url
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-LOGO_PATH = os.path.join(current_dir, "../..", "static", "images", "logo.ico")
+# ================= CONFIGURATION =================
+
+# 1. DYNAMIC PATH CALCULATION
+# The logo is a frontend asset: backend/reports/student_cards -> repo root
+REPO_ROOT = BACKEND_DIR.parent
+LOGO_PATH = REPO_ROOT / "frontend" / "static" / "images" / "logo.ico"
 
 OUTPUT_FILENAME = "classroom_cards.pdf"
-BASE_URL = "https://blossom.benmega.com/user/profile/"
+# The PDF holds student names and profile QR links, so by default it goes into the
+# git-ignored backend/userData/ folder instead of whatever the current directory is.
+DEFAULT_OUTPUT_PATH = str(BACKEND_DIR / "userData" / "student_cards" / OUTPUT_FILENAME)
 
+# Only students who earned a daily duck within this many days get a card
+ACTIVE_DAYS = 90
+
+# Card Dimensions
 CARD_WIDTH = 3.5 * inch
 CARD_HEIGHT = 2.0 * inch
 MARGIN_X = 0.75 * inch
@@ -40,7 +64,7 @@ def get_image_from_path(path):
 
 
 def generate_qr(slug):
-    url = f"{BASE_URL}{slug}"
+    url = build_profile_url(slug)
     qr = qrcode.QRCode(box_size=10, border=1)
     qr.add_data(url)
     qr.make(fit=True)
@@ -78,7 +102,7 @@ def draw_card(c, x, y, user, logo_img):
     # 4. Text & Details (Bottom Left - Kept original text, just aligned)
     c.setFont("Helvetica", 8)
     c.setFillColorRGB(0, 0, 1)
-    full_link = f"blossom.benmega.com/user/profile/{user.slug}"
+    full_link = build_profile_url(user.slug).split("://", 1)[-1]
     c.drawString(x + 15, y + 35, full_link)  # Aligned X with Name
 
     c.setFont("Helvetica-Oblique", 9)
@@ -99,8 +123,19 @@ def draw_card(c, x, y, user, logo_img):
     )
 
 
-def create_pdf(users):
-    c = canvas.Canvas(OUTPUT_FILENAME, pagesize=letter)
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description="Generate printable student QR cards.")
+    parser.add_argument(
+        "--output",
+        default=DEFAULT_OUTPUT_PATH,
+        help="Where to write the PDF (default: backend/userData/student_cards/classroom_cards.pdf)",
+    )
+    return parser.parse_args(argv)
+
+
+def create_pdf(users, output_path=DEFAULT_OUTPUT_PATH):
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    c = canvas.Canvas(output_path, pagesize=letter)
     _width, height = letter
 
     # Debug print to confirm path
@@ -135,25 +170,33 @@ def create_pdf(users):
             row = 0
 
     c.save()
-    print(f"PDF generated successfully: {OUTPUT_FILENAME}")
+    print(f"PDF generated successfully: {output_path}")
 
 
 # =================================================
 # EXECUTION
 # =================================================
 
-app = create_app()
+
+def get_card_users():
+    """Active, non-admin users with a profile slug (needs an app context)."""
+    # last_daily_duck is a Date column holding the UTC day of the last award
+    cutoff = date.today() - timedelta(days=ACTIVE_DAYS)
+
+    return User.query.filter(
+        User.role != "admin",
+        ~User.nickname.startswith("blossomstudent"),
+        User.last_daily_duck > cutoff,
+        User.slug.isnot(None),
+    ).all()
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    app = create_app()
+    with app.app_context():
+        create_pdf(get_card_users(), args.output)
 
 
 if __name__ == "__main__":
-    with app.app_context():
-        # Calculate 90 days ago in UTC
-        ninety_days_ago = datetime.now(timezone.utc) - timedelta(days=90)
-
-        all_students = User.query.filter(
-            User.role != 'admin',
-            ~User.nickname.startswith("blossomstudent"),
-            User.last_daily_duck > ninety_days_ago,
-        ).all()
-
-        create_pdf(all_students)
+    main()

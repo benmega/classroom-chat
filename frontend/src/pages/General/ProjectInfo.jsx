@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Award, BookOpen, Code2, CheckCircle2, HelpCircle, Loader2, Check, ExternalLink } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
-import { formatStaticUrl } from '../../utils/formatters';
+import { cssUrl } from '../../utils/formatters';
 import './ProjectInfo.css';
 
 
@@ -93,11 +94,11 @@ const ProjectInfo = () => {
                     }
                 }
             } else {
-                toast.error(response.data.error || 'Failed to assign project.');
+                toast.error(getErrorMessage({ response }, 'Failed to assign project.'));
             }
         } catch (err) {
             console.error('Assign project error:', err);
-            toast.error(err.response?.data?.error || 'An error occurred during assignment.');
+            toast.error(getErrorMessage(err, 'An error occurred during assignment.'));
         } finally {
             setAssigning(false);
         }
@@ -144,7 +145,7 @@ const ProjectInfo = () => {
                         <div 
                             className="project-header-cover-img"
                             style={{ 
-                                backgroundImage: project.image_url ? `url(${formatStaticUrl(project.image_url)})` : 'none',
+                                backgroundImage: cssUrl(project.image_url),
                                 backgroundColor: project.image_url ? 'transparent' : 'var(--blue-600)',
                                 display: 'flex',
                                 alignItems: 'center',

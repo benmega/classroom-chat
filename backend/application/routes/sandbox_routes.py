@@ -7,7 +7,6 @@ Summary: API routes for Classroom Sandbox Mode, including LevelGame administrati
 
 import contextlib
 import logging
-from datetime import datetime
 
 from application.decorators.admin_required import admin_only
 from application.extensions import csrf, db, socketio
@@ -19,6 +18,7 @@ from application.services.level_game_service import (
     get_student_sandbox_games,
     ingest_games_csv,
 )
+from application.utilities.helper_functions import utcnow_naive
 from flask import Blueprint, Response, g, jsonify, request, session
 
 logger = logging.getLogger(__name__)
@@ -119,7 +119,7 @@ def toggle_classroom_sandbox(class_id):
     is_active = bool(data["sandbox_active"]) if "sandbox_active" in data else not classroom.sandbox_active
 
     classroom.sandbox_active = is_active
-    classroom.sandbox_activated_at = datetime.utcnow() if is_active else None
+    classroom.sandbox_activated_at = utcnow_naive() if is_active else None
 
     if is_active:
         user_id = session.get("user")
@@ -155,7 +155,7 @@ def toggle_classroom_sandbox(class_id):
             "created_at": (
                 new_message.created_at.isoformat()
                 if new_message.created_at
-                else datetime.utcnow().isoformat()
+                else utcnow_naive().isoformat()
             ),
             "is_global": False,
             "target_live": False,

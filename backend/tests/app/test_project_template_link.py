@@ -28,13 +28,6 @@ def login_as_user(client, user):
         sess["user"] = user.id
 
 
-@pytest.fixture(autouse=True)
-def clear_total_cache():
-    User._total_challenges_cache.clear()
-    yield
-    User._total_challenges_cache.clear()
-
-
 @pytest.fixture
 def seeded(init_db):
     seed_three_d_track()

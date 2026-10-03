@@ -28,13 +28,14 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
                         name="password" 
                         className="pr-2-5rem"
                     />
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="password-toggle-btn"
-                        tabIndex="-1"
+                        aria-label="Show password"
+                        aria-pressed={showPassword}
                     >
-                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                     </button>
                 </div>
                 {formErrors.password && <span className="error-message">{formErrors.password}</span>}
@@ -55,9 +56,11 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
     <Modal isOpen={isOpen} onClose={onClose} title="Adjust Duck Balance">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className="form-group">
-                <label htmlFor="input-56">Target User</label>
+                {user
+                    ? <div id="adjust-ducks-user-label" className="form-label">Target User</div>
+                    : <label htmlFor="adjust-ducks-user">Target User</label>}
                 {user ? (
-                    <div className="user-badge-display">
+                    <div className="user-badge-display" role="group" aria-labelledby="adjust-ducks-user-label">
                         <SmartImage 
                             src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''} 
                             alt="" 
@@ -68,10 +71,10 @@ export const AdjustDucksModal = ({ isOpen, onClose, onSubmit, user, users, formE
                             <span className="user-nickname">{user.nickname || user.username}</span>
                             <span className="user-handle">@{user.username}</span>
                         </div>
-                        <input id="input-56" type="hidden" name="username" value={user.username} />
+                        <input type="hidden" name="username" value={user.username} />
                     </div>
                 ) : (
-                    <select name="username" className="admin-select">
+                    <select id="adjust-ducks-user" name="username" className="admin-select">
                         <option value="">Select a user...</option>
                         {users.map(u => (
                             <option key={u.id} value={u.username}>
@@ -101,9 +104,11 @@ export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, for
     <Modal isOpen={isOpen} onClose={onClose} title="Adjust Packets Balance">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
             <div className="form-group">
-                <label htmlFor="input-102">Target User</label>
+                {user
+                    ? <div id="adjust-packets-user-label" className="form-label">Target User</div>
+                    : <label htmlFor="adjust-packets-user">Target User</label>}
                 {user ? (
-                    <div className="user-badge-display">
+                    <div className="user-badge-display" role="group" aria-labelledby="adjust-packets-user-label">
                         <SmartImage 
                             src={user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : ''} 
                             alt="" 
@@ -114,10 +119,10 @@ export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, for
                             <span className="user-nickname">{user.nickname || user.username}</span>
                             <span className="user-handle">@{user.username}</span>
                         </div>
-                        <input id="input-102" type="hidden" name="username" value={user.username} />
+                        <input type="hidden" name="username" value={user.username} />
                     </div>
                 ) : (
-                    <select name="username" className="admin-select">
+                    <select id="adjust-packets-user" name="username" className="admin-select">
                         <option value="">Select a user...</option>
                         {users.map(u => (
                             <option key={u.id} value={u.username}>
@@ -188,13 +193,14 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
                         name="new_password" 
                         className="pr-2-5rem"
                     />
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={() => setShowNewPassword(!showNewPassword)}
                         className="password-toggle-btn"
-                        tabIndex="-1"
+                        aria-label="Show new password"
+                        aria-pressed={showNewPassword}
                     >
-                        {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showNewPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                     </button>
                 </div>
                 {formErrors.new_password && <span className="error-message">{formErrors.new_password}</span>}
@@ -207,13 +213,14 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
                         name="confirm_password" 
                         className="pr-2-5rem"
                     />
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                         className="password-toggle-btn"
-                        tabIndex="-1"
+                        aria-label="Show confirm password"
+                        aria-pressed={showConfirmPassword}
                     >
-                        {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showConfirmPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                     </button>
                 </div>
                 {formErrors.confirm_password && <span className="error-message">{formErrors.confirm_password}</span>}
@@ -225,31 +232,6 @@ export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors
     </Modal>
     );
 };
-
-export const StartConversationModal = ({ isOpen, onClose, onSubmit, loading, classrooms = [] }) => (
-    <Modal isOpen={isOpen} onClose={onClose} title="Start New Conversation">
-        <form onSubmit={onSubmit} className="admin-form">
-            <div className="form-group">
-                <label htmlFor="input-231">Target Classroom <span className="text-error">*</span></label>
-                <select id="input-231" name="classroom_id" className="admin-select" required defaultValue="">
-                    <option value="" disabled>Select a classroom...</option>
-                    {classrooms.map(c => (
-                        <option key={c.id} value={c.id}>
-                            {c.name} {c.id === 'global' ? '(Announcements)' : ''}
-                        </option>
-                    ))}
-                </select>
-            </div>
-            <div className="form-group">
-                <label htmlFor="input-242">Conversation Topic (Optional)</label>
-                <input id="input-242" type="text" name="title" placeholder="Leave empty for default..." />
-            </div>
-            <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? 'Starting...' : 'Start Conversation'}
-            </button>
-        </form>
-    </Modal>
-);
 
 export const AddBannedWordModal = ({ isOpen, onClose, onSubmit, newWord, setNewWord, loading }) => (
     <Modal isOpen={isOpen} onClose={onClose} title="Add Banned Word">
@@ -279,8 +261,8 @@ export const ManageChildrenModal = ({ isOpen, onClose, parent, users, parentChil
         <Modal isOpen={isOpen} onClose={onClose} title={`Manage Children: ${parent?.username || ''}`}>
             <div className="admin-form">
                 <div className="form-group">
-                    <label htmlFor="input-280">Select Students to Link</label>
-                    <div className="students-list-container">
+                    <div id="manage-children-label" className="form-label">Select Students to Link</div>
+                    <div className="students-list-container" role="group" aria-labelledby="manage-children-label">
                         {students.length === 0 ? (
                             <p className="text-muted text-sm text-center">No students found.</p>
                         ) : (

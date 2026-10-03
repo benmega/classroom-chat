@@ -5,6 +5,13 @@ on:
     branches:
       - deploy
 
+# One backend deploy at a time: overlapping runs would execute deploy.sh
+# concurrently on the EC2 host. Never cancel an in-flight deploy; a queued run
+# is superseded by the newest one.
+concurrency:
+  group: deploy-backend-ec2
+  cancel-in-progress: false
+
 jobs:
   # Gates: deploy must not run unless both of these succeed.
   tests:
@@ -38,7 +45,6 @@ jobs:
               printf 'ADMIN_USERNAME=%s\n' '${{ secrets.ADMIN_USERNAME }}'
               printf 'ADMIN_PASSWORD=%s\n' '${{ secrets.ADMIN_PASSWORD }}'
               printf 'DATABASE_URL=sqlite:////home/ubuntu/classroom-chat/backend/instance/prod_users.db\n'
-              printf 'OPENAI_API_KEY=%s\n' '${{ secrets.OPENAI_API_KEY }}'
               printf 'WEBHOOK_SECRET=%s\n' '${{ secrets.WEBHOOK_SECRET }}'
               printf 'COGNITO_REGION=%s\n' '${{ secrets.COGNITO_REGION }}'
               printf 'COGNITO_USER_POOL_ID=%s\n' '${{ secrets.COGNITO_USER_POOL_ID }}'

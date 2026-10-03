@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Zap, TrendingUp, BarChart2 } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import { getApiUrl } from '../../utils/apiUrl';
 import ContributionGraph from '../../components/profile/ContributionGraph';
 import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
@@ -76,7 +77,7 @@ const ParentReportCard = () => {
                 // Persist so the nav rail can offer a quick-return link
                 localStorage.setItem('parent_last_report_child_id', studentId);
             } catch (err) {
-                setError(err.response?.data?.error || 'Failed to load report card');
+                setError(getErrorMessage(err, 'Failed to load report card'));
             } finally {
                 setIsLoading(false);
             }

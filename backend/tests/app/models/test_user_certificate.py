@@ -54,7 +54,8 @@ def test_user_certificate_to_dict_and_attributes(app):
         assert d["user"]["nickname"] == "Cert User"
         assert d["achievement"]["name"] == "Cert Test Achievement"
         assert d["url"] == "https://example.com/cert.pdf"
-        assert d["file_path"] == "/uploads/cert.pdf"
+        # Only the file name is exposed, never the server directory
+        assert d["file_path"] == "cert.pdf"
         assert d["status"] == "approved"
         assert d["review_note"] == "Looks good."
         assert d["reviewed_at"] is not None

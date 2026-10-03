@@ -4,12 +4,11 @@ Type: py
 Summary: Admin routes for listing and resolving parent messages and inquiries.
 """
 
-from datetime import datetime
-
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.parent_message import ParentMessage
+from application.utilities.helper_functions import utcnow_naive
 from flask import request, session
 
 from ..admin_routes import admin_bp
@@ -52,7 +51,7 @@ def resolve_parent_message(msg_id):
         return {"message": "Parent message was already resolved.", "item": parent_msg.to_dict()}
 
     parent_msg.status = "resolved"
-    parent_msg.resolved_at = datetime.utcnow()
+    parent_msg.resolved_at = utcnow_naive()
     parent_msg.resolved_by_id = session.get("user")
 
     db.session.commit()

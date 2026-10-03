@@ -1,0 +1,10 @@
+# Everything needed to run the tests and linters locally and in CI (tests.yml):
+#   pip install -r requirements-dev.txt
+# Not installed in production; deploy.sh only installs requirements.txt.
+-r requirements.txt
+pytest==8.3.1
+pytest-cov==5.0.0
+ruff
+mypy
+sqlalchemy2-stubs
+factory_boy==3.3.3

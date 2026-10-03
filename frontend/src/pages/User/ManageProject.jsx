@@ -12,7 +12,7 @@ import { formatStaticUrl } from '../../utils/formatters';
 import { useProjectManagement } from '../../hooks/useProjectManagement';
 
 const ManageProject = () => {
-    const { currentUser } = useAuthStore();
+    const { user: currentUser } = useAuthStore();
     const {
         projectId,
         projectData,
@@ -122,9 +122,9 @@ const ManageProject = () => {
                         )}
 
                         <div className="form-wizard-header">
-                            <div role="button" tabIndex={0} className={`step ${activeTab === 'core' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('core')}>1. Core Info</div>
-                            <div role="button" tabIndex={0} className={`step ${activeTab === 'media' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('media')}>2. Media</div>
-                            <div role="button" tabIndex={0} className={`step ${activeTab === 'code' ? 'active' : ''}`} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setActiveTab('code')}>3. Code</div>
+                            <button type="button" className={`step ${activeTab === 'core' ? 'active' : ''}`} aria-current={activeTab === 'core' ? 'step' : undefined} onClick={() => setActiveTab('core')}>1. Core Info</button>
+                            <button type="button" className={`step ${activeTab === 'media' ? 'active' : ''}`} aria-current={activeTab === 'media' ? 'step' : undefined} onClick={() => setActiveTab('media')}>2. Media</button>
+                            <button type="button" className={`step ${activeTab === 'code' ? 'active' : ''}`} aria-current={activeTab === 'code' ? 'step' : undefined} onClick={() => setActiveTab('code')}>3. Code</button>
                         </div>
 
                         {currentUser?.role === 'admin' && (
@@ -213,7 +213,7 @@ const ManageProject = () => {
                                         <p className="media-hint">Upload a thumbnail to represent your project.</p>
                                         <label className="file-upload-btn primary-upload">
                                             <Upload size={16} /> {imagePreview || projectData.image_url ? 'Change Cover Image' : 'Upload Image'}
-                                            <input type="file" name="project_image" onChange={handleFileChange} accept="image/*" hidden />
+                                            <input type="file" name="project_image" onChange={handleFileChange} accept="image/*" className="sr-only" />
                                         </label>
                                     </div>
 
@@ -229,6 +229,7 @@ const ManageProject = () => {
                                                 value={projectData.video_url || ''} 
                                                 onChange={handleInputChange} 
                                                 placeholder="YouTube/Vimeo URL" 
+                                                aria-label="Video URL (YouTube or Vimeo)"
                                                 className="form-control with-icon" 
                                             />
                                         </div>
@@ -236,7 +237,7 @@ const ManageProject = () => {
                                         <div className="video-upload-actions">
                                             <label className="file-upload-btn secondary-upload">
                                                 <Upload size={16} /> Upload Video
-                                                <input type="file" name="project_video" onChange={handleFileChange} accept="video/*" hidden />
+                                                <input type="file" name="project_video" onChange={handleFileChange} accept="video/*" className="sr-only" />
                                             </label>
                                             <button type="button" className="file-upload-btn action-record" onClick={() => setIsRecorderOpen(true)}>
                                                 <Camera size={16} /> Record Screen
@@ -257,6 +258,7 @@ const ManageProject = () => {
                                             value={projectData.code_snippet || ''}
                                             onChange={handleInputChange}
                                             className="form-control inline-code-editor"
+                                            aria-label="Code snippet"
                                             placeholder="def my_awesome_function():\n    pass"
                                             rows={12}
                                         />

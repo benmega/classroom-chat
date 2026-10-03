@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, StartConversationModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
+import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
 
 describe('AdminModals', () => {
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe('AdminModals', () => {
       await userEvent.type(usernameInput, 'testuser');
       await userEvent.type(passwordInput, 'password123');
       
-      const toggleBtn = screen.getAllByRole('button').find(b => b.tabIndex === -1);
+      const toggleBtn = screen.getByRole('button', { name: 'Show password' });
       await userEvent.click(toggleBtn);
       expect(passwordInput).toHaveAttribute('type', 'text');
       await userEvent.click(toggleBtn);
@@ -183,43 +183,20 @@ describe('AdminModals', () => {
 
       expect(newPassInput).toHaveAttribute('type', 'password');
       
-      const toggleBtns = screen.getAllByRole('button').filter(b => b.tabIndex === -1);
-      
+      const toggleBtns = [
+        screen.getByRole('button', { name: 'Show new password' }),
+        screen.getByRole('button', { name: 'Show confirm password' }),
+      ];
+
       await userEvent.click(toggleBtns[0]);
       expect(newPassInput).toHaveAttribute('type', 'text');
-      
+
       await userEvent.click(toggleBtns[1]);
       expect(confirmPassInput).toHaveAttribute('type', 'text');
 
       await userEvent.type(newPassInput, 'newpass');
       await userEvent.type(confirmPassInput, 'newpass');
       await userEvent.click(screen.getByRole('button', { name: 'Reset Password' }));
-      expect(onSubmit).toHaveBeenCalled();
-    });
-  });
-
-  describe('StartConversationModal', () => {
-    it('renders classrooms and submits', async () => {
-      const classrooms = [{ id: 'global', name: 'Global' }, { id: 'class1', name: 'Class 1' }];
-      const onSubmit = vi.fn((e) => e.preventDefault());
-
-      render(
-        <StartConversationModal 
-          isOpen={true} 
-          onClose={vi.fn()} 
-          onSubmit={onSubmit} 
-          loading={false} 
-          classrooms={classrooms} 
-        />
-      );
-
-      expect(screen.getByRole('combobox')).toBeInTheDocument();
-      expect(screen.getByText('Global (Announcements)')).toBeInTheDocument();
-      expect(screen.getByText('Class 1')).toBeInTheDocument();
-
-      await userEvent.selectOptions(screen.getByRole('combobox'), 'class1');
-      await userEvent.type(document.querySelector('input[name="title"]'), 'Test Topic');
-      await userEvent.click(screen.getByRole('button', { name: 'Start Conversation' }));
       expect(onSubmit).toHaveBeenCalled();
     });
   });
@@ -261,6 +238,84 @@ describe('AdminModals', () => {
 
       await userEvent.click(linkBtn);
       expect(onToggleLink).toHaveBeenCalledWith('parent1', 'student2', false);
+    });
+  });
+
+  describe('accessibility', () => {
+    const users = [{ id: '1', username: 'user1', duck_balance: 10, packets: 2 }];
+
+    it('lets keyboard users reach the password toggle and tells screen readers whether the password is shown', async () => {
+      const user = userEvent.setup();
+      render(<CreateUserModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} formErrors={{}} loading={false} />);
+      const passwordInput = document.querySelector('input[name="password"]');
+      const toggle = screen.getByRole('button', { name: 'Show password' });
+
+      expect(toggle).not.toHaveAttribute('tabindex', '-1');
+      expect(toggle).toHaveAttribute('aria-pressed', 'false');
+      passwordInput.focus();
+      await user.tab();
+      expect(toggle).toHaveFocus();
+
+      await user.keyboard('{Enter}');
+
+      expect(passwordInput).toHaveAttribute('type', 'text');
+      expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    it('names both password toggles of the reset form and reaches them in order', async () => {
+      const user = userEvent.setup();
+      render(<ResetPasswordModal isOpen onClose={vi.fn()} onSubmit={vi.fn()} user={{ username: 'u' }} formErrors={{}} loading={false} />);
+
+      document.querySelector('input[name="new_password"]').focus();
+      await user.tab();
+      expect(screen.getByRole('button', { name: 'Show new password' })).toHaveFocus();
+      await user.tab();
+      expect(document.querySelector('input[name="confirm_password"]')).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole('button', { name: 'Show confirm password' })).toHaveFocus();
+      await user.keyboard(' ');
+
+      expect(screen.getByRole('button', { name: 'Show confirm password' })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: 'Show new password' })).toHaveAttribute('aria-pressed', 'false');
+    });
+
+    const adjustModals = [
+      ['AdjustDucksModal', (props) => <AdjustDucksModal {...props} />],
+      ['AdjustPacketsModal', (props) => <AdjustPacketsModal {...props} />],
+    ];
+    const adjustProps = { isOpen: true, onClose: vi.fn(), onSubmit: vi.fn(), users, formErrors: {}, loading: false };
+
+    it.each(adjustModals)('%s labels the user select when there is no specific user', (_name, renderModal) => {
+      render(renderModal({ ...adjustProps, user: null }));
+
+      expect(screen.getByLabelText('Target User')).toBe(screen.getByRole('combobox'));
+    });
+
+    it.each(adjustModals)('%s names the user badge instead of pointing a label at a hidden input', (_name, renderModal) => {
+      render(renderModal({ ...adjustProps, user: users[0] }));
+
+      const badge = screen.getByRole('group', { name: 'Target User' });
+      expect(badge).toHaveTextContent('@user1');
+      expect(screen.getByText('Target User').tagName).not.toBe('LABEL');
+      expect(document.querySelector('input[type="hidden"]')).toHaveValue('user1');
+    });
+
+    it('names the list of students in the manage-children dialog', () => {
+      render(
+        <ManageChildrenModal
+          isOpen
+          onClose={vi.fn()}
+          parent={{ id: 'p', username: 'pat' }}
+          users={[{ id: 's1', role: 'student', username: 'stud1' }]}
+          parentChildren={[]}
+          onToggleLink={vi.fn()}
+          loading={false}
+        />
+      );
+
+      const list = screen.getByRole('group', { name: 'Select Students to Link' });
+      expect(list).toHaveTextContent('stud1');
+      expect(document.querySelector('label[for="input-280"]')).toBeNull();
     });
   });
 

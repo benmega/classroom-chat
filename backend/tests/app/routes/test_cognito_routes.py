@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from application.models.session_log import SessionLog
 from application.models.user import User
 from botocore.exceptions import ClientError
 
@@ -137,3 +138,28 @@ def test_confirm_forgot_password_success(client, mock_boto_client):
     )
     assert resp.status_code == 200
     assert resp.json["success"] is True
+
+
+@patch("application.routes.cognito_routes.jwt.get_unverified_claims")
+def test_repeat_login_does_not_open_a_second_session(
+    mock_get_claims, client, mock_boto_client, init_db
+):
+    mock_boto_client.initiate_auth.return_value = {
+        "AuthenticationResult": {"IdToken": "dummy_token"}
+    }
+    mock_get_claims.return_value = {
+        "sub": "test-sub-123",
+        "email": "parent@example.com",
+    }
+
+    for _ in range(2):
+        resp = client.post(
+            "/api/auth/cognito/login",
+            json={"email": "parent@example.com", "password": "Password123!"},
+        )
+        assert resp.status_code == 200
+
+    user = User.query.filter_by(email="parent@example.com").first()
+    logs = SessionLog.query.filter_by(user_id=user.id).all()
+    assert len(logs) == 1
+    assert logs[0].end_time is None

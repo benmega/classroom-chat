@@ -24,6 +24,8 @@ def seed_command():
     """Seed the database with challenges and course instances from CSV files."""
     from application.extensions import db
     from application.models.challenge import Challenge
+    from application.models.classroom import Classroom
+    from application.models.course import Course
     from application.models.course_instance import CourseInstance
     from flask import current_app
 
@@ -36,7 +38,12 @@ def seed_command():
     if os.path.exists(instances_csv):
         click.echo(f"Seeding course instances from {instances_csv}...")
         inserted_instances = 0
+        skipped_orphans = 0
         try:
+            # SQLite foreign keys are not enforced, so an instance pointing at a
+            # missing classroom or course would insert silently. Check them here.
+            existing_classrooms = {cid for (cid,) in db.session.query(Classroom.id)}
+            existing_courses = {cid for (cid,) in db.session.query(Course.id)}
             with open(instances_csv, mode="r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
                 for row in reader:
@@ -46,17 +53,33 @@ def seed_command():
 
                     exists = CourseInstance.query.filter_by(id=instance_id).first()
                     if not exists:
+                        classroom_id = (row.get("classroom_id") or "").strip()
+                        course_id = (row.get("course_id") or "").strip() or None
+                        missing = []
+                        if classroom_id not in existing_classrooms:
+                            missing.append(f"classroom '{classroom_id}'")
+                        if course_id is not None and course_id not in existing_courses:
+                            missing.append(f"course '{course_id}'")
+                        if missing:
+                            click.echo(
+                                f"Skipping orphan course instance {instance_id}: "
+                                f"unknown {' and '.join(missing)}."
+                            )
+                            skipped_orphans += 1
+                            continue
+
                         new_instance = CourseInstance(
                             id=instance_id,
-                            classroom_id=row.get("classroom_id"),
-                            course_id=row.get("course_id"),
+                            classroom_id=classroom_id,
+                            course_id=course_id,
                         )
                         db.session.add(new_instance)
                         inserted_instances += 1
 
             db.session.commit()
             click.echo(
-                f"Successfully inserted {inserted_instances} new course instances."
+                f"Successfully inserted {inserted_instances} new course instances"
+                f" (skipped {skipped_orphans} orphan rows)."
             )
         except Exception as e:
             db.session.rollback()

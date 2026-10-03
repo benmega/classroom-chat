@@ -75,7 +75,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--text-on-primary);
     font-size: 0.85rem;
     font-weight: 600;
     opacity: 0;
@@ -97,9 +97,10 @@
 }
 
 /* Crop Modal Specifics */
-.crop-modal-content {
-    max-width: 500px !important;
-    padding-top: 20px !important; /* Reduced from 40px */
+/* Chained with .modal-content (declared further down) so the narrower max-width wins on specificity
+   rather than !important. The 20px padding-top comes from .modal-content. */
+.modal-content.crop-modal-content {
+    max-width: 500px;
 }
 
 .crop-area {
@@ -470,7 +471,7 @@
     font-weight: 600;
 }
 
-/* Proficiency borders matching levels */
+/* Proficiency borders matching levels: bronze / silver / gold are deliberate constants, not theme colours */
 .tech-skill-card.proficiency-1 { border-bottom: 3px solid #cd7f32; }
 .tech-skill-card.proficiency-2 { border-bottom: 3px solid #b0c4de; }
 .tech-skill-card.proficiency-3 { border-bottom: 3px solid #ffd700; }
@@ -529,23 +530,12 @@
     object-fit: cover;
 }
 
-.code-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 3rem;
-    background: var(--bg-tertiary);
-}
-
 .play-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: white;
+    color: var(--text-on-primary);
     background: rgba(0,0,0,0.4);
     width: 50px;
     height: 50px;
@@ -553,26 +543,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.edit-overlay {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.project-thumb:hover .edit-overlay {
-    opacity: 1;
 }
 
 .project-content {
@@ -665,8 +635,7 @@
 }
 
 .btn-text,
-.btn-add,
-.btn-icon-link {
+.btn-add {
     padding: 8px 12px;
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
@@ -690,7 +659,7 @@
 
 .btn-add:hover {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .btn-text {
@@ -742,6 +711,14 @@
     border-color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+}
+
+/* A certificate with a file is a link: keep it looking like the plain card. */
+a.cert-item,
+a.cert-item:hover {
+    color: inherit;
+    font-weight: inherit;
+    text-decoration: none;
 }
 
 .cert-icon {
@@ -862,12 +839,28 @@
     transform: scale(1.1);
 }
 
+/* The thumbnail is a button so it can be reached and opened from the keyboard; it must look like the bare image. */
+.note-thumb-btn {
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+/* .note-item clips its overflow, so the focus ring is drawn inside the thumbnail. */
+.note-thumb-btn:focus-visible {
+    outline-offset: -3px;
+}
+
 .delete-note {
     position: absolute;
     top: 5px;
     right: 5px;
     background: var(--error-color);
-    color: white;
+    color: var(--text-on-primary);
     width: 24px;
     height: 24px;
     border-radius: 4px;
@@ -878,7 +871,8 @@
     transition: opacity 0.2s;
 }
 
-.note-item:hover .delete-note {
+.note-item:hover .delete-note,
+.delete-note:focus-visible {
     opacity: 1;
 }
 
@@ -965,10 +959,10 @@
     flex-shrink: 0;
 }
 
-.graph-cell.level-1 { background: #bae6fd; }
-.graph-cell.level-2 { background: #7dd3fc; }
-.graph-cell.level-3 { background: #38bdf8; }
-.graph-cell.level-4 { background: #0284c7; }
+.graph-cell.level-1 { background: var(--graph-level-1); }
+.graph-cell.level-2 { background: var(--graph-level-2); }
+.graph-cell.level-3 { background: var(--graph-level-3); }
+.graph-cell.level-4 { background: var(--graph-level-4); }
 
 .graph-footer {
     display: flex;
@@ -998,7 +992,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: var(--z-modal); /* above header + dropdowns (iss_561) */
     padding: 30px;
     animation: fadeIn var(--transition-fast);
 }
@@ -1033,12 +1027,12 @@
     top: 30px;
     right: 30px;
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .close-slideshow:hover {
     background: rgba(255, 255, 255, 0.2);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .modal-content {
@@ -1277,7 +1271,7 @@
     top: 50%;
     transform: translateY(-50%);
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 50%;
     width: 60px;
@@ -1382,7 +1376,7 @@
 }
 
 .label-hamburger {
-    color: #D97706; /* Hamburger golden amber */
+    color: var(--warning-color); /* Hamburger golden amber */
 }
 
 .label-menu {
@@ -1411,7 +1405,7 @@
     background: var(--primary-color);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
     transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
 }
 
@@ -1427,7 +1421,7 @@
     background: var(--primary-color);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
     transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
 }
 

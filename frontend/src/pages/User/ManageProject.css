@@ -101,6 +101,8 @@
     cursor: pointer;
     border-radius: 8px;
     transition: all 0.2s;
+    font-size: inherit; /* the steps are buttons, which would otherwise use the browser's smaller button font */
+    line-height: inherit;
 }
 
 .form-wizard-header .step:hover {
@@ -137,7 +139,8 @@
 
 .form-control:focus {
     border-color: var(--primary-color);
-    outline: none;
+    outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
+    outline-offset: 2px;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
@@ -187,6 +190,12 @@
     border: 1px solid transparent;
 }
 
+/* The file input inside the label is visually hidden, so keyboard focus is shown on the label. */
+label.file-upload-btn:has(input:focus-visible) {
+    outline: 2px solid var(--primary-accessible);
+    outline-offset: 2px;
+}
+
 .primary-upload {
     background: rgba(16, 185, 129, 0.1);
     color: var(--primary-accessible);
@@ -230,8 +239,9 @@
     color: var(--text-muted);
 }
 
+/* Not applied yet: the markup uses .with-icon / .input-icon rather than these class names */
 .with-icon-pl {
-    padding-left: 40px !important;
+    padding-left: 40px;
 }
 
 .or-divider {
@@ -333,8 +343,12 @@
 }
 
 .placeholder-text {
-    color: var(--text-muted) !important;
     font-style: italic;
+}
+
+/* Chained under the page to outrank .preview-section-core h1 and .preview-desc without !important */
+.manage-project-page .placeholder-text {
+    color: var(--text-muted);
 }
 
 .preview-section-code {
@@ -517,24 +531,28 @@
 }
 
 .form-control.read-only-input {
-    background: var(--bg-secondary) !important;
-    color: var(--text-muted) !important;
     cursor: not-allowed;
     border-color: var(--border-subtle);
     opacity: 0.8;
 }
-.form-control.read-only-input:focus {
-    border-color: var(--border-subtle) !important;
-    box-shadow: none !important;
+/* Chained under the page so these outrank the focus styles of .form-control, the global input rules and the
+   .form-group input rules that leak in from other pages, without !important. */
+.manage-project-page .form-control.read-only-input {
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+}
+.manage-project-page .form-control.read-only-input:focus {
+    border-color: var(--border-subtle);
+    box-shadow: none;
 }
 
 @media (min-width: 900px) {
     main:has(.manage-project-page) {
-        max-width: none !important;
-        padding: 0 !important;
-        overflow: hidden !important;
-        flex: 1 !important;
-        height: 100% !important;
+        max-width: none;
+        padding: 0;
+        overflow: hidden;
+        flex: 1;
+        height: 100%;
     }
     .manage-project-page {
         height: 100%;
