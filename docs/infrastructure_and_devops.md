@@ -94,7 +94,8 @@ nano backend/.env
 
 ## 4. Systemd — Gunicorn Service
 
-File: `/etc/systemd/system/gunicorn-benmega.service`
+File: `/etc/systemd/system/gunicorn-benmega.service` (a copy is kept in
+`infrastructure/ec2/gunicorn-benmega.service`; `deploy.sh` does not install it).
 
 ```ini
 [Unit]
@@ -104,18 +105,18 @@ After=network.target
 [Service]
 User=ubuntu
 WorkingDirectory=/home/ubuntu/classroom-chat/backend
-ExecStart=/home/ubuntu/classroom-chat/venv/bin/gunicorn -w 1 -b 0.0.0.0:8000 main:app --timeout 300
+# The -k GeventWebSocketWorker is CRITICAL for Socket.io to work in production
+ExecStart=/home/ubuntu/classroom-chat/venv/bin/gunicorn     -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker     -w 1     -b 0.0.0.0:8000     main:app     --timeout 300
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-> The unit above is the documented one; it has not been verified against the live server. The app
-> uses Flask-SocketIO in gevent mode (`gevent`, `gevent-websocket` in `requirements.txt`), which
-> normally needs a gevent-capable worker (`-k geventwebsocket.gunicorn.workers.GeventWebSocketWorker`).
-> Confirm the real unit on EC2 before changing it. Since nginx proxies to `127.0.0.1:8000`, binding
-> to `127.0.0.1` is sufficient.
+> Verified against the live host on 2026-10-03: one gevent-websocket worker (`ps` shows the gunicorn
+> master plus that one worker). It binds `0.0.0.0:8000`, although nginx only needs
+> `127.0.0.1:8000`, so port 8000 must stay closed in the instance's security group. Binding to
+> `127.0.0.1` would remove that dependency.
 
 Key points:
 - `WorkingDirectory` must be `backend/` so gunicorn finds `main.py` and `application/`
@@ -147,8 +148,8 @@ others. By default it starts in every process that loads the app, except:
 - any process started with `SCHEDULER_ENABLED=0`
 
 Moving to several workers (or hosts) is a separate piece of work: it needs the rate limiter on a
-shared store, a Socket.IO `message_queue` with presence moved out of `_active_sessions`, and a
-verified gevent-capable worker class (see the note above).
+shared store and a Socket.IO `message_queue` with presence moved out of `_active_sessions`. The
+gevent-websocket worker class the live unit already uses is suitable.
 
 ---
 
