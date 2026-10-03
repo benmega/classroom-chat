@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import os
 
@@ -83,10 +84,8 @@ def generate_certificate(template_path_or_course_id, output_path, new_name):
         except Exception as e:
             logger.warning(f"Template {template_path} could not be used as a PDF ({e}). Generating default.")
             if doc is not None:
-                try:
+                with contextlib.suppress(Exception):
                     doc.close()
-                except Exception:
-                    pass
             doc = None
     else:
         logger.warning(f"Template not found or none: {template_path}. Generating default.")

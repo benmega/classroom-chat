@@ -1,7 +1,7 @@
 """Tests for the 3D modeling learning track (seeding, completion, progress)."""
 
 import pytest
-from application.commands.seed import generate_kebab_slug, seed_three_d_track, seed_command
+from application.commands.seed import generate_kebab_slug, seed_command, seed_three_d_track
 from application.commands.three_d_data import THREE_D_CHALLENGES, THREE_D_COURSES
 from application.extensions import db
 from application.models.challenge import Challenge
@@ -305,8 +305,8 @@ def test_pass_chapter_for_3d_course(client, sample_admin, sample_user, seeded):
     user = db.session.get(User, sample_user.id)
     logs = ChallengeLog.query.filter_by(user_id=user.id).all()
     assert len(logs) == 6
-    assert {l.course_id for l in logs} == {"3d-1"}
-    assert {l.domain for l in logs} == {"3d-modeling"}
+    assert {log.course_id for log in logs} == {"3d-1"}
+    assert {log.domain for log in logs} == {"3d-modeling"}
     assert user.duck_balance == ducks_before + 6
     # Admin override keeps its previous behaviour: the track is not switched.
     assert user.active_track == track_before
