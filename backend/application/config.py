@@ -81,8 +81,8 @@ class Config:
     LARGE_UPLOAD_MAX_CONTENT_LENGTH = 500 * 1024 * 1024
     LARGE_UPLOAD_ENDPOINTS: ClassVar[set[str]] = {"user.new_project", "user.edit_project"}
     ALLOWED_EXTENSIONS: ClassVar[set[str]] = {"png", "jpg", "jpeg", "gif", "webp"}
-    SUBMISSION_ALLOWED_EXTENSIONS: ClassVar[set[str]] = {
-        "png", "jpg", "jpeg", "gif", "webp", "pdf", "doc", "docx", "txt", "ppt", "pptx", "zip"
+    SUBMISSION_BLOCKED_EXTENSIONS: ClassVar[set[str]] = {
+        "exe", "bat", "cmd", "sh", "msi", "vbs", "ps1"
     }
     SUBMISSION_MAX_BYTES = 20 * 1024 * 1024  # 20MB
 

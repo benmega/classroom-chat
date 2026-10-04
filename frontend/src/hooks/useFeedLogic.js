@@ -222,7 +222,8 @@ export const useFeedLogic = (filterClassroomId = null) => {
           textareaRef.current.style.height = 'auto';
         }
       } catch (err) {
-        toast.error('Failed to submit file');
+        const errorMsg = err.response?.data?.error || 'Failed to submit file';
+        toast.error(errorMsg);
         console.error(err);
       }
       return;
