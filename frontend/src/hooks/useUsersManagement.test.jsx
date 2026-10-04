@@ -55,9 +55,6 @@ describe('useUsersManagement', () => {
       http.post('*/api/admin/reset_password', () => {
         return HttpResponse.json({ success: true, message: 'Password reset' });
       }),
-      http.post('*/api/admin/set_drawer', () => {
-        return HttpResponse.json({ success: true, message: 'Drawer set' });
-      }),
       http.post('*/api/admin/remove_user', () => {
         return HttpResponse.json({ success: true, message: 'User removed' });
       }),
@@ -217,18 +214,6 @@ describe('useUsersManagement', () => {
     
   });
 
-  it('handles set drawer', async () => {
-    const { result } = renderHook(() => useUsersManagement());
-    
-    const fakeEvent = { preventDefault: vi.fn(), target: {} };
-    window.FormData = class { get(k) { return k === 'username' ? 'user' : '1A'; } };
-
-    await act(async () => {
-      await result.current.handleSetDrawer(fakeEvent);
-    });
-    
-    
-  });
 
   it('handles remove user', async () => {
     const { result } = renderHook(() => useUsersManagement());
@@ -371,61 +356,7 @@ describe('useUsersManagement', () => {
 
     expect(adminCache.get(key)).toBeNull();
   });
-  it('offers to take over a drawer when the backend reports a conflict', async () => {
-    // @api_response puts conflict/current_owner/message next to `error`, not under it
-    const posted = [];
-    server.use(
-      http.post('*/api/admin/set_drawer', async ({ request }) => {
-        const body = await request.json();
-        posted.push(body);
-        if (!body.force) {
-          return HttpResponse.json({
-            status: 'error',
-            data: null,
-            error: 'Drawer 0x09 is already assigned to @ada.',
-            conflict: true,
-            message: 'Drawer 0x09 is already assigned to @ada.',
-            current_owner: 'ada',
-          }, { status: 409 });
-        }
-        return HttpResponse.json({ status: 'success', data: { message: 'Drawer updated' }, error: null });
-      })
-    );
-    const { result } = renderHook(() => useUsersManagement());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    window.FormData = class { get(k) { return k === 'username' ? 'grace' : '0x09'; } };
 
-    await act(async () => {
-      await result.current.handleSetDrawer({ preventDefault: vi.fn(), target: {} });
-    });
-
-    expect(showConfirm).toHaveBeenCalledTimes(1);
-    expect(showConfirm.mock.calls[0][0]).toContain('@ada');
-    expect(posted).toEqual([
-      { username: 'grace', drawer: '0x09' },
-      { username: 'grace', drawer: '0x09', force: true },
-    ]);
-    expect(toast.error).not.toHaveBeenCalled();
-  });
-
-  it('shows the error message when setting a drawer fails without a conflict', async () => {
-    server.use(
-      http.post('*/api/admin/set_drawer', () => HttpResponse.json(
-        { status: 'error', data: null, error: 'Drawer must be in hex format', message: 'Drawer must be in hex format' },
-        { status: 400 }
-      ))
-    );
-    const { result } = renderHook(() => useUsersManagement());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    window.FormData = class { get(k) { return k === 'username' ? 'grace' : 'zz'; } };
-
-    await act(async () => {
-      await result.current.handleSetDrawer({ preventDefault: vi.fn(), target: {} });
-    });
-
-    expect(showConfirm).not.toHaveBeenCalled();
-    expect(toast.error).toHaveBeenCalledWith('Drawer must be in hex format');
-  });
 
   describe('error handling and shared user actions', () => {
     // Earlier tests in this file swap window.FormData for stubs; these use the real one.
@@ -453,88 +384,6 @@ describe('useUsersManagement', () => {
       return hook;
     };
 
-    describe('handleSetDrawer', () => {
-      it('offers a take-over when the drawer belongs to someone else, then retries with force', async () => {
-        const bodies = [];
-        server.use(
-          http.post('*/api/admin/set_drawer', async ({ request }) => {
-            const body = await request.json();
-            bodies.push(body);
-            if (!body.force) {
-              // set_drawer is an @api_response route, so the conflict fields sit next to `error`.
-              return envelopeError('Drawer 0x05 is already assigned to @sam.', 409, { conflict: true, message: 'Drawer 0x05 is already assigned to @sam.', current_owner: 'sam' });
-            }
-            return HttpResponse.json({ status: 'success', data: { message: 'Drawer updated for kid' }, error: null });
-          })
-        );
-        const { result } = await renderLoaded();
-        act(() => result.current.setActiveModal('drawer'));
-
-        await act(async () => {
-          await result.current.handleSetDrawer(submitEvent({ username: 'kid', drawer: '5' }));
-        });
-
-        expect(showConfirm).toHaveBeenCalledTimes(1);
-        expect(showConfirm).toHaveBeenCalledWith(
-          expect.stringContaining('already assigned to @sam'),
-          { title: 'Drawer Conflict', confirmText: 'Take Over', destructive: true }
-        );
-        expect(bodies).toEqual([
-          { username: 'kid', drawer: '5' },
-          { username: 'kid', drawer: '5', force: true },
-        ]);
-        expect(toast.error).not.toHaveBeenCalled();
-        expect(result.current.activeModal).toBeNull();
-        expect(result.current.formLoading).toBe(false);
-      });
-
-      it('leaves the drawer alone when the take-over is declined', async () => {
-        showConfirm.mockResolvedValue(false);
-        const bodies = [];
-        server.use(
-          http.post('*/api/admin/set_drawer', async ({ request }) => {
-            bodies.push(await request.json());
-            return envelopeError('Drawer 0x05 is already assigned to @sam.', 409, { conflict: true, message: 'Drawer 0x05 is already assigned to @sam.', current_owner: 'sam' });
-          })
-        );
-        const { result } = await renderLoaded();
-        act(() => result.current.setActiveModal('drawer'));
-
-        await act(async () => {
-          await result.current.handleSetDrawer(submitEvent({ username: 'kid', drawer: '5' }));
-        });
-
-        expect(showConfirm).toHaveBeenCalledTimes(1);
-        expect(bodies).toHaveLength(1);
-        expect(toast.error).not.toHaveBeenCalled();
-        expect(result.current.activeModal).toBe('drawer');
-      });
-
-      it('shows the validation reason of an ordinary failure instead of a conflict prompt', async () => {
-        server.use(
-          http.post('*/api/admin/set_drawer', () => envelopeError('Drawer must be in hex format (e.g. 0xA6 or A6)', 400))
-        );
-        const { result } = await renderLoaded();
-
-        await act(async () => {
-          await result.current.handleSetDrawer(submitEvent({ username: 'kid', drawer: 'zz' }));
-        });
-
-        expect(showConfirm).not.toHaveBeenCalled();
-        expect(toast.error).toHaveBeenCalledWith('Drawer must be in hex format (e.g. 0xA6 or A6)');
-      });
-
-      it('falls back to a generic message when the failure carries no body', async () => {
-        server.use(http.post('*/api/admin/set_drawer', () => new HttpResponse(null, { status: 500 })));
-        const { result } = await renderLoaded();
-
-        await act(async () => {
-          await result.current.handleSetDrawer(submitEvent({ username: 'kid', drawer: '5' }));
-        });
-
-        expect(toast.error).toHaveBeenCalledWith('Failed to set drawer.');
-      });
-    });
 
     describe('handleToggleChat', () => {
       it('reads the new chat flag from the enveloped response', async () => {
@@ -964,3 +813,4 @@ describe('useUsersManagement', () => {
   });
 
 });
+

@@ -123,7 +123,7 @@ describe('Users Page', () => {
       ...defaultMockState,
       users: [
         { id: 1, username: 'admin1', nickname: 'Admin', role: 'student', is_admin: true, duck_balance: 10, packets: 5, is_online: true },
-        { id: 2, username: 'student1', nickname: 'Student', role: 'student', is_admin: false, duck_balance: 5, packets: 2, is_online: false, drawer: '1A' },
+        { id: 2, username: 'student1', nickname: 'Student', role: 'student', is_admin: false, duck_balance: 5, packets: 2, is_online: false },
         { id: 3, username: 'parent1', nickname: 'Parent', role: 'parent', is_admin: false, duck_balance: 0, packets: 0, is_online: false }
       ],
       totalUsers: 3
@@ -134,7 +134,6 @@ describe('Users Page', () => {
     expect(screen.getByText('@admin1')).toBeInTheDocument();
     expect(screen.getByText('@student1')).toBeInTheDocument();
     expect(screen.getByText('@parent1')).toBeInTheDocument();
-    expect(screen.getByText('Drawer:')).toBeInTheDocument();
   });
 
   it('handles search input', () => {
@@ -299,7 +298,7 @@ describe('Users Page', () => {
     useUsersManagement.mockReturnValue({
       ...defaultMockState,
       users: [
-        { id: 1, username: 'student1', role: 'student', duck_balance: 100, drawer: '1A' },
+        { id: 1, username: 'student1', role: 'student', duck_balance: 100 },
       ],
       totalUsers: 1,
     });

@@ -14,8 +14,8 @@
     --stat-approval-to: #4c1d95;
     --stat-balance-from: #0891b2;
     --stat-balance-to: #164e63;
-    --stat-residents-from: #ea580c;
-    --stat-residents-to: #7c2d12;
+    --stat-users-from: #ea580c;
+    --stat-users-to: #7c2d12;
 }
 
 .insights-grid {
@@ -193,7 +193,7 @@
 :where(.admin-dashboard) .stat-icon.active { background: linear-gradient(135deg, var(--stat-active-from), var(--stat-active-to)); } /* Darker pink */
 :where(.admin-dashboard) .stat-icon.approval { background: linear-gradient(135deg, var(--stat-approval-from), var(--stat-approval-to)); } /* Darker violet */
 :where(.admin-dashboard) .stat-icon.avg-balance { background: linear-gradient(135deg, var(--stat-balance-from), var(--stat-balance-to)); } /* Darker cyan */
-:where(.admin-dashboard) .stat-icon.residents { background: linear-gradient(135deg, var(--stat-residents-from), var(--stat-residents-to)); } /* Darker orange */
+:where(.admin-dashboard) .stat-icon.users { background: linear-gradient(135deg, var(--stat-users-from), var(--stat-users-to)); } /* Darker orange */
 
 :where(.admin-dashboard) .stat-card.clickable {
     cursor: pointer;

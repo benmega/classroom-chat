@@ -37,7 +37,7 @@ const AdminUserDashboard = () => {
         templates, selectedTemplateName, setSelectedTemplateName, templatesSaving,
         passChapterLoading, selectedChapterId, setSelectedChapterId, passPreview, setPassPreview,
         handlePassChapterPreview, handlePassChapterConfirm, handleAdjustDucks,
-        handleAdjustPackets, handleSetDrawer, handleResetPassword, handleRemoveUser,
+        handleAdjustPackets, handleResetPassword, handleRemoveUser,
         handleApproveUser, handleRejectUser, handleToggleChildLink, handleToggleParentLink,
         handleAssignProjectSubmit, handleUpdateUser, handleGenerateManualCertificate
     } = useAdminUserDashboard(userId);
@@ -328,17 +328,6 @@ const AdminUserDashboard = () => {
                                     <input type="number" name="amount" step="any" aria-label="Packet adjustment amount" placeholder="Amount (+/-)" required className="inline-input" />
                                     <button type="submit" className="btn-compact action-green" disabled={formLoading}>
                                         <Check size={14} /> Adjust
-                                    </button>
-                                </form>
-
-                                <form onSubmit={handleSetDrawer} className="economy-row-card">
-                                    <div className="econ-header">
-                                        <span className="econ-label">🔒 Locker Drawer</span>
-                                        <span className="econ-balance">{user.drawer || 'Not Set'}</span>
-                                    </div>
-                                    <input type="text" name="drawer" aria-label="Locker drawer" defaultValue={user.drawer || ''} placeholder="e.g. 0x08" maxLength={6} className="inline-input" />
-                                    <button type="submit" className="btn-compact action-green" disabled={formLoading}>
-                                        <Check size={14} /> Set
                                     </button>
                                 </form>
                             </div>

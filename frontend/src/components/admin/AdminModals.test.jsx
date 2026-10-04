@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
+import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, ResetPasswordModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
 
 describe('AdminModals', () => {
   beforeEach(() => {
@@ -136,31 +136,7 @@ describe('AdminModals', () => {
     });
   });
 
-  describe('SetDrawerModal', () => {
-    it('renders and submits', async () => {
-      const user = { username: 'draweruser', drawer: '0x01' };
-      const onSubmit = vi.fn((e) => e.preventDefault());
-      
-      render(
-        <SetDrawerModal 
-          isOpen={true} 
-          onClose={vi.fn()} 
-          onSubmit={onSubmit} 
-          user={user} 
-          loading={false} 
-        />
-      );
 
-      const drawerInput = document.querySelector('input[name="drawer"]');
-      expect(drawerInput).toHaveValue('0x01');
-      
-      await userEvent.clear(drawerInput);
-      await userEvent.type(drawerInput, '0xA6');
-      
-      await userEvent.click(screen.getByRole('button', { name: 'Set Drawer' }));
-      expect(onSubmit).toHaveBeenCalled();
-    });
-  });
 
   describe('ResetPasswordModal', () => {
     it('renders and toggles passwords', async () => {

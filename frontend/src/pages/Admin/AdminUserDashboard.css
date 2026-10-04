@@ -673,7 +673,7 @@
     flex: none;
 }
 
-/* Amount / drawer entries never need more than 10 characters. */
+/* Amount entries never need more than 10 characters. */
 .economy-row-card > input:not([type="hidden"]) {
     width: 9ch;
     flex: none;

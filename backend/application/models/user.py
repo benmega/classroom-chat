@@ -50,7 +50,6 @@ class User(db.Model):
     last_daily_duck = db.Column(db.Date, nullable=True)
     last_achievement_evaluation = db.Column(db.DateTime, nullable=True)
     connection_code = db.Column(db.String(10), unique=True, nullable=True)
-    drawer = db.Column(db.String(4), unique=True, nullable=True)
 
     # Shop Perks
     has_chat_font = db.Column(db.Boolean, default=False)
@@ -198,7 +197,6 @@ class User(db.Model):
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
             "has_double_duck": self.has_double_duck,
-            "drawer": self.drawer,
             "current_activity": self.current_activity,
             "last_activity_time": self.last_activity_time.isoformat()
             if self.last_activity_time
@@ -376,7 +374,6 @@ class User(db.Model):
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
             "has_double_duck": self.has_double_duck,
-            "drawer": self.drawer,
             "current_activity": self.current_activity,
             "last_activity_time": self.last_activity_time.isoformat()
             if self.last_activity_time

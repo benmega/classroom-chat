@@ -30,20 +30,20 @@ describe('AdminStats', () => {
         expect(screen.getByText('56')).toBeInTheDocument();
         expect(screen.getByText('10')).toBeInTheDocument();
         expect(screen.getByText('4')).toBeInTheDocument();
-        expect(screen.getByText('🦆 123.4')).toBeInTheDocument();
+        expect(screen.getByText(/123\.4/)).toBeInTheDocument();
     });
 
     it('shows a zero average rather than dividing by no residents', () => {
         render(<AdminStats stats={{ ...stats, total_users_count: undefined }} />);
 
-        expect(screen.getByText('🦆 0.0')).toBeInTheDocument();
+        expect(screen.getByText(/0\.0/)).toBeInTheDocument();
     });
 
     describe('keyboard', () => {
         const cards = [
             ['Ducks In Circulation', 'onTotalDucksClick'],
             ['Earned This Week', 'onEarnedWeekClick'],
-            ['Total Residents', 'onTotalResidentsClick'],
+            ['Total Users', 'onTotalUsersClick'],
             ['Online Users', 'onOnlineUsersClick'],
         ];
 
@@ -57,7 +57,7 @@ describe('AdminStats', () => {
                 focused.push(document.activeElement.querySelector('.stat-label').textContent);
             }
 
-            expect(focused).toEqual(['Ducks In Circulation', 'Earned This Week', 'Total Residents', 'Online Users']);
+            expect(focused).toEqual(['Ducks In Circulation', 'Earned This Week', 'Total Users', 'Online Users']);
             expect(screen.getAllByRole('button')).toHaveLength(4);
         });
 

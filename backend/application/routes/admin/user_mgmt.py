@@ -533,69 +533,6 @@ def get_classroom_connection_cards(classroom_id):
     return {"classroom_name": classroom_name, "cards": cards}
 
 
-@admin_bp.route("/set_drawer", methods=["POST"])
-@admin_only
-@api_response
-def set_drawer():
-    username = request.json.get("username")
-    drawer = request.json.get("drawer")
-    force = request.json.get("force", False)
-
-    if not username:
-        return "Username is required", 400
-
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return "User not found", 404
-
-    if user.role != "student":
-        return "Drawers can only be assigned to students", 403
-
-    if not drawer or str(drawer).strip() == "":
-        user.drawer = None
-    else:
-        drawer = str(drawer).strip()
-
-        # Be flexible: if they omitted 0x, we can add it (frontend does this now, but backend should too)
-        if not drawer.lower().startswith("0x"):
-            drawer = "0x" + drawer
-
-        if not re.fullmatch(r"0[xX][0-9A-Fa-f]{1,2}", drawer):
-            return "Drawer must be in hex format (e.g. 0xA6 or A6)", 400
-
-        try:
-            val = int(drawer, 16)
-            if val < 0 or val > 35:
-                return "Drawer number must be between 0 (0x00) and 35 (0x23)", 400
-        except ValueError:
-            return "Invalid hex drawer", 400
-
-        # Standardize format to 0x uppercase hex
-        drawer = f"0x{val:02X}"
-
-        existing_user = User.query.filter_by(drawer=drawer).first()
-        if existing_user and existing_user.id != user.id:
-            if not force:
-                return {
-                    "conflict": True,
-                    "message": f"Drawer {drawer} is already assigned to @{existing_user.username}.",
-                    "current_owner": existing_user.username,
-                }, 409
-            else:
-                existing_user.drawer = None
-
-        user.drawer = drawer
-
-    import sqlalchemy.exc
-
-    try:
-        db.session.commit()
-        return {"message": f"Drawer updated for {username}"}
-    except sqlalchemy.exc.IntegrityError:
-        db.session.rollback()
-        return "Drawer number is already assigned to another student", 409
-
-
 @admin_bp.route("/user/<int:user_id>", methods=["GET"])
 @admin_only
 def get_user_details(user_id):
@@ -624,6 +561,13 @@ def get_user_details(user_id):
         if most_recently_completed_challenge
         else None
     )
+
+    if most_recently_completed_challenge:
+        from application.models.challenge import Challenge
+        chal = Challenge.query.filter_by(slug=most_recently_completed_challenge.challenge_slug).first()
+        d["most_recently_completed_challenge_name"] = chal.name if chal else most_recently_completed_challenge.challenge_slug
+    else:
+        d["most_recently_completed_challenge_name"] = None
 
     return jsonify({"user": d})
 

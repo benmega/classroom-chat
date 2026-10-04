@@ -357,50 +357,6 @@ describe('useAdminUserDashboard', () => {
         expect(toast.error).toHaveBeenLastCalledWith(fallback);
     });
 
-    it('sets the drawer with a JSON body and reloads the user', async () => {
-        client.post.mockResolvedValueOnce({ status: 200, data: { status: 'success', data: { message: 'Drawer updated for testuser' } } });
-        const result = await loadStudent();
-        const getsBefore = client.get.mock.calls.length;
-
-        await act(async () => {
-            await result.current.handleSetDrawer({ preventDefault: vi.fn(), target: makeForm({ drawer: '0x05' }) });
-        });
-
-        expect(client.post).toHaveBeenCalledWith('/api/admin/set_drawer', { username: 'testuser', drawer: '0x05' });
-        expect(client.get.mock.calls.length).toBeGreaterThan(getsBefore);
-        expect(toast.error).not.toHaveBeenCalled();
-    });
-
-    it('shows a string reason for a failed drawer update, not the whole response body', async () => {
-        client.post.mockRejectedValueOnce(rejection({ status: 'error', data: null, error: 'Drawer must be in hex format (e.g. 0xA6 or A6)' }));
-        const result = await loadStudent();
-
-        await act(async () => {
-            await result.current.handleSetDrawer({ preventDefault: vi.fn(), target: makeForm({ drawer: 'zz' }) });
-        });
-
-        expect(toast.error).toHaveBeenCalledWith('Drawer must be in hex format (e.g. 0xA6 or A6)');
-        expect(result.current.formLoading).toBe(false);
-    });
-
-    it('shows the message of a drawer conflict', async () => {
-        client.post.mockRejectedValueOnce(rejection({
-            status: 'error',
-            data: null,
-            error: 'Drawer 0x05 is already assigned to @sam.',
-            conflict: true,
-            message: 'Drawer 0x05 is already assigned to @sam.',
-            current_owner: 'sam',
-        }, 409));
-        const result = await loadStudent();
-
-        await act(async () => {
-            await result.current.handleSetDrawer({ preventDefault: vi.fn(), target: makeForm({ drawer: '0x05' }) });
-        });
-
-        expect(toast.error).toHaveBeenCalledWith('Drawer 0x05 is already assigned to @sam.');
-    });
-
     it('removes the user after a labelled confirmation and goes back to the list', async () => {
         client.post.mockResolvedValueOnce({ data: { success: true, message: 'User removed' } });
         const result = await loadStudent();
@@ -455,8 +411,8 @@ describe('useAdminUserDashboard', () => {
 
         await act(async () => { await result.current.handlePassChapterConfirm(); });
         expect(showConfirm).toHaveBeenLastCalledWith(
-            expect.stringContaining('pass this chapter'),
-            { title: 'Pass Chapter', confirmText: 'Pass Chapter', destructive: false }
+            expect.stringContaining('Pass this chapter'),
+            { title: 'Pass Chapter', confirmText: 'Pass & award ducks', altText: 'Pass, no ducks', destructive: false }
         );
     });
 

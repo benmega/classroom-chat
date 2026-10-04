@@ -22,7 +22,6 @@ import {
     CreateUserModal, 
     AdjustDucksModal, 
     AdjustPacketsModal,
-    SetDrawerModal,
     ResetPasswordModal,
     ManageChildrenModal,
     ConnectionCardModal
@@ -118,10 +117,6 @@ const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, han
                                 <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); setActiveModal('adjust_packets'); setIsOpen(false); }}>
                                     <Package size={14} style={{marginRight:'8px'}} /> Adjust Packets
                                 </button>
-                                <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); setActiveModal('drawer'); setIsOpen(false); }}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight:'8px'}}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>
-                                    Set Drawer
-                                </button>
                             </>
                         )}
                         <button className="kebab-item" onClick={(e) => { e.stopPropagation(); setModalUser(u); setActiveModal('reset'); setIsOpen(false); }}>
@@ -172,6 +167,11 @@ const Users = () => {
         return ['', 'student', 'parent'].includes(roleParam) ? roleParam : '';
     });
 
+    const [initialStatusFilter] = useState(() => {
+        const filterParam = searchParams.get('filter');
+        return filterParam === 'online' ? ['active'] : [];
+    });
+
     const handleTabChange = (role) => {
         setActiveRole(role);
         setSearchParams(role ? { role } : {});
@@ -194,7 +194,6 @@ const Users = () => {
         handleCreateUser,
         handleAdjustDucks,
         handleAdjustPackets,
-        handleSetDrawer,
         handleResetPassword,
         handleRemoveUser,
         parentChildren,
@@ -214,7 +213,7 @@ const Users = () => {
         setSortBy,
         sortDir,
         setSortDir
-    } = useUsersManagement(activeRole);
+    } = useUsersManagement(activeRole, initialStatusFilter);
 
     const activeSort = { sortBy, sortDir };
     const handleSort = (key, dir) => { setSortBy(key); setSortDir(dir); };
@@ -291,26 +290,23 @@ const Users = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+                <div className="admin-role-tabs">
+                    {TABS.map(tab => (
+                        <button
+                            key={tab.value}
+                            className={`role-tab ${activeRole === tab.value ? 'active' : ''}`}
+                            onClick={() => handleTabChange(tab.value)}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
                 {activeRole !== 'parent' && (
                     <button className="primary-btn" onClick={() => setActiveModal('create')}>
                         <Plus size={18} /> {activeRole === 'student' ? 'Add Student' : 'Add User'}
                     </button>
                 )}
-
-                
             </AdminPageHeader>
-
-            <div className="admin-role-tabs">
-                {TABS.map(tab => (
-                    <button
-                        key={tab.value}
-                        className={`role-tab ${activeRole === tab.value ? 'active' : ''}`}
-                        onClick={() => handleTabChange(tab.value)}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
 
 
 
@@ -437,7 +433,6 @@ const Users = () => {
                                                     <div className="info">
                                                         <UserNameLink user={u} />
                                                         <div className="handle">@{u.username}</div>
-                                                        {u.role === 'student' && u.drawer && <div className="drawer-info drawer-info-text">Drawer: <span className="drawer-code">{u.drawer}</span></div>}
                                                     </div>
                                                 </div>
                                             </td>
@@ -496,7 +491,6 @@ const Users = () => {
                                                     <div className="info">
                                                         <UserNameLink user={u} />
                                                         <div className="handle">@{u.username}</div>
-                                                        {u.drawer && <div className="drawer-info drawer-info-text">Drawer: <span className="drawer-code">{u.drawer}</span></div>}
                                                     </div>
                                                 </div>
                                             </td>
@@ -685,14 +679,6 @@ const Users = () => {
                 user={modalUser} 
                 users={users} 
                 formErrors={formErrors} 
-                loading={formLoading} 
-            />
-
-            <SetDrawerModal 
-                isOpen={activeModal === 'drawer'} 
-                onClose={() => { setActiveModal(null); setModalUser(null); }} 
-                onSubmit={handleSetDrawer} 
-                user={modalUser} 
                 loading={formLoading} 
             />
 

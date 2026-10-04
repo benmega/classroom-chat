@@ -45,7 +45,7 @@ describe('EditProfile', () => {
                 bio: 'This is my bio',
                 role: 'student',
                 profile_picture: 'pic.jpg',
-                drawer: 'Drawer A1'
+                
             },
             checkAuth: vi.fn(),
             isAuthenticated: true,
@@ -67,7 +67,6 @@ describe('EditProfile', () => {
         expect(screen.getByPlaceholderText(/Enter your nickname/i)).toBeDisabled();
         expect(screen.getByText('Nickname (readonly)')).toBeInTheDocument();
         expect(screen.getByDisplayValue('This is my bio')).toBeInTheDocument();
-        expect(screen.getByDisplayValue('Drawer A1')).toBeInTheDocument();
 
         await waitFor(() => {
             expect(screen.getByDisplayValue('ABCD-1234')).toBeInTheDocument();
@@ -336,10 +335,8 @@ describe('EditProfile', () => {
 
             // What every background checkAuth() does: a brand-new user object, same account.
             act(() => {
-                useAuthStore.setState({ user: { ...useAuthStore.getState().user, drawer: 'Drawer B2' } });
             });
 
-            expect(screen.getByDisplayValue('Drawer B2')).toBeInTheDocument();
             expect(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i).value).toBe('Draft bio');
             expect(screen.getByAltText('Profile Preview').getAttribute('src')).toBe(previewBefore);
             expect(URL.revokeObjectURL).not.toHaveBeenCalled();
@@ -380,7 +377,7 @@ describe('EditProfile', () => {
         it('resyncs the form and preview from the refreshed user after a successful save', async () => {
             const refreshed = {
                 id: 1, username: 'testuser', nickname: 'Test Nick', bio: 'Saved bio', role: 'student',
-                profile_picture: 'new-pic.png', drawer: 'Drawer A1',
+                profile_picture: 'new-pic.png',
             };
             useAuthStore.setState({ checkAuth: vi.fn(async () => useAuthStore.setState({ user: refreshed })) });
             server.use(

@@ -44,7 +44,7 @@
     padding: 12px 20px;
     background: var(--primary-color);
     color: var(--text-on-primary);
-    border: none;
+    border: 1px solid transparent;
     border-radius: 12px;
     font-weight: 700;
     display: flex;
@@ -284,17 +284,6 @@
     gap: 8px;
 }
 
-.drawer-info-text {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
-
-.drawer-code {
-    font-family: monospace;
-    font-weight: bold;
-}
-
 .action-btn-blue {
     color: var(--sky-500);
 }
@@ -449,16 +438,16 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
-    margin-bottom: 1rem;
+    margin: 0; /* Remove bottom margin to align nicely in header */
 }
 
 .role-tab {
-    padding: 8px 20px;
-    border-radius: 999px;
+    padding: 12px 20px;
+    border-radius: 12px;
     border: 1px solid var(--border-subtle);
     background: var(--bg-primary);
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.95rem; /* Matches the search bar font size */
     font-weight: 600;
     cursor: pointer;
     transition: all 0.18s;

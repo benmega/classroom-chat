@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import {
     Search,
     Menu,
@@ -205,7 +205,7 @@ const AdminDashboard = () => {
                 onEarnedWeekClick={() => navigate('/admin/transactions?type=earned')}
                 onTotalDucksClick={() => navigate('/admin/users')}
                 onOnlineUsersClick={() => navigate('/admin/users?filter=online')}
-                onTotalResidentsClick={() => navigate('/admin/users')}
+                onTotalUsersClick={() => navigate('/admin/users')}
             />
 
             <div className="dashboard-layout">
@@ -313,7 +313,7 @@ const AdminDashboard = () => {
                                     <div className="name">{u.nickname || u.username}</div>
                                     <div className="handle">@{u.username}</div>
                                 </div>
-                                <div className="amount">🦆 {(u.duck_balance ?? 0).toFixed(1)}</div>
+                                <div className="amount">ðŸ¦† {(u.duck_balance ?? 0).toFixed(1)}</div>
                             </div>
                         ))}
                     </div>
@@ -333,5 +333,6 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
 
 

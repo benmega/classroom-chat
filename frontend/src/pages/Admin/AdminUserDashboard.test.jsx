@@ -48,7 +48,6 @@ describe('AdminUserDashboard Component Redesign', () => {
         is_approved: true,
         duck_balance: 150,
         packets: 5,
-        drawer: '0xA6',
         is_online: true,
         current_activity: 'CS 1 - Intro'
     };
@@ -99,7 +98,6 @@ describe('AdminUserDashboard Component Redesign', () => {
 
         expect(screen.getByText('🦆 Ducks')).toBeInTheDocument();
         expect(screen.getByText('📦 Packets')).toBeInTheDocument();
-        expect(screen.getByText('🔒 Locker Drawer')).toBeInTheDocument();
         expect(screen.getByText('150')).toBeInTheDocument();
 
         expect(screen.getByText('5.0000')).toBeInTheDocument();
@@ -255,12 +253,11 @@ describe('AdminUserDashboard Component Redesign', () => {
             expect(screen.getByRole('link', { name: 'View public profile (opens in a new tab)' })).toBeInTheDocument();
         });
 
-        it('names the amount and drawer inputs of the economy panel', async () => {
+        it('names the amount inputs of the economy panel', async () => {
             await renderDashboard();
 
             expect(screen.getByRole('spinbutton', { name: 'Duck adjustment amount' })).toBeInTheDocument();
             expect(screen.getByRole('spinbutton', { name: 'Packet adjustment amount' })).toBeInTheDocument();
-            expect(screen.getByRole('textbox', { name: 'Locker drawer' })).toHaveValue('0xA6');
         });
 
         it('names the link search and the print button of the connections panel', async () => {

@@ -2,9 +2,9 @@ import React from 'react';
 import { TrendingUp, Users, DollarSign, UserCircle } from 'lucide-react';
 import DuckIcon from '../Icons/DuckIcon';
 
-const AdminStats = ({ stats, onEarnedWeekClick, onTotalDucksClick, onOnlineUsersClick, onTotalResidentsClick }) => {
-    const totalResidents = stats.total_users_count ?? 0;
-    const avgBalance = totalResidents ? stats.total_ducks / totalResidents : 0;
+const AdminStats = ({ stats, onEarnedWeekClick, onTotalDucksClick, onOnlineUsersClick, onTotalUsersClick }) => {
+    const totalUsers = stats.total_users_count ?? 0;
+    const avgBalance = totalUsers ? stats.total_ducks / totalUsers : 0;
 
     return (
         <div className="stats-grid">
@@ -29,11 +29,11 @@ const AdminStats = ({ stats, onEarnedWeekClick, onTotalDucksClick, onOnlineUsers
                     <span className="stat-value">🦆 {avgBalance.toFixed(1)}</span>
                 </div>
             </div>
-            <div role="button" tabIndex={0} className="stat-card clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onTotalResidentsClick}>
-                <div className="stat-icon residents"><UserCircle size={24} /></div>
+            <div role="button" tabIndex={0} className="stat-card clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onTotalUsersClick}>
+                <div className="stat-icon users"><UserCircle size={24} /></div>
                 <div className="stat-info">
-                    <span className="stat-label">Total Residents</span>
-                    <span className="stat-value">{totalResidents}</span>
+                    <span className="stat-label">Total Users</span>
+                    <span className="stat-value">{totalUsers}</span>
                 </div>
             </div>
             <div role="button" tabIndex={0} className="stat-card clickable" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onOnlineUsersClick}>
