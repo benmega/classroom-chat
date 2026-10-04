@@ -289,11 +289,23 @@ def get_student_history(student_id):
             )
 
     # 2. Challenge logs
+    if challenge_logs:
+        from application.models.challenge import Challenge
+        slugs = {log.challenge_slug for log in challenge_logs}
+        challenges = Challenge.query.filter(Challenge.slug.in_(slugs)).all()
+        slug_to_name = {c.slug: c.name for c in challenges}
+    else:
+        slug_to_name = {}
+
     for log in challenge_logs:
+        display_name = slug_to_name.get(log.challenge_slug)
+        if not display_name:
+            display_name = log.challenge_slug.replace('-', ' ').replace('_', ' ').title()
+
         events.append(
             {
                 "type": "challenge",
-                "label": f"Completed level: {log.challenge_slug} ({log.domain})",
+                "label": f"Completed level: {display_name}",
                 "timestamp": log.timestamp.isoformat(),
                 "icon": "zap",
                 "priority": 1,  # Lower priority
