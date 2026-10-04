@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ForgotPassword from './ForgotPassword';
@@ -29,7 +30,6 @@ describe('ForgotPassword', () => {
         );
 
         expect(screen.getByText('Forgot Password')).toBeInTheDocument();        
-        // Ensure email input is not visible for student
         expect(screen.queryByPlaceholderText(/email address/i)).not.toBeInTheDocument();
     });
 
@@ -146,6 +146,42 @@ describe('ForgotPassword', () => {
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('Failed to send verification code.');
+        });
+    });
+
+    describe('labels and keyboard use', () => {
+        const renderForgot = () => render(
+            <MemoryRouter initialEntries={['/forgot-password']}>
+                <ForgotPassword />
+            </MemoryRouter>
+        );
+
+        it('tells assistive technology which role is selected', () => {
+            renderForgot();
+            const student = screen.getByRole('button', { name: 'Student' });
+            const parent = screen.getByRole('button', { name: 'Parent' });
+            expect(student).toHaveAttribute('aria-pressed', 'true');
+            expect(parent).toHaveAttribute('aria-pressed', 'false');
+
+            fireEvent.click(parent);
+
+            expect(student).toHaveAttribute('aria-pressed', 'false');
+            expect(parent).toHaveAttribute('aria-pressed', 'true');
+        });
+
+        it('names the email field and reaches it with Tab after the role buttons', async () => {
+            const user = userEvent.setup();
+            renderForgot();
+            fireEvent.click(screen.getByRole('button', { name: 'Parent' }));
+
+            await user.tab();
+            expect(screen.getByRole('button', { name: 'Student' })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('button', { name: 'Parent' })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('textbox', { name: 'Email address' })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('button', { name: /Send Code/i })).toHaveFocus();
         });
     });
 });

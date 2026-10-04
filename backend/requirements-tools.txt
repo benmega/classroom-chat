@@ -1,0 +1,13 @@
+# Optional extras for the manual dev/ops scripts. The app and its tests do not
+# need these, and neither deploy.sh nor CI installs them:
+#   pip install -r requirements-tools.txt
+-r requirements.txt
+
+# reports/student_cards/generate_cards.py (printable student cards)
+# tools/generate_user_qr_codes.py (QR code images)
+reportlab
+qrcode[pil]
+
+# screenshot.py and ../scripts/capture_all_screens.py, ../scripts/capture_mobile_and_modals.py
+# (Python Playwright; run `playwright install chromium` once after installing)
+playwright

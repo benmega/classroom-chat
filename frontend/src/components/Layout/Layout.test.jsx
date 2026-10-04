@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -148,5 +148,37 @@ describe('Layout Component', () => {
         const hamburgerBtn = screen.getByLabelText(/Toggle Sidebar/i);
         await userEvent.click(hamburgerBtn);
         expect(toggleSidebar).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the nav rail mounted and shows an in-content loader while a lazy page loads', async () => {
+        useLayout.mockReturnValue({ ...defaultLayoutContext });
+
+        let resolveChunk;
+        const LazyPage = React.lazy(() => new Promise((resolve) => {
+            resolveChunk = () => resolve({ default: () => <div>Lazy Page Content</div> });
+        }));
+
+        render(
+            <MemoryRouter>
+                <Layout>
+                    <LazyPage />
+                </Layout>
+            </MemoryRouter>
+        );
+
+        // Layout chrome stays on screen; only the <main> content area shows the loader.
+        expect(screen.getByTestId('desktop-nav-rail')).toBeInTheDocument();
+        expect(screen.getByTestId('user-search')).toBeInTheDocument();
+        const loader = screen.getByRole('status', { name: 'Loading page' });
+        expect(screen.getByRole('main')).toContainElement(loader);
+        expect(screen.queryByText('Lazy Page Content')).not.toBeInTheDocument();
+
+        await act(async () => {
+            resolveChunk();
+        });
+
+        expect(screen.getByText('Lazy Page Content')).toBeInTheDocument();
+        expect(screen.queryByRole('status', { name: 'Loading page' })).not.toBeInTheDocument();
+        expect(screen.getByTestId('desktop-nav-rail')).toBeInTheDocument();
     });
 });

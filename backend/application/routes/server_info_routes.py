@@ -1,33 +1,9 @@
-"""
-File: server_info_routes.py
-Type: py
-Summary: Flask routes for server info routes functionality.
-"""
 
-import socket
 
 from application.extensions import limiter
-from flask import Blueprint, jsonify
+from flask import Blueprint
 
 server_info = Blueprint("server_info", __name__, url_prefix="/server")
-
-
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        # Non-routable IP to get preferred outbound interface
-        s.connect(("10.255.255.255", 1))
-        IP = s.getsockname()[0]
-    except Exception:
-        IP = "127.0.0.1"
-    finally:
-        s.close()
-    return IP
-
-
-@server_info.route("/ip", methods=["GET"])
-def get_ip():
-    return jsonify({"ip": get_local_ip()})
 
 
 @server_info.route("/health")

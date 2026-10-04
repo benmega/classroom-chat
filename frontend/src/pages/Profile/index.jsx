@@ -5,7 +5,6 @@ import './Profile.css';
 import '../../assets/css/sprite.css'; 
 import ContributionGraph from '../../components/profile/ContributionGraph';
 
-// New sub-components
 import ProfileHeader from '../../components/profile/ProfileHeader';
 import CourseProgress from '../../components/profile/CourseProgress';
 import CertificationsList from '../../components/profile/CertificationsList';
@@ -19,7 +18,6 @@ import PfpCropModal from '../../components/profile/PfpCropModal';
 import JoinClassroom from '../General/JoinClassroom';
 import Modal from '../../components/common/Modal';
 
-// Hooks
 import { useProfile } from '../../hooks/useProfile';
 
 const Profile = () => {
@@ -28,6 +26,8 @@ const Profile = () => {
     const {
         profileData,
         isLoading,
+        loadError,
+        retryProfile,
         selectedProject,
         setSelectedProject,
         slideshowIndex,
@@ -49,7 +49,17 @@ const Profile = () => {
 
 
     if (isLoading) return <div className="profile-loading">Loading Profile...</div>;
-    if (!profileData) return <div className="profile-error">Profile not found.</div>;
+    if (!profileData) {
+        if (loadError) {
+            return (
+                <div className="profile-error">
+                    <p>We couldn't load this profile.</p>
+                    <button type="button" className="btn-secondary" onClick={retryProfile}>Try again</button>
+                </div>
+            );
+        }
+        return <div className="profile-error">Profile not found.</div>;
+    }
 
     const { target, viewer } = profileData;
     const isTargetUser = viewer?.id === target?.id;
@@ -167,6 +177,7 @@ const Profile = () => {
                 isOpen={isJoinModalOpen}
                 onClose={() => setIsJoinModalOpen(false)}
                 title=""
+                ariaLabel="Join a classroom"
                 maxWidth="500px"
             >
                 <div style={{ padding: 'var(--spacing-md)' }}>

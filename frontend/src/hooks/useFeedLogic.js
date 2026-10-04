@@ -43,7 +43,6 @@ export const useFeedLogic = (filterClassroomId = null) => {
   const prevScrollHeight = useRef(0);
   const lastFirstMessageId = useRef(null);
 
-  // When filterClassroomId changes, reset the feed
   useEffect(() => {
     if (filterClassroomId) {
       setTargetClassrooms([filterClassroomId]);

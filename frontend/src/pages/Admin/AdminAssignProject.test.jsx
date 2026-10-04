@@ -199,4 +199,74 @@ describe('AdminAssignProject', () => {
         fireEvent.click(screen.getByText('Code Showcase'));
         expect(screen.getByPlaceholderText(/def my_awesome_logic/)).toHaveValue('code');
     });
+
+    it('shows the reason the server gives when the assignment fails', async () => {
+        client.get.mockResolvedValueOnce({
+            data: { status: 'success', data: { templates: {} } }
+        });
+
+        renderWithRouter(<AdminAssignProject />);
+
+        client.get.mockResolvedValueOnce({
+            data: { users: [{ id: 42, username: 'testuser', nickname: 'Test User' }] }
+        });
+        fireEvent.change(screen.getByPlaceholderText(/search/i), { target: { value: 'test' } });
+        await waitFor(() => {
+            fireEvent.click(screen.getByText('Test User (testuser) - #42'));
+        });
+        fireEvent.change(screen.getByPlaceholderText(/awesome game/i), { target: { value: 'Cool Project' } });
+
+        client.post.mockRejectedValueOnce({ response: { status: 400, data: { status: 'error', data: null, error: 'Invalid student selection.' } } });
+        fireEvent.submit(screen.getAllByText(/Assign Project/i)[1].closest('form'));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Invalid student selection.');
+        });
+        expect(mockNavigate).not.toHaveBeenCalled();
+    });
+
+    describe('accessible names', () => {
+        it('names the button that clears the chosen student', async () => {
+            client.get.mockResolvedValueOnce({
+                data: { status: 'success', data: { templates: {} } }
+            });
+            renderWithRouter(<AdminAssignProject />);
+            client.get.mockResolvedValueOnce({
+                data: { users: [{ id: 42, username: 'testuser', nickname: 'Test User' }] }
+            });
+            fireEvent.change(screen.getByPlaceholderText(/search/i), { target: { value: 'test' } });
+            fireEvent.click(await screen.findByText('Test User (testuser) - #42'));
+
+            const clear = screen.getByRole('button', { name: 'Clear selected student' });
+            expect(clear).toHaveAttribute('type', 'button');
+            fireEvent.click(clear);
+
+            expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
+        });
+
+        it('names the code snippet box', async () => {
+            client.get.mockResolvedValueOnce({
+                data: { status: 'success', data: { templates: {} } }
+            });
+            renderWithRouter(<AdminAssignProject />);
+
+            fireEvent.click(screen.getByText('Code Showcase'));
+
+            expect(screen.getByRole('textbox', { name: 'Code snippet' })).toBeInTheDocument();
+        });
+
+        it('gives the preview demo-link button a name and no bogus href', async () => {
+            client.get.mockResolvedValueOnce({
+                data: { status: 'success', data: { templates: { 1: { id: 1, name: 'SP', link: 'https://demo.example' } } } }
+            });
+            renderWithRouter(<AdminAssignProject />);
+            await screen.findByText('SP');
+            fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
+
+            const demo = screen.getByRole('button', { name: 'Demo link (preview)' });
+
+            expect(demo).not.toHaveAttribute('href');
+            expect(demo).toHaveAttribute('type', 'button');
+        });
+    });
 });

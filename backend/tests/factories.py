@@ -2,7 +2,6 @@
 import factory
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
-from application.models.ai_settings import AISettings
 from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
@@ -137,18 +136,10 @@ class SkillFactory(BaseFactory):
     name = factory.Sequence(lambda n: f'Skill {n}')
     user_id = factory.LazyAttribute(lambda _: UserFactory().id)  # type: ignore[attr-defined]
 
-class AISettingsFactory(BaseFactory):
-    class Meta:
-        model = AISettings
-
-    key = factory.Sequence(lambda n: f'key_{n}')
-    value = 'value'
-
 class ConfigurationFactory(BaseFactory):
     class Meta:
         model = Configuration
 
-    ai_teacher_enabled = True
     message_sending_enabled = True
     duck_multiplier = 1
 

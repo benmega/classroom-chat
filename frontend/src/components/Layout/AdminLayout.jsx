@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
     Home,
@@ -19,7 +19,9 @@ import {
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
+import useLogout from '../../hooks/useLogout';
 import client from '../../api/client';
+import ContentLoader from '../common/ContentLoader';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
@@ -27,6 +29,7 @@ const AdminLayout = ({ children }) => {
     const userRole = useAuthStore((s) => s.user?.role);
     const user = useAuthStore((s) => s.user);
     const { isSidebarOpen, setSidebarOpen } = useSidebar();
+    const handleLogout = useLogout();
     const location = useLocation();
     const [reviewCounts, setReviewCounts] = useState({
         pending_users: 0,
@@ -108,7 +111,7 @@ const AdminLayout = ({ children }) => {
                     title="Admin HQ Home"
                     aria-label="Admin HQ Home"
                 >
-                    <img src="/images/logo.ico" alt="Admin HQ Logo" />
+                    <img src="/images/logo.png" alt="Admin HQ Logo" />
                     <span className="admin-brand-text">Admin HQ</span>
                 </Link>
 
@@ -177,10 +180,7 @@ const AdminLayout = ({ children }) => {
                     <div className="admin-rail-item-container admin-logout-container">
                         <div className="admin-rail-indicator" />
                         <button
-                            onClick={async () => {
-                                await useAuthStore.getState().logout();
-                                window.location.href = '/';
-                            }}
+                            onClick={handleLogout}
                             className="admin-rail-item admin-logout-btn"
                             data-tooltip="Logout"
                             title="Logout"
@@ -207,11 +207,10 @@ const AdminLayout = ({ children }) => {
             </div>
 
             {/* Main Content Area */}
-            <main
-                key={location.pathname.startsWith('/admin/advanced-crud') ? '/admin/advanced-crud' : location.pathname}
-                className="admin-body animate-page-entry"
-            >
-                {children}
+            <main className="admin-body">
+                <Suspense fallback={<ContentLoader />}>
+                    {children}
+                </Suspense>
             </main>
         </div>
     );

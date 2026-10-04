@@ -39,7 +39,6 @@ def bulk_add_challenges():
             errors.append(f"Missing required fields for challenge: {name or 'Unknown'}")
             continue
 
-        # Check if challenge already exists
         existing = Challenge.query.filter_by(slug=slug).first()
         if existing:
             skipped_count += 1

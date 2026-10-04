@@ -1,23 +1,18 @@
 ---
 name: test-ui-desktop
-description: Automatically test the Desktop UI for bugs, and document them as Jira-style markdown files in the issues/ directory.
+description: Automatically test the Desktop UI for bugs, and file them as GitHub Issues (via the `gh` CLI).
 ---
 
 # Desktop UI Bug Testing Workflow
 
 This workflow provides the standardized procedure for finding and recording UI bugs specifically for desktop resolutions.
 
-1.  **Locate**: List the `issues/` directory to identify the last used issue ID (e.g., `iss_033`).
-2.  **Health Check**: Before starting deep exploration, ensure the `browser` subagent is available (use the `invoke_subagent` tool to start the `browser` subagent if it is not running). Then, perform a simple navigation to `http://localhost:5173/` using the `browser` subagent. 
+1.  **Locate**: Run `gh issue list --state open --limit 100` to see existing issues so you do not file duplicates.
+2.  **Health Check**: Before starting deep exploration, perform a simple navigation to `http://localhost:5173/` using `browser_subagent`. 
     - If the browser fails to return a Page ID or throws a CDP error, stop and report "Browser Environment Unstable" to the user.
-3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the `@[/login]` workflow. Summary:
-    1. Navigate to `http://localhost:8000/dev-login?role=admin` — the backend returns JSON confirming the session.
-    2. Then navigate to `http://localhost:5173/` and verify the dashboard/chat loads (not the login page).
-    - **CRITICAL**: Port **8000** is the backend. Port **5173** is the React app. They share the same session cookie.
-    - Do NOT use the standard `/login` form unless the task is explicitly about testing login behaviour.
-    - If `/dev-login` returns an error, **stop and report the failure**. Do not attempt workarounds.
-4.  **Explore**: Use the `browser` subagent to systematically navigate through the application focusing on **common user flows** (e.g., Login -> Dashboard -> Chat -> Profile).
-    - **QA Standards**: Reference [testing_and_qa.md](file:///c:/Users/Ben/AntiGravity/classroom-chat/docs/testing_and_qa.md) for the standardized audit criteria.
+3.  **Authentication**: If testing a protected route or a user flow that requires being logged in, **YOU MUST** follow the [`login` skill](../login/SKILL.md) (default: the `/dev-login` path; do not use the standard `/login` form unless the task is explicitly about testing login behaviour).
+4.  **Explore**: Use `browser_subagent` to systematically navigate through the application focusing on **common user flows** (e.g., Login -> Dashboard -> Chat -> Profile).
+    - **QA Standards**: Reference [testing_and_qa.md](../../../docs/testing_and_qa.md) for the standardized audit criteria.
     - Prioritize desktop viewports (e.g., 1440px and 1280px).
     - Focus on desktop-specific interactions: hover states, sidebar navigation, and expanded layouts.
 5.  **Audit**:
@@ -26,8 +21,8 @@ This workflow provides the standardized procedure for finding and recording UI b
     - **Visual**: Is the desktop layout balanced? Check for overlapping, clipping, or poor alignment on large screens.
     - **Aesthetics**: Does it feel premium, high-quality, and modern?
 6.  **Record**:
-    - For every bug found, create a new file in `issues/iss_NNN_description.md`.
-    - Follow the Jira-style markdown structure specified in the `UI Bug Testing` global skill.
-    - Capture screenshots and link them in the markdown.
+    - For every bug found, write the report to a temporary markdown file (Description, Requirements, Repro Steps, Verification Results) and run `gh issue create --title "<short description>" --label bug --body-file <file>`. See [issue_resolver_guide.md](../../../docs/issue_resolver_guide.md).
+    - Use `enhancement` for UX improvements and optionally `priority:high|medium|low` if those labels exist. Never use the `ai-plan` or `ai-draft` labels (they trigger AI workflows).
+    - Capture screenshots and reference their paths in the issue body (or attach them in the GitHub UI).
 7.  **Status Check**: If `npm run dev` or `python main.py` triggers an error or warning, record it in a relevant issue.
-8.  **Summary**: Provide a bulleted summary of all newly created issues and their impact levels.
+8.  **Summary**: Provide a bulleted summary of all newly created issues (with their `#` numbers and URLs) and their impact levels.

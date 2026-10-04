@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import { Loader2, LogOut } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import CameraModal from '../../components/profile/CameraModal';
@@ -26,7 +27,7 @@ const KioskUpload = () => {
                 setClassroom(res.data.classroom);
             } catch (err) {
                 console.error('Failed to fetch classroom for kiosk:', err);
-                toast.error('Failed to load classroom.');
+                toast.error(getErrorMessage(err, 'Failed to load classroom.'));
             } finally {
                 setIsLoading(false);
             }

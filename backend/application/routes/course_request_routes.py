@@ -1,13 +1,10 @@
-"""
-File: course_request_routes.py
-Type: py
-Summary: Flask routes for student course instance requests.
-"""
+
 
 from application.extensions import db
+from application.models.classroom import Classroom
 from application.models.course_instance import CourseInstance
 from application.models.course_instance_request import CourseInstanceRequest
-from application.utilities.db_helpers import get_user
+from application.utilities.db_helpers import find_user
 from flask import Blueprint, jsonify, request, session
 
 course_request_bp = Blueprint(
@@ -21,7 +18,7 @@ def submit_request():
     if not session_userid:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-    user = get_user(session_userid)
+    user = find_user(session_userid)
     if not user:
         return jsonify({"success": False, "message": "Unknown user"}), 401
 
@@ -33,7 +30,6 @@ def submit_request():
     if not course_instance_id or not url:
         return jsonify({"success": False, "message": "Missing required fields"}), 400
 
-    # Check if a request already exists for this instance
     existing = CourseInstanceRequest.query.filter_by(
         course_instance_id=course_instance_id
     ).first()
@@ -70,7 +66,7 @@ def get_pending_requests():
     if not session_userid:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-    user = get_user(session_userid)
+    user = find_user(session_userid)
     if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
@@ -80,10 +76,10 @@ def get_pending_requests():
     enriched_requests = []
     for req in requests:
         req_dict = req.to_dict()
-        student = get_user(req.student_id)
+        student = find_user(req.student_id)
         if student:
             req_dict["student_username"] = student.username
-            classrooms = [c.to_dict() for c in student.classrooms]
+            classrooms = Classroom.to_dicts(student.classrooms)
             req_dict["student_classrooms"] = classrooms
         enriched_requests.append(req_dict)
 
@@ -96,7 +92,7 @@ def approve_request(request_id):
     if not session_userid:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-    user = get_user(session_userid)
+    user = find_user(session_userid)
     if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 
@@ -147,7 +143,7 @@ def reject_request(request_id):
     if not session_userid:
         return jsonify({"success": False, "message": "Unauthorized"}), 401
 
-    user = get_user(session_userid)
+    user = find_user(session_userid)
     if not user or user.role != 'admin':
         return jsonify({"success": False, "message": "Forbidden"}), 403
 

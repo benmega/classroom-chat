@@ -7,15 +7,23 @@ Summary: Entry point for starting the Flask application.
 import os
 import sys
 
+from dotenv import load_dotenv
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Load .env before the check below so a SOCKETIO_ASYNC_MODE set only in .env
+# is honoured here as well as in application.config (which reads the same
+# variable). Importing application.config this early would pull in
+# gevent-sensitive modules before they are patched.
+load_dotenv()
+
 # Monkey patch for gevent if it's the selected async mode
-if os.getenv("SOCKETIO_ASYNC_MODE", "gevent") == "gevent":
+if (os.getenv("SOCKETIO_ASYNC_MODE") or "gevent") == "gevent":
     from gevent import monkey
 
     monkey.patch_all()
 
-from application import create_app
+from application import create_app, reloader_enabled
 from application.extensions import socketio
 
 app = create_app()
@@ -39,9 +47,8 @@ def main():
         host="0.0.0.0",
         port=port,
         log_output=True,
-        use_reloader=not is_production
-        and os.getenv("FLASK_USE_RELOADER", "True").lower() in ("true", "1", "t")
-        and not getattr(sys, "frozen", False),
+        # The same test create_app uses to leave the scheduler to the reloader's child.
+        use_reloader=reloader_enabled(),
         allow_unsafe_werkzeug=not is_production,
         debug=debug,
     )

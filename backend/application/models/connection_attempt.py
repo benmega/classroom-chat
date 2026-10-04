@@ -1,12 +1,9 @@
-"""
-File: connection_attempt.py
-Type: py
-Summary: Model to track parent connection code attempts for rate limiting.
-"""
 
-from datetime import datetime, timedelta
+
+from datetime import timedelta
 
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class ConnectionAttempt(db.Model):
@@ -17,7 +14,7 @@ class ConnectionAttempt(db.Model):
         db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
     )
     attempted_at = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False, index=True
+        db.DateTime, default=utcnow_naive, nullable=False, index=True
     )
     code_attempted = db.Column(db.String(10), nullable=False)
     success = db.Column(db.Boolean, default=False)
@@ -35,7 +32,7 @@ class ConnectionAttempt(db.Model):
         Check if parent has exceeded rate limits.
         Returns: (is_allowed, error_message)
         """
-        now = datetime.utcnow()
+        now = utcnow_naive()
 
         # 15-minute limit: 5 attempts
         fifteen_min_ago = now - timedelta(minutes=15)
@@ -62,7 +59,6 @@ class ConnectionAttempt(db.Model):
         if attempts_today >= 20:
             return False, "Daily connection limit reached. Please try again tomorrow."
 
-        # Lifetime limit: 100 attempts
         attempts_lifetime = ConnectionAttempt.query.filter_by(
             parent_id=parent_id
         ).count()

@@ -1,12 +1,39 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Plus, Users, Globe, X, MoreVertical, Trash2 } from 'lucide-react';
+import { Plus, Users, Globe, X, MoreVertical, Trash2, GripVertical } from 'lucide-react';
 import { showConfirm } from '../../utils/confirm';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import adminCache from '../../utils/adminCache';
+import { getErrorMessage } from '../../utils/apiError';
 import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import useModalA11y from '../../hooks/useModalA11y';
 import './Classes.css';
+
+// The classroom order is a per-browser preference kept in localStorage; classrooms missing from it go last.
+const applySavedOrder = (items) => {
+    try {
+        const savedOrder = localStorage.getItem('admin_classes_order');
+        if (!savedOrder) return items;
+        const idOrder = JSON.parse(savedOrder);
+        if (!Array.isArray(idOrder)) return items;
+        const map = new Map(items.map(item => [item.id, item]));
+        const sorted = [];
+        for (const id of idOrder) {
+            if (map.has(id)) {
+                sorted.push(map.get(id));
+                map.delete(id);
+            }
+        }
+        for (const item of map.values()) {
+            sorted.push(item);
+        }
+        return sorted;
+    } catch {
+        return items;
+    }
+};
 
 const LanguageSymbol = ({ language }) => {
     const lang = (language || '').toLowerCase();
@@ -35,7 +62,6 @@ const LanguageSymbol = ({ language }) => {
             </svg>
         );
     }
-    // Fallback Code icon
     return <Globe size={18} aria-hidden="true" style={{ color: 'var(--text-muted)' }} />;
 };
 
@@ -86,22 +112,79 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
 
 const Classes = () => {
     const navigate = useNavigate();
-    const [classrooms, setClassrooms] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
+    const cachedClassrooms = adminCache.get('admin_classes');
+    const [classrooms, setClassrooms] = useState(() => cachedClassrooms ? applySavedOrder(cachedClassrooms) : []);
+    const [isLoading, setIsLoading] = useState(() => !cachedClassrooms);
 
-    // Create Classroom Modal state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newId, setNewId] = useState('');
     const [newName, setNewName] = useState('');
     const [newLanguage, setNewLanguage] = useState('Python');
-    const [newUrl, setNewUrl] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const createModalRef = React.useRef(null);
+
+    // Escape closes the dialog, Tab stays inside it, and focus returns to Add Classroom afterwards
+    useModalA11y({ isOpen: isCreateModalOpen, onClose: () => setIsCreateModalOpen(false), containerRef: createModalRef });
+
+    const dragItem = useRef(null);
+    const dragOverItem = useRef(null);
+    const isDraggingRef = useRef(false);
+    const [draggedIndex, setDraggedIndex] = useState(null);
+    const [dragOverIndex, setDragOverIndex] = useState(null);
+
+
+    const handleSort = useCallback(() => {
+        const from = dragItem.current;
+        const to = dragOverItem.current;
+        dragItem.current = null;
+        dragOverItem.current = null;
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+        setTimeout(() => {
+            isDraggingRef.current = false;
+        }, 50);
+
+        if (from === null || to === null || from === to) {
+            return;
+        }
+
+        setClassrooms(prev => {
+            const items = [...prev];
+            const [movedItem] = items.splice(from, 1);
+            items.splice(to, 0, movedItem);
+            try {
+                localStorage.setItem('admin_classes_order', JSON.stringify(items.map(c => c.id)));
+            } catch (e) {
+                console.error('Failed to save classroom order to localStorage', e);
+            }
+            adminCache.invalidate('admin_classes');
+            return items;
+        });
+    }, []);
+
+    const handleMoveCard = useCallback((index, direction) => {
+        setClassrooms(prev => {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= prev.length) return prev;
+            const items = [...prev];
+            const [movedItem] = items.splice(index, 1);
+            items.splice(targetIndex, 0, movedItem);
+            try {
+                localStorage.setItem('admin_classes_order', JSON.stringify(items.map(c => c.id)));
+            } catch (e) {
+                console.error('Failed to save classroom order to localStorage', e);
+            }
+            adminCache.invalidate('admin_classes');
+            return items;
+        });
+    }, []);
 
     const fetchClassrooms = useCallback(async () => {
         try {
             const response = await client.get('/api/admin/classrooms');
-            setClassrooms(response.data.data?.classrooms || response.data.classrooms || []);
+            const fetched = response.data.data?.classrooms || response.data.classrooms || [];
+            adminCache.set('admin_classes', fetched);
+            setClassrooms(applySavedOrder(fetched));
         } catch (error) {
             console.error('Error fetching classrooms:', error);
             toast.error('Failed to load classrooms list.');
@@ -121,11 +204,12 @@ const Classes = () => {
         try {
             const res = await client.delete(`/api/admin/classrooms/${classroom.id}`);
             if (res.data.success) {
+                adminCache.invalidate('admin_classes');
                 toast.success(res.data.message || 'Classroom deleted successfully');
                 fetchClassrooms();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to delete classroom.');
+            toast.error(getErrorMessage(err, 'Failed to delete classroom.'));
         }
     };
 
@@ -141,33 +225,22 @@ const Classes = () => {
             await client.post('/api/admin/crud/classroom', {
                 id: newId.trim(),
                 name: newName.trim(),
-                language: newLanguage.trim(),
-                url: newUrl.trim() || 'https://classroom.chat'
+                language: newLanguage.trim()
             });
 
+            adminCache.invalidate('admin_classes');
             setIsCreateModalOpen(false);
             setNewId('');
             setNewName('');
             setNewLanguage('Python');
-            setNewUrl('');
             fetchClassrooms();
         } catch (error) {
             console.error('Failed to create classroom:', error);
-            toast.error(error.response?.data?.error || 'Failed to create classroom.');
+            toast.error(getErrorMessage(error, 'Failed to create classroom.'));
         } finally {
             setIsSubmitting(false);
         }
     };
-
-    const filteredClassrooms = classrooms.filter(c => {
-        const term = searchTerm.toLowerCase();
-        return (
-            c.name?.toLowerCase().includes(term) ||
-            c.id?.toLowerCase().includes(term) ||
-            c.language?.toLowerCase().includes(term)
-        );
-    });
-
 
     if (isLoading) return (
         <div data-testid="admin-classes-page" className="admin-classes-page">
@@ -194,21 +267,6 @@ const Classes = () => {
     return (
         <div data-testid="admin-classes-page" className="admin-classes-page">
             <AdminPageHeader title="Classroom Directory">
-                <div className="search-bar">
-                    <Search size={18} aria-hidden="true" />
-                    <label htmlFor="classroom-search" className="sr-only" style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 }}>
-                        Search classrooms by name, ID, or language
-                    </label>
-                    <input
-                        type="text"
-                        id="classroom-search"
-                        aria-label="Search classrooms by name, ID, or language"
-                        placeholder="Search by name, ID, or language..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-
                 <div className="header-actions-group">
                     <button
                         className="primary-btn"
@@ -220,16 +278,40 @@ const Classes = () => {
                 </div>
             </AdminPageHeader>
 
-            {/* Grid Container */}
             <div className="classes-grid-container">
 
-                {filteredClassrooms.length > 0 ? (
+                {classrooms.length > 0 ? (
                     <div className="classes-grid" aria-label="Classroom Directory Grid">
-                        {filteredClassrooms.map(c => (
+                        {classrooms.map((c, index) => (
                             <div
-                                data-testid="class-card" className="class-card"
+                                data-testid="class-card"
+                                className={`class-card ${draggedIndex === index ? 'is-dragging' : ''} ${dragOverIndex === index ? 'drag-over' : ''}`}
                                 key={c.id}
-                                onClick={() => navigate(`/admin/classes/${c.id}`)}
+                                draggable
+                                onDragStart={(e) => {
+                                    isDraggingRef.current = true;
+                                    dragItem.current = index;
+                                    setDraggedIndex(index);
+                                    if (e.dataTransfer) {
+                                        e.dataTransfer.effectAllowed = 'move';
+                                        e.dataTransfer.setData('text/plain', String(index));
+                                    }
+                                }}
+                                onDragEnter={() => {
+                                    dragOverItem.current = index;
+                                    setDragOverIndex(index);
+                                }}
+                                onDragOver={(e) => {
+                                    e.preventDefault();
+                                    if (e.dataTransfer) {
+                                        e.dataTransfer.dropEffect = 'move';
+                                    }
+                                }}
+                                onDragEnd={handleSort}
+                                onClick={() => {
+                                    if (isDraggingRef.current) return;
+                                    navigate(`/admin/classes/${c.id}`);
+                                }}
                                 role="button"
                                 tabIndex={0}
                                 onKeyDown={(e) => {
@@ -241,13 +323,39 @@ const Classes = () => {
                                 }}
                             >
                                 <div data-testid="class-card" className="class-card-header">
+                                    <div
+                                        data-testid="class-card-drag-handle"
+                                        className="class-card-drag-handle"
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`Reorder ${c.name}. Press left or right arrow to move.`}
+                                        title="Drag or use arrow keys to reorder"
+                                        onClick={(e) => e.stopPropagation()}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleMoveCard(index, -1);
+                                            } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleMoveCard(index, 1);
+                                            }
+                                        }}
+                                    >
+                                        <GripVertical size={18} />
+                                    </div>
                                     <div style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 5 }}>
                                         <ClassCardMenu classroom={c} onDelete={handleDeleteClassroom} />
                                     </div>
                                     <Link
                                         to={`/admin/classes/${c.id}`}
                                         data-testid="class-card" className="class-card-title-link"
-                                        onClick={(e) => e.stopPropagation()}
+                                        onClick={(e) => {
+                                            if (isDraggingRef.current) e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        draggable={false}
                                         aria-label={`Manage classroom ${c.name}`}
                                     >
                                         {c.name}
@@ -269,14 +377,13 @@ const Classes = () => {
                     </div>
                 ) : (
                     <div className="empty-state" style={{ padding: '2rem', textAlign: 'center', background: 'white', borderRadius: '12px', border: '1px solid var(--border-subtle, #e2e8f0)' }}>
-                        No classrooms found matching your search.
+                        No classrooms found.
                     </div>
                 )}
             </div>
 
-            {/* Create Classroom Modal */}
             {isCreateModalOpen && (
-                <div data-testid="modal-overlay" className="modal-overlay" role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
+                <div data-testid="modal-overlay" className="modal-overlay" ref={createModalRef} tabIndex={-1} role="dialog" aria-labelledby="modal-title-create-classroom" aria-modal="true">
                     <div className="modal-card">
                         <div className="modal-header">
                             <h3 id="modal-title-create-classroom">Create New Classroom</h3>
@@ -295,6 +402,7 @@ const Classes = () => {
                                 <input
                                     type="text"
                                     id="new-class-id"
+                                    data-autofocus
                                     value={newId}
                                     onChange={(e) => setNewId(e.target.value)}
                                     placeholder="e.g. PY101_SPRING"
@@ -323,17 +431,6 @@ const Classes = () => {
                                     onChange={(e) => setNewLanguage(e.target.value)}
                                     placeholder="e.g. Python, Scratch, JavaScript"
                                     required
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label htmlFor="new-class-url">Web App / Project URL (Optional)</label>
-                                <input
-                                    type="url"
-                                    id="new-class-url"
-                                    value={newUrl}
-                                    onChange={(e) => setNewUrl(e.target.value)}
-                                    placeholder="https://..."
                                 />
                             </div>
 

@@ -2,15 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import { 
     ChevronLeft, Users, Trash2, 
     Check, Plus, Settings, Globe, Link2, BookOpen, Key, Copy, Gamepad2, Code, X, UserPlus,
-    Rocket, Sparkles
+    Rocket, Sparkles, Box
 } from 'lucide-react';
 import { showConfirm } from '../../utils/confirm';
 
 const getCourseIcon = (courseName, courseId) => {
     const text = `${courseName || ''} ${courseId || ''}`.toLowerCase();
+    if (/(^|[^a-z0-9])3d|tinkercad|blender|3d-modeling/.test(text)) return <Box size={24} />;
     if (text.includes('gd') || text.includes('game')) return <Gamepad2 size={24} />;
     if (text.includes('wd') || text.includes('web')) return <Globe size={24} />;
     if (text.includes('cs') || text.includes('computer')) return <Code size={24} />;
@@ -49,17 +51,14 @@ const AdminClassDashboard = () => {
     const [activeTab, setActiveTab] = useState('stream');
     const [joinCode, setJoinCode] = useState(null);
 
-    // Connection cards & course states
     const [activeModal, setActiveModal] = useState(null);
     const [classroomCards, setClassroomCards] = useState([]);
     const [isFetchingCards, setIsFetchingCards] = useState(false);
     const [courses, setCourses] = useState([]);
     
-    // Name editing state
     const [isEditingName, setIsEditingName] = useState(false);
     const [editNameValue, setEditNameValue] = useState('');
 
-    // Sandbox Mode state
     const [isTogglingSandbox, setIsTogglingSandbox] = useState(false);
 
     const handleToggleSandbox = async () => {
@@ -78,7 +77,7 @@ const AdminClassDashboard = () => {
             }
         } catch (err) {
             console.error('Failed to toggle sandbox mode:', err);
-            toast.error(err.response?.data?.error || 'Failed to toggle sandbox mode.');
+            toast.error(getErrorMessage(err, 'Failed to toggle sandbox mode.'));
         } finally {
             setIsTogglingSandbox(false);
         }
@@ -104,7 +103,6 @@ const AdminClassDashboard = () => {
             const res = await client.get(`/api/admin/classrooms/${classId}`);
             setClassroom(res.data.classroom);
 
-            // Fetch join code
             try {
                 const codeRes = await client.get(`/api/admin/classrooms/${classId}/join-code`);
                 if (codeRes.data.status === 'success' || codeRes.data.success) {
@@ -162,7 +160,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to connect course.');
+            toast.error(getErrorMessage(err, 'Failed to connect course.'));
         } finally {
             setFormLoading(false);
         }
@@ -178,7 +176,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to disconnect course.');
+            toast.error(getErrorMessage(err, 'Failed to disconnect course.'));
         } finally {
             setFormLoading(false);
         }
@@ -220,7 +218,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update languages.');
+            toast.error(getErrorMessage(err, 'Failed to update languages.'));
         }
     };
 
@@ -241,7 +239,7 @@ const AdminClassDashboard = () => {
                 setIsEditingName(false);
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to update name.');
+            toast.error(getErrorMessage(err, 'Failed to update name.'));
         } finally {
             setFormLoading(false);
         }
@@ -256,7 +254,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to regenerate code.');
+            toast.error(getErrorMessage(err, 'Failed to regenerate code.'));
         } finally {
             setFormLoading(false);
         }
@@ -277,7 +275,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to enroll student.');
+            toast.error(getErrorMessage(err, 'Failed to enroll student.'));
         } finally {
             setFormLoading(false);
         }
@@ -295,7 +293,7 @@ const AdminClassDashboard = () => {
                 fetchClassroomDetails();
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to unenroll student.');
+            toast.error(getErrorMessage(err, 'Failed to unenroll student.'));
         } finally {
             setFormLoading(false);
         }
@@ -317,7 +315,6 @@ const AdminClassDashboard = () => {
         );
     }
 
-    // Filter roster students
     const filteredRoster = (classroom.students || []).filter(student => {
         const query = rosterSearchQuery.toLowerCase();
         return (
@@ -326,7 +323,6 @@ const AdminClassDashboard = () => {
         );
     });
 
-    // Determine students available for enrollment (excluding already enrolled)
     const enrolledIds = new Set((classroom.students || []).map(s => s.id));
     const availableStudents = allStudents.filter(s => !enrolledIds.has(s.id));
 
@@ -348,6 +344,7 @@ const AdminClassDashboard = () => {
                         <div className="name-edit-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <input
                                 type="text"
+                                aria-label="Classroom name"
                                 value={editNameValue}
                                 onChange={(e) => setEditNameValue(e.target.value)}
                                 className="name-edit-input"
@@ -365,8 +362,8 @@ const AdminClassDashboard = () => {
                                     color: 'inherit'
                                 }}
                             />
-                            <button onClick={handleUpdateName} className="btn-action-sm primary" disabled={formLoading}>
-                                <Check size={16} />
+                            <button type="button" onClick={handleUpdateName} className="btn-action-sm primary" disabled={formLoading} aria-label="Save classroom name">
+                                <Check size={16} aria-hidden="true" />
                             </button>
                         </div>
                     ) : (
@@ -407,7 +404,6 @@ const AdminClassDashboard = () => {
                 </div>
             </div>
 
-            {/* Sandbox Mode Control Banner */}
             <div className="admin-sandbox-toolbar" data-testid="admin-sandbox-banner">
                 <div className="sandbox-toolbar-status">
                     {classroom?.sandbox_active ? (
@@ -618,7 +614,12 @@ const AdminClassDashboard = () => {
                                                             <span className="name">{student.nickname || student.username}</span>
                                                             <span className="handle">@{student.username}</span>
                                                         </div>
-                                                        <span className={`status-dot ${student.is_online ? 'online' : 'offline'}`} />
+                                                        <span
+                                                            className={`status-dot ${student.is_online ? 'online' : 'offline'}`}
+                                                            role="img"
+                                                            aria-label={student.is_online ? 'Online' : 'Offline'}
+                                                            title={student.is_online ? 'Online' : 'Offline'}
+                                                        />
                                                     </div>
                                                     <button 
                                                         type="button" 

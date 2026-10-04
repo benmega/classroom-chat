@@ -1,6 +1,6 @@
 import os
 
-import fitz
+import pymupdf
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 LOCAL_MOCKUPS_DIR = os.path.join(BASE_DIR, "mockups", "Certificate_Samples")
@@ -48,10 +48,10 @@ def process_template(input_path, output_path, is_ozaria=False):
     if not os.path.exists(input_path):
         return False
 
-    doc = fitz.open(input_path)
+    doc = pymupdf.open(input_path)
     page = doc[0]
     # Ozaria name area: y=205-250; CodeCombat name area: y=190-255
-    rect = fitz.Rect(0, 205, page.rect.width, 250) if is_ozaria else fitz.Rect(0, 190, page.rect.width, 255)
+    rect = pymupdf.Rect(0, 205, page.rect.width, 250) if is_ozaria else pymupdf.Rect(0, 190, page.rect.width, 255)
 
     page.draw_rect(rect, color=(1, 1, 1), fill=(1, 1, 1))
     doc.save(output_path)

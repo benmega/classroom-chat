@@ -1,3 +1,4 @@
+# Needs Python Playwright: pip install -r backend/requirements-tools.txt && playwright install chromium
 import asyncio
 import os
 

@@ -25,9 +25,8 @@ def test_save_message_to_db_no_user(mock_get):
 @patch('application.utilities.db_helpers.User.query')
 @patch('application.utilities.db_helpers.db.session.add')
 @patch('application.utilities.db_helpers.db.session.commit')
-@patch('application.services.moderation_service.message_is_appropriate')
+@patch('application.services.moderation_service.is_appropriate')
 def test_save_message_to_db_success(mock_is_appropriate, mock_commit, mock_add, mock_query, mock_get):
-    # Setup user
     mock_user = MagicMock()
     mock_user.role = "admin"
     mock_user.has_animated_border = False
@@ -36,11 +35,9 @@ def test_save_message_to_db_success(mock_is_appropriate, mock_commit, mock_add, 
 
     mock_get.return_value = mock_user
 
-    # Setup target_live online users
     mock_online_user = MagicMock()
     mock_query.filter_by.return_value.all.return_value = [mock_online_user]
 
-    # Run with target_live=True and target_user_ids=[2]
     result = save_message_to_db(
         user_id=1,
         message="Test message",
@@ -57,3 +54,15 @@ def test_save_message_to_db_exception(mock_rollback, mock_get):
     result = save_message_to_db(1, "Test")
     assert result == {"success": False, "error": "Failed to save message"}
     mock_rollback.assert_called_once()
+
+
+@patch('application.utilities.db_helpers.db.session.get')
+@patch('application.services.moderation_service.is_appropriate', return_value=False)
+def test_save_message_to_db_rejects_message_failing_moderation(mock_is_appropriate, mock_get):
+    mock_get.return_value = MagicMock(role="student")
+
+    result = save_message_to_db(1, "some banned text")
+
+    assert result["success"] is False
+    assert "isn't allowed" in result["error"]
+    mock_is_appropriate.assert_called_once_with("some banned text")

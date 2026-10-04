@@ -1,17 +1,12 @@
-"""
-File: parent_routes.py
-Type: py
-Summary: API endpoints for parent accounts to view linked children, student report cards,
-         historical progress data, and teacher contact functionality.
-"""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.connection_attempt import ConnectionAttempt
 from application.models.user import User
+from application.utilities.helper_functions import utcnow_naive
 from flask import Blueprint, request, session
 
 parent = Blueprint("parent", __name__)
@@ -216,7 +211,7 @@ def get_student_history(student_id):
     from application.models.challenge_log import ChallengeLog
     from application.models.duck_transaction import DuckTransaction
 
-    cutoff = datetime.utcnow() - timedelta(days=30)
+    cutoff = utcnow_naive() - timedelta(days=30)
 
     # Check if student has any activity ever
     total_challenges = ChallengeLog.query.filter_by(user_id=student_id).count()
@@ -361,9 +356,13 @@ def contact_teacher():
         return {"error": "Access denied. Parent account required."}, 403
 
     data = request.json or {}
-    subject = data.get("subject", "").strip()
-    body = data.get("body", "").strip()
+    if not isinstance(data.get("subject") or "", str) or not isinstance(data.get("body") or "", str):
+        return "Subject and body must be text.", 400
+    subject = (data.get("subject") or "").strip()
+    body = (data.get("body") or "").strip()
 
+    if len(subject) > 255:
+        return "Subject is too long (max 255 characters).", 400
     if not body:
         return "Message body is required.", 400
     if len(body) > 2000:
@@ -386,10 +385,20 @@ def contact_teacher():
         + body
     )
 
-    # Use the existing Message model to create a system message visible to admins
+    # Record the message in the dedicated ParentMessage model for admin review
     from application.extensions import db as _db
     from application.models.message import Message
+    from application.models.parent_message import ParentMessage
 
+    parent_msg = ParentMessage(
+        parent_id=user_obj.id,
+        subject=subject or None,
+        body=body,
+        status="pending",
+    )
+    _db.session.add(parent_msg)
+
+    # Use the existing Message model to create a system message visible to admins
     msg = Message(
         user_id=user_obj.id,
         content=full_content,

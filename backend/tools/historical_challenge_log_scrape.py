@@ -2,6 +2,7 @@ import csv
 import os
 import re
 import time
+from pathlib import Path
 
 import requests
 
@@ -20,21 +21,70 @@ HEADERS = {
 OWNER_ID = "62d23d975dafd60025f8c520"
 
 
-FILENAME = "../instance/migration/master_challenge_log.csv"
+# Anchored on this file, so the CSV lands in backend/instance/migration
+# whatever the working directory is
+OUT_DIR = Path(__file__).resolve().parents[1] / "instance" / "migration"
+FILENAME = OUT_DIR / "master_challenge_log.csv"
+
+CSV_FIELDS = [
+    "username",
+    "domain",
+    "challenge_name",
+    "timestamp",
+    "course_id",
+    "course_instance",
+    "helper",
+]
+
+# Seconds to wait for a response before giving up on a request
+REQUEST_TIMEOUT = 30
 
 
 # 2. HELPER FUNCTIONS
 def fetch_json(url, description):
     print(f"Fetching {description}...")
     try:
-        response = requests.get(url, headers=HEADERS)
+        response = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching {description}: {e}")
-        if "response" in locals() and response.status_code == 401:
+        # e.response is None for connection errors and timeouts
+        if e.response is not None and e.response.status_code == 401:
             print("(!) AUTH ERROR: Cookie expired.")
         return []
+
+
+def append_new_rows(rows):
+    """Append rows not already in FILENAME, keyed on (username, challenge_name, timestamp).
+
+    Re-running the scraper therefore never duplicates rows. Returns the number
+    of rows added.
+    """
+    os.makedirs(OUT_DIR, exist_ok=True)
+
+    def row_key(row):
+        return (row.get("username"), row.get("challenge_name"), row.get("timestamp"))
+
+    has_content = os.path.isfile(FILENAME) and os.path.getsize(FILENAME) > 0
+    seen = set()
+    if has_content:
+        with open(FILENAME, newline="", encoding="utf-8") as f:
+            seen = {row_key(row) for row in csv.DictReader(f)}
+
+    new_rows = []
+    for row in rows:
+        if row_key(row) in seen:
+            continue
+        seen.add(row_key(row))
+        new_rows.append(row)
+
+    with open(FILENAME, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        if not has_content:
+            writer.writeheader()
+        writer.writerows(new_rows)
+    return len(new_rows)
 
 
 def build_student_map(members_data):
@@ -137,34 +187,16 @@ def main(DOMAIN, URL_LEVELS):
         # Sleep briefly to be nice to the API
         time.sleep(1)
 
-        if all_rows:
-            os.makedirs(os.path.dirname(FILENAME), exist_ok=True)
+    # Write once, after every classroom has been collected
+    if all_rows:
+        added = append_new_rows(all_rows)
 
-            fields = [
-                "username",
-                "domain",
-                "challenge_name",
-                "timestamp",
-                "course_id",
-                "course_instance",
-                "helper",
-            ]
-
-            file_exists = os.path.isfile(FILENAME)
-
-            # Open in 'a' (append) mode instead of 'w' (write)
-            with open(FILENAME, "a", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=fields)
-
-                # Only write the header if the file is brand new
-                if not file_exists:
-                    writer.writeheader()
-
-                writer.writerows(all_rows)
-
-            print(f"\nSUCCESS! Appended {len(all_rows)} rows to {FILENAME}")
-        else:
-            print("\nNo data found.")
+        print(
+            f"\nSUCCESS! Appended {added} rows to {FILENAME} "
+            f"({len(all_rows) - added} already present)"
+        )
+    else:
+        print("\nNo data found.")
 
 
 if __name__ == "__main__":

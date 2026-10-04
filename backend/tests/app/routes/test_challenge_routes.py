@@ -4,14 +4,21 @@ Type: py
 Summary: Unit tests for challenge routes Flask routes.
 """
 
+import logging
 import re
 from unittest.mock import patch
 
 import pytest
 from application import db
-from application.models.challenge import Challenge
+from application.config import (
+    BOOKMARKLET_ORIGINS,
+    DEFAULT_DEV_CORS_ORIGINS,
+    DEFAULT_PROD_CORS_ORIGINS,
+)
 from application.models.challenge_log import ChallengeLog
 from application.models.configuration import Configuration
+from application.models.duck_transaction import DuckTransaction
+from sqlalchemy.exc import IntegrityError, OperationalError
 from tests.factories import ChallengeFactory, ConfigurationFactory, CourseFactory, CourseInstanceFactory, UserFactory
 
 
@@ -179,8 +186,11 @@ def test_submit_challenge_with_helper(client, init_db):
     assert log.helper == "friend_user"
 
 
-def test_submit_challenge_with_notes(client, init_db):
-    """Test challenge submission with notes."""
+def test_submit_challenge_notes_are_accepted_and_ignored(client, init_db):
+    """Notes are accepted with a submission but not stored anywhere.
+
+    ChallengeLog has no notes column, so the claim is logged exactly as without notes.
+    """
     sample_user = UserFactory()
     ConfigurationFactory()
 
@@ -208,6 +218,13 @@ def test_submit_challenge_with_notes(client, init_db):
     )
 
     assert response.status_code == 200
+    assert response.get_json()["success"] is True
+
+    logs = ChallengeLog.query.filter_by(
+        user_id=sample_user.id, challenge_slug="dungeons-of-kithgard"
+    ).all()
+    assert len(logs) == 1
+    assert logs[0].course_instance == "456"
 
 
 def test_detect_and_handle_challenge_url_valid(init_db):
@@ -352,6 +369,10 @@ def test_extract_challenge_details_alternative_url():
 
     assert result is not None
     assert result["domain"] == "codecombat.com"
+    # The /s/<slug>/lessons/<n>/levels/<n> form carries the slug but no course parameters
+    assert result["challenge_slug"] == "python-basics"
+    assert result["course_id"] is None
+    assert result["course_instance"] is None
 
 
 def test_extract_challenge_details_no_match():
@@ -543,117 +564,6 @@ def test_update_user_ducks_case_insensitive(init_db):
     assert reward == 10
 
 
-def test_challenge_complete_challenge_method(init_db):
-    """Test Challenge model's complete_challenge method."""
-    sample_user = UserFactory()
-    challenge = ChallengeFactory(
-        slug="dungeons-of-kithgard",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True
-    )
-
-    initial_log_count = ChallengeLog.query.count()
-
-    challenge.complete_challenge(sample_user)
-
-    assert ChallengeLog.query.count() == initial_log_count + 1
-    log = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
-    assert log.challenge_slug == challenge.slug
-
-
-def test_challenge_scale_value_easy(init_db):
-    """Test scaling challenge value for easy difficulty."""
-    challenge = ChallengeFactory(
-        name="Easy Challenge",
-        slug="easy-challenge",
-        domain="codecombat.com",
-        difficulty="easy",
-        value=10,
-        is_active=True,
-    )
-
-    scaled_value = challenge.scale_value()
-    assert scaled_value == 5  # 10 * 0.5
-
-
-def test_challenge_scale_value_medium(init_db):
-    """Test scaling challenge value for medium difficulty."""
-    challenge = ChallengeFactory(
-        name="Medium Challenge",
-        slug="medium-challenge",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True,
-    )
-
-    scaled_value = challenge.scale_value()
-    assert scaled_value == 10  # 10 * 1.0
-
-
-def test_challenge_scale_value_hard(init_db):
-    """Test scaling challenge value for hard difficulty."""
-    challenge = ChallengeFactory(
-        name="Hard Challenge",
-        slug="hard-challenge",
-        domain="codecombat.com",
-        difficulty="hard",
-        value=10,
-        is_active=True,
-    )
-
-    scaled_value = challenge.scale_value()
-    assert scaled_value == 20  # 10 * 2.0
-
-
-def test_challenge_scale_value_with_multiplier(init_db):
-    """Test scaling challenge value with additional multiplier."""
-    challenge = ChallengeFactory(
-        name="Test Challenge",
-        slug="test-challenge",
-        domain="codecombat.com",
-        difficulty="hard",
-        value=10,
-        is_active=True,
-    )
-
-    scaled_value = challenge.scale_value(difficulty_multiplier=2.0)
-    assert scaled_value == 40  # 10 * 2.0 * 2.0
-
-
-def test_challenge_default_slug_listener(init_db):
-    """Test that default slug is set from name if not provided."""
-    challenge = Challenge(
-        name="Test Challenge Without Slug",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True,
-    )
-    db.session.add(challenge)
-    db.session.commit()
-
-    assert challenge.slug == "Test Challenge Without Slug"
-
-
-def test_challenge_model_repr(init_db):
-    """Test Challenge model string representation."""
-    challenge = ChallengeFactory(
-        name="Dungeons of Kithgard",
-        slug="dungeons-of-kithgard",
-        domain="codecombat.com",
-        difficulty="medium",
-        value=10,
-        is_active=True,
-    )
-    repr_str = repr(challenge)
-    assert "Challenge" in repr_str
-    assert "Dungeons of Kithgard" in repr_str
-    assert "codecombat.com" in repr_str
-
-
 def test_url_pattern_matches_various_formats():
     """Test URL pattern regex matches various URL formats."""
     from application.routes.challenge_routes import URL_PATTERN
@@ -799,3 +709,801 @@ def test_submit_challenge_triggers_achievement(client, init_db):
     # Verify UserAchievement in DB
     ua = UserAchievement.query.filter_by(user_id=sample_user.id, achievement_id=ach.id).first()
     assert ua is not None
+
+
+# ---------------------------------------------------------------------------
+# Atomic claim (log + track + reward in one transaction), double submits,
+# slug matching, input handling and error reporting
+# ---------------------------------------------------------------------------
+
+CLAIM_SLUG = "dungeons-of-kithgard"
+REWARD_PATCH = "application.routes.challenge_routes._update_user_ducks"
+CHALLENGE_LOGGER = "application.routes.challenge_routes"
+GENERIC_FAILURE = "Could not log your challenge right now. Please try again."
+
+
+def _db_error(statement="INSERT INTO challenge_logs", orig="disk I/O error"):
+    """An OperationalError whose text must never reach the client."""
+    return OperationalError(statement, {}, Exception(orig))
+
+
+def _duplicate_error():
+    return IntegrityError(
+        "INSERT INTO challenge_logs",
+        {},
+        Exception("UNIQUE constraint failed: challenge_logs.user_id"),
+    )
+
+
+def _seed_claim(slug=CLAIM_SLUG, value=10, **user_kwargs):
+    """Create a user, configuration, course, instance and one challenge."""
+    user = UserFactory(**user_kwargs)
+    ConfigurationFactory()
+    course = CourseFactory(name="CS1")
+    instance = CourseInstanceFactory(course_id=course.id, classroom_id="cls1")
+    challenge = ChallengeFactory(
+        slug=slug,
+        domain="codecombat.com",
+        value=value,
+        course_id=course.id,
+        is_active=True,
+    )
+    url = (
+        f"https://codecombat.com/play/level/{slug}"
+        f"?course={course.id}&course-instance={instance.id}"
+    )
+    return user, course, instance, challenge, url
+
+
+def _login(client, user):
+    with client.session_transaction() as sess:
+        sess["user"] = user.id
+
+
+def _claim_rows(user):
+    """(challenge logs, challenge duck transactions) persisted for the user."""
+    db.session.expire_all()
+    logs = ChallengeLog.query.filter_by(user_id=user.id).count()
+    ducks = DuckTransaction.query.filter(
+        DuckTransaction.user_id == user.id,
+        DuckTransaction.reason.like("Challenge:%"),
+    ).count()
+    return logs, ducks
+
+
+def _details(course, instance, slug=CLAIM_SLUG):
+    return {
+        "domain": "codecombat.com",
+        "challenge_slug": slug,
+        "course_id": course.id,
+        "course_instance": instance.id,
+    }
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        RuntimeError("Error updating user ducks: (sqlite3.OperationalError) secret"),
+        ValueError("Challenge not found"),
+    ],
+)
+def test_submit_challenge_duck_failure_persists_nothing_and_retry_succeeds(
+    client, init_db, error
+):
+    """A failed reward leaves no log/ducks/track change, and a retry then works."""
+    user, _, _, _, url = _seed_claim(active_track="ozaria")
+    _login(client, user)
+    initial_ducks = user.duck_balance
+
+    with patch(REWARD_PATCH, side_effect=error):
+        response = client.post("/challenge/submit", json={"url": url})
+
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body["success"] is False
+    assert "already claimed" not in body["message"]
+    assert "secret" not in body["message"]
+    assert _claim_rows(user) == (0, 0)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks
+    assert user.active_track == "ozaria"
+
+    # Retry with the failure gone: a real claim, not "already claimed"
+    response = client.post("/challenge/submit", json={"url": url})
+
+    assert response.status_code == 200
+    assert response.get_json()["success"] is True
+    assert _claim_rows(user) == (1, 1)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks + 10
+    assert user.active_track == "cs"
+
+
+def test_submit_challenge_double_submit_awards_once(client, init_db):
+    """Submitting the same claim twice only pays out the first time."""
+    user, _, _, _, url = _seed_claim()
+    _login(client, user)
+    initial_ducks = user.duck_balance
+
+    first = client.post("/challenge/submit", json={"url": url})
+    second = client.post("/challenge/submit", json={"url": url})
+
+    assert first.status_code == 200
+    assert second.status_code == 400
+    assert "already claimed" in second.get_json()["message"]
+    assert _claim_rows(user) == (1, 1)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks + 10
+
+
+def test_submit_challenge_lost_race_is_told_already_claimed(client, init_db):
+    """The loser of a double-submit race (IntegrityError on commit) gets no ducks."""
+    user, _, _, _, url = _seed_claim(active_track="ozaria")
+    _login(client, user)
+    initial_ducks = user.duck_balance
+
+    with patch.object(db.session, "commit", side_effect=_duplicate_error()):
+        response = client.post("/challenge/submit", json={"url": url})
+
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body["success"] is False
+    assert "already claimed" in body["message"]
+    assert "UNIQUE" not in body["message"]
+    assert _claim_rows(user) == (0, 0)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks
+    assert user.active_track == "ozaria"
+
+
+def test_detect_and_handle_commits_once(init_db):
+    """The log, track/activity fields and ducks share a single commit."""
+    from application.routes.challenge_routes import detect_and_handle_challenge_url
+
+    user, _, _, _, url = _seed_claim()
+
+    with patch.object(db.session, "commit", wraps=db.session.commit) as commit_spy:
+        result = detect_and_handle_challenge_url(url, user, duck_multiplier=1)
+
+    assert result["details"]["success"] is True
+    assert commit_spy.call_count == 1
+    # The ORM object used internally is not leaked to callers
+    assert "challenge" not in result["details"]
+    # Everything is really committed: a rollback now must not undo it
+    db.session.rollback()
+    assert _claim_rows(user) == (1, 1)
+
+
+def test_log_challenge_stages_without_committing(init_db):
+    """_log_challenge leaves the commit to its caller."""
+    from application.routes.challenge_routes import _log_challenge
+
+    user, course, instance, challenge, _ = _seed_claim()
+
+    result = _log_challenge(_details(course, instance), user)
+
+    assert result["success"] is True
+    assert result["challenge"].id == challenge.id
+    db.session.rollback()
+    assert _claim_rows(user) == (0, 0)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        RuntimeError("boom"),
+        ValueError("boom"),
+        _db_error("UPDATE users SET duck_balance=?", "database is locked"),
+    ],
+)
+def test_detect_and_handle_reward_failure_rolls_back_everything(init_db, error, caplog):
+    """A failing duck update rolls back the log row and the track change too."""
+    from application.routes.challenge_routes import detect_and_handle_challenge_url
+
+    user, _, _, _, url = _seed_claim(active_track="ozaria")
+    initial_ducks = user.duck_balance
+
+    with caplog.at_level(logging.ERROR, logger=CHALLENGE_LOGGER):
+        with patch(REWARD_PATCH, side_effect=error):
+            result = detect_and_handle_challenge_url(url, user, duck_multiplier=1)
+
+    assert result["handled"] is True
+    details = result["details"]
+    assert details["success"] is False
+    assert details["message"] == GENERIC_FAILURE
+    assert any(
+        r.name == CHALLENGE_LOGGER and r.exc_info and CLAIM_SLUG in r.getMessage()
+        for r in caplog.records
+    )
+    assert _claim_rows(user) == (0, 0)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks
+    assert user.active_track == "ozaria"
+
+    # A retry is a normal first claim
+    retry = detect_and_handle_challenge_url(url, user, duck_multiplier=1)
+    assert retry["details"]["success"] is True
+    assert retry["details"]["duck_reward"] == 10
+    assert _claim_rows(user) == (1, 1)
+
+
+def test_detect_and_handle_commit_failure_is_generic_and_rolled_back(init_db):
+    """A database error at commit time is not echoed and leaves nothing behind."""
+    from application.routes.challenge_routes import detect_and_handle_challenge_url
+
+    user, _, _, _, url = _seed_claim(active_track="ozaria")
+    initial_ducks = user.duck_balance
+
+    with patch.object(db.session, "commit", side_effect=_db_error()):
+        result = detect_and_handle_challenge_url(url, user, duck_multiplier=1)
+
+    details = result["details"]
+    assert details["success"] is False
+    assert details["message"] == GENERIC_FAILURE
+    assert _claim_rows(user) == (0, 0)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks
+    assert user.active_track == "ozaria"
+
+
+def test_detect_and_handle_integrity_error_reports_already_claimed(init_db):
+    """IntegrityError at commit means someone else claimed it first: no ducks."""
+    from application.routes.challenge_routes import detect_and_handle_challenge_url
+
+    user, _, _, _, url = _seed_claim()
+    initial_ducks = user.duck_balance
+
+    with patch.object(db.session, "commit", side_effect=_duplicate_error()):
+        result = detect_and_handle_challenge_url(url, user, duck_multiplier=1)
+
+    assert result["handled"] is True
+    assert result["details"]["success"] is False
+    assert "already claimed" in result["details"]["message"]
+    assert _claim_rows(user) == (0, 0)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks
+
+
+def test_log_challenge_integrity_error_on_insert_reports_already_claimed(init_db):
+    """A duplicate rejected by the database at insert time is 'already claimed'."""
+    from application.routes.challenge_routes import _log_challenge
+
+    user, course, instance, _, _ = _seed_claim()
+
+    with patch.object(db.session, "flush", side_effect=_duplicate_error()):
+        result = _log_challenge(_details(course, instance), user)
+
+    assert result["success"] is False
+    assert "already claimed" in result["message"]
+    assert "UNIQUE" not in result["message"]
+    assert _claim_rows(user) == (0, 0)
+
+
+def test_log_challenge_database_error_is_logged_not_returned(init_db, caplog):
+    """DB error text is logged server-side and never returned to the client."""
+    from application.routes.challenge_routes import _log_challenge
+
+    user, course, instance, _, _ = _seed_claim()
+    user_id = user.id
+
+    with caplog.at_level(logging.ERROR, logger=CHALLENGE_LOGGER):
+        with patch.object(db.session, "flush", side_effect=_db_error()):
+            result = _log_challenge(_details(course, instance), user)
+
+    assert result["success"] is False
+    assert result["message"] == GENERIC_FAILURE
+    records = [r for r in caplog.records if r.name == CHALLENGE_LOGGER]
+    assert records
+    assert records[0].exc_info is not None
+    assert str(user_id) in records[0].getMessage()
+    assert CLAIM_SLUG in records[0].getMessage()
+    assert _claim_rows(user) == (0, 0)
+
+
+def test_submit_challenge_unknown_slug_is_rejected(client, init_db):
+    """A real course instance but no matching Challenge is refused."""
+    user = UserFactory()
+    ConfigurationFactory()
+    course = CourseFactory()
+    instance = CourseInstanceFactory(course_id=course.id, classroom_id="cls1")
+    _login(client, user)
+    initial_ducks = user.duck_balance
+
+    url = (
+        "https://codecombat.com/play/level/does-not-exist"
+        f"?course={course.id}&course-instance={instance.id}"
+    )
+    response = client.post("/challenge/submit", json={"url": url})
+
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body["success"] is False
+    assert "Couldn't identify challenge" in body["message"]
+    assert not body["course_instance_not_found"]
+    assert _claim_rows(user) == (0, 0)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks
+
+
+@pytest.mark.parametrize("other_slug", ["a-b", "axb"])
+def test_underscore_in_slug_is_not_a_wildcard(init_db, other_slug):
+    """'_' in a URL slug must not match other characters (LIKE wildcard)."""
+    from application.routes.challenge_routes import detect_and_handle_challenge_url
+
+    user, _, _, _, url = _seed_claim(slug=other_slug)
+    url = url.replace(f"/level/{other_slug}?", "/level/a_b?")
+
+    result = detect_and_handle_challenge_url(url, user, duck_multiplier=1)
+
+    assert result["handled"] is True
+    assert result["details"]["success"] is False
+    assert "Couldn't identify challenge 'a_b'" in result["details"]["message"]
+    assert _claim_rows(user) == (0, 0)
+
+
+def test_resolve_challenge_matching_rules(init_db):
+    """Exact, case-insensitive and dash/space tolerant, never a LIKE match."""
+    from application.routes.challenge_routes import _resolve_challenge
+
+    spaced = ChallengeFactory(slug="lava lake", name="Lava Lake")
+    plain = ChallengeFactory(slug="plain-slug", name="Plain")
+    upper = ChallengeFactory(slug="Mixed-Case", name="Mixed Upper")
+    lower = ChallengeFactory(slug="mixed-case", name="Mixed Lower")
+
+    assert _resolve_challenge("lava-lake").id == spaced.id
+    assert _resolve_challenge("LAVA-LAKE").id == spaced.id
+    assert _resolve_challenge("PLAIN-slug").id == plain.id
+    # An exact-case match wins when rows differ only by case
+    assert _resolve_challenge("mixed-case").id == lower.id
+    assert _resolve_challenge("Mixed-Case").id == upper.id
+    # Otherwise the lowest id wins, so the choice is deterministic
+    assert _resolve_challenge("MIXED-CASE").id == min(upper.id, lower.id)
+    # No LIKE semantics
+    assert _resolve_challenge("plain_slug") is None
+    assert _resolve_challenge("%") is None
+    assert _resolve_challenge("pl_in-slug") is None
+    assert _resolve_challenge("") is None
+    assert _resolve_challenge(None) is None
+
+
+def test_claim_resolves_the_challenge_only_once(init_db):
+    """The validated row is the one used for the track and the reward."""
+    from application.routes import challenge_routes
+    from application.routes.challenge_routes import detect_and_handle_challenge_url
+
+    user, _, _, _, url = _seed_claim(active_track="ozaria")
+
+    with patch.object(
+        challenge_routes,
+        "_resolve_challenge",
+        wraps=challenge_routes._resolve_challenge,
+    ) as resolve_spy:
+        result = detect_and_handle_challenge_url(url, user, duck_multiplier=2)
+
+    assert result["details"]["success"] is True
+    assert result["details"]["duck_reward"] == 20
+    assert resolve_spy.call_count == 1
+    db.session.refresh(user)
+    assert user.active_track == "cs"
+
+
+def test_update_user_ducks_accepts_resolved_challenge(init_db):
+    """_update_user_ducks can take the Challenge object itself."""
+    from application.routes.challenge_routes import _update_user_ducks
+
+    user = UserFactory()
+    challenge = ChallengeFactory(slug=CLAIM_SLUG, value=7)
+
+    assert _update_user_ducks(user, challenge, duck_multiplier=2) == 14
+    db.session.commit()
+    db.session.refresh(user)
+    assert user.duck_balance == 14
+
+
+@pytest.mark.parametrize("helpers", [5, ["friend"], {"name": "friend"}, True])
+def test_submit_challenge_json_non_string_helpers_is_400(client, init_db, helpers):
+    user, _, _, _, url = _seed_claim()
+    _login(client, user)
+
+    response = client.post("/challenge/submit", json={"url": url, "helpers": helpers})
+
+    assert response.status_code == 400
+    assert response.get_json()["success"] is False
+    assert _claim_rows(user) == (0, 0)
+
+
+@pytest.mark.parametrize("notes", [5, ["note"], {"a": 1}])
+def test_submit_challenge_json_non_string_notes_is_400(client, init_db, notes):
+    user, _, _, _, url = _seed_claim()
+    _login(client, user)
+
+    response = client.post("/challenge/submit", json={"url": url, "notes": notes})
+
+    assert response.status_code == 400
+    assert response.get_json()["success"] is False
+    assert _claim_rows(user) == (0, 0)
+
+
+@pytest.mark.parametrize("helpers", [None, 0, [], ""])
+def test_submit_challenge_json_empty_helpers_still_works(client, init_db, helpers):
+    """null/empty helpers keep meaning 'no helper'."""
+    user, _, _, _, url = _seed_claim()
+    _login(client, user)
+
+    response = client.post(
+        "/challenge/submit", json={"url": url, "helpers": helpers, "notes": None}
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["success"] is True
+
+
+@pytest.mark.parametrize(
+    "url", [123, ["https://codecombat.com/play/level/x"], {"a": 1}, True]
+)
+def test_submit_challenge_json_non_string_url_is_400(client, init_db, url):
+    user, _, _, _, _ = _seed_claim()
+    _login(client, user)
+
+    response = client.post("/challenge/submit", json={"url": url})
+
+    assert response.status_code == 400
+    assert response.get_json() == {
+        "success": False,
+        "message": "Challenge URL is required",
+    }
+
+
+@pytest.mark.parametrize(
+    "body", ["[1, 2]", '"just a string"', "42", "null", "{not json", ""]
+)
+def test_submit_challenge_invalid_json_body_is_json_400(client, init_db, body):
+    user, _, _, _, _ = _seed_claim()
+    _login(client, user)
+
+    response = client.post(
+        "/challenge/submit", data=body, content_type="application/json"
+    )
+
+    assert response.status_code == 400
+    assert response.is_json
+    assert response.get_json() == {"success": False, "message": "Invalid JSON body"}
+
+
+def test_submit_challenge_unknown_user_json_returns_401(client, init_db):
+    ConfigurationFactory()
+    with client.session_transaction() as sess:
+        sess["user"] = 987654  # stale session: no such user
+
+    response = client.post(
+        "/challenge/submit",
+        json={"url": "https://codecombat.com/play/level/x?course=1"},
+    )
+
+    assert response.status_code == 401
+    assert response.get_json() == {"success": False, "message": "Unknown user"}
+
+
+def test_submit_challenge_unknown_user_form_still_redirects(client, init_db):
+    ConfigurationFactory()
+    with client.session_transaction() as sess:
+        sess["user"] = 987654
+
+    response = client.post(
+        "/challenge/submit",
+        data={"url": "https://codecombat.com/play/level/x?course=1"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    assert "/login" in response.headers["Location"]
+    with client.session_transaction() as sess:
+        assert any("Unknown user" in m for _, m in sess.get("_flashes", []))
+
+
+def test_submit_challenge_no_configuration_json_returns_503(client, init_db):
+    user = UserFactory()
+    Configuration.query.delete()
+    db.session.commit()
+    _login(client, user)
+
+    response = client.post(
+        "/challenge/submit",
+        json={"url": "https://codecombat.com/play/level/test?course=1"},
+    )
+
+    assert response.status_code == 503
+    assert response.get_json() == {
+        "success": False,
+        "message": "Configuration missing",
+    }
+
+
+@pytest.mark.parametrize(
+    "transform",
+    [
+        str.upper,
+        str.title,
+        lambda name: f"  {name}  ",
+        lambda name: f"\t{name.upper()}\n",
+    ],
+)
+def test_log_challenge_helper_self_check_ignores_case_and_whitespace(
+    init_db, transform
+):
+    from application.routes.challenge_routes import _log_challenge
+
+    user, course, instance, _, _ = _seed_claim()
+
+    result = _log_challenge(
+        _details(course, instance), user, helper=transform(user.username)
+    )
+
+    assert result["success"] is True
+    log = ChallengeLog.query.filter_by(user_id=user.id).one()
+    assert log.helper == ""
+
+
+@pytest.mark.parametrize(
+    ("helper", "expected"),
+    [
+        ("  friend_user \t", "friend_user"),
+        ("x" * 150, "x" * 100),
+        (12345, ""),
+        (None, ""),
+    ],
+)
+def test_log_challenge_helper_is_normalised(init_db, helper, expected):
+    """Direct callers get the same stripping, bounding and type safety."""
+    from application.routes.challenge_routes import _log_challenge
+
+    user, course, instance, _, _ = _seed_claim()
+
+    result = _log_challenge(_details(course, instance), user, helper=helper)
+
+    assert result["success"] is True
+    log = ChallengeLog.query.filter_by(user_id=user.id).one()
+    assert log.helper == expected
+
+
+def test_real_unique_index_duplicate_is_already_claimed_and_session_recovers(
+    client, init_db
+):
+    """A genuine IntegrityError (not a mocked one) means 'already claimed'.
+
+    The schema has no unique constraint on challenge_logs yet, so one is created
+    here on the throw-away test database only. The rival row differs by case, so
+    the duplicate check misses it but the index rejects the claim's own insert,
+    like the loser of a double-submit race.
+    """
+    from sqlalchemy import text
+
+    user, course, instance, challenge, url = _seed_claim(active_track="ozaria")
+    db.session.execute(
+        text(
+            "CREATE UNIQUE INDEX uq_test_claim ON challenge_logs "
+            "(user_id, lower(challenge_slug), course_instance)"
+        )
+    )
+    db.session.add(
+        ChallengeLog(
+            user_id=user.id,
+            domain="codecombat.com",
+            challenge_slug=challenge.slug.upper(),
+            course_id=course.id,
+            course_instance=instance.id,
+        )
+    )
+    db.session.commit()
+    _login(client, user)
+    initial_ducks = user.duck_balance
+
+    response = client.post("/challenge/submit", json={"url": url})
+
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body["success"] is False
+    assert "already claimed" in body["message"]
+    assert "UNIQUE" not in body["message"]
+    # Only the rival's row exists; the loser got no ducks and no track change
+    assert _claim_rows(user) == (1, 0)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks
+    assert user.active_track == "ozaria"
+
+    # The session recovered: a different level can still be claimed
+    other = ChallengeFactory(
+        slug="other-level",
+        domain="codecombat.com",
+        value=3,
+        course_id=course.id,
+        is_active=True,
+    )
+    other_url = url.replace(f"/level/{challenge.slug}?", f"/level/{other.slug}?")
+    response = client.post("/challenge/submit", json={"url": other_url})
+
+    assert response.status_code == 200
+    assert response.get_json()["success"] is True
+    assert _claim_rows(user) == (2, 1)
+
+
+def _helper_scenario():
+    """Create a valid course/challenge/instance and return the challenge details."""
+    course = CourseFactory()
+    course_instance = CourseInstanceFactory(course_id=course.id, classroom_id="cls1")
+    ChallengeFactory(
+        slug="case-challenge",
+        course_id=course.id,
+        domain="codecombat.com",
+        difficulty="easy",
+        value=10,
+        is_active=True,
+    )
+    return {
+        "domain": "codecombat.com",
+        "challenge_slug": "case-challenge",
+        "course_id": course.id,
+        "course_instance": course_instance.id,
+    }
+
+
+@pytest.mark.parametrize("typed", ["BEN", "Ben", "  ben  "])
+def test_log_challenge_self_helper_is_blanked_case_insensitively(init_db, typed):
+    """Typing your own username in any case/spacing must not store a helper."""
+    from application.routes.challenge_routes import _log_challenge
+    from application.services.achievement_engine import compute_user_stats
+
+    ben = UserFactory(_username="ben")
+    details = _helper_scenario()
+
+    result = _log_challenge(details, ben, helper=typed)
+
+    assert result["success"] is True
+    log = ChallengeLog.query.filter_by(user_id=ben.id).one()
+    assert log.helper == ""
+    # ...so it does not count toward his own "community" achievement
+    assert compute_user_stats(ben)["community_count"] == 0
+
+
+def test_log_challenge_other_users_helper_credits_the_helper(init_db):
+    """'Ben' typed on someone else's log counts for user 'ben'."""
+    from application.routes.challenge_routes import _log_challenge
+    from application.services.achievement_engine import compute_user_stats
+
+    ben = UserFactory(_username="ben")
+    friend = UserFactory()
+    details = _helper_scenario()
+
+    result = _log_challenge(details, friend, helper="Ben")
+
+    assert result["success"] is True
+    log = ChallengeLog.query.filter_by(user_id=friend.id).one()
+    assert log.helper == "Ben"
+    assert compute_user_stats(ben)["community_count"] == 1
+
+
+# ---------------------------------------------------------------------------
+# CORS: bookmarklet origins and the allow-list shared with the app-wide config
+# ---------------------------------------------------------------------------
+
+
+def _preflight(client, origin):
+    return client.options(
+        "/challenge/submit",
+        headers={"Origin": origin, "Access-Control-Request-Method": "POST"},
+    )
+
+
+@pytest.mark.parametrize("origin", BOOKMARKLET_ORIGINS)
+def test_challenge_submit_preflight_allows_bookmarklet_origins(client, origin):
+    """The CodeCombat/Ozaria bookmarklet posts credentialed requests from these sites."""
+    response = _preflight(client, origin)
+
+    assert response.status_code == 200
+    assert response.headers["Access-Control-Allow-Origin"] == origin
+    assert response.headers["Access-Control-Allow-Credentials"] == "true"
+
+
+def test_bookmarklet_origins_are_the_codecombat_and_ozaria_sites():
+    assert BOOKMARKLET_ORIGINS == [
+        "https://codecombat.com",
+        "https://www.codecombat.com",
+        "https://ozaria.com",
+        "https://www.ozaria.com",
+    ]
+
+
+def test_challenge_submit_preflight_allows_app_origins(client):
+    from application.routes.challenge_routes import FRONTEND_ORIGINS
+
+    for origin in FRONTEND_ORIGINS:
+        response = _preflight(client, origin)
+        assert response.headers["Access-Control-Allow-Origin"] == origin
+        assert response.headers["Access-Control-Allow-Credentials"] == "true"
+
+
+def test_challenge_submit_preflight_rejects_unknown_origin(client):
+    response = _preflight(client, "https://evil.example.com")
+
+    assert "Access-Control-Allow-Origin" not in response.headers
+
+
+def test_challenge_origins_are_app_plus_bookmarklet_origins():
+    from application.routes.challenge_routes import CHALLENGE_ORIGINS, FRONTEND_ORIGINS
+
+    assert [*FRONTEND_ORIGINS, *BOOKMARKLET_ORIGINS] == CHALLENGE_ORIGINS
+
+
+def test_frontend_origins_follow_environment(monkeypatch):
+    """Localhost origins are defaults only outside production; CORS_ORIGINS overrides both."""
+    from application.routes.challenge_routes import _frontend_origins
+
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+
+    monkeypatch.setenv("FLASK_ENV", "production")
+    assert _frontend_origins() == DEFAULT_PROD_CORS_ORIGINS
+    assert not any("localhost" in o or "127.0.0.1" in o for o in _frontend_origins())
+
+    monkeypatch.setenv("FLASK_ENV", "development")
+    assert _frontend_origins() == DEFAULT_DEV_CORS_ORIGINS
+
+    monkeypatch.setenv("FLASK_ENV", "production")
+    monkeypatch.setenv("CORS_ORIGINS", " https://a.example , https://b.example ,")
+    assert _frontend_origins() == ["https://a.example", "https://b.example"]
+
+
+# ---------------------------------------------------------------------------
+# Enrollment logging: lines go through the module logger (not the root logger),
+# so they survive the root logger no longer being forced to INFO.
+# ---------------------------------------------------------------------------
+
+
+def _enrollment_records(caplog):
+    return [r for r in caplog.records if "[Enrollment]" in r.getMessage()]
+
+
+def test_enrollment_logs_through_the_module_logger(init_db, caplog):
+    from application.routes.challenge_routes import _enroll_user_in_classroom
+    from tests.factories import ClassroomFactory
+
+    user = UserFactory()
+    classroom = ClassroomFactory()
+
+    with caplog.at_level(logging.INFO, logger=CHALLENGE_LOGGER):
+        with patch("application.socket_events.emit_classroom_enrolled"):
+            _enroll_user_in_classroom(user, classroom.id)
+
+    records = _enrollment_records(caplog)
+    assert [(r.name, r.levelno) for r in records] == [(CHALLENGE_LOGGER, logging.INFO)]
+    assert f"User {user.id} enrolled in classroom '{classroom.id}'" in records[0].getMessage()
+
+
+def test_enrollment_warns_through_the_module_logger_for_an_unknown_classroom(init_db, caplog):
+    from application.routes.challenge_routes import _enroll_user_in_classroom
+
+    user = UserFactory()
+
+    with caplog.at_level(logging.INFO, logger=CHALLENGE_LOGGER):
+        _enroll_user_in_classroom(user, "no-such-classroom")
+
+    records = _enrollment_records(caplog)
+    assert [(r.name, r.levelno) for r in records] == [(CHALLENGE_LOGGER, logging.WARNING)]
+
+
+def test_enrollment_failure_is_logged_through_the_module_logger(init_db, caplog):
+    from application.routes.challenge_routes import _enroll_user_in_classroom
+    from tests.factories import ClassroomFactory
+
+    user = UserFactory()
+    classroom = ClassroomFactory()
+
+    with caplog.at_level(logging.INFO, logger=CHALLENGE_LOGGER):
+        with patch(
+            "application.socket_events.emit_classroom_enrolled",
+            side_effect=RuntimeError("socket down"),
+        ):
+            _enroll_user_in_classroom(user, classroom.id)
+
+    failures = [r for r in _enrollment_records(caplog) if r.levelno == logging.ERROR]
+    assert [r.name for r in failures] == [CHALLENGE_LOGGER]
+    assert failures[0].exc_info

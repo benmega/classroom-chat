@@ -1,7 +1,16 @@
+from unittest.mock import patch
+
+import pytest
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.classroom import Classroom
+from application.models.duck_transaction import DuckTransaction
 from application.models.user import User
+from application.routes.admin.user_mgmt import (
+    MAX_ADMIN_ADJUSTMENT,
+    MAX_INITIAL_DUCKS,
+)
+from tests.factories import UserFactory
 
 
 def login_as_admin(client, admin_user):
@@ -53,12 +62,10 @@ def test_approve_and_reject_user(client, sample_admin, init_db):
     db.session.add_all([u1, u2])
     db.session.commit()
 
-    # Approve
     resp = client.post(f"/api/admin/approve_user/{u1.id}")
     assert resp.status_code == 200
     assert u1.is_approved is True
 
-    # Reject
     resp = client.post(f"/api/admin/reject_user/{u2.id}")
     assert resp.status_code == 200
     assert User.query.filter_by(username="rejectstudent").first() is None
@@ -69,12 +76,10 @@ def test_toggle_user_chat(client, sample_admin, sample_user):
 
     assert getattr(sample_user, "can_chat", True) is True
 
-    # Toggle to False
     resp = client.post(f"/api/admin/user/{sample_user.id}/toggle-chat")
     assert resp.status_code == 200
     assert resp.get_json()["data"]["can_chat"] is False
 
-    # Toggle to True
     resp = client.post(f"/api/admin/user/{sample_user.id}/toggle-chat")
     assert resp.status_code == 200
     assert resp.get_json()["data"]["can_chat"] is True
@@ -83,14 +88,12 @@ def test_toggle_user_chat(client, sample_admin, sample_user):
 def test_get_users_pagination_and_search(client, sample_admin, sample_user):
     login_as_admin(client, sample_admin)
 
-    # Search by username
     resp = client.get(f"/api/admin/users?search={sample_user.username}")
     assert resp.status_code == 200
     data = resp.get_json()
     assert len(data["users"]) == 1
     assert data["users"][0]["username"] == sample_user.username
 
-    # Search with no results
     resp = client.get("/api/admin/users?search=nonexistent_search_query")
     assert resp.status_code == 200
     data = resp.get_json()
@@ -129,6 +132,45 @@ def test_reset_password(client, sample_admin, sample_user):
     assert resp.status_code == 400
 
 
+def test_reset_password_accepts_a_form_post(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/reset_password",
+        data={"username": sample_user.username, "new_password": "formpassword123"},
+    )
+
+    assert resp.status_code == 200
+    assert resp.get_json()["success"] is True
+    assert db.session.get(User, sample_user.id).check_password("formpassword123")
+
+
+@pytest.mark.parametrize(
+    ("body", "content_type"),
+    [
+        ("null", "application/json"),
+        ("[1, 2]", "application/json"),
+        ("not json at all", "application/json"),
+        ("plain text", "text/plain"),
+        ("", None),
+    ],
+)
+def test_reset_password_without_a_usable_body_is_a_400(
+    client, sample_admin, body, content_type
+):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/reset_password", data=body, content_type=content_type
+    )
+
+    assert resp.status_code == 400
+    assert resp.get_json() == {
+        "success": False,
+        "message": "Username and new password required",
+    }
+
+
 def test_create_user(client, sample_admin, init_db):
     login_as_admin(client, sample_admin)
 
@@ -153,7 +195,6 @@ def test_create_user(client, sample_admin, init_db):
     )
     assert resp.status_code == 400
 
-    # Duplicate username
     resp = client.post(
         "/api/admin/create_user",
         data={"username": "newstudent", "password": "password", "ducks": 0},
@@ -162,6 +203,69 @@ def test_create_user(client, sample_admin, init_db):
 
     resp = client.post("/api/admin/create_user", data={})
     assert resp.status_code == 400
+
+
+def test_create_user_rejects_initial_ducks_above_the_cap(
+    client, sample_admin, init_db
+):
+    login_as_admin(client, sample_admin)
+
+    for index, ducks in enumerate(
+        [MAX_INITIAL_DUCKS + 1, 10**12, "9" * 400]
+    ):
+        resp = client.post(
+            "/api/admin/create_user",
+            data={"username": f"richkid{index}", "password": "password123", "ducks": ducks},
+        )
+
+        assert resp.status_code == 400
+        assert resp.get_json() == {
+            "success": False,
+            "message": f"Initial ducks must be between 0 and {MAX_INITIAL_DUCKS}",
+        }
+        assert User.query.filter_by(username=f"richkid{index}").first() is None
+
+
+def test_create_user_accepts_the_maximum_initial_ducks(client, sample_admin, init_db):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/create_user",
+        data={"username": "maxducks", "password": "password123", "ducks": MAX_INITIAL_DUCKS},
+    )
+
+    assert resp.status_code == 200
+    created = User.query.filter_by(username="maxducks").one()
+    assert created.duck_balance == MAX_INITIAL_DUCKS
+    assert created.earned_ducks == MAX_INITIAL_DUCKS
+
+
+def test_create_user_retries_when_generated_slug_collides(
+    client, sample_admin, init_db, monkeypatch
+):
+    login_as_admin(client, sample_admin)
+    UserFactory(_username="first_sam", nickname="Sam")  # slug "sam"
+    real_generate_slug = User.generate_slug
+    calls = []
+
+    def racy_generate_slug(self):
+        calls.append(1)
+        if len(calls) == 1:
+            self.slug = "sam"  # computed before the other creation committed
+            return self.slug
+        return real_generate_slug(self)
+
+    monkeypatch.setattr(User, "generate_slug", racy_generate_slug)
+
+    resp = client.post(
+        "/api/admin/create_user",
+        data={"username": "sam", "password": "password123", "ducks": 5},
+    )
+
+    assert resp.status_code == 200
+    created = User.query.filter_by(username="sam").one()
+    assert created.slug == "sam-1"
+    assert created.duck_balance == 5
 
 
 def test_remove_user(client, sample_admin, sample_user):
@@ -174,7 +278,6 @@ def test_remove_user(client, sample_admin, sample_user):
     assert resp.get_json()["success"] is True
     assert User.query.filter_by(username=sample_user.username).first() is None
 
-    # Cannot remove admin
     other_admin = User(username="otheradmin2", role="admin", password_hash="dummy")
     db.session.add(other_admin)
     db.session.commit()
@@ -187,6 +290,71 @@ def test_remove_user(client, sample_admin, sample_user):
 
     resp = client.post("/api/admin/remove_user", data={})
     assert resp.status_code == 400
+
+
+def test_remove_user_refuses_to_remove_the_logged_in_admin(
+    client, sample_admin, init_db
+):
+    login_as_admin(client, sample_admin)
+    admin_id = sample_admin.id
+
+    resp = client.post("/api/admin/remove_user", data={"username": sample_admin.username})
+
+    assert resp.status_code == 403
+    body = resp.get_json()
+    assert body["success"] is False
+    assert body["message"] == "Cannot remove another admin"
+    assert db.session.get(User, admin_id) is not None
+
+
+def test_remove_user_blocked_by_related_records_is_a_logged_409(
+    client, sample_admin, sample_user, caplog
+):
+    from unittest.mock import patch
+
+    from sqlalchemy.exc import IntegrityError
+
+    login_as_admin(client, sample_admin)
+    username = sample_user.username
+
+    with (
+        caplog.at_level("ERROR"),
+        patch(
+            "application.extensions.db.session.commit",
+            side_effect=IntegrityError("DELETE FROM users", {}, Exception("FK failed")),
+        ),
+    ):
+        resp = client.post("/api/admin/remove_user", data={"username": username})
+
+    assert resp.status_code == 409
+    assert resp.get_json() == {
+        "success": False,
+        "message": "User has related records that prevent deletion",
+    }
+    assert "remove_user blocked by related records" in caplog.text
+    assert User.query.filter_by(username=username).first() is not None
+
+
+def test_remove_user_unexpected_failure_is_logged(
+    client, sample_admin, sample_user, caplog
+):
+    from unittest.mock import patch
+
+    login_as_admin(client, sample_admin)
+    username = sample_user.username
+
+    with (
+        caplog.at_level("ERROR"),
+        patch(
+            "application.extensions.db.session.commit", side_effect=Exception("DB Error")
+        ),
+    ):
+        resp = client.post("/api/admin/remove_user", data={"username": username})
+
+    assert resp.status_code == 500
+    assert resp.get_json()["message"] == "Internal server error"
+    assert "remove_user failed" in caplog.text
+    assert User.query.filter_by(username=username).first() is not None
 
 
 def test_adjust_ducks(client, sample_admin, sample_user):
@@ -210,6 +378,99 @@ def test_adjust_ducks(client, sample_admin, sample_user):
     assert resp.status_code == 400
 
 
+BAD_ADMIN_AMOUNTS = [
+    "nan",
+    "NaN",
+    "inf",
+    "-inf",
+    "1e999",
+    "1e308",
+    "-1e308",
+    str(MAX_ADMIN_ADJUSTMENT + 0.5),
+    str(-MAX_ADMIN_ADJUSTMENT - 1),
+]
+
+
+@pytest.mark.parametrize("amount", BAD_ADMIN_AMOUNTS)
+def test_adjust_ducks_rejects_non_finite_and_oversized_amounts(
+    client, sample_admin, sample_user, amount
+):
+    login_as_admin(client, sample_admin)
+    sample_user.duck_balance = 10
+    sample_user.earned_ducks = 10
+    db.session.commit()
+
+    resp = client.post(
+        "/api/admin/adjust_ducks", data={"username": sample_user.username, "amount": amount}
+    )
+
+    assert resp.status_code == 400
+    assert resp.get_json()["success"] is False
+    user = db.session.get(User, sample_user.id)
+    assert (user.duck_balance, user.earned_ducks) == (10, 10)
+    assert DuckTransaction.query.filter_by(user_id=user.id).count() == 0
+
+
+def test_adjust_ducks_accepts_the_maximum_amount(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/adjust_ducks",
+        data={"username": sample_user.username, "amount": MAX_ADMIN_ADJUSTMENT},
+    )
+
+    assert resp.status_code == 200
+    assert db.session.get(User, sample_user.id).duck_balance == MAX_ADMIN_ADJUSTMENT
+
+
+def test_adjust_ducks_failure_is_a_generic_500_and_rolls_back(
+    client, sample_admin, sample_user
+):
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+
+    with patch.object(User, "add_ducks", side_effect=RuntimeError("secret detail")):
+        resp = client.post(
+            "/api/admin/adjust_ducks", data={"username": sample_user.username, "amount": 5}
+        )
+
+    assert resp.status_code == 500
+    assert resp.get_json() == {"success": False, "message": "Internal server error"}
+    assert db.session.get(User, user_id).duck_balance == 0
+
+
+@pytest.mark.parametrize("amount", BAD_ADMIN_AMOUNTS)
+def test_adjust_packets_rejects_non_finite_and_oversized_amounts(
+    client, sample_admin, sample_user, amount
+):
+    login_as_admin(client, sample_admin)
+    sample_user.packets = 3
+    db.session.commit()
+
+    resp = client.post(
+        "/api/admin/adjust_packets",
+        data={"username": sample_user.username, "amount": amount},
+    )
+
+    assert resp.status_code == 400
+    assert resp.get_json()["success"] is False
+    assert db.session.get(User, sample_user.id).packets == 3
+
+
+def test_adjust_packets_accepts_a_valid_amount(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+    sample_user.packets = 3
+    db.session.commit()
+
+    resp = client.post(
+        "/api/admin/adjust_packets",
+        data={"username": sample_user.username, "amount": MAX_ADMIN_ADJUSTMENT},
+    )
+
+    assert resp.status_code == 200
+    assert db.session.get(User, sample_user.id).packets == 3 + MAX_ADMIN_ADJUSTMENT
+
+
 def test_parent_linking(client, sample_admin, init_db):
     login_as_admin(client, sample_admin)
 
@@ -218,7 +479,6 @@ def test_parent_linking(client, sample_admin, init_db):
     db.session.add_all([parent, child])
     db.session.commit()
 
-    # Link parent and child
     resp = client.post(f"/api/admin/parents/{parent.id}/link/{child.id}")
     assert resp.status_code == 200
     assert child in parent.children
@@ -228,7 +488,6 @@ def test_parent_linking(client, sample_admin, init_db):
     assert len(resp.get_json()["children"]) == 1
     assert resp.get_json()["children"][0]["username"] == "childuser"
 
-    # Unlink
     resp = client.post(f"/api/admin/parents/{parent.id}/unlink/{child.id}")
     assert resp.status_code == 200
     assert child not in parent.children
@@ -262,18 +521,15 @@ def test_classrooms_and_connection_cards(client, sample_admin, sample_user, init
     db.session.add(classroom)
     db.session.commit()
 
-    # List classrooms
     resp = client.get("/api/admin/classrooms")
     assert resp.status_code == 200
     classrooms = resp.get_json()["data"]["classrooms"]
     assert any(c["id"] == "class_101" for c in classrooms)
 
-    # Classroom cards list
     resp = client.get(f"/api/admin/classrooms/{classroom.id}/connection_cards")
     assert resp.status_code == 200
     assert len(resp.get_json()["data"]["cards"]) == 1
 
-    # All cards list
     resp = client.get("/api/admin/classrooms/all/connection_cards")
     assert resp.status_code == 200
 
@@ -299,14 +555,12 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     assert resp.status_code == 200
     assert sample_user.drawer == "0x06"
 
-    # Out of range drawer
     resp = client.post(
         "/api/admin/set_drawer",
         json={"username": sample_user.username, "drawer": "0x40"},
     )
     assert resp.status_code == 400
 
-    # Conflict assigning drawer to another user
     other_student = User(username="otherstudent", role="student", password_hash="dummy")
     db.session.add(other_student)
     db.session.commit()
@@ -317,7 +571,6 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     )
     assert resp.status_code == 409
 
-    # Reassign using force=True
     resp = client.post(
         "/api/admin/set_drawer",
         json={"username": other_student.username, "drawer": "0x06", "force": True},
@@ -326,7 +579,6 @@ def test_set_drawer(client, sample_admin, sample_user, init_db):
     assert other_student.drawer == "0x06"
     assert sample_user.drawer is None
 
-    # Clear drawer
     resp = client.post(
         "/api/admin/set_drawer", json={"username": other_student.username, "drawer": ""}
     )
@@ -361,7 +613,6 @@ def test_classroom_detail_management(client, sample_admin, init_db):
     assert c.name == "Updated Classroom Name"
     assert c.language == "Scratch"
 
-    # Enroll student
     resp = client.post(
         f"/api/admin/classrooms/{c.id}/enroll", json={"student_id": student.id}
     )
@@ -374,7 +625,6 @@ def test_classroom_detail_management(client, sample_admin, init_db):
     assert len(data["students"]) == 1
     assert data["students"][0]["username"] == "testclassroomstudent"
 
-    # Unenroll student
     resp = client.post(
         f"/api/admin/classrooms/{c.id}/unenroll", json={"student_id": student.id}
     )
@@ -429,7 +679,6 @@ def test_pass_chapter_preview_and_pass_chapter(
     db.session.add(ach)
     db.session.commit()
 
-    # Call preview with frontend ID "cs-1"
     resp = client.post(
         f"/api/admin/user/{sample_user.id}/pass_chapter_preview",
         json={"course_id": "cs-1"},
@@ -441,7 +690,6 @@ def test_pass_chapter_preview_and_pass_chapter(
     assert data["preview"]["ducks_to_award"] == 15
     assert "CS1 Certificate" in data["preview"]["certificates_to_award"]
 
-    # Call pass chapter with frontend ID "cs-1"
     resp = client.post(
         f"/api/admin/user/{sample_user.id}/pass_chapter", json={"course_id": "cs-1"}
     )
@@ -456,49 +704,27 @@ def test_pass_chapter_preview_and_pass_chapter(
     ).first()
     assert cert is not None
 
+    # The override credits ducks through add_ducks: balances and the log agree.
+    db.session.refresh(sample_user)
+    assert sample_user.duck_balance == 15
+    assert sample_user.earned_ducks == 15
+    tx = DuckTransaction.query.filter_by(user_id=sample_user.id).one()
+    assert tx.amount == 15
+    assert tx.reason == "Admin Pass Chapter Override for cs-1"
+
 
 def test_student_activity_and_get_users_roles(client, sample_admin, sample_user):
     login_as_admin(client, sample_admin)
 
-    # student_activity online
     resp = client.get("/api/admin/student_activity?is_online=true")
     assert resp.status_code == 200
 
-    # get_users role filter
     resp2 = client.get("/api/admin/users?role=student")
     assert resp2.status_code == 200
 
 
 def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
     login_as_admin(client, sample_admin)
-
-    resp = client.post("/api/admin/set_username", data={})
-    assert resp.status_code == 400  # Missing arguments
-
-    resp = client.post(
-        "/api/admin/set_username",
-        data={"user_id": sample_user.id, "username": "Inval!d"},
-    )
-    assert resp.status_code == 400  # Invalid regex
-
-    resp = client.post(
-        "/api/admin/set_username", data={"user_id": 99999, "username": "validname"}
-    )
-    assert resp.status_code == 404  # Not found
-
-    # We test IntegrityError via verify_password later or set_username by mock
-
-    from application.config import TestingConfig
-
-    resp = client.post(
-        "/api/admin/verify_password",
-        data={
-            "password": TestingConfig.ADMIN_PASSWORD,
-            "username": "Inval!d",
-            "user_id": sample_user.id,
-        },
-    )
-    assert resp.status_code == 400  # Invalid format
 
     parent = User(username="parent_error", role="parent", password_hash="dummy")
     db.session.add(parent)
@@ -601,8 +827,6 @@ def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
     # Exception mocking for create/remove user
     from unittest.mock import patch
 
-    import sqlalchemy.exc
-
     with patch(
         "application.extensions.db.session.commit", side_effect=Exception("DB Error")
     ):
@@ -616,30 +840,6 @@ def test_user_mgmt_error_branches(client, sample_admin, sample_user, init_db):
             "/api/admin/remove_user", data={"username": sample_user.username}
         )
         assert resp.status_code == 500
-
-    # IntegrityError mocking for set_username
-    with patch(
-        "application.extensions.db.session.commit",
-        side_effect=sqlalchemy.exc.IntegrityError("x", "y", "z"),
-    ):
-        resp = client.post(
-            "/api/admin/set_username",
-            data={"user_id": sample_user.id, "username": "takenname"},
-        )
-        assert resp.status_code == 409
-
-        # also for verify_password
-        from application.config import TestingConfig
-
-        resp = client.post(
-            "/api/admin/verify_password",
-            data={
-                "password": TestingConfig.ADMIN_PASSWORD,
-                "username": "takenname",
-                "user_id": sample_user.id,
-            },
-        )
-        assert resp.status_code == 409
 
 
 def test_update_user_details(client, sample_admin, sample_user):
@@ -678,3 +878,59 @@ def test_update_user_details(client, sample_admin, sample_user):
     # Test not found
     resp_404 = client.put("/api/admin/user/999999", json={"nickname": "nobody"})
     assert resp_404.status_code == 404
+
+
+def test_update_user_details_rejects_taken_username(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+    other = UserFactory()
+    original = sample_user.username
+
+    resp = client.put(
+        f"/api/admin/user/{sample_user.id}", json={"username": other.username}
+    )
+
+    assert resp.status_code == 409
+    assert db.session.get(User, sample_user.id).username == original
+
+
+def test_set_drawer_conflict_keeps_its_fields_at_the_top_level(
+    client, sample_admin, sample_user, init_db
+):
+    # The drawer-conflict dialog in the admin UI reads conflict/current_owner/message
+    # straight off the response body
+    login_as_admin(client, sample_admin)
+    sample_user.role = "student"
+    other_student = User(username="drawerrival", role="student", password_hash="dummy")
+    db.session.add(other_student)
+    db.session.commit()
+    first = client.post(
+        "/api/admin/set_drawer", json={"username": sample_user.username, "drawer": "0x09"}
+    )
+    assert first.status_code == 200
+
+    resp = client.post(
+        "/api/admin/set_drawer", json={"username": other_student.username, "drawer": "0x09"}
+    )
+
+    assert resp.status_code == 409
+    body = resp.get_json()
+    assert body["conflict"] is True
+    assert body["current_owner"] == sample_user.username
+    assert body["message"] == f"Drawer 0x09 is already assigned to @{sample_user.username}."
+    # `error` stays a plain string for generic error handling
+    assert body["error"] == body["message"]
+    assert body["status"] == "error"
+    assert body["data"] is None
+
+
+def test_update_user_details_errors_are_plain_strings(client, sample_admin, sample_user):
+    login_as_admin(client, sample_admin)
+
+    missing = client.put("/api/admin/user/999999", json={"nickname": "nobody"})
+    assert missing.status_code == 404
+    assert missing.get_json()["error"] == "User not found"
+
+    invalid = client.put(f"/api/admin/user/{sample_user.id}", json={"username": "a"})
+    assert invalid.status_code == 400
+    assert isinstance(invalid.get_json()["error"], str)
+    assert "3-30 chars" in invalid.get_json()["error"]

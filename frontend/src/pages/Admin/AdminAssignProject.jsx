@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Save, LayoutTemplate, ImageIcon, Code, User, Search, XCircle, Play, CheckCircle, ExternalLink } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import SmartImage from '../../components/common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
@@ -15,7 +16,7 @@ const AdminAssignProject = () => {
     const [activeTab, setActiveTab] = useState('core');
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    // Form State
+
     const [assignForm, setAssignForm] = useState({
         name: '',
         description: '',
@@ -26,10 +27,10 @@ const AdminAssignProject = () => {
         image_url: ''
     });
 
-    // Standard Projects
+
     const [standardProjects, setStandardProjects] = useState([]);
 
-    // User Search State
+
     const [userSearchQuery, setUserSearchQuery] = useState('');
     const [userSearchResults, setUserSearchResults] = useState([]);
     const [isSearchingUsers, setIsSearchingUsers] = useState(false);
@@ -103,7 +104,7 @@ const AdminAssignProject = () => {
                 navigate('/admin/to-review');
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to assign project.');
+            toast.error(getErrorMessage(error, 'Failed to assign project.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -183,7 +184,7 @@ const AdminAssignProject = () => {
                                                     <User size={16} />
                                                     <span>{selectedUser.nickname} ({selectedUser.username}) - #{selectedUser.id}</span>
                                                 </div>
-                                                <button type="button" onClick={() => setSelectedUser(null)}><XCircle size={16}/></button>
+                                                <button type="button" onClick={() => setSelectedUser(null)} aria-label="Clear selected student"><XCircle size={16} aria-hidden="true" /></button>
                                             </div>
                                         )}
                                     </div>
@@ -297,7 +298,8 @@ const AdminAssignProject = () => {
                                 <section className="form-section code-section fade-in h-full">
                                     <p className="hint">Paste the most interesting logic or function from your project here.</p>
                                     <textarea 
-                                        name="code_snippet" 
+                                        name="code_snippet"
+                                        aria-label="Code snippet"
                                         value={assignForm.code_snippet} 
                                         onChange={handleInputChange} 
                                         className="form-control code-editor h-full"
@@ -344,7 +346,7 @@ const AdminAssignProject = () => {
                                 
                                 <div className="project-footer">
                                     {assignForm.link && (
-                                        <button type="button" href="#" className="link-icon" onClick={(e) => e.preventDefault()}><ExternalLink size={16} /></button>
+                                        <button type="button" className="link-icon" onClick={(e) => e.preventDefault()} aria-label="Demo link (preview)"><ExternalLink size={16} aria-hidden="true" /></button>
                                     )}
                                     <button className="btn-text" onClick={(e) => e.preventDefault()}>Details</button>
                                 </div>

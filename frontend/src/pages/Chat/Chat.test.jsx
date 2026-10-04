@@ -1,4 +1,5 @@
 import { screen, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Chat from './Chat';
 import { renderWithProviders } from '../../test/test-utils';
@@ -35,12 +36,10 @@ const mockSocket = {
   disconnect: vi.fn(),
 };
 
-// Mock socket.io-client so no real connections are attempted
 vi.mock('socket.io-client', () => ({
   io: vi.fn(() => mockSocket),
 }));
 
-// Mock emoji-picker-react (heavy component, not relevant to logic tests)
 vi.mock('emoji-picker-react', () => ({
   default: ({ onEmojiClick }) => (
     <div data-testid="emoji-picker">
@@ -287,7 +286,6 @@ describe('Chat Component', () => {
 
     expect(screen.getByText('test.png')).toBeInTheDocument();
     
-    // Test removing file
     const removeBtn = screen.getByText('test.png').nextSibling;
     fireEvent.click(removeBtn);
     expect(mockSetFile).toHaveBeenCalledWith(null);
@@ -412,7 +410,6 @@ describe('Chat Component', () => {
     }));
     renderWithProviders(<Chat />);
 
-    // MultiSelectDropdown renders the defaultLabel "Classes"
     expect(screen.getByText(/classes/i)).toBeInTheDocument();
   });
 
@@ -425,7 +422,6 @@ describe('Chat Component', () => {
     }));
     renderWithProviders(<Chat />);
 
-    // Only Math 101 should appear (global is filtered out)
     expect(screen.queryByText('Global')).not.toBeInTheDocument();
   });
 
@@ -579,14 +575,12 @@ describe('Chat Component', () => {
 
     renderWithProviders(<Chat filterClassroomId="cls123" />);
 
-    // Wait for initial fetch to settle
     await waitFor(() => {
       expect(client.get).toHaveBeenCalledWith('/api/classrooms/cls123/sandbox-status');
     });
 
     expect(screen.queryByText(/All Tests Passed! Sandbox Mode is Active!/i)).not.toBeInTheDocument();
 
-    // Trigger socket event
     expect(socketListeners['sandbox_status_changed']).toBeDefined();
     act(() => {
       socketListeners['sandbox_status_changed']({
@@ -664,7 +658,6 @@ describe('Chat Component', () => {
 
     expect(screen.queryByTestId('sandbox-chat-banner')).not.toBeInTheDocument();
 
-    // Trigger socket event for cls_beta
     expect(socketListeners['sandbox_status_changed']).toBeDefined();
     act(() => {
       socketListeners['sandbox_status_changed']({
@@ -681,7 +674,6 @@ describe('Chat Component', () => {
       );
     });
 
-    // Toggle off
     act(() => {
       socketListeners['sandbox_status_changed']({
         classroom_id: 'cls_beta',
@@ -691,6 +683,73 @@ describe('Chat Component', () => {
 
     await waitFor(() => {
       expect(screen.queryByTestId('sandbox-chat-banner')).not.toBeInTheDocument();
+    });
+  });
+
+  // ─── Accessibility ────────────────────────────────────────────────────────
+
+  describe('accessible names and keyboard flow', () => {
+    it('names the message box independently of its changing placeholder', () => {
+      const { unmount } = renderWithProviders(<Chat />);
+      expect(screen.getByRole('textbox', { name: 'Write a message' })).toBeInTheDocument();
+      unmount();
+
+      useFeedLogic.mockReturnValue(buildFeedLogic({ cooldown: 25 }));
+      renderWithProviders(<Chat />);
+      expect(screen.getByRole('textbox', { name: 'Write a message' })).toBeDisabled();
+    });
+
+    it('names the composer toolbar buttons', () => {
+      renderWithProviders(<Chat />);
+
+      expect(screen.getByRole('button', { name: 'Attach file' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Add emoji' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Post message' })).toBeInTheDocument();
+    });
+
+    it('exposes the emoji picker state on its toggle', () => {
+      const { unmount } = renderWithProviders(<Chat />);
+      const closed = screen.getByRole('button', { name: 'Add emoji' });
+      expect(closed).toHaveAttribute('aria-haspopup', 'dialog');
+      expect(closed).toHaveAttribute('aria-expanded', 'false');
+      unmount();
+
+      useFeedLogic.mockReturnValue(buildFeedLogic({ showEmojiPicker: true }));
+      renderWithProviders(<Chat />);
+      expect(screen.getByRole('button', { name: 'Add emoji' })).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('labels the emoji picker as a dialog once it is open', async () => {
+      useFeedLogic.mockReturnValue(buildFeedLogic({ showEmojiPicker: true }));
+      renderWithProviders(<Chat />);
+
+      expect(await screen.findByRole('dialog', { name: 'Emoji picker' })).toBeInTheDocument();
+    });
+
+    it('names the remove button of the attached file chip after the file', () => {
+      const mockSetFile = vi.fn();
+      useFeedLogic.mockReturnValue(buildFeedLogic({
+        file: new File([''], 'homework.pdf', { type: 'application/pdf' }),
+        setFile: mockSetFile,
+      }));
+      renderWithProviders(<Chat />);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Remove homework.pdf' }));
+      expect(mockSetFile).toHaveBeenCalledWith(null);
+    });
+
+    it('reaches the composer controls with the Tab key in reading order', async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<Chat />);
+
+      await user.tab();
+      expect(screen.getByRole('textbox', { name: 'Write a message' })).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole('checkbox', { name: /live/i })).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole('button', { name: 'Attach file' })).toHaveFocus();
+      await user.tab();
+      expect(screen.getByRole('button', { name: 'Add emoji' })).toHaveFocus();
     });
   });
 });

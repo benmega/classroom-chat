@@ -1,14 +1,13 @@
-"""
-File: classroom.py
-Type: py
-Summary: SQLAlchemy model for Classroom and the user_classrooms join table.
-"""
+
 
 import random
 import string
-from datetime import datetime
+
+from sqlalchemy import func, select
+from sqlalchemy import inspect as sa_inspect
 
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 # ---------------------------------------------------------------------------
 # Join table — many-to-many between users and classrooms.
@@ -33,7 +32,7 @@ user_classrooms = db.Table(
         "enrolled_at",
         db.DateTime,
         nullable=False,
-        default=datetime.utcnow,
+        default=utcnow_naive,
     ),
 )
 
@@ -52,7 +51,7 @@ class Classroom(db.Model):
     id = db.Column(db.String(64), primary_key=True)
     name = db.Column(db.String(255), nullable=False)
     language = db.Column(db.String(64), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
     join_code = db.Column(db.String(5), unique=True, nullable=True, index=True)
     sandbox_active = db.Column(db.Boolean, default=False, nullable=False)
     sandbox_activated_at = db.Column(db.DateTime, nullable=True)
@@ -65,7 +64,7 @@ class Classroom(db.Model):
         "User",
         secondary=user_classrooms,
         back_populates="classrooms",
-        lazy="selectin",
+        lazy="select",
     )
 
     def __repr__(self):
@@ -100,7 +99,7 @@ class Classroom(db.Model):
         if self.sandbox_active:
             if (
                 self.sandbox_activated_at
-                and self.sandbox_activated_at.date() < datetime.utcnow().date()
+                and self.sandbox_activated_at.date() < utcnow_naive().date()
             ):
                 self.sandbox_active = False
                 self.sandbox_activated_at = None
@@ -108,14 +107,45 @@ class Classroom(db.Model):
             return True
         return False
 
-    def to_dict(self):
+    def _enrolled_count(self):
+        """Number of enrolled users, without loading the roster just to count it."""
+        if "users" not in sa_inspect(self).unloaded:
+            return len(self.users)
+        return (
+            db.session.scalar(
+                select(func.count())
+                .select_from(user_classrooms)
+                .where(user_classrooms.c.classroom_id == self.id)
+            )
+            or 0
+        )
+
+    @classmethod
+    def to_dicts(cls, classrooms):
+        """to_dict() for each of `classrooms` with one grouped COUNT for all of them."""
+        classrooms = list(classrooms)
+        if not classrooms:
+            return []
+        counts = dict(
+            db.session.execute(
+                select(user_classrooms.c.classroom_id, func.count())
+                .where(user_classrooms.c.classroom_id.in_([c.id for c in classrooms]))
+                .group_by(user_classrooms.c.classroom_id)
+            ).all()
+        )
+        return [c.to_dict(student_count=counts.get(c.id, 0)) for c in classrooms]
+
+    def to_dict(self, student_count=None):
         # join_code is intentionally omitted; fetch it via /api/admin/classrooms/<id>/join-code
+        # List views should use to_dicts(); student_count is the batch-computed value it passes in.
         self.check_sandbox_expiry()
+        if student_count is None:
+            student_count = self._enrolled_count()
         return {
             "id": self.id,
             "name": self.name,
             "language": self.language,
-            "student_count": len(self.users) if self.users else 0,
+            "student_count": student_count,
             "sandbox_active": bool(self.sandbox_active),
             "sandbox_activated_at": self.sandbox_activated_at.isoformat()
             if self.sandbox_activated_at

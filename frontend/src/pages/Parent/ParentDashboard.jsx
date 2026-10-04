@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, MoreVertical, User, Trophy, Bell, Activity, Zap, Clock, Star, BookOpen, Folder, Award, ChevronRight, AlertCircle, Plus, UserMinus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import { showConfirm } from '../../utils/confirm';
 import { getApiUrl } from '../../utils/apiUrl';
 
 import DesktopNotice from '../../components/common/DesktopNotice';
+import useModalA11y from '../../hooks/useModalA11y';
 import './ParentDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
 
-// ── Utility: relative time ────────────────────────────────────────────────────
 const timeAgo = (isoString) => {
     if (!isoString) return null;
     const diff = Date.now() - new Date(isoString).getTime();
@@ -23,13 +24,11 @@ const timeAgo = (isoString) => {
     return `${days}d ago`;
 };
 
-// ── Helper: is within N hours? ────────────────────────────────────────────────
 const isWithinHours = (isoString, hours) => {
     if (!isoString) return false;
     return Date.now() - new Date(isoString).getTime() < hours * 3600000;
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
 const ParentDashboard = () => {
     const navigate = useNavigate();
     const [children, setChildren] = useState([]);
@@ -39,13 +38,13 @@ const ParentDashboard = () => {
     const [connectError, setConnectError] = useState(null);
     const [isConnecting, setIsConnecting] = useState(false);
     const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+    const linkDialogRef = useRef(null);
+    const linkTitleId = useId();
 
-    // Per-child report and history data
     const [childReports, setChildReports] = useState({});
     const [childHistories, setChildHistories] = useState({});
     const [reportsLoading, setReportsLoading] = useState(false);
 
-    // ── Data Fetching ──────────────────────────────────────────────────────────
     const fetchChildren = useCallback(async () => {
         try {
             const response = await client.get(`/api/parents/children?t=${new Date().getTime()}`);
@@ -53,7 +52,7 @@ const ParentDashboard = () => {
             setChildren(list);
             return list;
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to load children');
+            toast.error(getErrorMessage(err, 'Failed to load children'));
             return [];
         } finally {
             setIsLoading(false);
@@ -101,6 +100,25 @@ const ParentDashboard = () => {
         });
     }, [fetchChildren, fetchChildReports]);
 
+    // Close the open child menu on a press anywhere outside it, or on Escape.
+    useEffect(() => {
+        if (openMenu === null) return undefined;
+        const handleMouseDown = (e) => {
+            if (!e.target.closest?.('.child-card-menu')) setOpenMenu(null);
+        };
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setOpenMenu(null);
+        };
+        document.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('mousedown', handleMouseDown);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [openMenu]);
+
+    useModalA11y({ isOpen: isLinkModalOpen, onClose: () => setIsLinkModalOpen(false), containerRef: linkDialogRef });
+
     // ── Connect child ──────────────────────────────────────────────────────────
     const handleConnectChild = async (e) => {
         e.preventDefault();
@@ -114,7 +132,7 @@ const ParentDashboard = () => {
             const list = await fetchChildren();
             if (list.length > 0) fetchChildReports(list);
         } catch (err) {
-            const msg = err.response?.data?.error || 'Failed to connect. Invalid code?';
+            const msg = getErrorMessage(err, 'Failed to connect. Invalid code?');
             setConnectError(msg);
             toast.error(msg);
         } finally {
@@ -122,7 +140,6 @@ const ParentDashboard = () => {
         }
     };
 
-    // ── Disconnect child ───────────────────────────────────────────────────────
     const handleDisconnect = async (childId, childName) => {
         if (!await showConfirm(`Remove ${childName}?`, { title: 'Remove Child', destructive: true })) return;
         try {
@@ -131,11 +148,10 @@ const ParentDashboard = () => {
             const list = await fetchChildren();
             if (list.length > 0) fetchChildReports(list);
         } catch (err) {
-            toast.error(err.response?.data?.error || 'Failed to disconnect');
+            toast.error(getErrorMessage(err, 'Failed to disconnect'));
         }
     };
 
-    // ── Merge and Prioritize Activity across all children ──────────────────────
     const mergedActivityFeed = useMemo(() => {
         const events = [];
         children.forEach((child) => {
@@ -163,7 +179,6 @@ const ParentDashboard = () => {
             .slice(0, 10);
     }, [children, childHistories]);
 
-    // ── Loading skeleton ───────────────────────────────────────────────────────
     if (isLoading) {
         return (
             <div className="parent-dashboard parent-loading animate-page-entry p-2rem">
@@ -190,60 +205,77 @@ const ParentDashboard = () => {
     if (children.length === 0 && !isLoading) {
         return (
             <div className="parent-dashboard animate-page-entry">
-                <div className="parent-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
-                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', maxWidth: '420px', width: '100%' }}>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>👋</div>
-                        <h2 style={{ marginBottom: '0.5rem', fontSize: '1.3rem' }}>Welcome to the Parent Portal</h2>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                            Link your child's account to start tracking their progress.
-                        </p>
+                <div className="parent-body parent-empty-body">
+                    <div className="glass-panel parent-empty">
+                        {/* Intro + value proposition: stacks above the connect panel on narrow screens, sits beside it on wide ones. */}
+                        <section className="parent-empty__intro" aria-labelledby="parent-empty-title">
+                            <div className="parent-empty__emoji" aria-hidden="true">👋</div>
+                            <h2 id="parent-empty-title" className="parent-empty__title">Welcome to the Parent Portal</h2>
+                            <p className="parent-empty__lead">
+                                Link your child's account to start tracking their progress.
+                            </p>
 
-                        <div style={{
-                            background: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-subtle)',
-                            borderRadius: '10px',
-                            padding: '1rem 1.25rem',
-                            marginBottom: '1.5rem',
-                            textAlign: 'left',
-                            fontSize: '0.85rem',
-                            lineHeight: 1.6,
-                            color: 'var(--text-secondary)',
-                        }}>
-                            <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.4rem' }}>How to get a connection code:</strong>
-                            <ol style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                            <ul className="parent-empty__features">
+                                <li className="parent-empty__feature">
+                                    <span className="parent-empty__feature-icon" aria-hidden="true"><Activity size={18} /></span>
+                                    <span>
+                                        <strong>Activity at a glance</strong>
+                                        <span className="parent-empty__feature-desc">See what they've been working on over the last 30 days.</span>
+                                    </span>
+                                </li>
+                                <li className="parent-empty__feature">
+                                    <span className="parent-empty__feature-icon" aria-hidden="true"><Trophy size={18} /></span>
+                                    <span>
+                                        <strong>Achievements &amp; challenges</strong>
+                                        <span className="parent-empty__feature-desc">Celebrate milestones as they earn them.</span>
+                                    </span>
+                                </li>
+                                <li className="parent-empty__feature">
+                                    <span className="parent-empty__feature-icon" aria-hidden="true"><Folder size={18} /></span>
+                                    <span>
+                                        <strong>Projects &amp; teacher notes</strong>
+                                        <span className="parent-empty__feature-desc">Browse their creations and feedback from class.</span>
+                                    </span>
+                                </li>
+                            </ul>
+                        </section>
+
+                        <section className="parent-empty__connect" aria-labelledby="parent-empty-connect-title">
+                            <h3 id="parent-empty-connect-title" className="parent-empty__connect-title">How to get a connection code</h3>
+                            <ol className="parent-empty__steps">
                                 <li>Ask your child to open the app and go to <strong>Settings</strong>.</li>
                                 <li>They'll see a <strong>Pairing Code</strong> — have them share it with you.</li>
                                 <li>Enter that code below to link their account.</li>
                             </ol>
-                        </div>
 
-                        <form onSubmit={handleConnectChild} className="connect-form d-flex flex-col gap-md">
-                            <input
-                                type="text"
-                                placeholder="Enter code"
-                                value={connectCode}
-                                onChange={(e) => setConnectCode(e.target.value)}
-                                maxLength={10}
-                                className="connect-input"
-                                style={{ padding: '0.75rem', fontSize: '1.1rem', textAlign: 'center', letterSpacing: '2px', textTransform: 'uppercase' }}
-                                aria-label="Connection code"
-                                // eslint-disable-next-line jsx-a11y/no-autofocus
-                                autoFocus
-                            />
-                            <button
-                                type="submit"
-                                className="btn-premium"
-                                disabled={isConnecting || !connectCode.trim()}
-                                style={{ width: '100%', justifyContent: 'center' }}
-                            >
-                                {isConnecting ? 'Linking...' : 'Link Child'}
-                            </button>
-                            {connectError && (
-                                <div style={{ fontSize: '0.75rem', color: 'var(--error-color)', marginTop: '0.25rem' }}>
-                                    {connectError}
-                                </div>
-                            )}
-                        </form>
+                            <form onSubmit={handleConnectChild} className="connect-form">
+                                <input
+                                    type="text"
+                                    placeholder="Enter code"
+                                    value={connectCode}
+                                    onChange={(e) => setConnectCode(e.target.value)}
+                                    maxLength={10}
+                                    className="connect-input parent-empty__input"
+                                    aria-label="Connection code"
+                                    aria-invalid={connectError ? 'true' : undefined}
+                                    aria-describedby={connectError ? 'parent-empty-connect-error' : undefined}
+                                    // eslint-disable-next-line jsx-a11y/no-autofocus
+                                    autoFocus
+                                />
+                                <button
+                                    type="submit"
+                                    className="btn-premium connect-submit-btn"
+                                    disabled={isConnecting || !connectCode.trim()}
+                                >
+                                    {isConnecting ? 'Linking...' : 'Link Child'}
+                                </button>
+                                {connectError && (
+                                    <div id="parent-empty-connect-error" className="connect-error-msg">
+                                        {connectError}
+                                    </div>
+                                )}
+                            </form>
+                        </section>
                     </div>
                 </div>
             </div>
@@ -251,14 +283,12 @@ const ParentDashboard = () => {
     }
 
     return (
-        <div role="button" tabIndex={0} className="parent-dashboard animate-page-entry" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setOpenMenu(null)}>
+        <div className="parent-dashboard animate-page-entry">
             <div className="parent-body">
                 
 
-                {/* Cohesive Dashboard Layout */}
                 <div className="dashboard-layout parent-dashboard-layout">
                     
-                    {/* Left Column: Cohesive Activity Feed */}
                     <div className="left-column">
                         <section className="dashboard-panel dashboard-panel-styled">
                             <div className="panel-header-styled">
@@ -294,22 +324,20 @@ const ParentDashboard = () => {
                                                     cursor: 'pointer'
                                                 }}
                                             >
-                                                {/* Child Avatar indicator */}
                                                 <div className="pos-rel d-flex align-center">
                                                     {event.childAvatar && !event.childAvatar.includes('Default_pfp.jpg') ? (
                                                         <img
                                                             src={getApiUrl(event.childAvatar)}
                                                             alt={event.childName}
-                                                            className="w-24px h-24px radius-50 object-cover"
+                                                            style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }}
                                                         />
                                                     ) : (
-                                                        <div className="child-avatar-initials w-24px h-24px m-0 text-0-7rem">
+                                                        <div className="child-avatar-initials" style={{ width: '24px', height: '24px', margin: 0, fontSize: '0.7rem' }}>
                                                             <User size={14} />
                                                         </div>
                                                     )}
                                                 </div>
 
-                                                {/* Event Info */}
                                                 <div className="flex-1 min-w-0" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
                                                     <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: '0.85rem' }}>
                                                         <span className="fw-bold text-primary">{event.childName}</span>
@@ -324,7 +352,6 @@ const ParentDashboard = () => {
                                     })}
                                 </div>
                             ) : (
-                                /* Encouragement section if there's no activity */
                                 <div className="d-flex flex-col gap-1-25rem">
                                     {children.map((child) => {
                                         const history = childHistories[child.id];
@@ -365,10 +392,8 @@ const ParentDashboard = () => {
                         </section>
                     </div>
 
-                    {/* Right Column: Family List */}
                     <div className="right-column d-flex flex-col gap-1-5rem">
                         
-                        {/* Children List */}
                         <section className="dashboard-panel dashboard-panel-styled-small">
                             <div className="panel-header-styled-small">
                                 <h3 className="panel-title-small">
@@ -405,7 +430,8 @@ const ParentDashboard = () => {
                                     return (
                                         <div role="button" tabIndex={0} 
                                             key={child.id} 
-                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/parent/report/${child.id}`)}
+                                            // Only the card itself opens the report: Enter/Space on the options button inside it must reach that button.
+                                            onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate(`/parent/report/${child.id}`)}
                                             style={{ 
                                                 display: 'flex', 
                                                 alignItems: 'center', 
@@ -439,7 +465,8 @@ const ParentDashboard = () => {
                                             </div>
 
                                             {/* Options Menu Only (No Duck Balance) */}
-                                            <div role="button" tabIndex={0} className="d-flex align-center" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => e.stopPropagation()}>
+                                            {/* Keeps clicks inside the menu from also opening the child's report card. */}
+                                            <div role="presentation" className="d-flex align-center" onClick={(e) => e.stopPropagation()}>
                                                 <div className="child-card-menu pos-rel top-auto right-auto">
                                                     <button
                                                         type="button"
@@ -479,9 +506,8 @@ const ParentDashboard = () => {
                 </div>
             </div>
 
-            {/* Link Another Child Modal */}
             {isLinkModalOpen && (
-                <div role="button" tabIndex={0} 
+                <div role="presentation"
                     style={{
                         position: 'fixed',
                         inset: 0,
@@ -493,9 +519,9 @@ const ParentDashboard = () => {
                         zIndex: 1000,
                         animation: 'fadeIn 0.25s ease'
                     }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setIsLinkModalOpen(false)}
+                    onClick={(e) => { if (e.target === e.currentTarget) setIsLinkModalOpen(false); }}
                 >
-                    <div role="button" tabIndex={0} 
+                    <div ref={linkDialogRef} role="dialog" aria-modal="true" aria-labelledby={linkTitleId} tabIndex={-1}
                         className="glass-panel"
                         style={{
                             width: '90%',
@@ -506,9 +532,8 @@ const ParentDashboard = () => {
                             boxShadow: 'var(--shadow-xl)',
                             position: 'relative'
                         }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 style={{ fontSize: '1.2rem', margin: '0 0 0.5rem 0', fontWeight: '700' }}>Link Another Child</h3>
+                        <h3 id={linkTitleId} style={{ fontSize: '1.2rem', margin: '0 0 0.5rem 0', fontWeight: '700' }}>Link Another Child</h3>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 1.25rem 0', lineHeight: 1.4 }}>
                             Enter the 6-character connection code to link another student.
                         </p>

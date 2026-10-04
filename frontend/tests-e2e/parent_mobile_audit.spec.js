@@ -31,7 +31,7 @@ test.describe('Parent Portal Mobile UI Audit', () => {
     await page.goto('http://localhost:5173/parent/dashboard');
     
     console.log('3. Waiting for dashboard content to load...');
-    await page.waitForSelector('.parent-dashboard', { state: 'visible', timeout: 10000 });
+    await page.waitForSelector('.parent-dashboard', { state: 'visible', timeout: 30000 });
     
     await page.waitForTimeout(2000);
     

@@ -19,7 +19,6 @@ def test_send_admin_email(mock_config, mock_boto3_client):
     mock_client_instance = MagicMock()
     mock_boto3_client.return_value = mock_client_instance
 
-    # Temporarily remove env vars that might interfere
     with patch.dict(os.environ, {}, clear=True):
         send_admin_email("Test Admin Subject", "Test Admin Body")
 

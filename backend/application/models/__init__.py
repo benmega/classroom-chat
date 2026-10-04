@@ -26,6 +26,7 @@ def setup_models():
     from .level_game import LevelGame
     from .message import Message
     from .note import Note
+    from .parent_message import ParentMessage
     from .parent_student import parent_students
     from .project import Project
     from .project_template import ProjectTemplate

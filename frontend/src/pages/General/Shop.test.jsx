@@ -6,8 +6,12 @@ import { server } from '../../test/mocks/server';
 import { http, HttpResponse } from 'msw';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
+import { loadCropper } from '../../utils/loadCropper';
 
-// Mock react-hot-toast
+vi.mock('../../utils/loadCropper', () => ({
+  loadCropper: vi.fn(),
+}));
+
 vi.mock('react-hot-toast', () => ({
   default: {
     success: vi.fn(),
@@ -17,8 +21,24 @@ vi.mock('react-hot-toast', () => ({
 
 const mockCheckAuth = vi.fn().mockResolvedValue();
 
+// Stand-in for Cropper.js: records how the wallpaper cropper is built.
+const croppers = [];
+class FakeCropper {
+  constructor(element, options) {
+    this.element = element;
+    this.options = options;
+    this.destroy = vi.fn();
+    this.getCroppedCanvas = vi.fn(() => ({
+      toBlob: (callback) => callback(new Blob(['jpeg'], { type: 'image/jpeg' })),
+    }));
+    croppers.push(this);
+  }
+}
+
 describe('Shop', () => {
   beforeEach(() => {
+    croppers.length = 0;
+    loadCropper.mockResolvedValue(FakeCropper);
     useAuthStore.setState({
       user: {
         id: 1,
@@ -77,7 +97,6 @@ describe('Shop', () => {
     const purchaseButtons = screen.getAllByText('10.000 Packets');
     expect(purchaseButtons.length).toBeGreaterThan(0);
     
-    // Click purchase button
     fireEvent.click(purchaseButtons[0]);
 
     await waitFor(() => {
@@ -157,6 +176,18 @@ describe('Shop', () => {
     });
   });
 
+  it('names the red, green and blue border colour controls', async () => {
+    renderWithProviders(<Shop />);
+    await waitFor(() => {
+      expect(screen.getByText('RGB Color:')).toBeInTheDocument();
+    });
+
+    ['Red', 'Green', 'Blue'].forEach((label) => {
+      expect(screen.getByRole('slider', { name: `${label} channel` })).toBeInTheDocument();
+      expect(screen.getByRole('spinbutton', { name: `${label} channel value` })).toBeInTheDocument();
+    });
+  });
+
   it('handles wallpaper upload (clicking the button)', async () => {
     renderWithProviders(<Shop />);
 
@@ -175,5 +206,94 @@ describe('Shop', () => {
     expect(screen.queryByText(/Upload Wallpaper/i)).toBeInTheDocument();
   });
 
+  describe('Claim Ducks bookmarklet', () => {
+    afterEach(() => vi.unstubAllEnvs());
 
+    const bookmarkletHref = async () => {
+      renderWithProviders(<Shop />);
+      const link = await screen.findByText('Claim Ducks');
+      return link.getAttribute('href');
+    };
+
+    it('submits to this page origin when VITE_API_URL is unset', async () => {
+      vi.stubEnv('VITE_API_URL', '');
+      expect(await bookmarkletHref()).toContain(`'${window.location.origin}/challenge/submit?url='`);
+    });
+
+    it('submits to the configured API origin, without doubling the slash', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com/');
+      expect(await bookmarkletHref()).toContain("'https://api.example.com/challenge/submit?url='");
+    });
+  });
+
+  describe('wallpaper cropping', () => {
+    const chooseWallpaper = async () => {
+      renderWithProviders(<Shop />);
+      await waitFor(() => {
+        expect(screen.queryByText(/Upload Wallpaper/i)).toBeInTheDocument();
+      });
+      const file = new File(['hello'], 'hello.png', { type: 'image/png' });
+      const input = document.querySelector('input[type="file"]');
+      await act(async () => {
+        fireEvent.change(input, { target: { files: [file] } });
+      });
+      await waitFor(() => expect(screen.getByText('Adjust Wallpaper')).toBeInTheDocument());
+    };
+
+    it('builds the 4:1 cropper through the shared loader', async () => {
+      await chooseWallpaper();
+
+      await waitFor(() => expect(croppers).toHaveLength(1));
+      expect(loadCropper).toHaveBeenCalledTimes(1);
+      expect(croppers[0].element).toBe(screen.getByAltText('To crop'));
+      expect(croppers[0].options).toMatchObject({ aspectRatio: 4, minCropBoxWidth: 300, minCropBoxHeight: 100 });
+    });
+
+    it('destroys the cropper when the dialog is cancelled', async () => {
+      await chooseWallpaper();
+      await waitFor(() => expect(croppers).toHaveLength(1));
+
+      fireEvent.click(screen.getByText('Cancel'));
+
+      await waitFor(() => expect(screen.queryByText('Adjust Wallpaper')).not.toBeInTheDocument());
+      expect(croppers[0].destroy).toHaveBeenCalledTimes(1);
+    });
+
+    it('reports a cropper that cannot be loaded and closes the dialog', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      loadCropper.mockRejectedValue(new Error('Failed to load the image cropper'));
+
+      await chooseWallpaper().catch(() => {});
+
+      await waitFor(() => {
+        expect(toast.error).toHaveBeenCalledWith('Could not load the image editor. Please try again.');
+      });
+      await waitFor(() => expect(screen.queryByText('Adjust Wallpaper')).not.toBeInTheDocument());
+    });
+
+    it('uploads the cropped wallpaper and closes the dialog', async () => {
+      await chooseWallpaper();
+      await waitFor(() => expect(croppers).toHaveLength(1));
+
+      fireEvent.click(screen.getByText('Save Changes'));
+
+      await waitFor(() => expect(screen.queryByText('Adjust Wallpaper')).not.toBeInTheDocument());
+      expect(mockCheckAuth).toHaveBeenCalledWith(true);
+    });
+
+    it('shows the server error when the wallpaper upload is rejected', async () => {
+      server.use(
+        http.post('*/user/api/profile-wallpaper', () => HttpResponse.json(
+          { status: 'error', data: null, error: 'Wallpaper is too large.' }, { status: 400 }
+        ))
+      );
+      await chooseWallpaper();
+      await waitFor(() => expect(croppers).toHaveLength(1));
+
+      fireEvent.click(screen.getByText('Save Changes'));
+
+      await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Wallpaper is too large.'));
+      expect(screen.getByText('Adjust Wallpaper')).toBeInTheDocument();
+    });
+  });
 });

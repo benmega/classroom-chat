@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ResetPassword from './ResetPassword';
@@ -176,6 +177,46 @@ describe('ResetPassword', () => {
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('Failed to reset password.');
+        });
+    });
+
+    describe('labels and keyboard use', () => {
+        const renderReset = () => render(
+            <MemoryRouter initialEntries={['/reset-password?email=test@example.com']}>
+                <ResetPassword />
+            </MemoryRouter>
+        );
+
+        it('names every field independently of its placeholder', () => {
+            renderReset();
+
+            const code = screen.getByRole('textbox', { name: 'Verification code' });
+            expect(code).toHaveAttribute('autocomplete', 'one-time-code');
+            expect(screen.getByLabelText('New password', { selector: 'input' })).toHaveAttribute('type', 'password');
+            expect(screen.getByLabelText('Confirm new password', { selector: 'input' })).toHaveAttribute('type', 'password');
+        });
+
+        it('reaches both show-password buttons with Tab and announces their state', async () => {
+            const user = userEvent.setup();
+            renderReset();
+            const [passwordToggle, confirmToggle] = screen.getAllByRole('button', { name: 'Show password' });
+            expect(passwordToggle).not.toHaveAttribute('tabindex');
+            expect(confirmToggle).not.toHaveAttribute('tabindex');
+
+            await user.tab();
+            expect(screen.getByRole('textbox', { name: 'Verification code' })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByLabelText('New password', { selector: 'input' })).toHaveFocus();
+            await user.tab();
+            expect(passwordToggle).toHaveFocus();
+            expect(passwordToggle).toHaveAttribute('aria-pressed', 'false');
+            await user.keyboard('{Enter}');
+            expect(passwordToggle).toHaveAttribute('aria-pressed', 'true');
+            expect(screen.getByLabelText('New password', { selector: 'input' })).toHaveAttribute('type', 'text');
+            await user.tab();
+            expect(screen.getByLabelText('Confirm new password', { selector: 'input' })).toHaveFocus();
+            await user.tab();
+            expect(confirmToggle).toHaveFocus();
         });
     });
 });

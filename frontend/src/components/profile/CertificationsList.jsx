@@ -2,6 +2,7 @@ import React from 'react';
 import { Award, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getApiUrl } from '../../utils/apiUrl';
+import { safeDate } from '../../utils/formatters';
 
 const CertificationsList = ({ certificates }) => {
     if (!certificates || certificates.length === 0) return null;
@@ -16,17 +17,36 @@ const CertificationsList = ({ certificates }) => {
             </div>
             <div className="cert-list-container">
                 <div className="cert-list">
-                    {certificates.map(cert => (
-                        <div role="button" tabIndex={0} key={cert.id} className="cert-item" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => cert.file_path && window.open(getApiUrl(`/api/achievements/view_certificate/${cert.id}`), '_blank')}>
-                            <div className="cert-icon">
-                                <div className={`badge badge-${cert.achievement?.slug || 'default'}`}></div>
+                    {certificates.map(cert => {
+                        const submittedDate = safeDate(cert.submitted_at, { month: 'short', year: 'numeric' });
+                        const content = (
+                            <>
+                                <div className="cert-icon">
+                                    <div className={`badge badge-${cert.achievement?.slug || 'default'}`}></div>
+                                </div>
+                                <div className="cert-info">
+                                    <h4>{cert.achievement?.name || 'Certification'}</h4>
+                                    {submittedDate && <span className="cert-date">{submittedDate}</span>}
+                                </div>
+                            </>
+                        );
+                        // Only a certificate with a file can be opened: that one is a real link, the rest are plain items.
+                        return cert.file_path ? (
+                            <a
+                                key={cert.id}
+                                href={getApiUrl(`/api/achievements/view_certificate/${cert.id}`)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="cert-item"
+                            >
+                                {content}
+                            </a>
+                        ) : (
+                            <div key={cert.id} className="cert-item">
+                                {content}
                             </div>
-                            <div className="cert-info">
-                                <h4>{cert.achievement?.name || 'Certification'}</h4>
-                                <span className="cert-date">{new Date(cert.submitted_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</span>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </section>

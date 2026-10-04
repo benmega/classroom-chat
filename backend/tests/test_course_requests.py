@@ -117,3 +117,46 @@ def test_reject_request(logged_in_admin, init_db, sample_user):
     # Verify db status
     init_db.session.refresh(req)
     assert req.status == "rejected"
+
+
+def test_submit_request_stale_session_user(client, init_db):
+    # The session names a user that no longer exists: answered as unauthorized, not a 404/500
+    with client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    response = client.post(
+        "/api/course-requests/submit",
+        json={"course_instance_id": "test_instance_stale", "url": "http://test.url"},
+    )
+
+    assert response.status_code == 401
+    assert response.json["message"] == "Unknown user"
+    assert CourseInstanceRequest.query.count() == 0
+
+
+def test_admin_actions_stale_session_user(client, init_db):
+    with client.session_transaction() as sess:
+        sess["user"] = 999999
+
+    assert client.get("/api/course-requests/pending").status_code == 403
+    assert client.post("/api/course-requests/1/approve", json={}).status_code == 403
+    assert client.post("/api/course-requests/1/reject").status_code == 403
+
+
+def test_get_pending_requests_skips_missing_student(logged_in_admin, init_db):
+    # A request whose student row is gone must not take the whole list down
+    orphan = CourseInstanceRequest(
+        student_id=999999,
+        course_instance_id="test_instance_orphan",
+        url="http://test.url",
+        status="pending",
+    )
+    init_db.session.add(orphan)
+    init_db.session.commit()
+
+    response = logged_in_admin.get("/api/course-requests/pending")
+
+    assert response.status_code == 200
+    (entry,) = response.json["requests"]
+    assert entry["course_instance_id"] == "test_instance_orphan"
+    assert "student_username" not in entry

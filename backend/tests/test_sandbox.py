@@ -1,9 +1,4 @@
-"""
-File: test_sandbox.py
-Type: py
-Summary: Unit and integration tests for Classroom Sandbox Mode backend features,
-         including models, service logic, CSV ingestion, and sandbox API endpoints.
-"""
+
 
 import io
 from datetime import datetime, timedelta

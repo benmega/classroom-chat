@@ -1,122 +1,52 @@
-"""
-File: duck_trade_routes.py
-Type: py
-Summary: Flask routes for duck trade routes functionality.
-"""
 
-import logging
 
 from application.extensions import db
 from application.models.duck_trade import DuckTradeLog
-from flask import Blueprint, flash, jsonify, redirect, request, session, url_for
-from flask_wtf import FlaskForm
-from wtforms import FieldList, FormField, IntegerField, SubmitField
-from wtforms.validators import DataRequired, NumberRange
+from application.models.user import User
+from flask import Blueprint, jsonify, request, session
 
 duck_trade = Blueprint("duck_trade", __name__)
-logging.basicConfig(level=logging.INFO)
+
+# Each trade stores one 0/1-style count per binary place (8 places).
+DUCK_PLACES = 8
 
 
-class BitDuckForm(FlaskForm):
-    """Sub-form for Bit Ducks selection."""
-
-    bit_ducks = FieldList(
-        IntegerField(
-            "Bit Duck Count",
-            default=0,
-            validators=[NumberRange(min=0, message="Count must be non-negative")],
-        ),
-        min_entries=8,
-        max_entries=8,
+def _is_duck_places(value):
+    """True for a list of exactly DUCK_PLACES non-negative integers."""
+    return (
+        isinstance(value, list)
+        and len(value) == DUCK_PLACES
+        and all(isinstance(v, int) and not isinstance(v, bool) and v >= 0 for v in value)
     )
-
-
-class ByteDuckForm(FlaskForm):
-    """Sub-form for Byte Ducks selection."""
-
-    byte_ducks = FieldList(
-        IntegerField(
-            "Byte Duck Count",
-            default=0,
-            validators=[NumberRange(min=0, message="Count must be non-negative")],
-        ),
-        min_entries=8,
-        max_entries=8,
-    )
-
-
-class DuckTradeForm(FlaskForm):
-    """Main form for duck trading."""
-
-    digital_ducks = IntegerField(
-        "Digital Ducks",
-        validators=[
-            DataRequired(),
-            NumberRange(min=1, message="Must trade at least 1 duck"),
-        ],
-    )
-    bit_duck_selection = FormField(BitDuckForm)
-    byte_duck_selection = FormField(ByteDuckForm)
-    submit = SubmitField("Submit Request")
-
-
-def to_binary(costs_dict):
-    """
-    Convert dictionary values to binary.
-    Educational Design: This system promotes "thinking in binary" by forcing students
-    to interact with powers of 2 directly in the UI without decimal aids.
-    """
-    return {key: str(bin(value))[2:] for key, value in costs_dict.items()}
-
-
-@duck_trade.route("/")
-def index():
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify(
-            {"message": "Duck trade endpoint. Use /submit_trade POST for actions."}
-        )
-    return redirect("/trade")
 
 
 @duck_trade.route("/submit_trade", methods=["POST"])
 def submit_trade():
-    form = DuckTradeForm()
-    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
-
-    # If it's a JSON request from the React frontend, WTForms validation might fail
-    # due to structure differences (e.g. nested FormFields).
-    # We bypass WTForms validation for JSON AJAX requests and handle it manually.
-    if not request.is_json and not form.validate_on_submit():
-        error_msg = "Error: Check your inputs."
-        if is_ajax:
-            return (
-                jsonify(
-                    {"status": "error", "message": error_msg, "errors": form.errors}
-                ),
-                400,
-            )
-        flash(error_msg, "danger")
-        return redirect("/trade")
+    # The React client is the only caller and always posts JSON.
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"status": "error", "message": "JSON body required"}), 400
 
     try:
         userid = session.get("user")
         if not userid:
-            msg = "You must be logged in."
-            if is_ajax:
-                return jsonify({"status": "error", "message": msg}), 403
-            flash(msg, "warning")
-            return redirect("/trade")
-
-        from application import User
+            return (
+                jsonify({"status": "error", "message": "You must be logged in."}),
+                401,
+            )
 
         user = db.session.get(User, userid)
 
         if not user:
-            msg = "User profile not found. Please log in again."
-            if is_ajax:
-                return jsonify({"status": "error", "message": msg}), 401
-            flash(msg, "danger")
-            return redirect("/login")
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "User profile not found. Please log in again.",
+                    }
+                ),
+                401,
+            )
         existing_trade = DuckTradeLog.query.filter_by(
             user_id=user.id, status="pending"
         ).first()
@@ -124,36 +54,48 @@ def submit_trade():
             msg = (
                 "You already have a pending trade. Please wait for it to be processed."
             )
-            if is_ajax:
-                return jsonify({"status": "error", "message": msg}), 400
-            flash(msg, "warning")
-            return redirect("/trade")
+            return jsonify({"status": "error", "message": msg}), 400
 
-        if is_ajax and request.is_json:
-            data = request.get_json()
-            try:
-                d_ducks = int(data.get("digital_ducks", 0))
-                if d_ducks < 1:
-                    return (
-                        jsonify(
-                            {
-                                "status": "error",
-                                "message": "Must trade at least 1 duck.",
-                            }
-                        ),
-                        400,
-                    )
-            except (ValueError, TypeError):
+        try:
+            d_ducks = int(data.get("digital_ducks", 0))
+            if d_ducks < 1:
                 return (
-                    jsonify({"status": "error", "message": "Invalid duck count."}),
+                    jsonify(
+                        {
+                            "status": "error",
+                            "message": "Must trade at least 1 duck.",
+                        }
+                    ),
                     400,
                 )
-            bit_ducks = data.get("bit_ducks", [])
-            byte_ducks = data.get("byte_ducks", [])
-        else:
-            d_ducks = form.digital_ducks.data
-            bit_ducks = []
-            byte_ducks = []
+        except (ValueError, TypeError, OverflowError):
+            return (
+                jsonify({"status": "error", "message": "Invalid duck count."}),
+                400,
+            )
+
+        # Approval would refuse it anyway, and a pending trade blocks the next one
+        if d_ducks > (user.duck_balance or 0):
+            return (
+                jsonify({"status": "error", "message": "Insufficient ducks."}),
+                400,
+            )
+
+        bit_ducks = data.get("bit_ducks")
+        byte_ducks = data.get("byte_ducks")
+        if not (_is_duck_places(bit_ducks) and _is_duck_places(byte_ducks)):
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": (
+                            "bit_ducks and byte_ducks must each be a list of "
+                            f"{DUCK_PLACES} non-negative integers."
+                        ),
+                    }
+                ),
+                400,
+            )
 
         trade = DuckTradeLog(
             user_id=user.id,
@@ -180,22 +122,10 @@ def submit_trade():
 
         msg = "Trade submitted for approval."
 
-        if is_ajax:
-            return jsonify({"status": "success", "message": msg, "new_awards": awards_payload})
-
-        flash(msg, "success")
-        return redirect("/trade")
+        return jsonify(
+            {"status": "success", "message": msg, "new_awards": awards_payload}
+        )
 
     except Exception:
         db.session.rollback()
-        if is_ajax:
-            return jsonify({"status": "error", "message": "Server Error"}), 500
-        flash("An unexpected error occurred.", "danger")
-        return redirect(url_for("duck_trade.index"))
-
-
-@duck_trade.route("/bit_shift", methods=["GET"])
-def bit_shift():
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({"message": "Bit Shift interface has migrated to React."})
-    return redirect("/trade")
+        return jsonify({"status": "error", "message": "Server Error"}), 500

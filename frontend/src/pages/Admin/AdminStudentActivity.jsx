@@ -83,7 +83,12 @@ const AdminStudentActivity = () => {
                                             alt={student.username} 
                                             className="avatar-img"
                                         />
-                                        <div className={`status-dot ${student.is_online ? 'online' : 'offline'}`} />
+                                        <div
+                                            className={`status-dot ${student.is_online ? 'online' : 'offline'}`}
+                                            role="img"
+                                            aria-label={student.is_online ? 'Online' : 'Offline'}
+                                            title={student.is_online ? 'Online' : 'Offline'}
+                                        />
                                     </div>
                                     <div className="student-info">
                                         <h3>{student.nickname || student.username}</h3>

@@ -1,16 +1,22 @@
-import React from 'react';
+import React, { useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const WallpaperCropModal = ({ isCropping, cropImgRef, cropImage, isUploadingPic, onCancel, onSave }) => {
+    const dialogRef = useRef(null);
+    const titleId = useId();
+
+    useModalA11y({ isOpen: Boolean(isCropping), onClose: onCancel, containerRef: dialogRef });
+
     if (!isCropping) return null;
 
     return createPortal(
         <div className="modal-overlay crop-modal-overlay">
-            <div className="modal-content crop-modal-content">
+            <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="modal-content crop-modal-content">
                 <div className="modal-header">
-                    <h2>Adjust Wallpaper</h2>
-                    <button className="close-modal" onClick={onCancel}><X size={24} /></button>
+                    <h2 id={titleId}>Adjust Wallpaper</h2>
+                    <button className="close-modal" onClick={onCancel} aria-label="Close"><X size={24} /></button>
                 </div>
                 <div className="crop-area">
                     <img ref={cropImgRef} src={cropImage} alt="To crop" className="max-w-100" />

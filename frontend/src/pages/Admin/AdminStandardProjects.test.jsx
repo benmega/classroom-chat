@@ -1,4 +1,6 @@
+import adminCache from '../../utils/adminCache';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminStandardProjects from './AdminStandardProjects';
@@ -36,6 +38,7 @@ vi.mock('../../hooks/useSidebar', () => ({
 
 describe('AdminStandardProjects', () => {
     beforeEach(() => {
+        adminCache.clear();
         vi.clearAllMocks();
     });
 
@@ -74,6 +77,27 @@ describe('AdminStandardProjects', () => {
         });
         expect(screen.getByText('Project 2')).toBeInTheDocument();
         expect(screen.getByText('Desc 1')).toBeInTheDocument();
+    });
+
+    it('quotes and encodes thumbnail urls so names with spaces and parentheses work', async () => {
+        const mockProjects = {
+            1: { id: 1, name: 'Project 1', description: 'Desc 1', image_url: 'images/projects/Tepun - Text-Based Adventure (2).jpg' },
+            2: { id: 2, name: 'Project 2', description: 'Desc 2' }
+        };
+
+        client.get.mockResolvedValueOnce({
+            data: { status: 'success', data: { templates: mockProjects } }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Project 1')).toBeInTheDocument();
+        });
+        const withImage = screen.getByText('Project 1').closest('.project-card').querySelector('.project-card-header');
+        expect(withImage.style.backgroundImage).toContain('Tepun%20-%20Text-Based%20Adventure%20%282%29.jpg');
+        const withoutImage = screen.getByText('Project 2').closest('.project-card').querySelector('.project-card-header');
+        expect(withoutImage.style.backgroundImage).toBe('none');
     });
 
     it('opens add modal, fills form, and submits new project', async () => {
@@ -155,7 +179,7 @@ describe('AdminStandardProjects', () => {
             expect(screen.getByText('Project 1')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Project 1').closest('.project-card'));
+        fireEvent.click(screen.getByRole('button', { name: /^Project 1/ }));
         
         const nameInput = screen.getByPlaceholderText(/e.g. Text-Based Adventure/i);
         expect(nameInput).toHaveValue('Project 1');
@@ -270,7 +294,7 @@ describe('AdminStandardProjects', () => {
             expect(screen.getByText('Project With Image')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Project With Image').closest('.project-card'));
+        fireEvent.click(screen.getByRole('button', { name: /^Project With Image/ }));
         
         expect(screen.getByText('Thumbnail Image')).toBeInTheDocument();
         const preview = screen.getByAltText('Upload preview');
@@ -296,7 +320,7 @@ describe('AdminStandardProjects', () => {
             expect(screen.getByText('Project With Image')).toBeInTheDocument();
         });
 
-        fireEvent.click(screen.getByText('Project With Image').closest('.project-card'));
+        fireEvent.click(screen.getByRole('button', { name: /^Project With Image/ }));
         
         const removeBtn = screen.getByRole('button', { name: /Remove image/i });
         fireEvent.click(removeBtn);
@@ -351,6 +375,147 @@ describe('AdminStandardProjects', () => {
         await waitFor(() => {
             const directUrlInput = screen.getByLabelText(/Direct Image URL/i);
             expect(directUrlInput).toHaveValue('/user/project_images/uploaded-uuid.png');
+        });
+    });
+
+    it('initializes from admin_standard_projects cache immediately and fetches in background', async () => {
+        const cached = [
+            { id: 99, name: 'Cached Template', description: 'Cached Desc' }
+        ];
+        adminCache.set('admin_standard_projects', cached);
+
+        client.get.mockResolvedValueOnce({
+            data: {
+                status: 'success',
+                data: {
+                    templates: {
+                        100: { id: 100, name: 'Fresh Template', description: 'Fresh Desc' }
+                    }
+                }
+            }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+
+        expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+        expect(screen.getByText('Cached Template')).toBeInTheDocument();
+
+        await waitFor(() => {
+            expect(screen.getByText('Fresh Template')).toBeInTheDocument();
+        });
+        expect(adminCache.get('admin_standard_projects')).toBeDefined();
+    });
+
+    it('shows the reason the server gives when a project cannot be deleted', async () => {
+        client.get.mockResolvedValue({
+            data: { status: 'success', data: { templates: { 1: { id: 1, name: 'Project 1', description: 'Desc 1' } } } }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+        await waitFor(() => {
+            expect(screen.getByText('Project 1')).toBeInTheDocument();
+        });
+
+        showConfirm.mockResolvedValueOnce(true);
+        client.delete.mockRejectedValueOnce({ response: { status: 400, data: { status: 'error', data: null, error: 'Template not found' } } });
+        fireEvent.click(screen.getByTitle(/Delete Project/i));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Template not found');
+        });
+    });
+
+    it('shows the reason the server gives when a project cannot be saved', async () => {
+        client.get.mockResolvedValue({
+            data: { status: 'success', data: { templates: {} } }
+        });
+
+        renderWithRouter(<AdminStandardProjects />);
+        await waitFor(() => {
+            expect(screen.getByRole('button', { name: /Add Project/i })).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('button', { name: /Add Project/i }));
+        fireEvent.change(screen.getByPlaceholderText(/e.g. Text-Based Adventure/i), { target: { value: 'New Template' } });
+
+        client.post.mockRejectedValueOnce({ response: { status: 400, data: { status: 'error', data: null, error: 'A template with this name already exists.' } } });
+        const saveButtons = screen.getAllByRole('button', { name: /Save Template/i })
+            .filter(el => el.tagName === 'BUTTON');
+        fireEvent.submit(saveButtons[0].closest('form'));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('A template with this name already exists.');
+        });
+    });
+
+    describe('keyboard', () => {
+        const twoProjects = {
+            data: { status: 'success', data: { templates: {
+                1: { id: 1, name: 'Project 1', description: 'Desc 1' },
+                2: { id: 2, name: 'Project 2', description: 'Desc 2' },
+            } } }
+        };
+
+        it('reaches each project card, then its delete button, with Tab', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(twoProjects);
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project 1');
+
+            await user.tab();
+            expect(screen.getByRole('button', { name: /Add Project/i })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('button', { name: /^Project 1/ })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('button', { name: 'Delete project Project 1' })).toHaveFocus();
+            await user.tab();
+            expect(screen.getByRole('button', { name: /^Project 2/ })).toHaveFocus();
+        });
+
+        it.each([
+            ['Enter', '{Enter}'],
+            ['Space', ' '],
+        ])('opens the edit modal for the focused card with %s', async (_label, key) => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(twoProjects);
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project 2');
+
+            screen.getByRole('button', { name: /^Project 2/ }).focus();
+            await user.keyboard(key);
+
+            expect(screen.getByRole('dialog', { name: 'Edit Standard Project' })).toBeInTheDocument();
+            expect(screen.getByPlaceholderText(/e.g. Text-Based Adventure/i)).toHaveValue('Project 2');
+        });
+
+        it('asks to delete, and does not open the editor, when Enter is pressed on a delete button', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(twoProjects);
+            showConfirm.mockResolvedValueOnce(false);
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project 1');
+
+            screen.getByRole('button', { name: 'Delete project Project 1' }).focus();
+            await user.keyboard('{Enter}');
+
+            await waitFor(() => expect(showConfirm).toHaveBeenCalledTimes(1));
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        });
+
+        it('puts focus back on the card when the editor is closed with Escape', async () => {
+            const user = userEvent.setup();
+            client.get.mockResolvedValue(twoProjects);
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project 1');
+            const card = screen.getByRole('button', { name: /^Project 1/ });
+
+            card.focus();
+            await user.keyboard('{Enter}');
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+            await user.keyboard('{Escape}');
+
+            expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+            expect(card).toHaveFocus();
         });
     });
 });

@@ -3,8 +3,16 @@ from application.extensions import db
 from application.models.project import Project
 from application.services.email_service import send_admin_email
 from flask import jsonify, request
+from sqlalchemy import case, func
+from sqlalchemy.orm import joinedload
 
 from ..admin_routes import admin_bp
+
+# Page size of the filters other than "pending" when ?limit= is not given, and the largest
+# page any filter can be asked for. The review queue ("pending") is returned whole unless
+# a limit is asked for, because the review page works through all of it.
+DEFAULT_PROJECTS_LIMIT = 100
+MAX_PROJECTS_LIMIT = 200
 
 
 @admin_bp.route("/manage-projects", methods=["GET"])
@@ -12,9 +20,11 @@ from ..admin_routes import admin_bp
 def manage_projects():
     filter_type = request.args.get("filter", "pending")
 
-    pending_count = Project.query.filter(Project.status == "pending").count()
-
-    total_count = Project.query.count()
+    # Both counts in one query
+    pending_count, total_count = db.session.query(
+        func.coalesce(func.sum(case((Project.status == "pending", 1), else_=0)), 0),
+        func.count(Project.id),
+    ).one()
 
     query = Project.query
     if filter_type == "pending":
@@ -24,18 +34,80 @@ def manage_projects():
     elif filter_type == "approved":
         query = query.filter(Project.status == "approved")
 
-    projects = query.order_by(Project.id.desc()).all()
+    limit = request.args.get("limit", type=int)
+    if limit is None:
+        limit = None if filter_type == "pending" else DEFAULT_PROJECTS_LIMIT
+    else:
+        limit = max(1, min(limit, MAX_PROJECTS_LIMIT))
+
+    # to_dict() reads each project's student: load them with the projects
+    query = query.options(joinedload(Project.user)).order_by(Project.id.desc())
+    if limit is not None:
+        page = max(1, request.args.get("page", 1, type=int))
+        query = query.limit(limit).offset((page - 1) * limit)
+    projects = query.all()
 
     return jsonify(
         {
             "status": "success",
             "data": {
                 "projects": [p.to_dict() for p in projects],
-                "pending_count": pending_count,
+                "pending_count": int(pending_count),
                 "total_count": total_count,
             },
         }
     )
+
+
+def _complete_linked_challenge(student, project):
+    """Complete the Challenge linked to the project's template, if any.
+
+    The template is resolved by ``project.template_id`` first; projects
+    created before that column existed (or by clients that never set it) fall
+    back to the unique template name. Returns (newly_completed, challenge_slug);
+    challenge_slug is the linked challenge whether or not it was new, so the
+    admin UI can tell "already completed" from "not linked".
+    Never raises: a problem here must not undo the project approval.
+    """
+    import logging
+
+    from application.models.challenge import Challenge
+    from application.models.project_template import ProjectTemplate
+    from application.services.challenge_completion import grant_challenge_completion
+
+    try:
+        template = None
+        if project.template_id:
+            template = db.session.get(ProjectTemplate, project.template_id)
+        if template is None:
+            template = ProjectTemplate.query.filter_by(name=project.name).first()
+        if not template or not template.challenge_slug:
+            return False, None
+        challenge = Challenge.query.filter_by(slug=template.challenge_slug).first()
+        if not challenge:
+            return False, None
+
+        from application.models.configuration import Configuration
+
+        config = Configuration.query.first()
+        multiplier = (config.duck_multiplier if config else 1) or 1
+        if student.has_double_duck:
+            multiplier *= 2
+
+        created = grant_challenge_completion(
+            student,
+            challenge,
+            reason=f"Project approved: {project.name}",
+            duck_multiplier=multiplier,
+            evaluate=False,  # the caller runs evaluate_user right after
+        )
+        return created, challenge.slug
+    except Exception:
+        db.session.rollback()
+        logging.getLogger(__name__).exception(
+            "Failed to complete linked challenge for project %s", project.id
+        )
+        return False, None
 
 
 @admin_bp.route("/handle-project-review/<int:project_id>", methods=["POST"])
@@ -85,6 +157,15 @@ def handle_project_review(project_id):
         project.status = "approved"
         db.session.commit()
 
+        # Mini-project templates can be linked to a Challenge (e.g. the 3D
+        # modeling track): approving the project completes that challenge.
+        challenge_completed = False
+        completed_challenge_slug = None
+        if student:
+            challenge_completed, completed_challenge_slug = (
+                _complete_linked_challenge(student, project)
+            )
+
         if student:
             from application.services.achievement_engine import evaluate_user
 
@@ -101,6 +182,8 @@ def handle_project_review(project_id):
             {
                 "status": "success",
                 "message": f"Project '{project.name}' approved with {packet_reward:.3f} packets.",
+                "challenge_completed": challenge_completed,
+                "challenge_slug": completed_challenge_slug,
             }
         )
 
@@ -127,9 +210,14 @@ def assign_project():
     code_snippet = data.get("code_snippet")
     image_url = data.get("image_url")
 
+    from application.models.project_template import ProjectTemplate
+
+    matched_template = ProjectTemplate.query.filter_by(name=name).first()
+
     project = Project(
         user_id=user_id,
         name=name,
+        template_id=matched_template.id if matched_template else None,
         description=description,
         link=link,
         github_link=github_link,

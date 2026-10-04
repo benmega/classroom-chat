@@ -1,10 +1,3 @@
-"""
-File: level_game_service.py
-Type: py
-Summary: Service functions for parsing assigned lessons, ingesting CSV level games,
-         and calculating unlocked sandbox games for students.
-"""
-
 import contextlib
 import csv
 import io
@@ -12,7 +5,6 @@ import logging
 import math
 import random
 import re
-from collections import OrderedDict
 from datetime import date
 from urllib.parse import urlparse
 

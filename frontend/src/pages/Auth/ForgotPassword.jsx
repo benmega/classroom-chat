@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, ArrowRight } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import './Auth.css';
 
@@ -28,7 +29,7 @@ const ForgotPassword = () => {
                 navigate(`/reset-password?email=${encodeURIComponent(email)}`);
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to send verification code.');
+            toast.error(getErrorMessage(error, 'Failed to send verification code.'));
         } finally {
             setIsLoading(false);
         }
@@ -44,7 +45,7 @@ const ForgotPassword = () => {
             <div className="auth-container">
                 <div className="auth-header">
                     <div className="brand-logo">
-                        <img src="/images/logo.ico" alt="Classroom Chat Logo" />
+                        <img src="/images/logo.png" alt="Classroom Chat Logo" />
                     </div>
                     <h1 className="auth-title">Forgot Password</h1>
                     <p className="auth-subtitle">Select your role to reset your password</p>
@@ -56,6 +57,7 @@ const ForgotPassword = () => {
                             type="button"
                             className={`auth-role-btn ${selectedRole === 'student' ? 'active' : 'inactive'}`}
                             onClick={() => setSelectedRole('student')}
+                            aria-pressed={selectedRole === 'student'}
                         >
                             Student
                         </button>
@@ -63,6 +65,7 @@ const ForgotPassword = () => {
                             type="button"
                             className={`auth-role-btn ${selectedRole === 'parent' ? 'active' : 'inactive'}`}
                             onClick={() => setSelectedRole('parent')}
+                            aria-pressed={selectedRole === 'parent'}
                         >
                             Parent
                         </button>
@@ -85,6 +88,7 @@ const ForgotPassword = () => {
                                         onChange={(e) => setEmail(e.target.value)} 
                                         required
                                         placeholder="Enter your Email Address"
+                                        aria-label="Email address"
                                         autoComplete="email"
                                         className="auth-input"
                                     />

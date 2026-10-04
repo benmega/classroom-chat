@@ -1,6 +1,7 @@
 import csv
 import os
 import time
+from pathlib import Path
 
 import requests
 
@@ -14,19 +15,64 @@ HEADERS = {
 }
 
 OWNER_ID = "62d23d975dafd60025f8c520"
-FILENAME = "../instance/migration/certificate_log.csv"
+
+# Anchored on this file, so the CSV lands in backend/instance/migration
+# whatever the working directory is
+OUT_DIR = Path(__file__).resolve().parents[1] / "instance" / "migration"
+FILENAME = OUT_DIR / "certificate_log.csv"
+
+CSV_FIELDS = [
+    "student_name",
+    "class_name",
+    "course_name",
+    "certificate_url",
+    "domain",
+    "completion_date",
+]
+
+# Seconds to wait for a response before giving up on a request
+REQUEST_TIMEOUT = 30
 
 
 # 2. HELPER FUNCTIONS
 def fetch_json(url, description):
     print(f"Fetching {description}...")
     try:
-        response = requests.get(url, headers=HEADERS)
+        response = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching {description}: {e}")
         return []
+
+
+def append_new_rows(rows):
+    """Append rows whose certificate_url is not already in FILENAME.
+
+    Re-running the scraper therefore never duplicates rows. Returns the number
+    of rows added.
+    """
+    os.makedirs(OUT_DIR, exist_ok=True)
+
+    has_content = os.path.isfile(FILENAME) and os.path.getsize(FILENAME) > 0
+    seen = set()
+    if has_content:
+        with open(FILENAME, newline="", encoding="utf-8") as f:
+            seen = {row.get("certificate_url") for row in csv.DictReader(f)}
+
+    new_rows = []
+    for row in rows:
+        if row["certificate_url"] in seen:
+            continue
+        seen.add(row["certificate_url"])
+        new_rows.append(row)
+
+    with open(FILENAME, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=CSV_FIELDS)
+        if not has_content:
+            writer.writeheader()
+        writer.writerows(new_rows)
+    return len(new_rows)
 
 
 def build_student_map(members_data):
@@ -136,25 +182,12 @@ def main(DOMAIN, URL_LEVELS):
         time.sleep(1)  # Be nice to API
 
     if all_rows:
-        os.makedirs(os.path.dirname(FILENAME), exist_ok=True)
-        fields = [
-            "student_name",
-            "class_name",
-            "course_name",
-            "certificate_url",
-            "domain",
-            "completion_date",
-        ]
+        added = append_new_rows(all_rows)
 
-        # Append mode
-        file_exists = os.path.isfile(FILENAME)
-        with open(FILENAME, "a", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=fields)
-            if not file_exists:
-                writer.writeheader()
-            writer.writerows(all_rows)
-
-        print(f"\nSUCCESS! Appended {len(all_rows)} certificates to {FILENAME}")
+        print(
+            f"\nSUCCESS! Appended {added} certificates to {FILENAME} "
+            f"({len(all_rows) - added} already present)"
+        )
     else:
         print("\nNo certificates found.")
 

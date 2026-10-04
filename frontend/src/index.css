@@ -161,7 +161,7 @@ button:focus-visible,
   justify-content: center;
   gap: 0.5rem;
   transition: var(--transition-bounce);
-  color: white;
+  color: var(--text-on-primary);
   background: var(--gradient-primary);
   box-shadow: var(--shadow-md);
   border: none;
@@ -304,10 +304,13 @@ select:hover:not(:focus) {
 input:focus,
 textarea:focus,
 select:focus {
-  outline: none; /* Custom ring via box-shadow below */
+  /* Custom ring via box-shadow below. The outline stays as a transparent one: it is invisible normally,
+     but forced-colors (Windows high contrast) mode drops box-shadow and paints it in a system colour. */
+  outline: 2px solid transparent;
+  outline-offset: 2px;
   border-color: var(--primary-accessible);
   box-shadow: var(--focus-ring);
-  background: white;
+  background: var(--bg-primary);
 }
 
 input::placeholder, 
@@ -326,24 +329,6 @@ label {
 button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-/* --- React Admin Layout Fixes --- */
-.RaSidebar-root {
-  display: none !important;
-}
-/* Forces the React Admin layout to render side-by-side rather than stacking vertically */
-.RaLayout-root {
-  display: flex !important;
-  flex-direction: row !important;
-  width: 100%;
-}
-
-.RaLayout-appFrame {
-  flex: 1 1 auto !important;
-  display: flex !important;
-  flex-direction: column !important;
-  min-width: 0;
 }
 
 /* --- Shop Perks --- */
@@ -414,6 +399,8 @@ button:disabled {
 .font-mono { font-family: monospace; }
 .language-badge-styled { padding: 4px 8px; background: var(--primary-light); color: var(--primary-accessible); border-radius: 6px; font-size: 0.85rem; font-weight: 500; }
 .d-none { display: none; }
+/* Hidden on screen but still focusable and read out: use instead of display:none for inputs and labels. */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .w-fit-content { width: fit-content; }
 .p-2rem { padding: 2rem; }
 .p-1rem { padding: 1rem; }
@@ -513,7 +500,7 @@ button:disabled {
 .dashboard-panel-styled-small { padding: 1.5rem; background: var(--bg-primary); border-radius: 16px; border: 1px solid var(--border-subtle); }
 .panel-header-styled-small { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem; margin-bottom: 1.25rem; }
 .panel-title-small { font-size: 1.1rem; margin: 0; font-weight: 700; }
-.status-dot-small { position: absolute; bottom: -2px; right: -2px; width: 9px; height: 9px; border: 1.5px solid white; }
+.status-dot-small { position: absolute; bottom: -2px; right: -2px; width: 9px; height: 9px; border: 1.5px solid var(--bg-primary); }
 .text-0-85rem { font-size: 0.85rem; }
 .top-auto { top: auto; }
 .right-auto { right: auto; }
@@ -528,8 +515,8 @@ button:disabled {
 .radius-8 { border-radius: 8px; }
 .btn-small-link { padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; }
 .mt-20px { margin-top: 20px; }
-.btn-secondary-styled { padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border-subtle); background: white; cursor: pointer; }
-.connection-card-preview { background: white; padding: 1.5rem; border-radius: 12px; display: inline-block; border: 1px solid var(--border-subtle); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+.btn-secondary-styled { padding: 10px 20px; border-radius: 8px; border: 1px solid var(--border-subtle); background: var(--bg-primary); cursor: pointer; }
+.connection-card-preview { background: var(--bg-primary); padding: 1.5rem; border-radius: 12px; display: inline-block; border: 1px solid var(--border-subtle); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 .mb-xs { margin-bottom: 0.25rem; }
 .text-slate-800 { color: var(--slate-800); }
 .w-200px { width: 200px; }

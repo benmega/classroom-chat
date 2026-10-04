@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import toast from 'react-hot-toast';
 import { showConfirm } from '../utils/confirm';
+import { getErrorMessage } from '../utils/apiError';
+import { useAdminUserActions } from './useAdminUserActions';
 
 export const useAdminUserDashboard = (userId) => {
     const navigate = useNavigate();
@@ -25,7 +27,6 @@ export const useAdminUserDashboard = (userId) => {
     const [selectedTemplateName, setSelectedTemplateName] = useState('');
     const [templatesSaving, setTemplatesSaving] = useState(false);
 
-    // Pass chapter state
     const [passChapterLoading, setPassChapterLoading] = useState(false);
     const [selectedChapterId, setSelectedChapterId] = useState('');
     const [passPreview, setPassPreview] = useState(null);
@@ -72,89 +73,68 @@ export const useAdminUserDashboard = (userId) => {
             if (res.data.success) {
                 setPassPreview(res.data.preview);
             }
-        } catch {
-            toast.error('Failed to preview chapter pass');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to preview chapter pass'));
         } finally {
             setPassChapterLoading(false);
         }
     };
 
     const handlePassChapterConfirm = async () => {
-        if (!await showConfirm("Are you sure you want to pass this chapter? They will receive all achievements, certificates, and ducks.", { title: 'Pass Chapter', confirmLabel: 'Pass Chapter', destructive: false })) {
+        const choice = await showConfirm("Pass this chapter? The student gets full credit for its levels, all achievements and certificates. Award the ducks for those levels?", { title: 'Pass Chapter', confirmText: 'Pass & award ducks', altText: 'Pass, no ducks', destructive: false });
+        if (!choice) {
             return;
         }
         setPassChapterLoading(true);
         try {
-            const res = await client.post(`/api/admin/user/${userId}/pass_chapter`, { course_id: selectedChapterId });
+            const res = await client.post(`/api/admin/user/${userId}/pass_chapter`, { course_id: selectedChapterId, award_ducks: choice === true });
             if (res.data.success) {
                 
                 setPassPreview(null);
                 setSelectedChapterId('');
                 fetchUser();
             }
-        } catch {
-            toast.error('Failed to pass chapter');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to pass chapter'));
         } finally {
             setPassChapterLoading(false);
         }
     };
 
+    const { adjustDucks, adjustPackets, resetPassword, removeUser } = useAdminUserActions({ setFormLoading });
+
     const handleAdjustDucks = async (e) => {
         e.preventDefault();
-        setFormLoading(true);
-        const formData = new FormData(e.target);
-        
-        try {
-            const res = await client.post('/api/admin/adjust_ducks', formData);
-            if (res.data.success) {
-                
-                e.target.reset();
-                fetchUser();
-            } else {
-                toast.error(res.data.message || "Failed to adjust ducks");
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'An error occurred.');
-        } finally {
-            setFormLoading(false);
-        }
+        const form = e.target;
+        await adjustDucks(new FormData(form), () => {
+            form.reset();
+            fetchUser();
+        });
     };
 
     const handleAdjustPackets = async (e) => {
         e.preventDefault();
-        setFormLoading(true);
-        const formData = new FormData(e.target);
-        
-        try {
-            const res = await client.post('/api/admin/adjust_packets', formData);
-            if (res.data.success) {
-                
-                e.target.reset();
-                fetchUser();
-            } else {
-                toast.error(res.data.message || "Failed to adjust packets");
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'An error occurred.');
-        } finally {
-            setFormLoading(false);
-        }
+        const form = e.target;
+        await adjustPackets(new FormData(form), () => {
+            form.reset();
+            fetchUser();
+        });
     };
 
     const handleSetDrawer = async (e) => {
         e.preventDefault();
         setFormLoading(true);
         const formData = new FormData(e.target);
-        formData.append('username', user.username);
         
         try {
-            const res = await client.post('/api/admin/set_drawer', formData);
+            // set_drawer reads a JSON body, not form data.
+            const res = await client.post('/api/admin/set_drawer', { username: user.username, drawer: formData.get('drawer') });
             if (res.status === 200) {
                 
                 fetchUser();
             }
         } catch (err) {
-            toast.error(err.response?.data || 'Failed to update drawer');
+            toast.error(getErrorMessage(err, 'Failed to update drawer'));
         } finally {
             setFormLoading(false);
         }
@@ -162,41 +142,12 @@ export const useAdminUserDashboard = (userId) => {
 
     const handleResetPassword = async (e) => {
         e.preventDefault();
-        setFormLoading(true);
-        const formData = new FormData(e.target);
-        
-        try {
-            const res = await client.post('/api/admin/reset_password', formData);
-            if (res.data.success) {
-                
-                e.target.reset();
-            } else {
-                toast.error(res.data.message || "Failed to reset password");
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'An error occurred.');
-        } finally {
-            setFormLoading(false);
-        }
+        const form = e.target;
+        await resetPassword({ ...Object.fromEntries(new FormData(form)), username: user.username }, () => form.reset());
     };
 
     const handleRemoveUser = async () => {
-        if (!await showConfirm(`Are you sure you want to completely remove ${user.username}? This cannot be undone.`, { title: 'Remove User', confirmLabel: 'Remove', destructive: true })) {
-            return;
-        }
-        try {
-            const formData = new FormData();
-            formData.append('username', user.username);
-            const res = await client.post('/api/admin/remove_user', formData);
-            if (res.data.success) {
-                
-                navigate('/admin/users');
-            } else {
-                toast.error(res.data.message || "Failed to remove user");
-            }
-        } catch (err) {
-            toast.error(err.response?.data?.error || 'An error occurred.');
-        }
+        await removeUser(user.username, () => navigate('/admin/users'));
     };
 
     const handleApproveUser = async () => {
@@ -207,15 +158,15 @@ export const useAdminUserDashboard = (userId) => {
                 
                 fetchUser();
             }
-        } catch {
-            toast.error('Failed to approve user.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to approve user.'));
         } finally {
             setFormLoading(false);
         }
     };
 
     const handleRejectUser = async () => {
-        if (!await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', confirmLabel: 'Reject & Delete', destructive: true })) return;
+        if (!await showConfirm('Are you sure you want to reject and delete this user?', { title: 'Reject User', confirmText: 'Reject & Delete', destructive: true })) return;
         setFormLoading(true);
         try {
             const response = await client.post(`/api/admin/reject_user/${user.id}`);
@@ -223,8 +174,8 @@ export const useAdminUserDashboard = (userId) => {
                 
                 navigate('/admin/users');
             }
-        } catch {
-            toast.error('Failed to reject user.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to reject user.'));
         } finally {
             setFormLoading(false);
         }
@@ -249,11 +200,9 @@ export const useAdminUserDashboard = (userId) => {
             if (response.data.success) {
                 
                 fetchParentChildren();
-            } else {
-                toast.error(response.data.message || `Failed to ${endpoint} child`);
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'An error occurred');
+            toast.error(getErrorMessage(error, `Failed to ${isLinked ? 'unlink' : 'link'} child`));
         } finally {
             setFormLoading(false);
         }
@@ -278,11 +227,9 @@ export const useAdminUserDashboard = (userId) => {
             if (response.data.success) {
                 
                 fetchStudentParents();
-            } else {
-                toast.error(response.data.message || `Failed to ${endpoint} parent`);
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'An error occurred');
+            toast.error(getErrorMessage(error, `Failed to ${isLinked ? 'unlink' : 'link'} parent`));
         } finally {
             setFormLoading(false);
         }
@@ -308,12 +255,10 @@ export const useAdminUserDashboard = (userId) => {
                 
                 setSelectedTemplateName('');
                 fetchUser();
-            } else {
-                toast.error(response.data.error || 'Failed to assign project.');
             }
         } catch (error) {
             console.error('Assign error:', error);
-            toast.error(error.response?.data?.error || 'An error occurred.');
+            toast.error(getErrorMessage(error, 'Failed to assign project.'));
         } finally {
             setTemplatesSaving(false);
         }
@@ -366,7 +311,7 @@ export const useAdminUserDashboard = (userId) => {
                 toast.error(responseData.error || 'Failed to update user profile');
             }
         } catch (err) {
-            toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to update user profile.');
+            toast.error(getErrorMessage(err, 'Failed to update user profile.'));
         } finally {
             setFormLoading(false);
         }

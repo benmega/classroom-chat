@@ -1,5 +1,12 @@
 .admin-schema-error {
-    color: var(--error-color, red);
+    margin: 16px;
+}
+
+/* react-admin's layout frame may shrink below the width of its content so wide datagrids scroll inside it.
+   Scoped to this panel through the className set in CustomLayout. react-admin's own '.css-xxx .RaLayout-appFrame'
+   rule does not set min-width, so nothing competes with this one and it needs no !important. */
+.admin-crud-layout .RaLayout-appFrame {
+    min-width: 0;
 }
 
 .admin-top-menu {

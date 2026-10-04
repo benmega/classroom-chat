@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/apiError';
 import { showConfirm } from '../utils/confirm';
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
@@ -13,6 +14,7 @@ export const useProjectManagement = () => {
     const [searchParams] = useSearchParams();
     const studentIdParam = searchParams.get('student_id');
     const { user: currentUser } = useAuthStore();
+    const isAdmin = currentUser?.role === 'admin';
     
     const [projectData, setProjectData] = useState({
         name: '',
@@ -36,6 +38,35 @@ export const useProjectManagement = () => {
     const [projectVideo, setProjectVideo] = useState(null);
     const [isCustomImage, setIsCustomImage] = useState(false);
     const [error, setError] = useState(null);
+    // The object URL behind the current image preview, if it was made from a local file
+    // (a preview of the saved server image is a plain URL and needs no cleanup).
+    const previewBlobRef = useRef(null);
+    const isMountedRef = useRef(true);
+
+    const revokePreviewBlob = useCallback(() => {
+        if (previewBlobRef.current) {
+            URL.revokeObjectURL(previewBlobRef.current);
+            previewBlobRef.current = null;
+        }
+    }, []);
+
+    // Previews a local file, releasing the blob URL of the one it replaces.
+    // A video thumbnail can finish extracting after the page is gone: that late
+    // preview must not create a blob URL nothing would ever release.
+    const setPreviewFromFile = useCallback((file) => {
+        if (!isMountedRef.current) return;
+        revokePreviewBlob();
+        previewBlobRef.current = URL.createObjectURL(file);
+        setImagePreview(previewBlobRef.current);
+    }, [revokePreviewBlob]);
+
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+            revokePreviewBlob();
+        };
+    }, [revokePreviewBlob]);
 
     useEffect(() => {
         if (!projectId && studentIdParam) {
@@ -48,7 +79,7 @@ export const useProjectManagement = () => {
             setIsLoading(true);
             try {
                 const [studentRes, projectRes, templatesRes] = await Promise.all([
-                    currentUser?.role === 'admin' ? client.get('/user/project/new') : Promise.resolve(null),
+                    isAdmin ? client.get('/user/project/new') : Promise.resolve(null),
                     projectId ? client.get(`/user/project/edit/${projectId}`) : Promise.resolve(null),
                     client.get('/api/project-templates')
                 ]);
@@ -74,15 +105,21 @@ export const useProjectManagement = () => {
                         student_id: p.user_id || ''
                     });
                     if (p.image_url) {
+                        revokePreviewBlob();
                         setImagePreview(formatStaticUrl(p.image_url));
                         setIsCustomImage(true);
                     }
                     
-                    // Match project name against default templates
+                    // Preselect the template this project was built from: by template_id
+                    // when present, else by exact (case-insensitive) name for older projects.
                     let matchingTemplate = 'custom';
-                    if (p.name) {
-                        const matched = Object.keys(fetchedTemplates).find(t => p.name.toLowerCase().includes(t.toLowerCase()));
-                        if (matched) matchingTemplate = matched;
+                    const templateNames = Object.keys(fetchedTemplates);
+                    if (p.template_id != null) {
+                        const byId = templateNames.find(t => String(fetchedTemplates[t]?.id) === String(p.template_id));
+                        if (byId) matchingTemplate = byId;
+                    } else if (p.name) {
+                        const byName = templateNames.find(t => t.toLowerCase() === p.name.toLowerCase());
+                        if (byName) matchingTemplate = byName;
                     }
                     setSelectedTemplate(matchingTemplate);
                 }
@@ -101,7 +138,7 @@ export const useProjectManagement = () => {
         };
 
         fetchData();
-    }, [projectId, currentUser]);
+    }, [projectId, isAdmin, revokePreviewBlob]);
 
     const adjustTextareaHeight = (target) => {
         if (!target) return;
@@ -137,7 +174,7 @@ export const useProjectManagement = () => {
         if (files && files[0]) {
             if (name === 'project_image') {
                 setProjectImage(files[0]);
-                setImagePreview(URL.createObjectURL(files[0]));
+                setPreviewFromFile(files[0]);
                 setIsCustomImage(true);
             } else if (name === 'project_video') {
                 setProjectVideo(files[0]);
@@ -147,7 +184,7 @@ export const useProjectManagement = () => {
                         const thumbnailBlob = await extractVideoThumbnail(files[0]);
                         const thumbnailFile = new File([thumbnailBlob], "video_thumbnail.jpg", { type: "image/jpeg" });
                         setProjectImage(thumbnailFile);
-                        setImagePreview(URL.createObjectURL(thumbnailFile));
+                        setPreviewFromFile(thumbnailFile);
                         toast.success('Generated thumbnail from video!');
                     } catch (err) {
                         console.error('Failed to extract thumbnail:', err);
@@ -166,7 +203,7 @@ export const useProjectManagement = () => {
                 const thumbnailBlob = await extractVideoThumbnail(file);
                 const thumbnailFile = new File([thumbnailBlob], "video_thumbnail.jpg", { type: "image/jpeg" });
                 setProjectImage(thumbnailFile);
-                setImagePreview(URL.createObjectURL(thumbnailFile));
+                setPreviewFromFile(thumbnailFile);
                 toast.success('Generated thumbnail from recording!');
             } catch (err) {
                 console.error('Failed to extract thumbnail:', err);
@@ -184,6 +221,16 @@ export const useProjectManagement = () => {
                 formData.append(key, value);
             }
         });
+
+        // Link the project to its template so renaming it later can't break the link.
+        // A custom project is only sent explicitly (as "null") when editing, to clear a link;
+        // on create the server links exact name matches itself.
+        const templateId = selectedTemplate !== 'custom' ? templates[selectedTemplate]?.id : null;
+        if (templateId != null) {
+            formData.append('template_id', templateId);
+        } else if (projectId && Object.keys(templates).length > 0) {
+            formData.append('template_id', 'null');
+        }
 
         if (projectImage) formData.append('project_image', projectImage);
         if (projectVideo) formData.append('project_video', projectVideo);
@@ -210,11 +257,11 @@ export const useProjectManagement = () => {
 
                 navigate('/profile');
             } else {
-                toast.error(response.data.error || 'Failed to save project.');
+                toast.error(getErrorMessage({ response }, 'Failed to save project.'));
             }
         } catch (error) {
             console.error('Save error:', error);
-            toast.error(error.response?.data?.error || 'An error occurred.');
+            toast.error(getErrorMessage(error, 'An error occurred.'));
         } finally {
             setIsSaving(false);
         }
@@ -241,8 +288,8 @@ export const useProjectManagement = () => {
 
                 navigate('/profile');
             }
-        } catch {
-            toast.error('Failed to delete project.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to delete project.'));
         } finally {
             setIsSaving(false);
         }

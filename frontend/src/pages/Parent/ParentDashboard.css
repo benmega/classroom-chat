@@ -53,7 +53,7 @@
     padding: 0 6px;
     border-radius: 99px;
     background: var(--primary-color, #0f766e);
-    color: #fff;
+    color: var(--text-on-primary);
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -184,7 +184,7 @@
     bottom: -2px;
     right: -2px;
     color: #f59e0b;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 50%;
     padding: 2px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.15);
@@ -427,7 +427,7 @@
     position: absolute;
     top: 100%;
     right: 0;
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 6px;
     box-shadow: var(--shadow-md);
@@ -504,12 +504,12 @@
     width: 13px;
     height: 13px;
     border-radius: 50%;
-    border: 2px solid white;
+    border: 2px solid var(--bg-primary);
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);
 }
 
 .activity-dot--active {
-    background: #22c55e;
+    background: var(--green-500);
     animation: pulse-dot 2s ease-in-out infinite;
 }
 
@@ -559,7 +559,7 @@
 
 .duck-label {
     font-size: 0.7rem;
-    color: #b45309;
+    color: var(--amber-700);
     font-weight: 500;
 }
 
@@ -706,6 +706,138 @@
     font-weight: 500;
 }
 
+/* ─── Empty State (no linked children) ───────────────────────────────────────── */
+/* Mobile-first: one centered column. From 900px the intro and connect panel sit
+   side by side so wide screens use the horizontal space instead of a narrow strip. */
+.parent-empty-body {
+    min-height: 80vh;
+    justify-content: center;
+    align-items: center;
+}
+
+.parent-empty {
+    width: 100%;
+    max-width: 440px;
+    padding: 2rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+    box-sizing: border-box;
+}
+
+.parent-empty__intro {
+    text-align: center;
+}
+
+.parent-empty__emoji {
+    font-size: 2.5rem;
+    line-height: 1;
+    margin-bottom: 0.75rem;
+}
+
+.parent-empty__title {
+    font-size: 1.3rem;
+    margin: 0 0 0.5rem;
+    color: var(--text-primary);
+}
+
+.parent-empty__lead {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+/* Value proposition list — only worth the space on wider screens. */
+.parent-empty__features {
+    display: none;
+    list-style: none;
+    margin: 1.75rem 0 0;
+    padding: 0;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: left;
+}
+
+.parent-empty__feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.parent-empty__feature-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-light);
+    color: var(--primary-color);
+}
+
+.parent-empty__feature-desc {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.parent-empty__connect {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg, 12px);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.parent-empty__connect-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.parent-empty__steps {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.parent-empty__input {
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+@media (min-width: 900px) {
+    .parent-empty {
+        max-width: 960px;
+        padding: 2.75rem;
+        grid-template-columns: minmax(0, 1.1fr) minmax(320px, 1fr);
+        gap: 3rem;
+        align-items: center;
+    }
+
+    .parent-empty__intro { text-align: left; }
+    .parent-empty__emoji { font-size: 3rem; }
+    .parent-empty__title { font-size: 1.75rem; }
+    .parent-empty__lead  { font-size: 1rem; max-width: 42ch; }
+    .parent-empty__features { display: flex; }
+
+    .parent-empty__connect { padding: 1.75rem; }
+}
+
 /* ─── Error State ─────────────────────────────────────────────────────────────── */
 .parent-error {
     grid-column: 1 / -1;
@@ -715,7 +847,7 @@
     justify-content: center;
     padding: 3rem 2rem;
     background: var(--error-subtle);
-    border: 1px solid #fecaca;
+    border: 1px solid var(--error-light);
     border-radius: var(--radius-lg, 0.5rem);
     text-align: center;
     gap: 0.5rem;

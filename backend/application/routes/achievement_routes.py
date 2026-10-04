@@ -4,7 +4,6 @@ import re
 import subprocess
 import sys
 import zipfile
-from datetime import datetime
 from typing import Any
 
 from application.decorators.admin_required import admin_only
@@ -13,29 +12,261 @@ from application.extensions import db
 from application.models.achievements import Achievement
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
-from application.utilities.helper_functions import allowed_file
+from application.utilities.cert_generator import get_certificate_templates_dir
+from application.utilities.helper_functions import allowed_file, utcnow_naive
+from application.utilities.image_upload import (
+    BADGE_MAX_EDGE,
+    ImageUploadError,
+    process_image,
+    write_bytes_atomic,
+)
 from flask import (
     Blueprint,
+    current_app,
     flash,
     jsonify,
     redirect,
-    render_template,
     request,
     send_file,
     send_from_directory,
     session,
     url_for,
 )
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import contains_eager, joinedload
 from werkzeug.utils import secure_filename
 
 achievements = Blueprint("achievements", __name__)
 
-# Updated to allow codecombat.com and ozaria.com (with optional www)
-CERT_URL_REGEX = r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w\d]+\?.*course=([\w\d-]+)"
+# Updated to allow codecombat.com and ozaria.com (with optional www). Used with
+# re.fullmatch, so nothing may precede the scheme or follow the URL. The ``course``
+# parameter may sit anywhere in the query string and be followed by more
+# parameters or a #fragment.
+CERT_URL_REGEX = (
+    r"https://(?:www\.)?(?:codecombat|ozaria)\.com/certificates/[\w\d]+"
+    r"\?(?:[^\s#]*&)?course=([\w\d-]+)(?:[&#]\S*)?"
+)
 
+
+# Far longer than any real certificate link. The pattern is not linear on a long run
+# of ``&course=`` pairs, so longer input is turned away without being matched.
+MAX_CERT_URL_LENGTH = 2048
 
 ALLOWED_EXTENSIONS = {"pdf"}
+
+# The slug names the badge file on disk, so keep it to a path-safe charset.
+SLUG_RE = re.compile(r"[a-z0-9-]+")
+SLUG_ERROR = "Slug may only contain lowercase letters, digits and hyphens."
+REWARD_ERROR = "Reward must be a whole number of at least 1."
+
+# Badge uploads are normalised to <slug>.png, the only name every consumer looks for.
+# The other extensions are what older uploads may have left behind.
+BADGE_EXTENSIONS = ("png", "jpg", "jpeg", "webp")
+SPRITE_REBUILD_TIMEOUT = 60  # seconds
+
+
+class _BadgeError(Exception):
+    """A badge change failed after the upload was accepted; the message is shown to the admin."""
+
+
+class _BadgeFiles:
+    """The badge file changes of one request, remembered so they can be undone."""
+
+    def __init__(self):
+        self._originals: dict[str, bytes | None] = {}
+
+    def _remember(self, path):
+        if path not in self._originals:
+            try:
+                with open(path, "rb") as handle:
+                    self._originals[path] = handle.read()
+            except FileNotFoundError:
+                self._originals[path] = None
+
+    def write(self, path, data):
+        self._remember(path)
+        write_bytes_atomic(path, data)
+
+    def remove(self, path):
+        if os.path.isfile(path):
+            self._remember(path)
+            os.remove(path)
+
+    def move(self, source, target):
+        with open(source, "rb") as handle:
+            data = handle.read()
+        self.write(target, data)
+        self.remove(source)
+
+    def undo(self):
+        """Put every touched file back as it was: restored, or removed if it did not exist."""
+        for path, data in self._originals.items():
+            try:
+                if data is not None:
+                    write_bytes_atomic(path, data)
+                elif os.path.exists(path):
+                    os.remove(path)
+            except OSError:
+                current_app.logger.exception(f"Could not restore the badge file {path}")
+
+
+def _badge_dir():
+    """Folder of the badge images (current_app.static_folder / images / achievement_badges)."""
+    return os.path.join(str(current_app.static_folder), "images", "achievement_badges")
+
+
+def _badge_slug_is_safe(slug):
+    """True when ``<slug>.<ext>`` is a plain file name, so a badge can never leave the badge folder."""
+    return bool(slug) and all(os.path.basename(f"{slug}.{ext}") == f"{slug}.{ext}" for ext in BADGE_EXTENSIONS)
+
+
+def _badge_path(slug, ext):
+    badge_dir = os.path.abspath(_badge_dir())
+    path = os.path.abspath(os.path.join(badge_dir, f"{slug}.{ext}"))
+    if not _badge_slug_is_safe(slug) or os.path.commonpath([badge_dir, path]) != badge_dir:
+        raise ValueError(f"Unsafe badge slug: {slug!r}")
+    return path
+
+
+def _prepare_badge(badge_file):
+    """Validates an uploaded badge and returns it as a PNG of at most BADGE_MAX_EDGE pixels."""
+    return process_image(
+        badge_file,
+        max_bytes=current_app.config["IMAGE_MAX_BYTES_BADGE"],
+        max_edge=BADGE_MAX_EDGE,
+        allowed_formats=("PNG", "JPEG", "WEBP"),
+        output_format="PNG",
+    )
+
+
+def _rebuild_sprite():
+    """Runs backend/tools/make_sprite_sheet.py, which packs every badge into the sprite sheet."""
+    tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
+    script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
+    try:
+        subprocess.run(
+            [sys.executable, script_path],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=SPRITE_REBUILD_TIMEOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        raise _BadgeError(f"Sprite sheet rebuild failed: {e.stderr}") from e
+    except Exception as e:
+        raise _BadgeError(f"Error rebuilding sprite sheet: {e}") from e
+
+
+def _apply_badge_change(files, old_slug, new_slug, badge_png):
+    """
+    Brings the badge files in line with an add or edit, through ``files`` so it can be undone.
+
+    ``badge_png`` is the new badge (PNG bytes) or None; ``old_slug`` is None for an add.
+    Returns True when the sprite sheet has to be rebuilt.
+    """
+    slug_changed = bool(old_slug) and old_slug != new_slug
+    # A stored slug from before slugs were restricted may not be a plain file name:
+    # its files are left alone.
+    old_files_usable = slug_changed and _badge_slug_is_safe(old_slug)
+
+    if badge_png is not None:
+        os.makedirs(_badge_dir(), exist_ok=True)
+        files.write(_badge_path(new_slug, "png"), badge_png)
+        # An earlier upload of another type would give the slug a second sprite cell and CSS rule.
+        for ext in BADGE_EXTENSIONS[1:]:
+            files.remove(_badge_path(new_slug, ext))
+        if old_files_usable:
+            for ext in BADGE_EXTENSIONS:
+                files.remove(_badge_path(old_slug, ext))
+        return True
+
+    changed = False
+    if old_files_usable:
+        for ext in BADGE_EXTENSIONS:
+            old_path = _badge_path(old_slug, ext)
+            if os.path.isfile(old_path):
+                files.move(old_path, _badge_path(new_slug, ext))
+                changed = True
+    return changed
+
+
+def _commit_with_badge(old_slug, new_slug, badge_png):
+    """
+    Flushes and commits the achievement the caller added or changed, together with its badge files.
+
+    The row is flushed first, so a database problem shows up before any file is touched.
+    The badge files are then written and the sprite rebuilt (a slow subprocess), and only
+    then is the session committed. Returns None on success. On any failure the session is
+    rolled back, the files are put back as they were and the JSON error response is returned.
+    """
+    files = _BadgeFiles()
+    rebuilt = False
+    try:
+        db.session.flush()
+        if _apply_badge_change(files, old_slug, new_slug, badge_png):
+            _rebuild_sprite()
+            rebuilt = True
+        db.session.commit()
+        return None
+    except Exception as e:
+        db.session.rollback()
+        files.undo()
+        if rebuilt:
+            # The sprite was built from the files that were just put back.
+            try:
+                _rebuild_sprite()
+            except _BadgeError:
+                current_app.logger.exception("Could not rebuild the sprite sheet after undoing a badge change")
+        if isinstance(e, _BadgeError):
+            message = str(e)
+        else:
+            current_app.logger.exception(f"Error saving achievement badge: {e}")
+            message = "Error saving the achievement."
+        return jsonify({"status": "error", "message": message}), 500
+
+
+def _parse_reward(value):
+    """Return ``value`` as a whole number >= 1, or None if it is not one."""
+    if isinstance(value, bool):
+        return None
+    try:
+        if isinstance(value, float) and not value.is_integer():
+            return None
+        reward = int(value)
+    except (TypeError, ValueError):
+        return None
+    return reward if reward >= 1 else None
+
+
+def _certificate_dir():
+    """Folder the certificate PDFs are written to."""
+    return current_app.config.get(
+        "UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")
+    )
+
+
+def _certificate_abs_path(cert):
+    """Absolute path of ``cert``'s PDF, or None when the row has no file.
+
+    New rows store only the file name, which lives in the upload folder. Older
+    rows hold the absolute path of the host that saved them: that path is used
+    while it still exists, otherwise the same name is looked up in the upload folder.
+    """
+    name = cert.stored_filename
+    if not name:
+        return None
+    if os.path.isabs(cert.file_path) and os.path.exists(cert.file_path):
+        return os.path.abspath(cert.file_path)
+    return os.path.abspath(os.path.join(_certificate_dir(), name))
+
+
+def _certificate_download_name(cert, with_id=False):
+    """Safe ``<student>_<achievement>.pdf`` name; ``with_id`` keeps zip entries unique."""
+    user = cert.user
+    owner = secure_filename(user.nickname or "") or secure_filename(user.username or "")
+    stem = secure_filename(f"{owner}_{cert.achievement.name}") or "certificate"
+    if with_id or stem == "certificate":
+        stem = f"{stem}_{cert.id}"
+    return f"{stem}.pdf"
 
 
 # API for the achievements data
@@ -51,33 +282,16 @@ def get_achievements_json():
         return jsonify({"success": False, "error": "User not found!"}), 404
 
     # Automatically check for new achievements when visiting the page
-    from application.models.challenge_log import ChallengeLog
-    from application.models.duck_trade import DuckTradeLog
-    from application.models.message import Message
     from application.services.achievement_engine import (
-        _calculate_consistency,
+        compute_user_stats,
         evaluate_user,
         get_achievement_progress,
-        longest_session_minutes,
     )
-    from sqlalchemy import func
 
     evaluate_user(current_user)
 
     # Pre-calculate stats for speed
-    stats = {
-        "chat_count": db.session.query(func.count(Message.id))
-        .filter(Message.user_id == current_user.id)
-        .scalar(),
-        "consistency_streak": _calculate_consistency(current_user.id),
-        "community_count": db.session.query(func.count(ChallengeLog.id))
-        .filter(func.lower(ChallengeLog.helper) == current_user.username.lower())
-        .scalar(),
-        "max_session": longest_session_minutes(current_user.id),
-        "trade_count": db.session.query(func.count(DuckTradeLog.id))
-        .filter(DuckTradeLog.user_id == current_user.id)
-        .scalar(),
-    }
+    stats = compute_user_stats(current_user)
 
     user_achievements = {ua.achievement_id for ua in current_user.achievements}
     all_achievements = Achievement.query.all()
@@ -101,36 +315,16 @@ def get_achievements_json():
     )
 
 
-# Legacy SSR page for achievements
-@achievements.route("/")
-@achievements.route("/view")
-def achievements_page():
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return get_achievements_json()
-
-    user_id = session.get("user")
-    current_user = User.query.filter_by(id=user_id).first()
-    if not current_user:
-        return jsonify({"success": False, "error": "User not found!"}), 404
-
-    return render_template("achievements.html", user=current_user)
-
-
-@achievements.route("/add", methods=["GET", "POST"])
+@achievements.route("/add", methods=["POST"])
 @admin_only
 def add_achievement():
     data = request.get_json() if request.is_json else request.form
-
-    if request.method == "GET":
-        if request.is_json or request.accept_mimetypes.accept_json:
-            return jsonify({"status": "ready"}), 200
-        return render_template("add_achievement.html"), 200
 
     name = data.get("name")
     slug = data.get("slug")
     description = data.get("description")
     achievement_type = data.get("type", "ducks")
-    reward = int(data.get("reward") or 1)
+    raw_reward = data.get("reward")
     requirement_value = data.get("requirement_value") or None
     source = data.get("source")
 
@@ -139,6 +333,13 @@ def add_achievement():
             jsonify({"status": "error", "message": "Name and Slug are required."}),
             400,
         )
+
+    if not isinstance(slug, str) or not SLUG_RE.fullmatch(slug):
+        return jsonify({"status": "error", "message": SLUG_ERROR}), 400
+
+    reward = 1 if raw_reward in (None, "") else _parse_reward(raw_reward)
+    if reward is None:
+        return jsonify({"status": "error", "message": REWARD_ERROR}), 400
 
     # Check for existing slug
     existing = Achievement.query.filter_by(slug=slug).first()
@@ -153,60 +354,20 @@ def add_achievement():
             400,
         )
 
-    # Handle Badge Upload
+    # Handle Badge Upload: validate it before anything is created or written
+    badge_png = None
     badge_file = request.files.get("badge")
     if badge_file and badge_file.filename != "":
         allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
         if not allowed_file(badge_file.filename, allowed_badge_ext):
             return (
                 jsonify({"status": "error", "message": "Invalid badge file type."}),
-                200,
+                400,
             )
-
-        from flask import current_app
-
-        # We save to frontend/static/images/achievement_badges/
-        # which is current_app.static_folder / "images" / "achievement_badges"
-        badge_dir = os.path.join(
-            str(current_app.static_folder), "images", "achievement_badges"
-        )
-        os.makedirs(badge_dir, exist_ok=True)
-
-        ext = (badge_file.filename or "").rsplit(".", 1)[1].lower()
-        filename = f"{slug}.{ext}"
-        filepath = os.path.join(badge_dir, filename)
-        badge_file.save(filepath)
-
-        # Trigger sprite sheet rebuild
         try:
-            tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
-            script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
-            subprocess.run(
-                [sys.executable, script_path],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except subprocess.CalledProcessError as e:
-            return (
-                jsonify(
-                    {
-                        "status": "error",
-                        "message": f"Sprite sheet rebuild failed: {e.stderr}",
-                    }
-                ),
-                500,
-            )
-        except Exception as e:
-            return (
-                jsonify(
-                    {
-                        "status": "error",
-                        "message": f"Error rebuilding sprite sheet: {e}",
-                    }
-                ),
-                500,
-            )
+            badge_png = _prepare_badge(badge_file).data
+        except ImageUploadError as e:
+            return jsonify({"status": "error", "message": e.message}), e.status
 
     ach = Achievement(
         name=name,
@@ -218,7 +379,13 @@ def add_achievement():
         source=source,
     )
     db.session.add(ach)
-    db.session.commit()
+
+    # The row is created first; the badge is saved to
+    # current_app.static_folder / "images" / "achievement_badges" and the sprite rebuilt
+    # before the commit, so a failure leaves neither a row nor a badge behind.
+    failure = _commit_with_badge(None, slug, badge_png)
+    if failure:
+        return failure
 
     return jsonify(
         {"status": "success", "message": f"Achievement '{name}' added successfully!"}
@@ -240,143 +407,148 @@ def edit_achievement(id):
     requirement_value = data.get("requirement_value")
     source = data.get("source")
 
-    if name: ach.name = name
+    # Validate before touching ``ach``. An unchanged slug is accepted as-is so an
+    # achievement created before slugs were restricted can still be edited.
+    if slug and slug != ach.slug and not SLUG_RE.fullmatch(slug):
+        return jsonify({"status": "error", "message": SLUG_ERROR}), 400
+    new_reward = None
+    if reward:
+        new_reward = _parse_reward(reward)
+        if new_reward is None:
+            return jsonify({"status": "error", "message": REWARD_ERROR}), 400
     if slug:
         existing = Achievement.query.filter(Achievement.slug == slug, Achievement.id != id).first()
         if existing:
             return jsonify({"status": "error", "message": "Achievement with this slug already exists."}), 400
-        ach.slug = slug
-    if description is not None: ach.description = description
-    if achievement_type: ach.type = achievement_type
-    if reward: ach.reward = int(reward)
-    if requirement_value is not None: ach.requirement_value = requirement_value
-    if source is not None: ach.source = source
 
+    badge_png = None
     badge_file = request.files.get("badge")
     if badge_file and badge_file.filename != "":
         allowed_badge_ext = {"png", "jpg", "jpeg", "webp"}
         if not allowed_file(badge_file.filename, allowed_badge_ext):
             return jsonify({"status": "error", "message": "Invalid badge file type."}), 400
-
-        from flask import current_app
-        badge_dir = os.path.join(str(current_app.static_folder), "images", "achievement_badges")
-        os.makedirs(badge_dir, exist_ok=True)
-
-        ext = (badge_file.filename or "").rsplit(".", 1)[1].lower()
-        filename = f"{ach.slug}.{ext}"
-        filepath = os.path.join(badge_dir, filename)
-        badge_file.save(filepath)
-
+        # An unchanged slug is not re-validated above, so a stored slug that predates
+        # SLUG_RE must still never be able to write outside the badge directory.
+        if not _badge_slug_is_safe(slug or ach.slug):
+            return jsonify({"status": "error", "message": SLUG_ERROR}), 400
         try:
-            tools_dir = os.path.join(current_app.config["BASE_DIR"], "backend", "tools")
-            script_path = os.path.join(tools_dir, "make_sprite_sheet.py")
-            subprocess.run([sys.executable, script_path], check=True, capture_output=True, text=True)
-        except Exception as e:
-            return jsonify({"status": "error", "message": f"Error rebuilding sprite sheet: {e}"}), 500
+            badge_png = _prepare_badge(badge_file).data
+        except ImageUploadError as e:
+            return jsonify({"status": "error", "message": e.message}), e.status
 
-    db.session.commit()
+    old_slug = ach.slug
+    if name: ach.name = name
+    if slug: ach.slug = slug
+    if description is not None: ach.description = description
+    if achievement_type: ach.type = achievement_type
+    if new_reward is not None: ach.reward = new_reward
+    if requirement_value is not None: ach.requirement_value = requirement_value
+    if source is not None: ach.source = source
+
+    # A renamed slug moves the badge along; a new badge replaces it. The sprite is rebuilt
+    # before the commit, and a failure puts the previous badge files back.
+    failure = _commit_with_badge(old_slug, ach.slug, badge_png)
+    if failure:
+        return failure
     return jsonify({"status": "success", "message": f"Achievement '{ach.name}' updated successfully!"})
 
-@achievements.route("/submit_certificate", methods=["GET", "POST"])
+@achievements.route("/submit_certificate", methods=["POST"])
 def submit_certificate():
     user_id = session.get("user")
     current_user = User.query.filter_by(id=user_id).first()
     if not current_user:
         return jsonify({"success": False, "error": "User not found!"}), 400
 
-    if request.method == "POST":
-        data = request.get_json(silent=True) or request.form
-        url = data.get("certificate_url")
+    data = request.get_json(silent=True) or request.form
+    url = data.get("certificate_url")
+    url = url.strip() if isinstance(url, str) else ""
 
-        # 1. Check URL
-        match = re.search(CERT_URL_REGEX, url or "")
-        if not match:
-            return jsonify({"success": False, "error": "Invalid certificate URL."}), 200
+    # 1. Check URL
+    match = None
+    if len(url) <= MAX_CERT_URL_LENGTH:
+        match = re.fullmatch(CERT_URL_REGEX, url)
+    if not match:
+        return jsonify({"success": False, "error": "Invalid certificate URL."}), 400
 
-        course_slug = match.group(1)
+    course_slug = match.group(1)
 
-        from application.utilities.db_helpers import resolve_course_id
-        db_course_id = resolve_course_id(course_slug)
+    from application.utilities.db_helpers import resolve_course_id
+    db_course_id = resolve_course_id(course_slug)
 
-        achievement = Achievement.query.filter(
-            (Achievement.slug == course_slug) |
-            (Achievement.source == course_slug) |
-            (Achievement.slug == db_course_id) |
-            (Achievement.source == db_course_id)
-        ).first()
+    achievement = Achievement.query.filter(
+        (Achievement.slug == course_slug) |
+        (Achievement.source == course_slug) |
+        (Achievement.slug == db_course_id) |
+        (Achievement.source == db_course_id)
+    ).first()
 
-        is_auto_recommended = False
-        recommendation_reason = "No matching achievement found for this course."
-        if achievement:
-            is_auto_recommended = True
-            recommendation_reason = f"Valid certificate URL matching achievement '{achievement.name}'."
-        else:
-            return jsonify({
-                "success": False,
-                "error": "No matching achievement found for this course."
-            }), 200
+    is_auto_recommended = False
+    recommendation_reason = "No matching achievement found for this course."
+    if achievement:
+        is_auto_recommended = True
+        recommendation_reason = f"Valid certificate URL matching achievement '{achievement.name}'."
+    else:
+        return jsonify({
+            "success": False,
+            "error": "No matching achievement found for this course."
+        }), 422
 
-        # 2. Handle File (Upload or Generate)
-        file = request.files.get("certificate_file")
-        from flask import current_app
+    # 2. Handle File (Upload or Generate)
+    file = request.files.get("certificate_file")
 
-        cert_dir = os.path.join(current_app.config.get("UPLOAD_FOLDER", os.path.join(current_app.config["BASE_DIR"], "certificates")))
-        os.makedirs(cert_dir, exist_ok=True)
-        filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
-        filepath = os.path.join(cert_dir, filename)
+    cert_dir = _certificate_dir()
+    os.makedirs(cert_dir, exist_ok=True)
+    filename = secure_filename(f"{current_user.username}_{achievement.slug}.pdf")
+    filepath = os.path.join(cert_dir, filename)
 
-        if file and file.filename:
-            from application.utilities.helper_functions import allowed_file
-            if not allowed_file(file.filename, {'pdf'}):
-                return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 200
-            file.save(filepath)
-        else:
-            from application.utilities.cert_generator import generate_certificate
+    if file and file.filename:
+        from application.utilities.helper_functions import allowed_file
+        if not allowed_file(file.filename, {'pdf'}):
+            return jsonify({"success": False, "error": "Invalid file type. Only PDF is allowed."}), 400
+        file.save(filepath)
+    else:
+        from application.utilities.cert_generator import generate_certificate
 
-            # Use Alice_CS1.pdf as our template
-            template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
-            student_name = current_user.nickname or current_user.username
+        # Use Alice_CS1.pdf as our template
+        template_path = os.path.join(current_app.config["BASE_DIR"], "mockups", "Certificate_Samples", "CodeCombat", "Alice_CS1.pdf")
+        student_name = current_user.nickname or current_user.username
 
-            try:
-                generate_certificate(template_path, filepath, student_name)
-            except Exception as e:
-                return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
+        try:
+            generate_certificate(template_path, filepath, student_name)
+        except Exception as e:
+            return jsonify({"success": False, "error": f"Failed to generate certificate: {e}"}), 500
 
-        # 3. Create or update cert entry
-        cert = UserCertificate.query.filter_by(
-            user_id=current_user.id, achievement_id=achievement.id
-        ).first()
+    # 3. Create or update cert entry
+    cert = UserCertificate.query.filter_by(
+        user_id=current_user.id, achievement_id=achievement.id
+    ).first()
 
-        if not cert:
-            cert = UserCertificate(
-                user_id=current_user.id,
-                achievement_id=achievement.id,
-                url=url,
-                file_path=filepath,
-                status="pending",
-                is_auto_recommended=is_auto_recommended,
-                recommendation_reason=recommendation_reason
+    if not cert:
+        cert = UserCertificate(
+            user_id=current_user.id,
+            achievement_id=achievement.id,
+            url=url,
+            file_path=filename,
+            status="pending",
+            is_auto_recommended=is_auto_recommended,
+            recommendation_reason=recommendation_reason
 
-            )
-            db.session.add(cert)
-        else:
-            cert.url = url
-            cert.file_path = filepath
-            # A resubmission always requires fresh admin review — never
-            # auto-approve just because a prior submission existed.
-            cert.status = "pending"
-            cert.reviewed_at = None
-
-        db.session.commit()
-
-        # Success return
-        return jsonify(
-            {"success": True, "message": "Certificate submitted successfully."}
         )
+        db.session.add(cert)
+    else:
+        cert.url = url
+        cert.file_path = filename
+        # A resubmission always requires fresh admin review — never
+        # auto-approve just because a prior submission existed.
+        cert.status = "pending"
+        cert.reviewed_at = None
 
-    if request.is_json or request.accept_mimetypes.accept_json:
-        return jsonify({"status": "ready"}), 200
-    return render_template("submit_certificate.html"), 200
+    db.session.commit()
+
+    # Success return
+    return jsonify(
+        {"success": True, "message": "Certificate submitted successfully."}
+    )
 
 
 @achievements.route("/view_certificate/<int:cert_id>")
@@ -384,14 +556,14 @@ def view_certificate(cert_id):
     # Intentionally public: certificates are shareable achievements, and this
     # tradeoff is disclosed and accepted during onboarding.
     cert = db.get_or_404(UserCertificate, cert_id)
-    full_path = os.path.abspath(cert.file_path)
-    directory = os.path.dirname(full_path)
-    filename = os.path.basename(full_path)
+    full_path = _certificate_abs_path(cert)
 
-    if not os.path.exists(full_path):
+    if not full_path or not os.path.exists(full_path):
         flash("Certificate file not found on the server.", "error")
         return "File Not Found", 404  # Returns a 404 status code
 
+    directory = os.path.dirname(full_path)
+    filename = os.path.basename(full_path)
     return send_from_directory(directory, filename, mimetype="application/pdf")
 
 
@@ -399,12 +571,19 @@ def view_certificate(cert_id):
 @admin_only
 @api_response
 def admin_certificates():
-    # Only show pending certificates by default, matching the template
+    # Only show pending certificates by default, matching the template.
+    # The joins used for filtering also load the student and the achievement that
+    # to_dict() reads, so the list is one query however many certificates there are.
     certs = (
         db.session.query(UserCertificate)
         .filter_by(status="pending")
         .join(User)
         .join(Achievement)
+        .options(
+            contains_eager(UserCertificate.user),
+            contains_eager(UserCertificate.achievement),
+        )
+        .order_by(UserCertificate.submitted_at, UserCertificate.id)
         .all()
     )
 
@@ -442,7 +621,7 @@ View Student Profile:
 def mark_reviewed(cert_id):
     cert = db.get_or_404(UserCertificate, cert_id)
     cert.status = "approved"
-    cert.reviewed_at = datetime.utcnow()
+    cert.reviewed_at = utcnow_naive()
     db.session.commit()
 
     from application.socket_events import emit_activity_resolved
@@ -455,13 +634,7 @@ def mark_reviewed(cert_id):
 
     _send_certificate_approval_email(cert)
 
-    msg = "Certificate marked as reviewed."
-
-    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify({"status": "success", "message": msg})
-
-    flash(msg, "success")
-    return redirect(url_for("achievements.admin_certificates"))
+    return jsonify({"status": "success", "message": "Certificate marked as reviewed."})
 
 
 @achievements.route("/admin/certificates/reject/<int:cert_id>", methods=["POST"])
@@ -471,39 +644,35 @@ def reject_certificate(cert_id):
     data = request.get_json(silent=True) or {}
     cert.status = "rejected"
     cert.review_note = data.get("review_note")
-    cert.reviewed_at = datetime.utcnow()
+    cert.reviewed_at = utcnow_naive()
     db.session.commit()
 
     from application.socket_events import emit_activity_resolved
 
     emit_activity_resolved(cert.user_id, "certificate", cert.id, "rejected")
 
-    msg = "Certificate rejected."
-
-    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify({"status": "success", "message": msg})
-
-    flash(msg, "success")
-    return redirect(url_for("achievements.admin_certificates"))
+    return jsonify({"status": "success", "message": "Certificate rejected."})
 
 
 @achievements.route("/download_certificate/<int:cert_id>")
 def download_certificate(cert_id):
     # Intentionally public — see view_certificate.
     cert = db.get_or_404(UserCertificate, cert_id)
-    full_path = os.path.abspath(cert.file_path)
+    full_path = _certificate_abs_path(cert)
+
+    if not full_path or not os.path.exists(full_path):
+        flash("Certificate file not found on the server.", "error")
+        # The achievements page is a React route (served as the SPA index)
+        return redirect(request.referrer or "/achievements")
+
     directory = os.path.dirname(full_path)
     filename = os.path.basename(full_path)
 
-    if not os.path.exists(full_path):
-        flash("Certificate file not found on the server.", "error")
-        return redirect(request.referrer or url_for("achievements.achievements_page"))
-
-    # Helper to construct a nice filename for the download
-    download_name = f"{cert.user.nickname}_{cert.achievement.name}.pdf"
-
     return send_from_directory(
-        directory, filename, as_attachment=True, download_name=download_name
+        directory,
+        filename,
+        as_attachment=True,
+        download_name=_certificate_download_name(cert),
     )
 
 
@@ -511,7 +680,7 @@ def download_certificate(cert_id):
 @admin_only
 def mark_all_reviewed():
     certs = db.session.query(UserCertificate).filter_by(status="pending").all()
-    now = datetime.utcnow()
+    now = utcnow_naive()
     users_to_evaluate = set()
     for cert in certs:
         cert.status = "approved"
@@ -530,13 +699,12 @@ def mark_all_reviewed():
     for user in users_to_evaluate:
         evaluate_user(user, force=True)
 
-    msg = f"{len(certs)} certificates marked as reviewed."
-
-    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest":
-        return jsonify({"status": "success", "message": msg})
-
-    flash(msg, "success")
-    return redirect(url_for("achievements.admin_certificates"))
+    return jsonify(
+        {
+            "status": "success",
+            "message": f"{len(certs)} certificates marked as reviewed.",
+        }
+    )
 
 
 @achievements.route("/admin/certificates/download_all")
@@ -556,10 +724,15 @@ def download_all_certificates():
 
     memory_file = io.BytesIO()
     with zipfile.ZipFile(memory_file, "w", zipfile.ZIP_DEFLATED) as zf:
+        used_names = set()
         for cert in certs:
-            full_path = os.path.abspath(cert.file_path)
-            if os.path.exists(full_path):
-                filename = f"{cert.user.nickname}_{cert.achievement.name}.pdf"
+            full_path = _certificate_abs_path(cert)
+            if full_path and os.path.exists(full_path):
+                filename = _certificate_download_name(cert)
+                if filename in used_names:
+                    # Two students (or two courses) can share a nickname
+                    filename = _certificate_download_name(cert, with_id=True)
+                used_names.add(filename)
                 zf.write(full_path, filename)
 
     memory_file.seek(0)
@@ -589,9 +762,11 @@ def admin_certificate_templates():
         {"id": "oz-1", "name": "Ozaria 1"},
         {"id": "oz-2", "name": "Ozaria 2"},
         {"id": "oz-3", "name": "Ozaria 3"},
-        {"id": "oz-4", "name": "Ozaria 4"}
+        {"id": "oz-4", "name": "Ozaria 4"},
+        {"id": "3d-1", "name": "TinkerCAD 1"},
+        {"id": "3d-2", "name": "Blender 1"},
     ]
-    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    templates_dir = get_certificate_templates_dir()
     result = []
     for c in courses:
         path = os.path.join(templates_dir, f"{c['id']}.pdf")
@@ -612,7 +787,7 @@ def admin_certificate_templates_view(course_id):
     from application.utilities.cert_generator import generate_certificate
     from application.utilities.db_helpers import get_canonical_course_slug, resolve_course_id
 
-    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    templates_dir = get_certificate_templates_dir()
     canonical_slug = get_canonical_course_slug(course_id)
     mongo_id = resolve_course_id(course_id)
 
@@ -649,7 +824,7 @@ def admin_certificate_templates_upload(course_id):
     if not file.filename.lower().endswith(".pdf"):
         return jsonify({"status": "error", "success": False, "error": "Only PDF files allowed"}), 400
 
-    templates_dir = os.path.join(os.path.dirname(__file__), "..", "static", "certificate_templates")
+    templates_dir = get_certificate_templates_dir()
     os.makedirs(templates_dir, exist_ok=True)
 
     canonical_slug = get_canonical_course_slug(course_id)

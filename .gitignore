@@ -10,18 +10,29 @@ venv/
 userData/
 frontend/static/images/projects/
 *.env
+.env.*
+!.env.example
+!.env.test
+*.pem
 backend/reports/certificates/
-/backend/license/license.lic
 *.iml
 *.ipr
 *.iws
 .venv/
 *.log
+*.log.*
 *.bak
 certificates/*
+backend/certificates/
 mockups/Certificate_Samples/
 git_log.txt
-.agents/workflows/git-review.md
+
+# Generated output containing student names (cards, scraper dumps)
+classroom_cards.pdf
+backend/instance/migration/certificate_log.csv
+backend/instance/migration/master_challenge_log.csv
+instance/migration/certificate_log.csv
+instance/migration/master_challenge_log.csv
 
 # Dependencies and build output
 node_modules/
@@ -29,12 +40,17 @@ dist/
 
 # Test and coverage artifacts
 .coverage
+.coverage.*
 coverage/
+htmlcov/
+coverage_output.txt
 playwright-report/
 test-results/
 eslint_report.json
 lint_output*
 test_output.txt
+test_results.txt
+test_results.json
 
 # Scratch and diff dumps
 backend/scratch/

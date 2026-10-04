@@ -1,12 +1,7 @@
-"""
-File: user_certificate.py
-Type: py
-Summary: SQLAlchemy model for user-submitted certificates.
-"""
 
-from datetime import datetime
 
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class UserCertificate(db.Model):
@@ -17,7 +12,7 @@ class UserCertificate(db.Model):
         db.Integer, db.ForeignKey("achievement.id"), nullable=False
     )
     url = db.Column(db.String(256), nullable=False)
-    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    submitted_at = db.Column(db.DateTime, default=utcnow_naive)
     file_path = db.Column(db.String(256), nullable=True)
     status = db.Column(db.String(20), nullable=False, default="pending")
     review_note = db.Column(db.Text, nullable=True)
@@ -27,6 +22,17 @@ class UserCertificate(db.Model):
 
     # Relationships
     achievement = db.relationship("Achievement", backref="certificates")
+
+    @property
+    def stored_filename(self):
+        """File name of the stored PDF, or None when the row has no file.
+
+        New rows store only the name. Older rows hold the absolute path of the host
+        that saved the file, so the directory part is dropped (either separator)
+        to keep server paths out of API responses.
+        """
+        name = (self.file_path or "").replace("\\", "/").rsplit("/", 1)[-1]
+        return name if name not in ("", ".", "..") else None
 
     def to_dict(self):
         return {
@@ -46,7 +52,7 @@ class UserCertificate(db.Model):
             "submitted_at": (
                 self.submitted_at.isoformat() if self.submitted_at else None
             ),
-            "file_path": self.file_path,
+            "file_path": self.stored_filename,
             "status": self.status,
             "review_note": self.review_note,
             "reviewed_at": self.reviewed_at.isoformat() if self.reviewed_at else None,

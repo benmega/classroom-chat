@@ -14,6 +14,8 @@ function Assert-Success {
 # ---------------------------------------------------------
 
 # BACKEND CHECKS
+# Needs the backend test/lint tooling (ruff, pytest, ...) in the active venv:
+#   pip install -r backend/requirements-dev.txt
 # ---------------------------------------------------------
 Write-Host "`n[1/5] Running Backend Checks..." -ForegroundColor Yellow
 Set-Location "$PSScriptRoot\..\backend"

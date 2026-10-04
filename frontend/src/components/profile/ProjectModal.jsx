@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ExternalLink, Code, CheckCircle, FileText, AlertCircle } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
+import { safeUrl } from '../../utils/safeUrl';
 import SmartImage from '../common/SmartImage';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const getYoutubeEmbedUrl = (url) => {
     if (!url) return null;
@@ -31,17 +33,22 @@ const getYoutubeEmbedUrl = (url) => {
 };
 
 const ProjectModal = ({ project, onClose }) => {
+    const dialogRef = useRef(null);
+    const titleId = useId();
+
+    useModalA11y({ isOpen: Boolean(project), onClose, containerRef: dialogRef });
+
     if (!project) return null;
 
     return createPortal(
-        <div role="button" tabIndex={0} className="modal-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={onClose}>
-            <div role="button" tabIndex={0} className="modal-content project-modal" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={e => e.stopPropagation()}>
-                <button className="close-modal" onClick={onClose}><X size={24} /></button>
+        <div role="presentation" className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+            <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="modal-content project-modal">
+                <button className="close-modal" onClick={onClose} aria-label="Close"><X size={24} /></button>
                 <div className="modal-header">
-                    <h2>{project.name}</h2>
+                    <h2 id={titleId}>{project.name}</h2>
                     <div className="modal-actions">
-                        {project.link && <a href={project.link} className="btn-primary" target="_blank" rel="noreferrer"><ExternalLink size={18} /> Launch Live</a>}
-                        {project.github_link && <a href={project.github_link} className="btn-secondary" target="_blank" rel="noreferrer"><Code size={18} /> Source</a>}
+                        {safeUrl(project.link) && <a href={safeUrl(project.link)} className="btn-primary" target="_blank" rel="noreferrer"><ExternalLink size={18} /> Launch Live</a>}
+                        {safeUrl(project.github_link) && <a href={safeUrl(project.github_link)} className="btn-secondary" target="_blank" rel="noreferrer"><Code size={18} /> Source</a>}
                     </div>
                 </div>
                 <div className="modal-body">

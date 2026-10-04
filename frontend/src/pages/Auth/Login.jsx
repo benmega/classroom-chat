@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { User, Lock, ArrowRight, Zap, Eye, EyeOff } from 'lucide-react';
+import { User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import './Auth.css';
@@ -66,7 +66,7 @@ const Login = () => {
             <div className="auth-container">
                 <div className="auth-header">
                     <div className="brand-logo">
-                        <img src="/images/logo.ico" alt="Classroom Chat Logo" />
+                        <img src="/images/logo.png" alt="Classroom Chat Logo" />
                     </div>
                     <h1 className="auth-title">Welcome Back</h1>
                 </div>
@@ -81,6 +81,7 @@ const Login = () => {
                                 onChange={(e) => setUsernameOrEmail(e.target.value)}
                                 required
                                 placeholder="Username or Email"
+                                aria-label="Username or email"
                                 autoComplete="username"
                                 className="auth-input"
                             />
@@ -97,6 +98,7 @@ const Login = () => {
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                                 placeholder="Password"
+                                aria-label="Password"
                                 autoComplete="current-password"
                                 className="auth-input has-password-toggle"
                             />
@@ -105,8 +107,8 @@ const Login = () => {
                                 type="button"
                                 className="toggle-password-btn"
                                 onClick={() => setShowPassword(!showPassword)}
-                                aria-label={showPassword ? "Hide password" : "Show password"}
-                                tabIndex="-1"
+                                aria-label="Show password"
+                                aria-pressed={showPassword}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>

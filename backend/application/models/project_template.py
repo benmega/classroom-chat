@@ -1,8 +1,4 @@
-"""
-File: project_template.py
-Type: py
-Summary: SQLAlchemy model for default project templates.
-"""
+
 
 from ..extensions import db
 
@@ -24,6 +20,9 @@ class ProjectTemplate(db.Model):
     difficulty = db.Column(db.String(50), nullable=True, default="Intermediate")
     concepts = db.Column(db.JSON, nullable=True, default=list)
     goals = db.Column(db.JSON, nullable=True, default=list)
+    # Optional: slug of the Challenge completed when a project built from this
+    # template is approved (used by the 3D modeling track).
+    challenge_slug = db.Column(db.String(255), nullable=True)
 
     def __repr__(self):
         return f"<ProjectTemplate {self.name}>"
@@ -42,4 +41,5 @@ class ProjectTemplate(db.Model):
             "difficulty": self.difficulty,
             "concepts": self.concepts,
             "goals": self.goals,
+            "challenge_slug": self.challenge_slug,
         }

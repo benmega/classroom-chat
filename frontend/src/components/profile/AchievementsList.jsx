@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Award, Plus } from 'lucide-react';
+import { safeDate } from '../../utils/formatters';
 
 const AchievementsList = ({ achievements }) => {
     const navigate = useNavigate();
@@ -17,15 +18,18 @@ const AchievementsList = ({ achievements }) => {
             </div>
             <div className="achievement-strip-container">
                 <div className="achievement-strip">
-                    {achievements.map(ua => (
-                        <div role="button" tabIndex={0} key={ua.id} className="ach-strip-item clickable cursor-pointer" title={ua.achievement?.description} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate('/achievements')}>
-                            <div className={`badge badge-${ua.achievement?.slug || 'default'} mini`}>&nbsp;</div>
-                            <div className="ach-strip-info">
-                                <span className="ach-name">{ua.achievement?.name}</span>
-                                <span className="ach-date">{new Date(ua.earned_at).toLocaleDateString()}</span>
+                    {achievements.map(ua => {
+                        const earnedDate = safeDate(ua.earned_at);
+                        return (
+                            <div role="button" tabIndex={0} key={ua.id} className="ach-strip-item clickable cursor-pointer" title={ua.achievement?.description} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => navigate('/achievements')}>
+                                <div className={`badge badge-${ua.achievement?.slug || 'default'} mini`}>&nbsp;</div>
+                                <div className="ach-strip-info">
+                                    <span className="ach-name">{ua.achievement?.name}</span>
+                                    {earnedDate && <span className="ach-date">{earnedDate}</span>}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
         </section>

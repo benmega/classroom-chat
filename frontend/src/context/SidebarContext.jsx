@@ -1,7 +1,5 @@
-/* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useState } from 'react';
-
-export const SidebarContext = createContext();
+import { useState } from 'react';
+import { SidebarContext } from './sidebarContextObject';
 
 export const SidebarProvider = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);

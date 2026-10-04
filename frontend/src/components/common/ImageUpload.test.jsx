@@ -1,4 +1,5 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
 import ImageUpload from './ImageUpload';
@@ -172,7 +173,7 @@ describe('ImageUpload Component', () => {
       />
     );
 
-    const dropzone = screen.getByRole('button');
+    const dropzone = document.querySelector('.image-upload-container');
     const imageFile = new File(['dropped image'], 'dropped.png', { type: 'image/png' });
 
     fireEvent.dragOver(dropzone);
@@ -193,6 +194,99 @@ describe('ImageUpload Component', () => {
         new_url: '/user/project_images/dropped.png',
         filename: 'dropped.png',
       });
+    });
+  });
+
+  it('shows the server error when the upload response is not a success', async () => {
+    axios.post.mockResolvedValueOnce({ data: { status: 'error', error: 'Image is corrupt.' } });
+    render(<ImageUpload uploadUrl="/api/upload" onUploadSuccess={vi.fn()} />);
+
+    const input = document.querySelector('input[type="file"]');
+    fireEvent.change(input, { target: { files: [new File(['x'], 'pic.png', { type: 'image/png' })] } });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Image is corrupt.');
+    });
+  });
+
+  it('shows the message of a failed upload request, and a generic one without text', async () => {
+    axios.post.mockRejectedValueOnce({ response: { data: { success: false, message: 'Quota exceeded.' } } });
+    axios.post.mockRejectedValueOnce(new Error('Network Error'));
+    render(<ImageUpload uploadUrl="/api/upload" onUploadSuccess={vi.fn()} />);
+
+    const input = document.querySelector('input[type="file"]');
+    fireEvent.change(input, { target: { files: [new File(['x'], 'a.png', { type: 'image/png' })] } });
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Quota exceeded.');
+    });
+
+    fireEvent.change(document.querySelector('input[type="file"]'), { target: { files: [new File(['y'], 'b.png', { type: 'image/png' })] } });
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('Server error during upload');
+    });
+  });
+
+  describe('keyboard and screen reader access', () => {
+    it('is not a button: the drop area has no role and no tab stop of its own', () => {
+      render(<ImageUpload uploadUrl="/api/upload" />);
+
+      const dropzone = document.querySelector('.image-upload-container');
+      expect(dropzone).not.toHaveAttribute('role');
+      expect(dropzone).not.toHaveAttribute('tabindex');
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    });
+
+    it('offers a named, focusable file input instead of a display:none one', async () => {
+      const user = userEvent.setup();
+      render(<ImageUpload uploadUrl="/api/upload" label="Cover image" />);
+      const input = document.querySelector('input[type="file"]');
+
+      expect(input).toHaveAttribute('aria-label', 'Cover image');
+      expect(input).toHaveClass('sr-only');
+      expect(input).not.toHaveAttribute('hidden');
+
+      await user.tab();
+      expect(input).toHaveFocus();
+    });
+
+    it('does not nest the remove button in a button', () => {
+      render(<ImageUpload uploadUrl="/api/upload" initialImage="/images/test.jpg" />);
+
+      const remove = screen.getByRole('button', { name: 'Remove image' });
+      expect(remove.parentElement.closest('[role="button"], button')).toBeNull();
+    });
+
+    it('opens the file picker when the drop area is clicked', () => {
+      render(<ImageUpload uploadUrl="/api/upload" />);
+      const input = document.querySelector('input[type="file"]');
+      const clickSpy = vi.spyOn(input, 'click').mockImplementation(() => {});
+
+      fireEvent.click(document.querySelector('.image-upload-container'));
+
+      expect(clickSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not click the input again when the click came from the input itself', () => {
+      render(<ImageUpload uploadUrl="/api/upload" />);
+      const input = document.querySelector('input[type="file"]');
+      const clickSpy = vi.spyOn(input, 'click').mockImplementation(() => {});
+
+      fireEvent.click(input);
+
+      expect(clickSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not open the picker while an upload is running', async () => {
+      axios.post.mockReturnValueOnce(new Promise(() => {}));
+      render(<ImageUpload uploadUrl="/api/upload" />);
+      const input = document.querySelector('input[type="file"]');
+      fireEvent.change(input, { target: { files: [new File(['x'], 'pic.png', { type: 'image/png' })] } });
+      await waitFor(() => expect(document.querySelector('.image-upload-container')).toHaveClass('uploading'));
+      const clickSpy = vi.spyOn(input, 'click').mockImplementation(() => {});
+
+      fireEvent.click(document.querySelector('.image-upload-container'));
+
+      expect(clickSpy).not.toHaveBeenCalled();
     });
   });
 });

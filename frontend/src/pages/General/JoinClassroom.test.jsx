@@ -48,7 +48,6 @@ describe('JoinClassroom Component', () => {
     const input = screen.getByPlaceholderText(/Enter code e\.g\. AB3C9/i);
     fireEvent.change(input, { target: { value: 'AB' } });
 
-    // Submit form directly
     const form = input.closest('form');
     fireEvent.submit(form);
 

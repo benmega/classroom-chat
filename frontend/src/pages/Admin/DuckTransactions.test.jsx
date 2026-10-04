@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '../../test/test-utils';
 import DuckTransactions from './DuckTransactions';
 
@@ -16,6 +17,11 @@ vi.mock('../../hooks/useSidebar', () => ({
 }));
 
 import client from '../../api/client';
+import toast from 'react-hot-toast';
+
+vi.mock('react-hot-toast', () => ({
+  default: { success: vi.fn(), error: vi.fn() },
+}));
 
 const mockTransactions = [
   {
@@ -188,7 +194,6 @@ describe('DuckTransactions', () => {
     const form = input.closest('form');
     fireEvent.submit(form);
 
-    // After submit, fetchTransactions is re-called with search param
     await waitFor(() => expect(client.get).toHaveBeenCalledTimes(2));
   });
 
@@ -263,6 +268,48 @@ describe('DuckTransactions', () => {
     renderComponent();
     await waitFor(() => {
       expect(screen.getByText('No reason provided')).toBeInTheDocument();
+    });
+  });
+
+  it('shows the reason the server gives when the transactions cannot be loaded', async () => {
+    client.get.mockRejectedValue({ response: { status: 403, data: { status: 'error', data: null, error: 'Admin access required' } } });
+    renderComponent();
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Admin access required'));
+  });
+
+  it('falls back to a generic message when the failure has no body', async () => {
+    client.get.mockRejectedValue(new Error('Network Error'));
+    renderComponent();
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to load transactions.'));
+  });
+
+  describe('keyboard and screen reader access', () => {
+    it('makes Back to Dashboard a real link to the dashboard', async () => {
+      client.get.mockResolvedValue(successResponse);
+      renderComponent();
+
+      const back = await screen.findByRole('link', { name: 'Back to Dashboard' });
+
+      expect(back).toHaveAttribute('href', '/admin');
+    });
+
+    it('follows Back to Dashboard with the keyboard', async () => {
+      const user = userEvent.setup();
+      client.get.mockResolvedValue(successResponse);
+      renderComponent();
+      const back = await screen.findByRole('link', { name: 'Back to Dashboard' });
+
+      back.focus();
+      await user.keyboard('{Enter}');
+
+      expect(window.location.pathname).toBe('/admin');
+    });
+
+    it('names the search box', async () => {
+      client.get.mockResolvedValue(successResponse);
+      renderComponent();
+
+      expect(await screen.findByRole('textbox', { name: 'Search transactions' })).toBeInTheDocument();
     });
   });
 });

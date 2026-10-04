@@ -4,7 +4,6 @@ Type: py
 Summary: Unit tests for admin routes Flask routes.
 """
 
-import contextlib
 import json
 from unittest.mock import patch
 
@@ -12,8 +11,11 @@ from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
 from application.models.duck_trade import DuckTradeLog
+from application.models.duck_transaction import DuckTransaction
 from application.models.user import User
 from flask import url_for
+from sqlalchemy import update
+from sqlalchemy.orm import Session
 
 
 def login_as_admin(client, admin_user):
@@ -52,94 +54,12 @@ def test_get_users_with_auth(client, sample_admin, sample_users):
         assert user.username in usernames
 
 
-def test_set_username_route(client, sample_user, sample_admin):
-    """Test setting a username as an admin."""
-    login_as_admin(client, sample_admin)
-
-    resp = client.post(
-        "/api/admin/set_username",
-        data={"user_id": sample_user.id, "username": "new_username"},
-    )
-    assert resp.status_code == 200
-    assert resp.get_json()["success"] is True
-
-    # Query inside a context
-    with client.application.app_context():
-        updated = db.session.get(User, sample_user.id)
-        assert updated.username == "new_username"
-
-
-def test_verify_password_success(client, test_app, sample_admin):
-    """Test successful password verification."""
-    from application.config import TestingConfig
-
-    login_as_admin(client, sample_admin)
-
-    with patch(
-        "application.routes.admin_routes.admin_pass",
-        TestingConfig.ADMIN_PASSWORD,
-    ):
-        # We MUST provide user_id, otherwise the backend tries to find user by IP (127.0.0.1)
-        # which fails in testing, causing the AttributeError seen in logs.
-        response = client.post(
-            "/api/admin/verify_password",
-            data={
-                "password": TestingConfig.ADMIN_PASSWORD,
-                "username": "verified_username",
-                "user_id": sample_admin.id,
-            },
-        )
-
-    assert response.status_code == 200
-    data = json.loads(response.data)
-    assert data["success"] is True
-
-    with test_app.app_context():
-        updated_user = db.session.get(User, sample_admin.id)
-        assert updated_user.username == "verified_username"
-
-
-def test_verify_password_failure(client, sample_admin):
-    """Test failed password verification."""
-    login_as_admin(client, sample_admin)
-
-    response = client.post(
-        "/api/admin/verify_password",
-        data={
-            "password": "wrong_password",
-            "username": "any_username",
-            "user_id": sample_admin.id,
-        },
-    )
-
-    assert response.status_code == 401
-    data = json.loads(response.data)
-    assert data["success"] is False
-
-
 def test_dashboard(client, sample_admin, sample_configuration):
     """Test accessing the admin dashboard."""
     login_as_admin(client, sample_admin)
 
     response = client.get("/api/admin/dashboard")
     assert response.status_code == 200
-
-
-def test_toggle_ai(client, test_app, sample_configuration, sample_admin):
-    """Test toggling AI teacher functionality."""
-    login_as_admin(client, sample_admin)
-
-    with test_app.app_context():
-        initial_state = sample_configuration.ai_teacher_enabled
-
-        response = client.post("/api/admin/toggle-ai")
-        data = json.loads(response.data)
-
-        assert response.status_code == 200
-        assert data["success"] is True
-
-        updated_config = Configuration.query.first()
-        assert updated_config.ai_teacher_enabled != initial_state
 
 
 def test_toggle_message_sending(client, test_app, sample_configuration, sample_admin):
@@ -157,12 +77,6 @@ def test_toggle_message_sending(client, test_app, sample_configuration, sample_a
 
         updated_config = Configuration.query.first()
         assert updated_config.message_sending_enabled != initial_state
-
-
-def test_clear_partial_history(client, test_app, init_db, sample_admin):
-    """Test clearing partial conversation history."""
-    login_as_admin(client, sample_admin)
-
 
 
 def test_add_banned_word(client, sample_admin, test_app):
@@ -192,12 +106,6 @@ def test_add_banned_word(client, sample_admin, test_app):
         db.session.commit()
 
 
-def test_strike_message(client, sample_admin, sample_message):
-    """Test striking a message."""
-    login_as_admin(client, sample_admin)
-
-
-
 def test_adjust_ducks(client, sample_admin, sample_user, test_app):
     """Test adjusting a user's duck balance."""
     login_as_admin(client, sample_admin)
@@ -219,43 +127,247 @@ def test_adjust_ducks(client, sample_admin, sample_user, test_app):
 
 
 def test_trade_action_approve(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    sample_user.duck_balance = 100
+    db.session.commit()
+    cost = sample_duck_trade.digital_ducks
+
+    response = client.post(
+        "/api/admin/trade_action",
+        data={"trade_id": str(trade_id), "action": "approve"},
+        content_type="application/x-www-form-urlencoded",
+    )
+
+    data = json.loads(response.data)
+    assert response.status_code == 200
+    assert data["status"] == "success"
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+    assert db.session.get(User, user_id).duck_balance == 100 - cost
+    tx = DuckTransaction.query.filter_by(user_id=user_id).one()
+    assert tx.amount == -cost
+    assert tx.reason.startswith("Trade Approval")
+
+
+def test_trade_action_reject(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    """Test rejecting a duck trade."""
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    balance = sample_user.duck_balance
+
+    response = client.post(
+        "/api/admin/trade_action",
+        data={"trade_id": trade_id, "action": "reject"},
+    )
+
+    data = json.loads(response.data)
+    assert response.status_code == 200
+    assert data["status"] == "success"
+    assert db.session.get(DuckTradeLog, trade_id).status == "rejected"
+    assert db.session.get(User, user_id).duck_balance == balance
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def test_trade_action_double_approve_deducts_once(
     client, sample_admin, sample_user, sample_duck_trade, test_app, init_db
 ):
     login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+    user_id = sample_user.id
+    sample_user.duck_balance = 100
+    db.session.commit()
 
-    with test_app.app_context():
-        sample_user.duck_balance = 100
-        db.session.commit()
+    first = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+    assert first.status_code == 200
+    balance_after_first = db.session.get(User, user_id).duck_balance
 
-        trade_id = sample_duck_trade.id
-
-        with patch.object(DuckTradeLog, "approve") as mock_approve:
-            response = client.post(
-                "/api/admin/trade_action",
-                data={"trade_id": str(trade_id), "action": "approve"},
-                content_type="application/x-www-form-urlencoded",
-            )
-
-            data = json.loads(response.data)
-            assert response.status_code == 200
-            assert data["status"] == "success"
-            mock_approve.assert_called_once()
+    second = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+    assert second.status_code == 400
+    assert db.session.get(User, user_id).duck_balance == balance_after_first
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
 
 
-def test_trade_action_reject(client, sample_admin, sample_duck_trade, init_db):
-    """Test rejecting a duck trade."""
+def test_trade_action_rejects_non_pending_trade(
+    client, sample_admin, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+
+    assert (
+        client.post(
+            "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "reject"}
+        ).status_code
+        == 200
+    )
+    for action in ("approve", "reject"):
+        resp = client.post(
+            "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": action}
+        )
+        assert resp.status_code == 400
+    assert db.session.get(DuckTradeLog, trade_id).status == "rejected"
+
+
+def test_trade_action_insufficient_ducks(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    """A trade the student can no longer afford is refused with a reason and stays pending."""
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+    user_id = sample_user.id
+    sample_duck_trade.digital_ducks = 50
+    sample_user.duck_balance = 10
+    db.session.commit()
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+
+    assert response.status_code == 400
+    data = response.get_json()
+    assert data["status"] == "error"
+    assert data["message"] == "Insufficient ducks"
+    assert db.session.get(User, user_id).duck_balance == 10
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"
+
+    # Still pending, so it can be approved once the balance covers it.
+    sample_user.duck_balance = 60
+    db.session.commit()
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+    assert response.status_code == 200
+    assert db.session.get(User, user_id).duck_balance == 10
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+
+
+def test_trade_action_approve_with_insufficient_balance_changes_nothing(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    sample_user.duck_balance = 0
+    db.session.commit()
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "Insufficient ducks"
+    assert db.session.get(User, user_id).duck_balance == 0
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def _commit_from_another_session(statement):
+    """Run one UPDATE in its own session, as a concurrent request would."""
+    with Session(db.engine) as other:
+        other.execute(statement)
+        other.commit()
+
+
+def test_trade_action_approve_loses_the_race_to_a_concurrent_approval(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    """A second admin whose page still shows the trade as pending must not
+    deduct the ducks again after the first admin's approval was committed."""
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    cost = sample_duck_trade.digital_ducks
+    # This session's copy of the trade still says "pending" (not yet reloaded).
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"
+
+    _commit_from_another_session(
+        update(DuckTradeLog).where(DuckTradeLog.id == trade_id).values(status="approved")
+    )
+    _commit_from_another_session(
+        update(User).where(User.id == user_id).values(duck_balance=100 - cost)
+    )
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+
+    assert response.status_code == 400
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+    assert db.session.get(User, user_id).duck_balance == 100 - cost
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def test_trade_action_approve_cannot_overdraw_a_balance_spent_in_the_meantime(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    user_id = sample_user.id
+    trade_id = sample_duck_trade.id
+    assert db.session.get(User, user_id).duck_balance == 100  # stale copy: enough
+
+    # The student spent everything elsewhere after the page loaded.
+    _commit_from_another_session(
+        update(User).where(User.id == user_id).values(duck_balance=0)
+    )
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "approve"}
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["message"] == "Insufficient ducks"
+    assert db.session.get(User, user_id).duck_balance == 0
+    # The failed attempt must not leave the trade claimed.
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"
+    assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def test_trade_action_reject_cannot_overwrite_a_concurrent_approval(
+    client, sample_admin, sample_user, sample_duck_trade, init_db
+):
+    login_as_admin(client, sample_admin)
+    trade_id = sample_duck_trade.id
+    assert db.session.get(DuckTradeLog, trade_id).status == "pending"  # stale copy
+
+    _commit_from_another_session(
+        update(DuckTradeLog).where(DuckTradeLog.id == trade_id).values(status="approved")
+    )
+
+    response = client.post(
+        "/api/admin/trade_action", data={"trade_id": str(trade_id), "action": "reject"}
+    )
+
+    assert response.status_code == 400
+    assert db.session.get(DuckTradeLog, trade_id).status == "approved"
+
+
+def test_trade_action_rejects_unknown_trade_and_action(
+    client, sample_admin, sample_duck_trade, init_db
+):
     login_as_admin(client, sample_admin)
 
-    with patch.object(DuckTradeLog, "reject") as mock_reject:
-        response = client.post(
-            "/api/admin/trade_action",
-            data={"trade_id": sample_duck_trade.id, "action": "reject"},
-        )
+    missing = client.post(
+        "/api/admin/trade_action", data={"trade_id": "99999", "action": "approve"}
+    )
+    assert missing.status_code == 404
+    assert missing.get_json() == {"status": "error", "message": "Trade not found"}
 
-        data = json.loads(response.data)
-        assert response.status_code == 200
-        assert data["status"] == "success"
-        mock_reject.assert_called_once()
+    bad_action = client.post(
+        "/api/admin/trade_action",
+        data={"trade_id": str(sample_duck_trade.id), "action": "refund"},
+    )
+    assert bad_action.status_code == 400
+    assert bad_action.get_json() == {"status": "error", "message": "Invalid action"}
+    assert db.session.get(DuckTradeLog, sample_duck_trade.id).status == "pending"
 
 
 def test_reset_password(client, sample_admin, sample_user, test_app, init_db):
@@ -338,9 +450,11 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db):
 
         assert response.status_code == 200
         users_data = json.loads(response.data)
-        assert len(users_data) >= len(sample_users)
+        # The route wraps the page of users in an object next to the totals
+        user_list = users_data["users"]
+        assert isinstance(user_list, list)
+        assert len(user_list) >= len(sample_users)
 
-        user_list = users_data.get("users", users_data)
         user_data = next(
             u for u in user_list if u["username"] == sample_users[0].username
         )
@@ -348,24 +462,65 @@ def test_get_users(client, test_app, sample_users, sample_admin, init_db):
         assert "levels_today" in user_data
 
 
-def test_set_username_proper_case_handling(client, test_app, sample_user, sample_admin):
+def test_update_user_username_proper_case_handling(client, test_app, sample_user, sample_admin):
     """Test that usernames are properly converted to lowercase per the User model."""
     login_as_admin(client, sample_admin)
 
     with test_app.app_context():
         mixed_case_username = "MixedCaseUsername"
 
-        response = client.post(
-            url_for("admin.set_username_route"),
-            data={"user_id": sample_user.id, "username": mixed_case_username},
+        response = client.put(
+            url_for("admin.update_user_details", user_id=sample_user.id),
+            json={"username": mixed_case_username},
         )
 
         assert response.status_code == 200
-        json_response = json.loads(response.data)
-        assert json_response["success"] is True
 
         updated_user = db.session.get(User, sample_user.id)
         assert updated_user.username == mixed_case_username.lower()
+
+
+def test_toggle_messages_text_matches_state(client, sample_configuration, sample_admin):
+    login_as_admin(client, sample_admin)
+    sample_configuration.message_sending_enabled = False
+    db.session.commit()
+
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is True
+    assert "enabled" in data["message"] and "disabled" not in data["message"]
+
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is False
+    assert "disabled" in data["message"]
+
+
+def test_toggle_message_sending_without_config_row(client, init_db, sample_admin):
+    login_as_admin(client, sample_admin)
+    # A missing row counts as enabled, so the first toggle disables sending.
+    data = json.loads(client.post("/api/admin/toggle-message-sending").data)
+    assert data["status"] is False
+    assert Configuration.query.first().message_sending_enabled is False
+
+
+def test_update_duck_multiplier_rejects_student_and_anonymous(
+    client, sample_configuration, sample_user
+):
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 1000})
+    assert response.status_code in (401, 403)
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(sample_user.id)
+        sess["user"] = sample_user.id
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 1000})
+    assert response.status_code in (401, 403)
+    assert Configuration.query.first().duck_multiplier == 1
+
+
+def test_update_duck_multiplier_admin_ok(client, sample_configuration, sample_admin):
+    login_as_admin(client, sample_admin)
+    response = client.post("/api/admin/update_duck_multiplier", json={"multiplier": 2})
+    assert response.status_code == 200
+    assert Configuration.query.first().duck_multiplier == 2
 
 
 def test_admin_transactions_route(client, test_app, sample_user, sample_admin):
@@ -567,6 +722,54 @@ def test_upload_template_image_invalid_file(client, sample_admin):
         content_type="multipart/form-data",
     )
     assert resp_txt.status_code == 400
+
+
+def test_upload_template_image_is_stored_under_its_real_type(client, sample_admin, test_app, tmp_path, monkeypatch):
+    """A template image goes through the same validation as every other project image."""
+    from io import BytesIO
+
+    from PIL import Image
+    from tests.image_helpers import png_bytes
+
+    monkeypatch.setitem(test_app.config, "UPLOAD_FOLDER", str(tmp_path))
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/project-templates/upload-image",
+        data={"file": (BytesIO(png_bytes(mode="RGBA")), "thumb.jpg")},
+        content_type="multipart/form-data",
+    )
+
+    assert resp.status_code == 200
+    res_data = resp.get_json()["data"]
+    assert res_data["filename"].endswith(".png")
+    assert res_data["new_url"] == f"/user/project_images/{res_data['filename']}"
+    with Image.open(tmp_path / "projects" / res_data["filename"]) as stored:
+        assert (stored.format, stored.mode) == ("PNG", "RGBA")
+
+
+def test_upload_template_image_rejects_bad_content_and_oversize(client, sample_admin, test_app, tmp_path, monkeypatch):
+    from io import BytesIO
+
+    monkeypatch.setitem(test_app.config, "UPLOAD_FOLDER", str(tmp_path))
+    login_as_admin(client, sample_admin)
+
+    corrupt = client.post(
+        "/api/project-templates/upload-image",
+        data={"file": (BytesIO(b"not an image"), "thumb.png")},
+        content_type="multipart/form-data",
+    )
+    assert corrupt.status_code == 400
+    assert corrupt.get_json()["error"] == "Invalid or corrupt image file."
+
+    too_large = client.post(
+        "/api/project-templates/upload-image",
+        data={"file": (BytesIO(b"0" * (10 * 1024 * 1024 + 10)), "thumb.png")},
+        content_type="multipart/form-data",
+    )
+    assert too_large.status_code == 413
+    assert "Maximum size is 10MB" in too_large.get_json()["error"]
+    assert not (tmp_path / "projects").exists()
 
 
 def test_project_review_packets(client, sample_admin, sample_user, test_app):
@@ -847,36 +1050,59 @@ def test_dashboard_extended(client, sample_admin, test_app, sample_user):
         assert resp2.status_code == 200
 
 
-def test_admin_stats(client, sample_admin, test_app):
-    """Test the /stats route."""
-    login_as_admin(client, sample_admin)
+def test_dashboard_weekly_ducks_use_a_naive_utc_window(
+    client, sample_admin, sample_user
+):
+    """The 7-day window is built from naive UTC, matching the naive DB timestamps."""
+    from datetime import timedelta
 
-    resp = client.get("/api/admin/stats")
+    from application.models.duck_transaction import DuckTransaction
+    from application.utilities.helper_functions import utcnow_naive
+
+    login_as_admin(client, sample_admin)
+    now = utcnow_naive()
+    db.session.add_all(
+        [
+            DuckTransaction(
+                user_id=sample_user.id,
+                amount=7.0,
+                reason="Recent earned",
+                timestamp=now - timedelta(days=1),
+            ),
+            DuckTransaction(
+                user_id=sample_user.id,
+                amount=100.0,
+                reason="Too old",
+                timestamp=now - timedelta(days=8),
+            ),
+            DuckTransaction(
+                user_id=sample_user.id,
+                amount=-3.0,
+                reason="Recent spent",
+                timestamp=now - timedelta(days=1),
+            ),
+        ]
+    )
+    db.session.commit()
+
+    resp = client.get("/api/admin/dashboard")
+
     assert resp.status_code == 200
-    data = resp.get_json()
-    assert "user_count" in data["data"]
-    assert "total_ducks" in data["data"]
+    assert resp.get_json()["data"]["ducks_earned_this_week"] == 7
 
 
-def test_admin_logs(client, sample_admin, test_app):
+def test_admin_logs(client, sample_admin, test_app, tmp_path, monkeypatch):
     """Test the /logs route."""
-    import os
-
     login_as_admin(client, sample_admin)
 
-    log_path = os.path.join(test_app.config.get("INSTANCE_FOLDER"), "app.log")
-
-    os.makedirs(os.path.dirname(log_path), exist_ok=True)
-    with open(log_path, "w") as f:
-        f.write("Line 1\nLine 2\n")
+    monkeypatch.setitem(test_app.config, "INSTANCE_FOLDER", str(tmp_path))
+    (tmp_path / "app.log").write_text("Line 1\nLine 2\n")
 
     resp = client.get("/api/admin/logs")
     assert resp.status_code == 200
     assert "Line 1" in resp.get_json()["data"]["logs"]
-    with contextlib.suppress(PermissionError):
-        os.remove(log_path)
 
-    test_app.config["INSTANCE_FOLDER"] = "/tmp/does_not_exist_log_path"
+    monkeypatch.setitem(test_app.config, "INSTANCE_FOLDER", str(tmp_path / "missing"))
     resp2 = client.get("/api/admin/logs")
     assert resp2.status_code == 200
     assert "Log file not found." in resp2.get_json()["data"]["logs"]

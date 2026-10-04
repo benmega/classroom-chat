@@ -1,12 +1,14 @@
+import math
 import re
-from datetime import date, datetime, timedelta
-from typing import ClassVar
+from datetime import timedelta
 
-from sqlalchemy import event
+from sqlalchemy import case, event, func, or_, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..extensions import db
+from ..utilities.helper_functions import utc_today, utcnow_naive
 
 # Models are imported locally within methods to prevent circular dependencies
 
@@ -36,7 +38,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=True)
     cognito_sub = db.Column(db.String(50), unique=True, nullable=True)
     bio = db.Column(db.String(500), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     has_seen_tutorial = db.Column(db.Boolean, default=False)
     current_activity = db.Column(db.String(255), nullable=True)
     last_activity_time = db.Column(db.DateTime, nullable=True)
@@ -89,7 +91,7 @@ class User(db.Model):
         "Classroom",
         secondary="user_classrooms",
         back_populates="users",
-        lazy="selectin",
+        lazy="select",
     )
 
     notes = db.relationship(
@@ -105,8 +107,8 @@ class User(db.Model):
         secondary="parent_students",
         primaryjoin="User.id == parent_students.c.parent_id",
         secondaryjoin="User.id == parent_students.c.student_id",
-        lazy="selectin",
-        backref=db.backref("parents", lazy="selectin"),
+        lazy="select",
+        backref=db.backref("parents", lazy="select"),
     )
 
     def __repr__(self):
@@ -206,26 +208,116 @@ class User(db.Model):
             "can_chat": self.can_chat if self.can_chat is not None else True,
         }
 
-    def to_dict_summary(self, precomputed_progress=None):
-        """Lighter dictionary for list views, avoids extremely expensive processing."""
+    @classmethod
+    def build_progress_map(cls, users):
+        """Challenge-log counts per (username, domain) for a batch of users.
 
-        if precomputed_progress:
+        Pass the result to to_dict_summary as `precomputed_progress`: one grouped
+        query for the whole batch instead of several COUNT queries per user.
+        """
+        from .challenge_log import ChallengeLog
+
+        id_to_username = {u.id: u._username for u in users}
+        if not id_to_username:
+            return {}
+
+        counts = (
+            db.session.query(
+                ChallengeLog.user_id, ChallengeLog.domain, func.count(ChallengeLog.id)
+            )
+            .filter(ChallengeLog.user_id.in_(list(id_to_username)))
+            .group_by(ChallengeLog.user_id, ChallengeLog.domain)
+            .all()
+        )
+        return {
+            (id_to_username[user_id], domain): count
+            for user_id, domain, count in counts
+        }
+
+    @staticmethod
+    def _challenge_totals():
+        """Number of challenges in each progress domain (one grouped query)."""
+        from .challenge import Challenge
+
+        domains = ("codecombat.com", "www.ozaria.com", "3d-modeling")
+        rows = (
+            db.session.query(Challenge.domain, func.count(Challenge.id))
+            .filter(Challenge.domain.in_(domains))
+            .group_by(Challenge.domain)
+            .all()
+        )
+        totals = dict.fromkeys(domains, 0)
+        totals.update(dict(rows))
+        return totals
+
+    @staticmethod
+    def _activity_user_ids(users):
+        """Ids among `users` with any activity; the batch form of has_activity."""
+        from .challenge_log import ChallengeLog
+        from .course_instance_request import CourseInstanceRequest
+        from .submission import Submission
+        from .user_certificate import UserCertificate
+
+        user_ids = [u.id for u in users]
+        active = set()
+        for column in (
+            ChallengeLog.user_id,
+            Submission.user_id,
+            UserCertificate.user_id,
+            CourseInstanceRequest.student_id,
+        ):
+            rows = db.session.query(column).filter(column.in_(user_ids)).distinct()
+            active.update(user_id for (user_id,) in rows)
+        return active
+
+    @classmethod
+    def to_dict_summaries(cls, users):
+        """to_dict_summary() for each of `users` in a constant number of queries.
+
+        The per-user progress, challenge totals and activity flag are computed
+        once for the whole batch. Load the users with
+        selectinload(User.projects) to keep the recent-project lookup flat too.
+        """
+        users = list(users)
+        if not users:
+            return []
+
+        progress = cls.build_progress_map(users)
+        totals = cls._challenge_totals()
+        active_ids = cls._activity_user_ids(users)
+        return [
+            u.to_dict_summary(
+                progress, challenge_totals=totals, activity_user_ids=active_ids
+            )
+            for u in users
+        ]
+
+    def to_dict_summary(
+        self,
+        precomputed_progress=None,
+        challenge_totals=None,
+        activity_user_ids=None,
+    ):
+        """Lighter dictionary for list views, avoids extremely expensive processing.
+
+        List views should use to_dict_summaries(); the optional arguments are the
+        batch-computed values it passes in (an empty precomputed_progress is valid
+        and means "no challenge logs").
+        """
+
+        if precomputed_progress is not None:
             cc_levels = precomputed_progress.get((self._username, "codecombat.com"), 0)
             oz_levels = precomputed_progress.get((self._username, "www.ozaria.com"), 0)
+            td_levels = precomputed_progress.get((self._username, "3d-modeling"), 0)
 
-            from .challenge import Challenge
-
-            if "codecombat.com" not in self._total_challenges_cache:
-                self._total_challenges_cache["codecombat.com"] = (
-                    Challenge.query.filter_by(domain="codecombat.com").count()
-                )
-            if "www.ozaria.com" not in self._total_challenges_cache:
-                self._total_challenges_cache["www.ozaria.com"] = (
-                    Challenge.query.filter_by(domain="www.ozaria.com").count()
-                )
-
-            cc_total = self._total_challenges_cache["codecombat.com"]
-            oz_total = self._total_challenges_cache["www.ozaria.com"]
+            totals = (
+                challenge_totals
+                if challenge_totals is not None
+                else self._challenge_totals()
+            )
+            cc_total = totals["codecombat.com"]
+            oz_total = totals["www.ozaria.com"]
+            td_total = totals.get("3d-modeling", 0)
 
             cc_percent = (
                 int(round((cc_levels / cc_total * 100), 0)) if cc_total > 0 else 0
@@ -233,11 +325,16 @@ class User(db.Model):
             oz_percent = (
                 int(round((oz_levels / oz_total * 100), 0)) if oz_total > 0 else 0
             )
+            td_percent = (
+                int(round((td_levels / td_total * 100), 0)) if td_total > 0 else 0
+            )
         else:
             cc_levels = self.get_progress("codecombat.com")
             oz_levels = self.get_progress("www.ozaria.com")
+            td_levels = self.get_progress("3d-modeling")
             cc_percent = self.get_progress_percent("codecombat.com")
             oz_percent = self.get_progress_percent("www.ozaria.com")
+            td_percent = self.get_progress_percent("3d-modeling")
         d = {
             "id": self.id,
             "user_id": self.id,
@@ -260,12 +357,14 @@ class User(db.Model):
             "earned_ducks": self.earned_ducks,
             "packets": self.packets,
             # Progress counters
-            "total_levels": cc_levels + oz_levels,
-            "completed_challenges_count": cc_levels + oz_levels,
+            "total_levels": cc_levels + oz_levels + td_levels,
+            "completed_challenges_count": cc_levels + oz_levels + td_levels,
             "cc_levels": cc_levels,
             "oz_levels": oz_levels,
+            "td_levels": td_levels,
             "cc_percent": cc_percent,
             "oz_percent": oz_percent,
+            "td_percent": td_percent,
             "has_seen_tutorial": self.has_seen_tutorial,
             "has_chat_font": self.has_chat_font,
             "chat_font_color": self.chat_font_color,
@@ -282,7 +381,11 @@ class User(db.Model):
             "last_activity_time": self.last_activity_time.isoformat()
             if self.last_activity_time
             else None,
-            "has_activity": self.has_activity,
+            "has_activity": (
+                self.id in activity_user_ids
+                if activity_user_ids is not None
+                else self.has_activity
+            ),
             "recent_project": {
                 "name": self.projects[-1].name,
             }
@@ -345,24 +448,22 @@ class User(db.Model):
         if not user:
             return
 
-        if online:
-            from .session_log import SessionLog
+        from .session_log import SessionLog
 
-            # Start new session if none active
-            if not SessionLog.query.filter_by(user_id=user.id, end_time=None).first():
-                SessionLog.start_session(user.id)
+        # The session log and is_online change together in a single commit.
+        if online:
+            # Returns the already-open session if there is one
+            SessionLog.start_session(user.id, commit=False)
             user.is_online = True
         else:
-            from .session_log import SessionLog
-
-            # End the most recent session
-            SessionLog.end_session(user.id)
+            SessionLog.end_session(user.id, commit=False)
             user.is_online = False
 
-        db.session.commit()
-
-    _total_challenges_cache: ClassVar[dict] = {}
-
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
@@ -378,12 +479,7 @@ class User(db.Model):
         """Calculate CodeCombat progress as a percentage of completed challenges (rounded for readability)."""
         from .challenge import Challenge
 
-        if domain not in self._total_challenges_cache:
-            self._total_challenges_cache[domain] = Challenge.query.filter_by(
-                domain=domain
-            ).count()
-
-        total_challenges = self._total_challenges_cache[domain]
+        total_challenges = Challenge.query.filter_by(domain=domain).count()
         from .challenge_log import ChallengeLog
 
         completed_challenges = ChallengeLog.query.filter_by(
@@ -405,6 +501,8 @@ class User(db.Model):
         cc_percent = self.get_progress_percent("codecombat.com")
         oz_levels = self.get_progress("www.ozaria.com")
         oz_percent = self.get_progress_percent("www.ozaria.com")
+        td_levels = self.get_progress("3d-modeling")
+        td_percent = self.get_progress_percent("3d-modeling")
 
         # Query all courses at once to avoid N+1 queries during breakdown generation
         courses_dict = {course.id: course.name for course in Course.query.all()}
@@ -416,6 +514,16 @@ class User(db.Model):
                 user_id=self.id, domain=domain
             ).all()
             completed_slugs = {cl.challenge_slug for cl in user_logs}
+
+            # Latest completion time per challenge, used to tell which course the
+            # student most recently made progress in.
+            last_completed_by_slug = {}
+            for cl in user_logs:
+                if cl.timestamp is None:
+                    continue
+                prev = last_completed_by_slug.get(cl.challenge_slug)
+                if prev is None or cl.timestamp > prev:
+                    last_completed_by_slug[cl.challenge_slug] = cl.timestamp
 
             all_challenges = Challenge.query.filter_by(domain=domain).order_by(Challenge.sequence).all()
 
@@ -433,10 +541,16 @@ class User(db.Model):
 
                 levels = []
                 completed_count = 0
+                course_last_completed = None
                 for c in challenges:
                     is_completed = c.slug in completed_slugs
                     if is_completed:
                         completed_count += 1
+                        ts = last_completed_by_slug.get(c.slug)
+                        if ts is not None and (
+                            course_last_completed is None or ts > course_last_completed
+                        ):
+                            course_last_completed = ts
                     levels.append(
                         {"name": c.name, "slug": c.slug, "sequence": c.sequence, "is_completed": is_completed}
                     )
@@ -449,6 +563,11 @@ class User(db.Model):
                             "levels_completed": completed_count,
                             "levels_total": len(levels),
                             "levels": levels,
+                            "last_completed_at": (
+                                course_last_completed.isoformat()
+                                if course_last_completed
+                                else None
+                            ),
                         }
                     )
 
@@ -475,6 +594,11 @@ class User(db.Model):
                 course_name = (
                     courses_dict.get(course_id, course_id) if course_id else "Other"
                 )
+                legacy_times = [
+                    cl.timestamp
+                    for cl in user_logs
+                    if cl.course_id == course_id and cl.timestamp is not None
+                ]
                 breakdown.append(
                     {
                         "course_id": course_id,
@@ -482,6 +606,9 @@ class User(db.Model):
                         "levels_completed": len(levels),
                         "levels_total": len(levels),
                         "levels": levels,
+                        "last_completed_at": (
+                            max(legacy_times).isoformat() if legacy_times else None
+                        ),
                     }
                 )
 
@@ -499,56 +626,65 @@ class User(db.Model):
                 "percent": oz_percent,
                 "breakdown": get_course_breakdown("www.ozaria.com"),
             },
+            "3d-modeling": {
+                "levels_completed": td_levels,
+                "percent": td_percent,
+                "breakdown": get_course_breakdown("3d-modeling"),
+            },
         }
 
-    def add_skill(self, skill_name):
-        from .skill import Skill
+    def add_ducks(self, amount, reason=None, min_balance=None):
+        """Credit (or debit) ducks and log a DuckTransaction.
 
-        new_skill = Skill(name=skill_name, user_id=self.id)
-        db.session.add(new_skill)
-        db.session.commit()
+        Returns True when the change was applied and False when it was not:
+        parents never hold ducks, and with ``min_balance`` set the change is
+        refused if it would leave duck_balance below that value.  Non-finite
+        amounts raise ValueError.
 
-    def remove_skill(self, skill_id):
-        from .skill import Skill
-
-        skill = db.session.get(Skill, skill_id)
-        if skill and skill.user_id == self.id:
-            db.session.delete(skill)
-            db.session.commit()
-
-    def add_project(self, name, description=None, link=None):
-        from .project import Project
-
-        new_project = Project(
-            name=name, description=description, link=link, user_id=self.id
-        )
-        db.session.add(new_project)
-        db.session.commit()
-
-    def remove_project(self, project_id):
-        from .project import Project
-
-        project = db.session.get(Project, project_id)
-        if project and project.user_id == self.id:
-            db.session.delete(project)
-            db.session.commit()
-
-    def add_ducks(self, amount, reason=None):
+        For a persisted user the balances change in a single SQL UPDATE
+        (``col = col + amount``) rather than read-modify-write on the loaded
+        instance, so concurrent credits/debits (trades, achievements, admin
+        adjustments) cannot overwrite each other; the instance is refreshed
+        from the row afterwards.  The caller must commit the session.
+        """
         if self.role == "parent":
-            return
+            return False
 
-        if amount > 0:
-            self.earned_ducks += amount
-            # Note: Packets are no longer earned here. They are earned via projects or admin adjustment.
+        if not math.isfinite(amount):
+            raise ValueError("amount must be a finite number")
 
-        self.duck_balance += amount
+        # Note: Packets are no longer earned here. They are earned via projects or admin adjustment.
+        earned_gain = amount if amount > 0 else 0
 
-        # Invariant: earned_ducks >= duck_balance at all times.
-        # earned_ducks is a lifetime counter (never decremented by spending or penalties).
-        # If duck_balance somehow exceeds earned_ducks (e.g. due to legacy migration data),
-        # clamp earned_ducks up to duck_balance so the invariant always holds.
-        if self.earned_ducks < self.duck_balance:
-            self.earned_ducks = self.duck_balance
+        if self.id is not None and self in db.session:
+            new_balance = User.duck_balance + amount
+            new_earned = User.earned_ducks + earned_gain
+            update_stmt = update(User).where(User.id == self.id)
+            if min_balance is not None:
+                update_stmt = update_stmt.where(new_balance >= min_balance)
+            result = db.session.execute(
+                update_stmt.values(
+                    duck_balance=new_balance,
+                    # Invariant: earned_ducks >= duck_balance at all times.
+                    # earned_ducks is a lifetime counter (never decremented by spending or penalties).
+                    # If duck_balance somehow exceeds earned_ducks (e.g. due to legacy migration data),
+                    # clamp earned_ducks up to duck_balance so the invariant always holds.
+                    earned_ducks=case(
+                        (new_earned < new_balance, new_balance), else_=new_earned
+                    ),
+                ).execution_options(synchronize_session=False)
+            )
+            if result.rowcount != 1:
+                return False
+            db.session.refresh(self, ["duck_balance", "earned_ducks"])
+        else:
+            # Not persisted yet (no row to update): plain in-memory arithmetic.
+            if min_balance is not None and self.duck_balance + amount < min_balance:
+                return False
+            self.earned_ducks += earned_gain
+            self.duck_balance += amount
+            if self.earned_ducks < self.duck_balance:
+                self.earned_ducks = self.duck_balance
 
         # Record the transaction
         from .duck_transaction import DuckTransaction
@@ -556,6 +692,7 @@ class User(db.Model):
         transaction = DuckTransaction(user_id=self.id, amount=amount, reason=reason)
         db.session.add(transaction)
         # Note: The caller must commit the session
+        return True
 
     def award_daily_duck(self, amount=1):
         if self.role == "parent":
@@ -564,15 +701,31 @@ class User(db.Model):
         if self.has_double_duck:
             amount *= 2
 
-        from datetime import date
+        # The day boundary is UTC, like every other timestamp in the app.
+        today = utc_today()
+        if self.last_daily_duck == today:
+            return False
 
-        today = date.today()
-        if self.last_daily_duck != today:
-            self.add_ducks(amount, reason="Daily Duck")
+        if self.id is not None and self in db.session:
+            # Claim today with a conditional UPDATE before awarding, so two
+            # concurrent logins cannot both pass the check above and both award.
+            claimed = db.session.execute(
+                update(User)
+                .where(
+                    User.id == self.id,
+                    or_(User.last_daily_duck.is_(None), User.last_daily_duck != today),
+                )
+                .values(last_daily_duck=today)
+                .execution_options(synchronize_session=False)
+            )
+            if claimed.rowcount != 1:
+                return False
+            db.session.refresh(self, ["last_daily_duck"])
+        else:
             self.last_daily_duck = today
-            # Note: The caller must commit the session
-            return True
-        return False
+
+        # Note: The caller must commit the session
+        return self.add_ducks(amount, reason="Daily Duck")
 
     def get_contribution_data(self):
         """
@@ -583,7 +736,7 @@ class User(db.Model):
         }
         """
         # Align end date to the coming Saturday to complete the grid
-        today = date.today()
+        today = utc_today()
         idx = (today.weekday() + 1) % 7  # 0 = Sun
         end_date = today + timedelta(days=(6 - idx))
         start_date = end_date - timedelta(weeks=52)
@@ -668,17 +821,40 @@ class User(db.Model):
 
     def get_completed_levels(self):
         """
-        Returns a set of level slugs that the user has completed.
-        Used by the skill service to determine Web Dev and other specific course progress.
+        Returns a set of challenge slugs that the user has completed.
         """
-        # We assume the ChallengeLog model has a 'level_slug' column.
         # Using a set removes duplicates.
-        return {getattr(log, "challenge_slug", "") for log in self.challenge_logs}
+        return {log.challenge_slug for log in self.challenge_logs}
 
 
-# SQLAlchemy event listener to auto-generate slug for new users
 @event.listens_for(User, "before_insert")
 def receive_before_insert(mapper, connection, target):
     """Auto-generate slug before inserting a new user if not already set."""
     if not target.slug:
         target.generate_slug()
+
+
+def save_new_user(user, commit=True):
+    """Insert a new user, retrying once if its generated slug loses a race.
+
+    The slug is generated inside the INSERT's flush (receive_before_insert), so
+    two simultaneous signups with the same nickname can pick the same slug and
+    the second violates the unique constraint. By then the winner is committed
+    and visible, so regenerating the slug finds a free one.
+
+    With commit=False the user is only flushed (e.g. to get its id first); the
+    caller commits.
+    """
+    db.session.add(user)
+    try:
+        db.session.flush()
+    except IntegrityError:
+        db.session.rollback()
+        user.slug = None
+        user.generate_slug()
+        db.session.add(user)
+        db.session.flush()
+
+    if commit:
+        db.session.commit()
+    return user

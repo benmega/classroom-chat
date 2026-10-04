@@ -1,11 +1,12 @@
 import React, { useEffect, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
+import { Toaster, ToastBar } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
+import { isSigningOut } from './hooks/useLogout';
 import { SidebarProvider } from './context/SidebarContext';
-import { THEME } from './utils/theme';
 import ConfirmDialog from './components/common/ConfirmDialog';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 
 import Layout from './components/Layout/Layout';
@@ -61,64 +62,13 @@ const JoinClassroomLink = React.lazy(() => import('./pages/General/JoinClassroom
 import DevLogin from './pages/Auth/DevLogin';
 
 /**
- * Catches chunk-load errors (e.g. after a deploy that invalidates old JS hashes).
- * Instead of silently force-refreshing in a `React.lazy` wrapper (which can cause
- * infinite reload loops), we surface a user-friendly "Reload" prompt.
+ * Resets the boundary on route change so a page that crashed does not stay stuck on the
+ * error screen after the user navigates elsewhere. Must render inside <Router>.
  */
-class ChunkErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, info) {
-    console.error('Chunk load error caught by boundary:', error, info);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '100vh',
-          background: 'var(--bg-primary)',
-          color: 'var(--text-primary)',
-          textAlign: 'center',
-          padding: '2rem',
-        }}>
-          <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)' }}>A new version is available</h2>
-          <p style={{ opacity: 0.7, fontSize: 'var(--font-sm)', margin: 0 }}>
-            Please reload the page to get the latest update.
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '0.6rem 1.5rem',
-              borderRadius: 'var(--radius-lg)',
-              border: 'none',
-              background: 'var(--primary-color)',
-              color: '#fff',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 'var(--font-sm)',
-            }}
-          >
-            Reload
-          </button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+const RouteAwareBoundary = ({ children }) => {
+  const location = useLocation();
+  return <ErrorBoundary resetKeys={[location.pathname]}>{children}</ErrorBoundary>;
+};
 
 // Fallback spinner shown while lazy chunks are loading
 const PageLoader = () => (
@@ -129,34 +79,49 @@ const PageLoader = () => (
     height: '100vh',
     background: 'var(--bg-primary)',
   }}>
-    <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={40} strokeWidth={1.5} color={THEME.colors.blue600} />
+    <Loader2 style={{ animation: 'spin 1s linear infinite', color: 'var(--blue-600)' }} size={40} strokeWidth={1.5} />
   </div>
 );
 
 
+// Printed student cards and QR codes link to /user/profile/:slug (the API path),
+// which is not a page. Send those scans to the public profile page.
+const LegacyProfileRedirect = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/profile/${encodeURIComponent(slug)}`} replace />;
+};
+
+// Full-page loader shown while the first auth check is still running
+const AuthLoader = () => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1.5rem',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    background: 'var(--bg-primary)',
+    color: 'var(--text-primary)',
+  }}>
+      <Loader2 style={{ animation: 'spin 1s linear infinite', color: 'var(--blue-600)' }} size={64} strokeWidth={1.5} />
+      <div style={{ textAlign: 'center' }}>
+        <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
+        <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: 'var(--font-sm)' }}>Preparing your workspace...</p>
+      </div>
+  </div>
+);
+
 const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => {
   const { isAuthenticated, user, isLoading } = useAuthStore();
   const location = useLocation();
-  
-  if (isLoading) return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: '1.5rem', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh', 
-      background: 'var(--bg-primary)', 
-      color: 'var(--text-primary)',
-    }}>
-        <Loader2 style={{ animation: 'spin 1s linear infinite' }} size={64} strokeWidth={1.5} color={THEME.colors.blue600} />
-        <div style={{ textAlign: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: 'var(--font-2xl)', fontWeight: 'bold', letterSpacing: '-0.025em' }}>Classroom Chat</h2>
-          <p style={{ margin: '0.25rem 0 0 0', opacity: 0.7, fontSize: 'var(--font-sm)' }}>Preparing your workspace...</p>
-        </div>
-    </div>
-  );
-  if (!isAuthenticated) return <Navigate to="/login" />;
+
+  if (isLoading) return <AuthLoader />;
+  if (!isAuthenticated) {
+    // replace: Back must not return to the page that just bounced the user.
+    // from: Login sends them back here once they have signed in again. Not after a deliberate sign-out.
+    const from = location.pathname + location.search + location.hash;
+    return <Navigate to="/login" replace state={isSigningOut() ? null : { from }} />;
+  }
   if (adminOnly && user?.role !== 'admin') return <AccessDenied />;
 
   if (user?.role === 'parent' && 
@@ -175,8 +140,30 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
   return children;
 };
 
+const TOAST_POSITION = 'bottom-right';
+
+// react-hot-toast announces every toast politely (role="status"). Errors should interrupt the screen
+// reader instead, so they are rendered as an assertive alert; the bar, its styling and animation are unchanged.
+const renderToast = (t) => (
+  <ToastBar
+    toast={t.type === 'error' ? { ...t, ariaProps: { role: 'alert', 'aria-live': 'assertive' } } : t}
+    position={t.position || TOAST_POSITION}
+  />
+);
+
+// Sign-in and sign-up pages are for signed-out users. Once signed in, go where ProtectedRoute (or a
+// join link) came from, else to the user's home page. Deciding that here keeps the destination
+// fixed instead of racing Login's own navigation.
+const GuestRoute = ({ redirectTo, children }) => {
+  const { isAuthenticated } = useAuthStore();
+  const location = useLocation();
+
+  if (isAuthenticated) return <Navigate to={location.state?.from || redirectTo} replace />;
+  return children;
+};
+
 function App() {
-  const { checkAuth, isAuthenticated, isServerOffline, user } = useAuthStore();
+  const { checkAuth, isServerOffline, user } = useAuthStore();
 
   useEffect(() => {
     checkAuth();
@@ -199,7 +186,7 @@ function App() {
     <Router>
       <SidebarProvider>
         <Toaster 
-            position="bottom-right"
+            position={TOAST_POSITION}
             gutter={12}
             containerStyle={{
                 bottom: 24,
@@ -238,15 +225,17 @@ function App() {
                     },
                 },
             }}
-        />
+        >
+            {renderToast}
+        </Toaster>
         <ConfirmDialog />
-      <ChunkErrorBoundary>
+      <RouteAwareBoundary>
       <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path="/login" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Login />} />
-        <Route path="/signup" element={isAuthenticated ? <Navigate to={authRedirect} /> : <Signup />} />
-        <Route path="/forgot-password" element={isAuthenticated ? <Navigate to={authRedirect} /> : <ForgotPassword />} />
-        <Route path="/reset-password" element={isAuthenticated ? <Navigate to={authRedirect} /> : <ResetPassword />} />
+        <Route path="/login" element={<GuestRoute redirectTo={authRedirect}><Login /></GuestRoute>} />
+        <Route path="/signup" element={<GuestRoute redirectTo={authRedirect}><Signup /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute redirectTo={authRedirect}><ForgotPassword /></GuestRoute>} />
+        <Route path="/reset-password" element={<GuestRoute redirectTo={authRedirect}><ResetPassword /></GuestRoute>} />
 
 
         {/* Development-only shortcut — guarded so browsers in production never see this route */}
@@ -446,10 +435,12 @@ function App() {
           </ProtectedRoute>
         } />
 
+        <Route path="/user/profile/:slug" element={<LegacyProfileRedirect />} />
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
       </Suspense>
-      </ChunkErrorBoundary>
+      </RouteAwareBoundary>
       </SidebarProvider>
     </Router>
   );

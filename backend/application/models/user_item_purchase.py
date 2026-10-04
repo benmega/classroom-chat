@@ -25,7 +25,6 @@ class UserItemPurchase(db.Model):
         backref=db.backref("purchases", cascade="all, delete-orphan", lazy="dynamic"),
     )
 
-    # Constraint to ensure one record per user per item
     __table_args__ = (db.UniqueConstraint("user_id", "item_id", name="uq_user_item"),)
 
     def __repr__(self):

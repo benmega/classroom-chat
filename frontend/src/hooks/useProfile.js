@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { showConfirm } from '../utils/confirm';
+import { loadCropper } from '../utils/loadCropper';
+import { PROFILE_PICTURE_TYPES } from '../utils/profilePicture';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/apiError';
 import useAuthStore from '../store/useAuthStore';
 import toast from 'react-hot-toast';
 
@@ -11,6 +14,7 @@ export const useProfile = () => {
     const { checkAuth } = useAuthStore();
     const [profileData, setProfileData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState(false);
     const [selectedProject, setSelectedProject] = useState(null);
     const [slideshowIndex, setSlideshowIndex] = useState(null);
     
@@ -18,7 +22,6 @@ export const useProfile = () => {
     const cameraInputRef = useRef(null);
     const pfpInputRef = useRef(null);
 
-    // Profile Picture Cropping State
     const [isCropping, setIsCropping] = useState(false);
     const [cropImage, setCropImage] = useState(null);
     const [isUploadingPic, setIsUploadingPic] = useState(false);
@@ -27,13 +30,21 @@ export const useProfile = () => {
 
     const fetchProfile = useCallback(async () => {
         setIsLoading(true);
+        setLoadError(false);
         try {
             const endpoint = slug ? `/user/profile/${slug}` : '/user/profile';
             const response = await client.get(endpoint);
             setProfileData(response.data.data);
-        } catch {
+        } catch (err) {
+            const status = err.response?.status;
             toast.error('Failed to load profile.');
-            if (!slug) navigate('/login');
+            if (!slug && status === 401) {
+                // Not signed in (the api client has already reset the auth state).
+                navigate('/login');
+            } else if (status !== 404) {
+                // A network blip or server error: keep the user here and let them retry.
+                setLoadError(true);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -88,7 +99,7 @@ export const useProfile = () => {
         const file = e.target.files[0];
         if (!file) return;
 
-        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+        if (!PROFILE_PICTURE_TYPES.includes(file.type)) {
             toast.error('Please select a valid image file (JPG, PNG, WebP).');
             return;
         }
@@ -133,10 +144,10 @@ export const useProfile = () => {
                             checkAuth();
                         }
                     } else {
-                        toast.error(response.data.error || 'Upload failed.');
+                        toast.error(getErrorMessage({ response }, 'Upload failed.'));
                     }
                 } catch (err) {
-                    toast.error(err.response?.data?.error || 'Server error during upload.');
+                    toast.error(getErrorMessage(err, 'Server error during upload.'));
                 } finally {
                     setIsUploadingPic(false);
                 }
@@ -149,49 +160,36 @@ export const useProfile = () => {
     };
 
     useEffect(() => {
+        // Closed (or unmounted) while the library was still loading: build nothing.
+        let cancelled = false;
+
         if (isCropping) {
-            const loadCropper = async () => {
-                if (typeof window.Cropper === 'undefined') {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = '/lib/cropper.min.css';
-                    document.head.appendChild(link);
-
-                    const script = document.createElement('script');
-                    script.src = '/lib/cropper.min.js';
-                    script.async = true;
-                    script.onload = () => initCropper();
-                    document.body.appendChild(script);
-                } else {
-                    initCropper();
-                }
-            };
-
-            const initCropper = () => {
-                setTimeout(() => {
-                    if (cropImgRef.current) {
-                        cropperRef.current = new window.Cropper(cropImgRef.current, {
-                            aspectRatio: 1,
-                            viewMode: 2,
-                            dragMode: 'move',
-                            autoCropArea: 0.8,
-                            restore: false,
-                            guides: true,
-                            center: true,
-                            highlight: false,
-                            cropBoxMovable: true,
-                            cropBoxResizable: true,
-                            minCropBoxWidth: 100,
-                            minCropBoxHeight: 100,
-                        });
-                    }
-                }, 100);
-            };
-
-            loadCropper();
+            loadCropper().then((Cropper) => {
+                if (cancelled || !cropImgRef.current) return;
+                cropperRef.current = new Cropper(cropImgRef.current, {
+                    aspectRatio: 1,
+                    viewMode: 2,
+                    dragMode: 'move',
+                    autoCropArea: 0.8,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    minCropBoxWidth: 100,
+                    minCropBoxHeight: 100,
+                });
+            }).catch((err) => {
+                if (cancelled) return;
+                console.error('Cropper load error:', err);
+                toast.error('Could not load the image editor. Please try again.');
+                setIsCropping(false);
+            });
         }
 
         return () => {
+            cancelled = true;
             if (cropperRef.current) {
                 cropperRef.current.destroy();
                 cropperRef.current = null;
@@ -202,6 +200,8 @@ export const useProfile = () => {
     return {
         profileData,
         isLoading,
+        loadError,
+        retryProfile: fetchProfile,
         selectedProject,
         setSelectedProject,
         slideshowIndex,

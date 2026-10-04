@@ -6,14 +6,11 @@ import DevLogin from './DevLogin';
 import { server } from '../../test/mocks/server';
 import { http, HttpResponse } from 'msw';
 import useAuthStore from '../../store/useAuthStore';
-
-// We need a dummy component to verify navigation
 const ChatPage = () => <div data-testid="chat-page">Chat Page</div>;
 const CourseProgressPage = () => <div data-testid="course-page">Course Page</div>;
 
 describe('DevLogin', () => {
     beforeEach(() => {
-        // Reset auth store before each test
         useAuthStore.setState({ user: null, isAuthenticated: false, isChecking: false });
     });
 

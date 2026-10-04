@@ -28,6 +28,28 @@ export const formatStaticUrl = (url) => {
     return getApiUrl(formattedUrl);
 };
 
+// CSS background-image value for a static/uploaded image. An unquoted url() breaks on
+// spaces and parentheses (legacy names like "Tepun - Text-Based Adventure (2).jpg"),
+// so quote it and percent-encode those characters, keeping any existing %XX escapes.
+export const cssUrl = (url) => {
+    const formatted = formatStaticUrl(url);
+    if (!formatted) return 'none';
+    const encoded = encodeURI(formatted)
+        .replace(/%25([0-9A-Fa-f]{2})/g, '%$1')
+        .replace(/\(/g, '%28')
+        .replace(/\)/g, '%29');
+    return `url("${encoded}")`;
+};
+
+// Locale date for a timestamp, or '' when it is missing or not a valid date
+// (instead of "Invalid Date", or 1970 for null).
+export const safeDate = (value, options) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return '';
+    return date.toLocaleDateString(undefined, options);
+};
+
 export const formatRelativeTime = (dateStr) => {
     if (!dateStr) return 'Never';
     

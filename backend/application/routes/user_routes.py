@@ -1,17 +1,23 @@
 import os
 import re
 import threading
-import uuid
-from datetime import datetime
 from io import BytesIO
 
 from application.config import Config
 from application.decorators.api_response import api_response
 from application.extensions import csrf, db, limiter
 from application.models.project import Project
+from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
-from application.models.user import User
-from application.utilities.helper_functions import allowed_file, get_s3_client
+from application.models.user import User, save_new_user
+from application.utilities.helper_functions import allowed_file, get_s3_client, utcnow_naive
+from application.utilities.image_upload import (
+    AVATAR_MAX_EDGE,
+    PROJECT_MAX_EDGE,
+    ImageUploadError,
+    delete_stored_image,
+    save_validated_image,
+)
 from flask import (
     Blueprint,
     abort,
@@ -19,22 +25,19 @@ from flask import (
     flash,
     jsonify,
     redirect,
-    render_template,
     request,
     send_from_directory,
     session,
     url_for,
 )
+from flask_limiter.util import get_remote_address
 from flask_wtf import FlaskForm
-from PIL import Image
 from sqlalchemy.orm import selectinload
 from werkzeug.utils import secure_filename
 from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import DataRequired
 
 user = Blueprint("user", __name__)
-
-S3_UPLOAD_BUCKET = "youtube-upload-source-classroom-chat"
 
 
 from application.decorators.login_required import require_login
@@ -56,13 +59,15 @@ class LoginForm(FlaskForm):
 
 @csrf.exempt
 @user.route("/login", methods=["GET", "POST"])
-@limiter.limit("10 per minute; 100 per hour", methods=["POST"])
+@limiter.limit(
+    "10 per minute; 100 per hour", methods=["POST"], key_func=get_remote_address
+)
 def login():
     form = LoginForm()
     if request.is_json:
-        data = request.get_json()
-        username = data.get("username", "").lower()
-        password = data.get("password", "")
+        data = request.get_json(silent=True) or {}
+        username = str(data.get("username") or "").lower()
+        password = str(data.get("password") or "")
     else:
         if form.validate_on_submit():
             username = form.username.data.lower()
@@ -104,18 +109,13 @@ def login():
             return redirect(url_for("general.index"))
         else:
             if request.is_json:
-                return "Invalid username or password.", 401
+                return {"error": "Invalid username or password."}, 401
             flash("Invalid username or password.", "error")
             return "Invalid username or password.", 200
 
     if request.is_json or request.accept_mimetypes.accept_json:
         return {"error": "Method not allowed for JSON. Use POST to login."}, 405
-    # For testing and direct access, return the login page
-    # In this app, it might be served by a template
-    try:
-        return render_template("login.html"), 200
-    except Exception:
-        return "Login Page", 200
+    return "Login Page", 200
 
 
 @user.route("/api/auth/status", methods=["GET"])
@@ -162,6 +162,11 @@ def tutorial_complete():
 def logout():
     user_id = session.get("user")
     if user_id:
+        # An open socket keeps the rooms and session it had at handshake time,
+        # so it must not outlive this login (a different user may sign in next)
+        from application.socket_events import disconnect_user_sockets
+
+        disconnect_user_sockets(user_id)
         User.set_online(user_id, False)
 
     session.pop("user", None)
@@ -173,7 +178,7 @@ def logout():
 
 @csrf.exempt
 @user.route("/signup", methods=["POST"])
-@limiter.limit("5 per minute; 30 per hour")
+@limiter.limit("5 per minute; 30 per hour", key_func=get_remote_address)
 @api_response
 def signup():
     data = request.get_json()
@@ -198,8 +203,7 @@ def signup():
     try:
         new_user = User(username=username, is_approved=False)
         new_user.set_password(password)
-        db.session.add(new_user)
-        db.session.commit()
+        save_new_user(new_user)
         return {"message": "Account created! Awaiting admin approval."}, 201
     except Exception as e:
         db.session.rollback()
@@ -273,32 +277,43 @@ def edit_profile():
     user_obj = db.session.get(User, user_id)
 
     if request.method == "POST":
+        new_picture = None
         try:
+            old_picture = user_obj.profile_picture
             data = request.get_json() if request.is_json else request.form
             # 1. Update Basic Info (Password, IP, Online Status)
             if not update_basic_user_info(user_obj, data):
-                return {"error": "Passwords do not match."}, 400
+                return "Passwords do not match.", 400
 
-            # 2. Update Skills (Clear and Re-add)
-            clear_user_skills(user_obj)
-            add_user_skills(
-                user_obj,
-                (
-                    data.getlist("skills[]")
-                    if hasattr(data, "getlist")
-                    else data.get("skills", [])
-                ),
-            )
+            # 2. Update Skills (Clear and Re-add) - only when skills were sent
+            if "skills" in data or "skills[]" in data:
+                clear_user_skills(user_obj)
+                add_user_skills(
+                    user_obj,
+                    (
+                        data.getlist("skills[]")
+                        if hasattr(data, "getlist")
+                        else data.get("skills") or []
+                    ),
+                )
 
             # 3. Handle Profile Picture (if uploaded via this form, currently only form-data)
             if not request.is_json:
-                handle_profile_picture_upload(user_obj)
+                new_picture = handle_profile_picture_upload(user_obj)
 
             db.session.commit()
+            # Only once the new picture is committed is the old file safe to remove.
+            if new_picture:
+                delete_profile_picture_file(old_picture)
             return {"message": "Account settings updated successfully!"}, 200
 
+        except ImageUploadError as e:
+            db.session.rollback()
+            return e.message, e.status
         except Exception as e:
             db.session.rollback()
+            if new_picture:
+                delete_profile_picture_file(new_picture)
             current_app.logger.exception(f"Error during profile update: {e}")
             return "An error occurred while updating the profile.", 500
 
@@ -332,6 +347,33 @@ def get_parent_connection_code():
     }
 
 
+_TEMPLATE_ID_ABSENT = object()
+
+
+def _read_template_id(data):
+    """Parse the optional ``template_id`` form field.
+
+    Returns ``(value, error)``. ``value`` is ``_TEMPLATE_ID_ABSENT`` when the
+    field was not sent, ``None`` when it was sent empty/"null" (custom project)
+    and otherwise the id of an existing ProjectTemplate. ``error`` is a
+    ``(message, status)`` tuple for invalid input.
+    """
+    from application.models.project_template import ProjectTemplate
+
+    if "template_id" not in data:
+        return _TEMPLATE_ID_ABSENT, None
+    raw = data.get("template_id")
+    if raw is None or str(raw).strip().lower() in ("", "null", "none", "undefined"):
+        return None, None
+    try:
+        template_id = int(str(raw).strip())
+    except (TypeError, ValueError):
+        return None, ("Invalid template.", 400)
+    if not db.session.get(ProjectTemplate, template_id):
+        return None, ("Invalid template.", 400)
+    return template_id, None
+
+
 @user.route("/project/new", methods=["GET", "POST"])
 @require_login
 @api_response
@@ -357,6 +399,16 @@ def new_project():
         if not target_user:
             return "Invalid student selection.", 400
 
+        template_id, template_error = _read_template_id(data)
+        if template_error:
+            return template_error
+        if template_id is _TEMPLATE_ID_ABSENT:
+            # Older clients only send the name: link when it exactly matches.
+            from application.models.project_template import ProjectTemplate
+
+            matched = ProjectTemplate.query.filter_by(name=name).first()
+            template_id = matched.id if matched else None
+
         new_proj = Project(
             name=name,
             description=data.get("description"),
@@ -370,28 +422,26 @@ def new_project():
                 else None
             ),
             user_id=target_user.id,
+            template_id=template_id,
             status="pending",
         )
 
         db.session.add(new_proj)
 
         target_user.current_activity = f"Working on project: {new_proj.name}"
-        target_user.last_activity_time = datetime.utcnow()
+        target_user.last_activity_time = utcnow_naive()
 
         db.session.flush()
 
         if "project_image" in request.files:
             file = request.files["project_image"]
             if file and file.filename != "":
-                filename = handle_project_image_upload(file)
-                if filename:
-                    new_proj.image_url = f"/user/project_images/{filename}"
-                else:
-                    return (
-                        "Invalid image format. Allowed: "
-                        + ", ".join(Config.ALLOWED_EXTENSIONS),
-                        400,
-                    )
+                try:
+                    filename = handle_project_image_upload(file)
+                except ImageUploadError as e:
+                    db.session.rollback()  # the new project is not kept
+                    return e.message, e.status
+                new_proj.image_url = f"/user/project_images/{filename}"
 
         db.session.commit()
 
@@ -414,10 +464,13 @@ def new_project():
 
     # GET logic
     if request.is_json or request.accept_mimetypes.accept_json:
+        # Only three columns are needed for the picker: no full User rows
         student_list = (
             [
-                {"id": u.id, "username": u.username, "slug": u.slug}
-                for u in User.query.all()
+                {"id": uid, "username": username, "slug": slug}
+                for uid, username, slug in db.session.query(
+                    User.id, User._username, User.slug
+                ).order_by(User.id)
             ]
             if getattr(user_obj, "role", "") == "admin"
             else None
@@ -443,9 +496,15 @@ def edit_project(project_id):
         action = data.get("action")
 
         if action == "delete":
+            image_url = project.image_url
             db.session.delete(project)
             db.session.commit()
+            _delete_project_image_if_unreferenced(image_url)
             return {"message": "Project deleted successfully."}
+
+        template_id, template_error = _read_template_id(data)
+        if template_error:
+            return template_error
 
         # Default action is save
         # Strip local paths if somehow accidentally passed
@@ -455,6 +514,8 @@ def edit_project(project_id):
         project.github_link = data.get("github_link")
         project.video_url = data.get("video_url")
         project.code_snippet = data.get("code_snippet")
+        if template_id is not _TEMPLATE_ID_ABSENT:
+            project.template_id = template_id
 
         if getattr(current_user, "role", "") == "admin":
             if "teacher_comment" in data:
@@ -475,20 +536,20 @@ def edit_project(project_id):
             if project.status == "rejected":
                 project.status = "pending"
 
+        replaced_image_url = None
         if "project_image" in request.files:
             file = request.files["project_image"]
             if file and file.filename != "":
-                filename = handle_project_image_upload(file)
-                if filename:
-                    project.image_url = f"/user/project_images/{filename}"
-                else:
-                    return (
-                        "Invalid image format. Allowed: "
-                        + ", ".join(Config.ALLOWED_EXTENSIONS),
-                        400,
-                    )
+                try:
+                    filename = handle_project_image_upload(file)
+                except ImageUploadError as e:
+                    db.session.rollback()  # none of the other edits is kept
+                    return e.message, e.status
+                replaced_image_url = project.image_url
+                project.image_url = f"/user/project_images/{filename}"
 
         db.session.commit()
+        _delete_project_image_if_unreferenced(replaced_image_url)
 
         video_started = False
         if "project_video" in request.files:
@@ -535,81 +596,35 @@ def api_edit_profile_picture():
             400,
         )
 
-    # Limit size to 5MB
-    file.seek(0, os.SEEK_END)
-    file_size = file.tell()
-    file.seek(0)
-    if file_size > 5 * 1024 * 1024:
-        return "File too large. Maximum size is 5MB.", 400
-
+    filename = None
     try:
-        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-        secure_path = os.path.join(
-            current_app.config["UPLOAD_FOLDER"], "profile_pictures", filename
+        # Verified, shrunk to AVATAR_MAX_EDGE and stored under a name made from its real
+        # format; an animated image keeps its frames.
+        filename = save_validated_image(
+            file,
+            _upload_dir("profile_pictures"),
+            max_bytes=current_app.config["IMAGE_MAX_BYTES_AVATAR"],
+            max_edge=AVATAR_MAX_EDGE,
+            preserve_animation=True,
         )
 
-        os.makedirs(os.path.dirname(secure_path), exist_ok=True)
-
-        # Open and resize/save with PIL for consistency
-        img = Image.open(file)
-        img.save(secure_path)
-
-        # Cleanup old image if it exists
-        if user_obj.profile_picture:
-            old_path = os.path.join(
-                current_app.config["UPLOAD_FOLDER"],
-                "profile_pictures",
-                user_obj.profile_picture,
-            )
-            if os.path.exists(old_path):
-                os.remove(old_path)
-
+        old_picture = user_obj.profile_picture
         user_obj.profile_picture = filename
         db.session.commit()
+        # Only once the new picture is committed is the old file safe to remove.
+        delete_profile_picture_file(old_picture)
 
         new_url = url_for("user.profile_picture", filename=filename)
         return {"new_url": new_url, "filename": filename}
 
+    except ImageUploadError as e:
+        return e.message, e.status
     except Exception as e:
         db.session.rollback()
+        if filename:
+            delete_profile_picture_file(filename)
         current_app.logger.exception(f"Error updating profile picture: {e}")
         return "Server error during image processing.", 500
-
-
-@user.route("/api/project-image", methods=["POST"])
-@require_login
-@api_response
-def api_upload_project_image():
-    if "project_image" not in request.files:
-        return "No image part in request", 400
-
-    file = request.files["project_image"]
-    if file.filename == "":
-        return "No file selected", 400
-
-    if not allowed_file(file.filename):
-        return "Invalid file format.", 400
-
-    # Limit size to 10MB for projects
-    file.seek(0, os.SEEK_END)
-    file_size = file.tell()
-    file.seek(0)
-    if file_size > 10 * 1024 * 1024:
-        return "File too large. Maximum size is 10MB.", 400
-
-    try:
-        filename = handle_project_image_upload(file)
-        if not filename:
-            return "Failed to process image.", 500
-
-        # We don't link to a specific project yet, just return the URL/filename
-        # The frontend will send the filename back when saving the project form
-        new_url = url_for("user.project_image", filename=filename)
-        return {"new_url": new_url, "filename": filename}
-
-    except Exception as e:
-        print(f"Error saving image: {e!s}")
-        return "Error saving image", 500
 
 
 @user.route("/api/profile-wallpaper", methods=["POST"])
@@ -635,34 +650,20 @@ def api_edit_profile_wallpaper():
             400,
         )
 
-    file.seek(0, os.SEEK_END)
-    file_size = file.tell()
-    file.seek(0)
-    if file_size > 10 * 1024 * 1024:
-        return "File too large. Maximum size is 10MB.", 400
-
+    wallpaper_dir = _upload_dir("profile_wallpapers")
+    filename = None
     try:
-        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-        secure_path = os.path.join(
-            current_app.config["UPLOAD_FOLDER"], "profile_wallpapers", filename
+        filename = save_validated_image(
+            file,
+            wallpaper_dir,
+            max_bytes=current_app.config["IMAGE_MAX_BYTES_WALLPAPER"],
+            preserve_animation=True,
         )
 
-        os.makedirs(os.path.dirname(secure_path), exist_ok=True)
-
-        img = Image.open(file)
-        img.save(secure_path)
-
-        if user_obj.profile_wallpaper:
-            old_path = os.path.join(
-                current_app.config["UPLOAD_FOLDER"],
-                "profile_wallpapers",
-                user_obj.profile_wallpaper,
-            )
-            if os.path.exists(old_path):
-                os.remove(old_path)
-
+        old_wallpaper = user_obj.profile_wallpaper
         user_obj.profile_wallpaper = filename
         db.session.commit()
+        delete_stored_image(wallpaper_dir, old_wallpaper)
 
         new_url = url_for("user.profile_wallpaper", filename=filename)
         return {
@@ -670,29 +671,14 @@ def api_edit_profile_wallpaper():
             "filename": filename,
             "message": "Profile wallpaper updated successfully!",
         }
+    except ImageUploadError as e:
+        return e.message, e.status
     except Exception as e:
-        print(f"Error saving wallpaper: {e!s}")
+        db.session.rollback()
+        if filename:
+            delete_stored_image(wallpaper_dir, filename)
+        current_app.logger.exception(f"Error saving wallpaper: {e!s}")
         return "Error saving wallpaper", 500
-
-
-@user.route("/delete_profile_picture", methods=["POST"])
-@require_login
-def delete_profile_picture():
-    user_id = session.get("user")
-    user_obj = db.session.get(User, user_id)
-
-    if user_obj.profile_picture:
-        filepath = os.path.join(
-            Config.UPLOAD_FOLDER, "profile_pictures", user_obj.profile_picture
-        )
-        if os.path.exists(filepath):
-            os.remove(filepath)
-
-        user_obj.profile_picture = None
-        db.session.commit()
-
-    flash("Profile picture removed.", "success")
-    return redirect("/profile")
 
 
 @limiter.limit("50 per minute")
@@ -756,15 +742,6 @@ def project_image(filename):
         )
 
 
-@user.route("/get_users", methods=["GET"])
-@require_login
-def get_users_simple_list():
-
-    users = User.query.all()
-    users_data = [{"id": u.id, "username": u.username} for u in users]
-    return jsonify(users_data)
-
-
 @user.route("/api/users/search", methods=["GET"])
 @require_login
 @api_response
@@ -802,25 +779,6 @@ def search_users():
     }
 
 
-@user.route("/get_user_id", methods=["GET"])
-@require_login
-def get_user_id():
-
-    user_id = session.get("user")
-    if user_id:
-        return jsonify({"user_id": user_id})
-    return jsonify({"user_id": None}), 404
-
-
-@user.route("/remove_skill/<int:skill_id>", methods=["POST"])
-@require_login
-def remove_skill(skill_id):
-    user_id = session.get("user")
-    user_obj = db.session.get(User, user_id)
-    user_obj.remove_skill(skill_id)
-    return jsonify(success=True)
-
-
 def update_basic_user_info(user_obj, data):
     """Updates basic user settings (IP, Online Status, Password, Bio)."""
     ip_address = request.headers.get("X-Forwarded-For", request.remote_addr)
@@ -834,9 +792,12 @@ def update_basic_user_info(user_obj, data):
     if "bio" in data:
         user_obj.bio = data.get("bio")
 
-    # Update nickname if provided (students cannot change their own nickname)
+    # Update nickname if provided (students cannot change their own nickname;
+    # the existing profile slug is left unchanged)
     if "nickname" in data and user_obj.role != "student":
-        user_obj.nickname = data.get("nickname")
+        nickname = (data.get("nickname") or "").strip()
+        if nickname:
+            user_obj.nickname = nickname[:50]
 
     password = data.get("password")
     confirm_password = data.get("confirm_password")
@@ -864,33 +825,91 @@ def add_user_skills(user_obj, skills):
             user_obj.skills.append(Skill(name=skill_name))
 
 
+def _upload_dir(name):
+    """A folder of the persistent userData directory."""
+    return os.path.join(current_app.config["UPLOAD_FOLDER"], name)
+
+
+def _invalid_image_format_error():
+    return ImageUploadError("Invalid image format. Allowed: " + ", ".join(sorted(Config.ALLOWED_EXTENSIONS)))
+
+
+def delete_profile_picture_file(filename):
+    """Removes a stored profile picture. The shared default picture and non-file names are left alone."""
+    delete_stored_image(_upload_dir("profile_pictures"), filename, keep=("Default_pfp.jpg",))
+
+
 def handle_profile_picture_upload(user_obj):
-    """Handles uploading and saving a user profile picture."""
+    """
+    Saves an uploaded profile picture and points ``user_obj`` at it.
+
+    Returns the new file name, or None when the request has no picture. The caller
+    removes the previous file (see delete_profile_picture_file) once the change is
+    committed. Raises ImageUploadError for a picture that is not an acceptable image.
+    """
     if "profile_picture" in request.files:
         file = request.files["profile_picture"]
-        if file and allowed_file(file.filename):
-            filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-            filepath = os.path.join(Config.UPLOAD_FOLDER, "profile_pictures", filename)
-
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
-            file.save(filepath)
-
+        if file and file.filename:
+            if not allowed_file(file.filename):
+                raise _invalid_image_format_error()
+            filename = save_validated_image(
+                file,
+                _upload_dir("profile_pictures"),
+                max_bytes=current_app.config["IMAGE_MAX_BYTES_AVATAR"],
+                max_edge=AVATAR_MAX_EDGE,
+                preserve_animation=True,
+            )
             user_obj.profile_picture = filename
+            return filename
+    return None
 
 
 def handle_project_image_upload(file):
     """
     Saves a project image to the persistent userData directory and returns the filename.
+
+    Returns None when there is no file. Raises ImageUploadError for an image that is
+    not acceptable (wrong type, too large, not a readable image).
     """
-    if file and allowed_file(file.filename):
-        filename = f"{uuid.uuid4().hex}.{file.filename.rsplit('.', 1)[1].lower()}"
-        upload_path = os.path.join(Config.UPLOAD_FOLDER, "projects")
+    if not file or not file.filename:
+        return None
+    if not allowed_file(file.filename):
+        raise _invalid_image_format_error()
+    return save_validated_image(
+        file,
+        _upload_dir("projects"),
+        max_bytes=current_app.config["IMAGE_MAX_BYTES_PROJECT"],
+        max_edge=PROJECT_MAX_EDGE,
+        preserve_animation=True,
+    )
 
-        os.makedirs(upload_path, exist_ok=True)
-        file.save(os.path.join(upload_path, filename))
 
-        return filename
-    return None
+_PROJECT_IMAGE_URL_RE = re.compile(r"/user/project_images/([0-9a-f]{32}\.\w+)")
+
+
+def _delete_project_image_if_unreferenced(image_url):
+    """
+    Removes the uploaded file behind a project image URL once nothing uses it.
+
+    The same /user/project_images/<file> URL can be shared: an assigned project copies
+    its template's image, and a template can point at an uploaded file. Only files this
+    app uploaded match; anything else (static images, YouTube thumbnails) is ignored.
+    Call it after the project row was deleted or changed and committed. A failure is
+    logged and never blocks the caller.
+    """
+    match = _PROJECT_IMAGE_URL_RE.fullmatch(image_url or "")
+    if not match:
+        return
+    filename = match.group(1)
+    try:
+        in_use = (
+            db.session.query(Project.id).filter(Project.image_url.endswith(filename)).first()
+            or db.session.query(ProjectTemplate.id).filter(ProjectTemplate.image_url.endswith(filename)).first()
+        )
+        if not in_use:
+            delete_stored_image(_upload_dir("projects"), filename)
+    except Exception:
+        current_app.logger.exception(f"Could not clean up project image {filename}")
 
 
 def _do_s3_upload(app, file_bytes, filename, content_type, username, project_name, project_id):
@@ -920,9 +939,10 @@ def _do_s3_upload(app, file_bytes, filename, content_type, username, project_nam
             # which ignores MultipartUpload events unless explicitly enabled.
             config = TransferConfig(multipart_threshold=1024 * 1024 * 500)
 
+            bucket = app.config["S3_UPLOAD_BUCKET"]
             s3_client.upload_fileobj(
                 BytesIO(file_bytes),
-                S3_UPLOAD_BUCKET,
+                bucket,
                 s3_filename,
                 ExtraArgs={
                     "ContentType": content_type or "video/mp4",
@@ -931,10 +951,8 @@ def _do_s3_upload(app, file_bytes, filename, content_type, username, project_nam
                 Config=config,
             )
 
-            region = os.environ.get("AWS_REGION", "ap-southeast-1")
-            video_url = (
-                f"https://{S3_UPLOAD_BUCKET}.s3.{region}.amazonaws.com/{s3_filename}"
-            )
+            region = os.environ.get("AWS_REGION", Config.AWS_REGION)
+            video_url = f"https://{bucket}.s3.{region}.amazonaws.com/{s3_filename}"
 
             project = db.session.get(Project, project_id)
             if project:

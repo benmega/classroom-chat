@@ -3,6 +3,9 @@ import { Shield, Unlock, Star, Loader2, ShoppingCart, Palette, Image as ImageIco
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
+import { loadCropper } from '../../utils/loadCropper';
+import { getErrorMessage } from '../../utils/apiError';
+import { getAbsoluteApiBaseUrl } from '../../utils/apiUrl';
 import './Shop.css'; // Let's use a standard CSS file
 import WallpaperCropModal from '../../components/profile/WallpaperCropModal';
 import Skeleton from '../../components/common/Skeleton';
@@ -39,8 +42,7 @@ const Shop = () => {
     const cropperRef = React.useRef(null);
     const cropImgRef = React.useRef(null);
 
-    const apiBase = import.meta.env.VITE_API_URL || '';
-    const fullApiUrl = apiBase.startsWith('http') ? apiBase : (window.location.origin + apiBase);
+    const fullApiUrl = getAbsoluteApiBaseUrl();
 
     const bookmarkletCode = `javascript:(function(){
         const url = window.location.href;
@@ -95,7 +97,7 @@ const Shop = () => {
             await checkAuth(); 
             await fetchItems(); 
         } catch (error) {
-            toast.error(error.response?.data?.message || `Failed to purchase ${itemName}`);
+            toast.error(getErrorMessage(error, `Failed to purchase ${itemName}`));
         } finally {
             setPurchasingId(null);
         }
@@ -189,7 +191,7 @@ const Shop = () => {
                     setIsCropping(false);
                     await checkAuth(true);
                 } catch (error) {
-                    toast.error(error.response?.data?.error || "Failed to upload wallpaper.");
+                    toast.error(getErrorMessage(error, "Failed to upload wallpaper."));
                 } finally {
                     setIsUploadingPic(false);
                 }
@@ -202,49 +204,36 @@ const Shop = () => {
     };
 
     useEffect(() => {
+        // Closed (or unmounted) while the library was still loading: build nothing.
+        let cancelled = false;
+
         if (isCropping) {
-            const loadCropper = async () => {
-                if (typeof window.Cropper === 'undefined') {
-                    const link = document.createElement('link');
-                    link.rel = 'stylesheet';
-                    link.href = '/lib/cropper.min.css';
-                    document.head.appendChild(link);
-
-                    const script = document.createElement('script');
-                    script.src = '/lib/cropper.min.js';
-                    script.async = true;
-                    script.onload = () => initCropper();
-                    document.body.appendChild(script);
-                } else {
-                    initCropper();
-                }
-            };
-
-            const initCropper = () => {
-                setTimeout(() => {
-                    if (cropImgRef.current) {
-                        cropperRef.current = new window.Cropper(cropImgRef.current, {
-                            aspectRatio: 4 / 1,
-                            viewMode: 2,
-                            dragMode: 'move',
-                            autoCropArea: 0.8,
-                            restore: false,
-                            guides: true,
-                            center: true,
-                            highlight: false,
-                            cropBoxMovable: true,
-                            cropBoxResizable: true,
-                            minCropBoxWidth: 300,
-                            minCropBoxHeight: 100,
-                        });
-                    }
-                }, 100);
-            };
-
-            loadCropper();
+            loadCropper().then((Cropper) => {
+                if (cancelled || !cropImgRef.current) return;
+                cropperRef.current = new Cropper(cropImgRef.current, {
+                    aspectRatio: 4 / 1,
+                    viewMode: 2,
+                    dragMode: 'move',
+                    autoCropArea: 0.8,
+                    restore: false,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    cropBoxMovable: true,
+                    cropBoxResizable: true,
+                    minCropBoxWidth: 300,
+                    minCropBoxHeight: 100,
+                });
+            }).catch((err) => {
+                if (cancelled) return;
+                console.error('Cropper load error:', err);
+                toast.error('Could not load the image editor. Please try again.');
+                setIsCropping(false);
+            });
         }
 
         return () => {
+            cancelled = true;
             if (cropperRef.current) {
                 cropperRef.current.destroy();
                 cropperRef.current = null;
@@ -364,6 +353,7 @@ const Shop = () => {
                                                                 <input 
                                                                     type="range" 
                                                                     min="0" max="255" 
+                                                                    aria-label={`${label} channel`}
                                                                     value={val} 
                                                                     onChange={(e) => handleRgbChange(channel, e.target.value)}
                                                                     onMouseUp={handleBorderColorSubmit}
@@ -373,6 +363,7 @@ const Shop = () => {
                                                                 <input 
                                                                     type="number" 
                                                                     min="0" max="255" 
+                                                                    aria-label={`${label} channel value`}
                                                                     value={val}
                                                                     onChange={(e) => handleRgbChange(channel, e.target.value)}
                                                                     onBlur={handleBorderColorSubmit}

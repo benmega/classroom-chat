@@ -7,6 +7,14 @@ import { getApiUrl } from '../../utils/apiUrl';
 
 const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink, onJoinClassroomClick }) => {
     const borderSpeed = '1.5s';
+    // Only the owner can change the photo, so only for them is the avatar a button.
+    const avatarButtonProps = isOwner ? {
+        role: 'button',
+        tabIndex: 0,
+        'aria-label': 'Change profile photo',
+        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } },
+        onClick: () => pfpInputRef.current?.click(),
+    } : {};
     return (
         <div className="profile-header-card">
             <div 
@@ -19,9 +27,9 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink, on
                 } : {}}
             ></div>
             <div className="profile-header-content">
-                <div role="button" tabIndex={0} 
+                <div
                     className={`avatar-wrapper ${target.has_animated_border ? 'perk-animated-border' : ''}`} 
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => isOwner && pfpInputRef.current?.click()}
+                    {...avatarButtonProps}
                     style={target.has_animated_border ? { 
                         '--border-speed': borderSpeed,
                         ...(target.animated_border_color ? { '--border-color': target.animated_border_color } : {})

@@ -1,12 +1,17 @@
 import contextlib
 import logging
 import os
+import sys
 from datetime import timedelta
+from logging.handlers import RotatingFileHandler
 
-from application.config import DevelopmentConfig, ProductionConfig, TestingConfig
-from application.constants import (
-    GLOBAL_CLASSROOM_ID as GLOBAL_CLASSROOM_ID,
-)  # imported for side-effect availability
+from application.config import (
+    DEFAULT_DEV_CORS_ORIGINS,
+    INSTANCE_DIR,
+    DevelopmentConfig,
+    ProductionConfig,
+    TestingConfig,
+)
 from application.extensions import csrf, db, limiter, migrate, scheduler, socketio
 from application.models import setup_models
 from application.models.configuration import Configuration
@@ -14,7 +19,7 @@ from application.models.user import User
 from application.routes import register_blueprints
 from application.utilities.helper_functions import format_number
 from application.utilities.schema_check import check_for_schema_drift
-from flask import Flask, g, jsonify, session
+from flask import Flask, g, jsonify, request, session
 from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
 from flask_talisman import Talisman
@@ -23,32 +28,51 @@ from sqlalchemy import inspect
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+_CONSOLE_HANDLER_NAME = "app_console"
+_FILE_HANDLER_NAME = "app_file"
 
-def create_app(config_class=None):
+
+def _configure_logging():
+    """
+    Attach the console and rotating-file handlers to the root logger, once per
+    process: create_app() runs again for every test and reload, and must not
+    stack up duplicate handlers (repeated lines, leaked file handles).
+    """
+    root_logger = logging.getLogger()
+    attached = {handler.get_name() for handler in root_logger.handlers}
     log_formatter = logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(log_formatter)
+    if _CONSOLE_HANDLER_NAME not in attached:
+        console_handler = logging.StreamHandler()
+        console_handler.set_name(_CONSOLE_HANDLER_NAME)
+        console_handler.setFormatter(log_formatter)
+        root_logger.addHandler(console_handler)
 
-    log_dir = os.path.join(
-        os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "instance"
-    )
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-    from logging.handlers import RotatingFileHandler
+    if _FILE_HANDLER_NAME not in attached:
+        os.makedirs(INSTANCE_DIR, exist_ok=True)
+        # delay=True: the file is opened on the first write, not on creation.
+        file_handler = RotatingFileHandler(
+            os.path.join(INSTANCE_DIR, "app.log"),
+            maxBytes=10 * 1024 * 1024,
+            backupCount=5,
+            delay=True,
+        )
+        file_handler.set_name(_FILE_HANDLER_NAME)
+        file_handler.setFormatter(log_formatter)
+        root_logger.addHandler(file_handler)
 
-    file_handler = RotatingFileHandler(
-        os.path.join(log_dir, "app.log"), maxBytes=10 * 1024 * 1024, backupCount=5
-    )
-    file_handler.setFormatter(log_formatter)
+    # Only the app's own loggers ("application", which is also Flask's
+    # app.logger, and its children) log at INFO; the root logger keeps its
+    # default level so third-party libraries are not forced to INFO.
+    logging.getLogger("application").setLevel(logging.INFO)
+    for noisy in ("werkzeug", "sqlalchemy.engine", "engineio", "socketio"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
 
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(console_handler)
-    root_logger.addHandler(file_handler)
 
+def create_app(config_class=None):
+    _configure_logging()
     logger = logging.getLogger(__name__)
 
     # Dynamically select config if not explicitly passed
@@ -67,33 +91,17 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder=template_folder, static_folder=static_folder)
     app.config.from_object(config_class)
 
-    # In production, TEMPLATE_FOLDER points to the built frontend/dist.
-    # We add frontend/templates as a fallback so Flask-Admin templates are still found.
+    # Support internal backend templates (e.g. dev_login.html) alongside built dist templates
     from jinja2 import ChoiceLoader, FileSystemLoader
 
-    app.jinja_loader = ChoiceLoader(
-        [
-            app.jinja_loader,
-            FileSystemLoader(
-                os.path.join(app.config.get("BASE_DIR", ""), "frontend", "templates")
-            ),
-        ]
-    )
+    backend_templates = os.path.join(os.path.dirname(__file__), "templates")
+    loaders = [app.jinja_loader] if app.jinja_loader else []
+    if os.path.isdir(backend_templates):
+        loaders.append(FileSystemLoader(backend_templates))
+    if len(loaders) > 1:
+        app.jinja_loader = ChoiceLoader(loaders)
 
-    cors_origins = getattr(
-        config_class,
-        "CORS_ORIGINS",
-        [
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://localhost:5175",
-            "http://localhost:8000",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5174",
-            "http://127.0.0.1:5175",
-            "http://127.0.0.1:8000",
-        ],
-    )
+    cors_origins = getattr(config_class, "CORS_ORIGINS", DEFAULT_DEV_CORS_ORIGINS)
     CORS(
         app,
         origins=cors_origins,
@@ -120,12 +128,19 @@ def create_app(config_class=None):
     }
     Talisman(app, force_https=is_prod, content_security_policy=csp, session_cookie_secure=is_prod, session_cookie_http_only=True)
 
-    # x_for=1 tells Flask to trust the first X-Forwarded-For header.
-    # Only trust proxy headers in production, where nginx sets them. Trusting
-    # them in development would let anyone on the network spoof
+    # Trust the X-Forwarded-* headers set by the reverse proxies in front of the app.
+    # TRUSTED_PROXY_COUNT is 1 in production (nginx) and 0 elsewhere: trusting the
+    # headers in development would let anyone on the network spoof
     # X-Forwarded-For: 127.0.0.1 and pass dev-login's localhost-only guard.
-    if os.getenv("FLASK_ENV", "development").lower() == "production":
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
+    proxy_count = app.config.get("TRUSTED_PROXY_COUNT", 0)
+    if proxy_count > 0:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app,
+            x_for=proxy_count,
+            x_proto=proxy_count,
+            x_host=proxy_count,
+            x_port=proxy_count,
+        )
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
 
@@ -144,6 +159,16 @@ def create_app(config_class=None):
         scheduler.init_app(app)
 
     from . import socket_events as socket_events
+
+    # Requests are capped by MAX_CONTENT_LENGTH, except the video-upload
+    # endpoints, which get the larger limit. This hook must be registered
+    # before csrf.init_app: Flask-WTF's CSRF check reads request.form for
+    # multipart POSTs, which parses the body under whatever limit is in force,
+    # so setting the limit inside the view would be too late.
+    @app.before_request
+    def allow_large_uploads():
+        if request.endpoint in app.config["LARGE_UPLOAD_ENDPOINTS"]:
+            request.max_content_length = app.config["LARGE_UPLOAD_MAX_CONTENT_LENGTH"]
 
     csrf.init_app(app)
     register_blueprints(app)
@@ -170,27 +195,28 @@ def create_app(config_class=None):
         inspector = inspect(db.engine)
         if "db" not in sys.argv:
             if not inspector.has_table("users"):
-                # This part is now redundant for create_all, but we still want to ensure default config if it was a fresh DB
-                ensure_default_configuration()
                 logger.info("Database initialized for the first time.")
-            else:
-                # Still check if we need to ensure default configuration even if users exists
-                ensure_default_configuration()
+            # Ensure the default configuration exists, including on a fresh DB
+            ensure_default_configuration()
 
-        try:
-            if not getattr(scheduler, "running", False):
-                scheduler.start()
-        except Exception:
-            pass
+        if _should_start_scheduler(app):
+            try:
+                if not getattr(scheduler, "running", False):
+                    scheduler.start()
+            except Exception:
+                logger.exception("Could not start the session cleanup scheduler")
+        else:
+            logger.info("Session cleanup scheduler not started in this process")
 
-        # Ensure global classroom + conversation exist and update the
-        # in-process GLOBAL_CONVERSATION_ID constant.
+        # Ensure the reserved classrooms, store items and project templates exist.
         seed_global_data()
 
     @app.before_request
     def load_user():
         user_id = session.get("user")
-        g.user = User.query.filter_by(id=user_id).first() if user_id else None
+        # A primary-key lookup: the row lands in the identity map, so the routes' own
+        # db.session.get(User, ...) calls in the same request cost no further query
+        g.user = db.session.get(User, user_id) if user_id else None
 
     @app.context_processor
     def inject_user():
@@ -239,21 +265,46 @@ def create_app(config_class=None):
     return app
 
 
+def reloader_enabled():
+    """Whether main() runs the dev server under the Werkzeug reloader."""
+    return (
+        os.getenv("FLASK_ENV", "development").lower() != "production"
+        and os.getenv("FLASK_USE_RELOADER", "True").lower() in ("true", "1", "t")
+        and not getattr(sys, "frozen", False)
+    )
+
+
+def _should_start_scheduler(app):
+    """Whether this process should run the session cleanup scheduler.
+
+    The job must run in exactly one process. It is skipped under test, for
+    'flask db' commands, when SCHEDULER_ENABLED is off (set it to 0 on every
+    worker but one if gunicorn ever runs more than one) and in the Werkzeug
+    reloader's parent process, whose child imports the app again and starts its
+    own scheduler. Production (gunicorn, one worker) starts it by default.
+    """
+    if app.config.get("TESTING") or "db" in sys.argv:
+        return False
+    if not app.config.get("SCHEDULER_ENABLED", True):
+        return False
+    is_reloader_parent = (
+        reloader_enabled() and os.environ.get("WERKZEUG_RUN_MAIN") != "true"
+    )
+    return not is_reloader_parent
+
+
 def ensure_default_configuration():
-    if Configuration.query.first() is None:
-        default_config = Configuration(ai_teacher_enabled=False)
-        db.session.add(default_config)
-        db.session.commit()
+    Configuration.get_or_create()
+    db.session.commit()
 
 
 def seed_global_data():
     """
-    Idempotently ensure the reserved classrooms and global conversation exist.
-    Populates application.constants.GLOBAL_CONVERSATION_ID in-process so
-    routes can import it as a constant without hitting the DB every request.
+    Idempotently ensure the reserved classrooms, default store items and
+    default project templates exist.
 
-    Skips gracefully if the schema is not yet migrated (e.g. during
-    'flask db upgrade' before the conversations table has classroom_id).
+    Skips gracefully when running a 'flask db' command, so that
+    'flask db upgrade' can load the app before the schema is migrated.
     """
     import logging
 

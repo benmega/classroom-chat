@@ -1,28 +1,18 @@
 """
 Unit tests for helper_functions.py
 """
-from datetime import datetime
+from datetime import date, datetime, timedelta, timezone
+from unittest.mock import patch
 
-from application.extensions import db
-from application.models.user import User
 from application.utilities.helper_functions import (
     allowed_file,
-    cleanup_missing_user_pfps,
     format_file_size,
     format_number,
     get_s3_client,
-    request_database_commit,
     safe_parse_datetime,
+    utc_today,
+    utcnow_naive,
 )
-
-
-def test_request_database_commit_success(app):
-    with app.app_context():
-        u = User(username="commit_user_test")
-        u.set_password("pass123")
-        db.session.add(u)
-        res = request_database_commit()
-        assert res is True
 
 
 def test_allowed_file():
@@ -62,19 +52,59 @@ def test_safe_parse_datetime():
     assert safe_parse_datetime("not-a-date") is None
 
 
-def test_cleanup_missing_user_pfps(app, tmp_path, monkeypatch):
-    with app.app_context():
-        u1 = User(username="pfp_user_1_test", profile_picture="nonexistent.png")
-        u1.set_password("pass123")
-        u2 = User(username="pfp_user_2_test", profile_picture="Default_pfp.jpg")
-        u2.set_password("pass123")
-        db.session.add_all([u1, u2])
-        db.session.commit()
+def test_get_s3_client_region_defaults_to_config(monkeypatch):
+    from unittest.mock import patch
 
-        # Monkeypatch Config.UPLOAD_FOLDER to tmp_path
-        from application.config import Config
-        monkeypatch.setattr(Config, "UPLOAD_FOLDER", str(tmp_path))
+    from application.config import Config
 
-        fixed = cleanup_missing_user_pfps()
-        assert fixed >= 1
-        assert u1.profile_picture == "Default_pfp.jpg"
+    monkeypatch.delenv("AWS_REGION", raising=False)
+    with patch("boto3.client") as mock_client:
+        get_s3_client()
+    assert mock_client.call_args.kwargs["region_name"] == Config.AWS_REGION
+
+    monkeypatch.setenv("AWS_REGION", "us-east-1")
+    with patch("boto3.client") as mock_client:
+        get_s3_client()
+    assert mock_client.call_args.kwargs["region_name"] == "us-east-1"
+
+
+def test_utcnow_naive_is_naive_utc():
+    before = datetime.now(timezone.utc).replace(tzinfo=None)
+    now = utcnow_naive()
+    after = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    assert now.tzinfo is None
+    assert before <= now <= after
+    # Same clock as the deprecated utcnow() it replaces, so stored rows stay comparable
+    assert abs(now - datetime.utcnow()) < timedelta(seconds=5)
+
+
+def test_utc_today_is_the_utc_date():
+    before = datetime.now(timezone.utc).date()
+    today = utc_today()
+    after = datetime.now(timezone.utc).date()
+
+    assert type(today) is date
+    assert before <= today <= after
+
+
+def test_utc_today_reads_the_clock_in_utc():
+    class FrozenDatetime(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2030, 1, 19, 23, 30, tzinfo=timezone.utc).astimezone(tz)
+
+    with patch("application.utilities.helper_functions.datetime", FrozenDatetime):
+        assert utc_today() == date(2030, 1, 19)
+
+
+def test_get_s3_client_failure_is_logged_not_printed(capsys):
+    from unittest.mock import patch
+
+    with patch("boto3.client", side_effect=RuntimeError("no credentials")), patch(
+        "application.utilities.helper_functions.logger.exception"
+    ) as mock_log:
+        assert get_s3_client() is None
+
+    mock_log.assert_called_once()
+    assert capsys.readouterr().err == ""

@@ -1,14 +1,14 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import client from '../api/client';
 import useSidebar from './useSidebar';
 import useChatSocket from './useChatSocket';
+import useLogout from './useLogout';
 
 export const useLayout = () => {
     const {
         user,
-        logout,
         isAuthenticated,
         hamburgerProgress,
         setUnreadCount,
@@ -16,7 +16,7 @@ export const useLayout = () => {
         activityUnreadCount,
         setActivityUnreadCount
     } = useAuthStore();
-    const navigate = useNavigate();
+    const handleLogout = useLogout();
     const location = useLocation();
     const { isSidebarOpen, toggleSidebar, setSidebarOpen } = useSidebar();
 
@@ -50,19 +50,20 @@ export const useLayout = () => {
                 const lastReadIdVal = localStorage.getItem(key);
                 const lastReadId = lastReadIdVal ? parseInt(lastReadIdVal, 10) : null;
 
-                // TODO: Replace with a lightweight /message/api/unread-count?last_read_id=X
-                // endpoint to avoid transferring full message payloads just for the count.
-                const response = await client.get('/message/api/feed?limit=50', { signal: controller.signal });
-                const feed = response.data.messages || [];
+                // The server counts: only numbers come back, not the messages themselves.
+                // Without a read marker (null is left out of the query) it only reports the newest id.
+                const response = await client.get('/message/api/unread-count', {
+                    params: { last_read_id: lastReadId },
+                    signal: controller.signal,
+                });
+                const { count, latest_id: latestMsgId } = response.data;
 
-                if (feed.length > 0) {
-                    const latestMsgId = feed[0].id;
+                if (latestMsgId) {
                     if (lastReadId === null) {
                         localStorage.setItem(key, latestMsgId.toString());
                         setUnreadCount(0);
                         setLastReadMessageId(latestMsgId);
                     } else {
-                        const count = feed.filter(msg => msg.id > lastReadId).length;
                         setUnreadCount(count);
                         setLastReadMessageId(lastReadId);
                     }
@@ -110,7 +111,6 @@ export const useLayout = () => {
                     audio.play().catch(err => console.warn('Quack autoplay prevented:', err));
                 };
 
-                // Play first quack immediately
                 playQuack();
                 quacksPlayed++;
 
@@ -150,11 +150,6 @@ export const useLayout = () => {
         return () => clearInterval(interval);
     }, [isAuthenticated, user]);
 
-
-    const handleLogout = async () => {
-        await logout();
-        navigate('/');
-    };
 
     const isGuestPage = ['/login', '/signup'].includes(location.pathname);
     const isChatPage = location.pathname === '/' || location.pathname.startsWith('/chat');

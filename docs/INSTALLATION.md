@@ -1,7 +1,7 @@
 # Installation - Classroom Chat and Duck System
 
 ## Prerequisites
-- Python 3.11 (matches CI; 3.8+ generally works)
+- Python 3.11 (matches CI; 3.10 is the minimum the pinned dependencies support)
 - Node.js 20+ and npm (for the Vite/React frontend)
 - SQLite (bundled with Python — no separate database server needed for local dev)
 
@@ -9,7 +9,7 @@
 
 1. Clone the repository and enter it:
    ```bash
-   git clone <repository_url>
+   git clone https://github.com/benmega/classroom-chat.git
    cd classroom-chat
    ```
 
@@ -25,8 +25,9 @@
 
 3. Install backend dependencies:
    ```bash
-   pip install -r requirements.txt
+   pip install -r requirements-dev.txt
    ```
+   `requirements-dev.txt` is `requirements.txt` (what the app needs to run, and the only file `deploy.sh` installs on the server) plus the test and lint tooling (pytest, pytest-cov, ruff, mypy, factory_boy). If you only want to run the app, `pip install -r requirements.txt` is enough. The one-off scripts that generate student cards (`reports/student_cards/generate_cards.py`), QR codes (`tools/generate_user_qr_codes.py`) and screenshots (`screenshot.py`, `scripts/capture_*.py`) need a few more packages: `pip install -r requirements-tools.txt` (then `playwright install chromium` for the screenshot scripts).
 
 4. Create `backend/.env` with at least:
    ```env
@@ -34,7 +35,7 @@
    SECRET_KEY=some-dev-secret
    ADMIN_PASSWORD=some-dev-password
    ```
-   `SECRET_KEY`/`ADMIN_PASSWORD` fall back to insecure dev defaults if omitted in development, but `FLASK_ENV=production` will refuse to start without them (`application/config.py`). AI-teacher features additionally need `OPENAI_API_KEY`; Cognito-backed parent auth needs the `COGNITO_*` vars — both are optional for local development of the rest of the app.
+   `backend/.env.example` is a template for this file; it defaults to `FLASK_ENV=development` and lists every optional variable. `SECRET_KEY`/`ADMIN_PASSWORD` fall back to insecure dev defaults if omitted in development, but production needs `FLASK_ENV=production` and will refuse to start without them (`application/config.py`). On the server, `deploy.yml` writes `backend/.env` (including `FLASK_ENV=production`) from GitHub Secrets; if you create it by hand from the example, change `FLASK_ENV` to `production`. Cognito-backed parent auth additionally needs the `COGNITO_*` vars, which are optional for local development of the rest of the app.
 
 5. Install frontend dependencies:
    ```bash
@@ -44,7 +45,7 @@
 
 ## Getting Started
 
-The database (SQLite, at `backend/instance/dev_users.db`) is created automatically on first run in development — `flask db` migrations are only required in production. To run locally:
+The database (SQLite, at `backend/instance/dev_users.db`) is created automatically on first run in development — `flask db` migrations are only required in production. Schema changes are still made as Alembic migrations (`flask db migrate`), never as ad hoc scripts; production applies them through `deploy.sh` (see [infrastructure_and_devops.md](infrastructure_and_devops.md#8-database-migrations)). To run locally:
 
 ```bash
 # Terminal 1 — backend (from backend/, venv activated)
@@ -54,6 +55,12 @@ python main.py
 
 # Terminal 2 — frontend (from frontend/)
 npm run dev -- --host
+```
+
+**Windows one-click start:** `run_dev.ps1` in the repository root opens both servers above in separate PowerShell windows (frontend with `--host`, backend with `python main.py`). It works from any directory, and activates `backend/.venv` or `backend/venv` first when one exists:
+
+```powershell
+.\run_dev.ps1
 ```
 
 - Frontend dev server: http://localhost:5173
@@ -74,7 +81,7 @@ npm run test:e2e
 ```
 
 ## API Documentation
-See [`api_reference.md`](api_reference.md) for the endpoint catalog, or run the backend and browse Swagger UI at `/api/docs`.
+See [`api_reference.md`](api_reference.md) for the endpoint catalog (it also has a one-liner that prints every registered route).
 
 ## Production Deployment
 Production deployment is split between AWS S3/CloudFront for the React frontend and an EC2 instance behind nginx for the Flask backend. Both pipelines are gated by CI (`tests.yml` + `lint.yml`) on pushes to the `deploy` branch — see `.github/workflows/deploy-frontend.yml` and `.github/workflows/deploy.yml` (which triggers `deploy.sh`) for the full pipeline.

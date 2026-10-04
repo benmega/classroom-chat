@@ -3,6 +3,7 @@ import { FileUp, Save, Info, Database, Folder, ArrowLeft, Plus, X, GripVertical 
 import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
+import { getErrorMessage } from '../../utils/apiError';
 import './AdminChallenges.css';
 import Papa from 'papaparse';
 import Modal from '../../components/common/Modal';
@@ -12,32 +13,32 @@ const AdminChallenges = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [courses, setCourses] = useState([]);
 
-    // Drill-down view state
+
     const [selectedCourseId, setSelectedCourseId] = useState(null);
 
-    // List view state
+
     const [groupedChallenges, setGroupedChallenges] = useState({});
     const [isLoadingList, setIsLoadingList] = useState(true);
 
-    // Bulk Import Modal state
+
     const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
     const [parsedChallenges, setParsedChallenges] = useState([]);
     const [fileName, setFileName] = useState('');
 
-    // Single Challenge Modal state
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingChallenge, setEditingChallenge] = useState(null);
     const [modalForm, setModalForm] = useState({
         name: '', slug: '', course_id: '', domain: 'codecombat.com', difficulty: 'medium', value: 1, sequence: '', description: ''
     });
 
-    // Add Course Modal state
+
     const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
     const [courseForm, setCourseForm] = useState({
         id: '', name: '', domain: 'codecombat.com', description: ''
     });
 
-    // Drag and Drop state
+
     const dragItem = useRef(null);
     const dragOverItem = useRef(null);
 
@@ -65,8 +66,8 @@ const AdminChallenges = () => {
         try {
             await client.put('/api/admin/challenges/reorder', { updates });
             // We successfully saved order, no toast to avoid spam
-        } catch {
-            toast.error('Failed to save new order');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to save new order'));
         }
     };
 
@@ -180,7 +181,7 @@ const AdminChallenges = () => {
                 fetchGroupedChallenges();
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to add challenges.');
+            toast.error(getErrorMessage(error, 'Failed to add challenges.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -221,7 +222,7 @@ const AdminChallenges = () => {
             setIsModalOpen(false);
             fetchGroupedChallenges();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Action failed.');
+            toast.error(getErrorMessage(error, 'Action failed.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -233,8 +234,8 @@ const AdminChallenges = () => {
             const res = await client.delete(`/api/admin/challenges/${id}`);
             toast.success(res.data.message || 'Challenge deleted.');
             fetchGroupedChallenges();
-        } catch {
-            toast.error('Failed to delete challenge.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to delete challenge.'));
         }
     };
 
@@ -253,7 +254,7 @@ const AdminChallenges = () => {
             fetchCourses();
             setSelectedCourseId(courseForm.id);
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to add course.');
+            toast.error(getErrorMessage(error, 'Failed to add course.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -294,7 +295,7 @@ const AdminChallenges = () => {
                         No courses found. Try adding one!
                     </div>
                 ) : selectedCourseId === null ? (
-                    // COURSES VIEW
+
                     <div className="courses-grid">
                         {courseIds.map(courseId => {
                             const courseName = getCourseName(courseId);
@@ -336,7 +337,7 @@ const AdminChallenges = () => {
                         })}
                     </div>
                 ) : (
-                    // COURSE DETAILS VIEW
+
                     <div className="course-details-view">
                         <button className="secondary-btn mb-1rem" onClick={() => setSelectedCourseId(null)} style={{ padding: '0.5rem 1rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}>
                             <ArrowLeft size={16} /> Back to Courses
@@ -360,6 +361,8 @@ const AdminChallenges = () => {
                                     onDragOver={(e) => e.preventDefault()}
                                     onClick={() => openModal(c)}
                                     onKeyDown={(e) => {
+                                        // Keys pressed on the delete button bubble up here: only the row itself opens the editor
+                                        if (e.target !== e.currentTarget) return;
                                         if (e.key === 'Enter' || e.key === ' ') {
                                             e.preventDefault();
                                             openModal(c);
@@ -368,17 +371,11 @@ const AdminChallenges = () => {
                                     role="button"
                                     tabIndex={0}
                                 >
+                                    {/* Decorative: the whole row is what drags, and the handle does nothing on its own */}
                                     <div
                                         className="drag-handle"
                                         onClick={(e) => e.stopPropagation()}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === ' ') {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                            }
-                                        }}
-                                        role="button"
-                                        tabIndex={0}
+                                        aria-hidden="true"
                                     >
                                         <GripVertical size={20} color="var(--text-secondary)" />
                                     </div>
@@ -401,8 +398,9 @@ const AdminChallenges = () => {
                                         className="challenge-list-remove-btn"
                                         onClick={(e) => { e.stopPropagation(); handleDelete(c.id, c.name); }}
                                         title="Delete Challenge"
+                                        aria-label={`Delete challenge ${c.name}`}
                                     >
-                                        <X size={18} />
+                                        <X size={18} aria-hidden="true" />
                                     </button>
                                 </div>
                             ))}
@@ -476,6 +474,7 @@ const AdminChallenges = () => {
                             <option value="codecombat.com">codecombat.com</option>
                             <option value="studio.code.org">studio.code.org</option>
                             <option value="ozaria.com">ozaria.com</option>
+                            <option value="3d-modeling">3D Modeling</option>
                             <option value="other">other</option>
                         </select>
                     </div>
@@ -528,6 +527,7 @@ const AdminChallenges = () => {
                             <option value="codecombat.com">codecombat.com</option>
                             <option value="studio.code.org">studio.code.org</option>
                             <option value="ozaria.com">ozaria.com</option>
+                            <option value="3d-modeling">3D Modeling</option>
                             <option value="other">other</option>
                         </select>
                     </div>

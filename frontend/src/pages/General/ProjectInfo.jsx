@@ -2,12 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate, Link } from 'react-router-dom';
 import { ArrowLeft, Award, BookOpen, Code2, CheckCircle2, HelpCircle, Loader2, Check, ExternalLink } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
-import { formatStaticUrl } from '../../utils/formatters';
+import { cssUrl } from '../../utils/formatters';
 import './ProjectInfo.css';
 
 
+
+// The student's project built from this template: by template_id, else by exact name (older projects).
+const findAssigned = (projects, template) => (
+    projects.find(p => p.template_id != null && String(p.template_id) === String(template.id))
+    || projects.find(p => p.template_id == null && p.name === template.name)
+);
 
 const ProjectInfo = () => {
     const { projectId } = useParams();
@@ -28,7 +35,6 @@ const ProjectInfo = () => {
             try {
                 let currentProj = project;
                 
-                // Fetch template if not passed in navigation state
                 if (!currentProj) {
                     const res = await client.get('/api/project-templates');
                     const templates = res.data?.data?.templates || {};
@@ -43,12 +49,11 @@ const ProjectInfo = () => {
                     }
                 }
                 
-                // Check if current user already has this project assigned
                 if (user && currentProj) {
                     const profileRes = await client.get('/user/profile');
                     const userProfile = profileRes.data?.data?.target;
                     if (userProfile && userProfile.projects) {
-                        const assigned = userProfile.projects.find(p => p.name === currentProj.name);
+                        const assigned = findAssigned(userProfile.projects, currentProj);
                         if (assigned) {
                             setAssignedProject(assigned);
                         }
@@ -74,26 +79,26 @@ const ProjectInfo = () => {
         formData.append('name', project.name);
         formData.append('description', project.description || '');
         formData.append('student_id', user.id);
+        formData.append('template_id', project.id);
         
         try {
             const response = await client.post('/user/project/new', formData);
             if (response.data.status === 'success') {
                 
-                // Reload profile data to find newly assigned project
                 const profileRes = await client.get('/user/profile');
                 const userProfile = profileRes.data?.data?.target;
                 if (userProfile && userProfile.projects) {
-                    const assigned = userProfile.projects.find(p => p.name === project.name);
+                    const assigned = findAssigned(userProfile.projects, project);
                     if (assigned) {
                         setAssignedProject(assigned);
                     }
                 }
             } else {
-                toast.error(response.data.error || 'Failed to assign project.');
+                toast.error(getErrorMessage({ response }, 'Failed to assign project.'));
             }
         } catch (err) {
             console.error('Assign project error:', err);
-            toast.error(err.response?.data?.error || 'An error occurred during assignment.');
+            toast.error(getErrorMessage(err, 'An error occurred during assignment.'));
         } finally {
             setAssigning(false);
         }
@@ -140,7 +145,7 @@ const ProjectInfo = () => {
                         <div 
                             className="project-header-cover-img"
                             style={{ 
-                                backgroundImage: project.image_url ? `url(${formatStaticUrl(project.image_url)})` : 'none',
+                                backgroundImage: cssUrl(project.image_url),
                                 backgroundColor: project.image_url ? 'transparent' : 'var(--blue-600)',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -157,7 +162,6 @@ const ProjectInfo = () => {
                 </div>
 
                 <div className="project-hero">
-                    {/* Left side: Main Content */}
                     <div className="project-main-content">
                         <div className="project-description-section">
                             <h3 className="project-section-title">
@@ -183,9 +187,7 @@ const ProjectInfo = () => {
                         </div>
                     </div>
 
-                    {/* Right side: Sidebar Actions & Specs */}
                     <div className="project-sidebar-content">
-                        {/* Assignment Action Card */}
                         <div className="action-card">
                             {assignedProject ? (
                                 <div className="action-btn-wrapper">
@@ -212,7 +214,6 @@ const ProjectInfo = () => {
                             )}
                         </div>
 
-                        {/* Metadata Specs Card */}
                         <div className="info-grid-card">
                             <div className="info-item">
                                 <div className="info-icon-box">

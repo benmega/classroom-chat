@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import { Save, X, Eye, EyeOff, Copy } from 'lucide-react';
 import client from '../../api/client';
@@ -7,7 +7,13 @@ import useAuthStore from '../../store/useAuthStore';
 import './EditProfile.css';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
+import { getErrorMessage } from '../../utils/apiError';
+import { PROFILE_PICTURE_TYPES, validateProfilePicture } from '../../utils/profilePicture';
 import { ConnectionCardModal } from '../../components/admin/AdminModals';
+
+const serverPreviewUrl = (u) => (
+    u?.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : getApiUrl('/static/images/Default_pfp.jpg')
+);
 
 const EditProfile = () => {
     const { user, checkAuth } = useAuthStore();
@@ -23,20 +29,53 @@ const EditProfile = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [connectionCode, setConnectionCode] = useState('');
     const [showConnectionModal, setShowConnectionModal] = useState(false);
+    // The object URL behind a freshly chosen (unsaved) photo, so it can be revoked.
+    const blobUrlRef = useRef(null);
+
+    const userId = user?.id;
+    const userRole = user?.role;
+
+    const revokeBlobUrl = useCallback(() => {
+        if (blobUrlRef.current) {
+            URL.revokeObjectURL(blobUrlRef.current);
+            blobUrlRef.current = null;
+        }
+    }, []);
+
+    const syncTextFields = useCallback((u) => {
+        setNickname(u.nickname || u.username);
+        setBio(u.bio || '');
+    }, []);
+
+    const syncPreview = useCallback((u) => {
+        revokeBlobUrl();
+        setPreviewUrl(serverPreviewUrl(u));
+    }, [revokeBlobUrl]);
+
+    // Initialise the form once per signed-in user. Keyed on the id, not the user
+    // object: checkAuth() replaces the object on every call (Shop, BitShift, ...),
+    // and re-initialising then would throw away unsaved edits and the photo preview.
+    useEffect(() => {
+        const current = useAuthStore.getState().user;
+        if (current) {
+            syncTextFields(current);
+            syncPreview(current);
+        }
+    }, [userId, syncTextFields, syncPreview]);
 
     useEffect(() => {
-        if (user) {
-            setNickname(user.nickname || user.username);
-            setBio(user.bio || '');
-            setPreviewUrl(user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : getApiUrl('/static/images/Default_pfp.jpg'));
+        if (!userId || userRole === 'parent') return;
+        let cancelled = false;
+        client.get('/user/api/parent-code')
+            .then(res => {
+                if (!cancelled) setConnectionCode(res.data?.data?.connection_code || res.data?.connection_code);
+            })
+            .catch(err => console.error('Failed to fetch connection code:', err));
+        return () => { cancelled = true; };
+    }, [userId, userRole]);
 
-            if (user.role !== 'parent') {
-                client.get('/user/api/parent-code')
-                    .then(res => setConnectionCode(res.data?.data?.connection_code || res.data?.connection_code))
-                    .catch(err => console.error('Failed to fetch connection code:', err));
-            }
-        }
-    }, [user]);
+    // Release a pending preview blob when the page goes away.
+    useEffect(() => () => revokeBlobUrl(), [revokeBlobUrl]);
 
     const isStudent = user?.role === 'student';
 
@@ -49,20 +88,28 @@ const EditProfile = () => {
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setProfilePic(file);
-            setPreviewUrl(URL.createObjectURL(file));
+        if (!file) return;
+
+        const problem = validateProfilePicture(file);
+        if (problem) {
+            toast.error(problem);
+            e.target.value = '';
+            return;
         }
+
+        revokeBlobUrl();
+        blobUrlRef.current = URL.createObjectURL(file);
+        setProfilePic(file);
+        setPreviewUrl(blobUrlRef.current);
     };
 
     const handleCancel = () => {
         if (user) {
-            setNickname(user.nickname || user.username);
-            setBio(user.bio || '');
+            syncTextFields(user);
+            syncPreview(user);
             setPassword('');
             setConfirmPassword('');
             setProfilePic(null);
-            setPreviewUrl(user.profile_picture ? getApiUrl(`/user/profile_pictures/${user.profile_picture}`) : getApiUrl('/static/images/Default_pfp.jpg'));
         }
     };
 
@@ -78,14 +125,8 @@ const EditProfile = () => {
 
         setIsSaving(true);
         try {
-            // 1. Handle Profile Picture if changed
-            if (profilePic) {
-                const picData = new FormData();
-                picData.append('profile_picture', profilePic);
-                await client.post('/user/api/profile-picture', picData);
-            }
-
-            // 2. Handle Basic Info
+            // 1. Basic info first: it carries the validation that can fail (e.g. a
+            // password rule), so a rejection leaves the current avatar untouched.
             const payload = {
                 bio,
                 password: password || undefined,
@@ -96,17 +137,40 @@ const EditProfile = () => {
             }
 
             await client.post('/user/edit_profile', payload);
-            
-            
-            
             setPassword('');
             setConfirmPassword('');
-            setProfilePic(null);
-            
+
+            // 2. Then the profile picture, if changed. The info above is already
+            // saved by now, so a failure here is reported separately and the chosen
+            // photo is kept so the user can retry.
+            let pictureSaved = true;
+            if (profilePic) {
+                try {
+                    const picData = new FormData();
+                    picData.append('profile_picture', profilePic);
+                    await client.post('/user/api/profile-picture', picData);
+                    setProfilePic(null);
+                } catch (picError) {
+                    console.error('Profile picture upload error:', picError);
+                    pictureSaved = false;
+                    const reason = getErrorMessage(picError, '');
+                    toast.error(reason
+                        ? `Profile saved, but the photo upload failed: ${reason}`
+                        : 'Profile saved, but the photo upload failed. Please try again.');
+                }
+            }
+
+            // checkAuth() swaps in a fresh user object, which no longer re-initialises
+            // the form on its own, so resync it explicitly from the saved data.
             await checkAuth(true);
+            const saved = useAuthStore.getState().user;
+            if (saved) {
+                syncTextFields(saved);
+                if (pictureSaved) syncPreview(saved);
+            }
         } catch (error) {
             console.error('Update error:', error);
-            toast.error(error.response?.data?.error || 'Failed to update profile.');
+            toast.error(getErrorMessage(error, 'Failed to update profile.'));
         } finally {
             setIsSaving(false);
         }
@@ -115,7 +179,6 @@ const EditProfile = () => {
     return (
         <div className="edit-profile-page">
             <form onSubmit={handleSave} className="settings-form">
-                {/* Header Section */}
                 <div className="profile-settings-header">
                     <div className="profile-header-avatar-section">
                         <div className="avatar-wrapper">
@@ -131,9 +194,9 @@ const EditProfile = () => {
                                     key={profilePic ? 'pfp-selected' : 'pfp-empty'}
                                     type="file" 
                                     id="pfp-upload" 
-                                    hidden 
-                                    onChange={handleFileChange} 
-                                    accept="image/*" 
+                                    className="sr-only"
+                                    onChange={handleFileChange}
+                                    accept={PROFILE_PICTURE_TYPES.join(',')} 
                                 />
                             </label>
                         </div>
@@ -145,9 +208,7 @@ const EditProfile = () => {
                     </div>
                 </div>
 
-                {/* Main Content Layout */}
                 <div className="settings-layout">
-                    {/* Profile Information */}
                     <div className="settings-panel profile-info-panel">
                         <h2 className="panel-title">Profile Information</h2>
                         
@@ -197,7 +258,6 @@ const EditProfile = () => {
                         </div>
                     </div>
 
-                    {/* Pairing Code Panel */}
                     {user?.role !== 'parent' && (
                         <div className="settings-panel connection-panel">
                             <h2 className="panel-title">Pairing Code & Connection</h2>
@@ -207,6 +267,7 @@ const EditProfile = () => {
                                     value={connectionCode || 'Loading...'}
                                     readOnly
                                     disabled
+                                    aria-label="Pairing code"
                                     className="connection-code-value"
                                 />
                                 <button 
@@ -220,6 +281,7 @@ const EditProfile = () => {
                                     }}
                                     disabled={!connectionCode}
                                     title="Copy Code"
+                                    aria-label="Copy pairing code"
                                 >
                                     <Copy size={18} />
                                 </button>
@@ -250,7 +312,6 @@ const EditProfile = () => {
                         </div>
                     )}
 
-                    {/* Account Security Panel */}
                     <div className="settings-panel security-panel">
                         <h2 className="panel-title">Account Security</h2>
                         <div className="security-fields-row">
@@ -269,7 +330,8 @@ const EditProfile = () => {
                                         type="button" 
                                         className="password-toggle-btn"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        tabIndex="-1"
+                                        aria-label="Show new password"
+                                        aria-pressed={showPassword}
                                     >
                                         {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
@@ -290,7 +352,8 @@ const EditProfile = () => {
                                         type="button" 
                                         className="password-toggle-btn"
                                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        tabIndex="-1"
+                                        aria-label="Show confirm new password"
+                                        aria-pressed={showConfirmPassword}
                                     >
                                         {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                     </button>
@@ -300,7 +363,6 @@ const EditProfile = () => {
                     </div>
                 </div>
 
-                {/* Save Button Row */}
                 {hasChanges && (
                     <div className="settings-footer-actions">
                         <button type="button" onClick={handleCancel} className="btn-secondary">

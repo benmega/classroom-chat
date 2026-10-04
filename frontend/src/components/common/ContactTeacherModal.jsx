@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { X, Send, MessageSquare } from "lucide-react";
 import client from "../../api/client";
+import { getErrorMessage } from "../../utils/apiError";
 import toast from "react-hot-toast";
 
 const ContactTeacherModal = ({ isOpen, onClose }) => {
@@ -28,7 +29,7 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
             setSent(true);
             toast.success("Message sent to teacher!");
         } catch (err) {
-            toast.error(err.response?.data?.error || "Failed to send message.");
+            toast.error(getErrorMessage(err, "Failed to send message."));
         } finally {
             setIsSending(false);
         }

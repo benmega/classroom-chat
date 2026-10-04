@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import GameRewardsCsvModal from '../../components/admin/GameRewardsCsvModal';
 import './AdminGameCatalog.css';
 
@@ -25,7 +26,7 @@ const AdminGameCatalog = () => {
       setGames(res.data?.games || []);
     } catch (err) {
       console.error('Failed to fetch level games:', err);
-      toast.error('Failed to load game catalog.');
+      toast.error(getErrorMessage(err, 'Failed to load game catalog.'));
     } finally {
       setIsLoading(false);
     }

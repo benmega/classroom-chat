@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import client from '../../api/client';
 import { showConfirm } from '../../utils/confirm';
 import toast from 'react-hot-toast';
+import adminCache from '../../utils/adminCache';
+import { getErrorMessage } from '../../utils/apiError';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
-import { formatStaticUrl } from '../../utils/formatters';
+import { cssUrl } from '../../utils/formatters';
 import Modal from '../../components/common/Modal';
 import ImageUpload from '../../components/common/ImageUpload';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
 import './AdminStandardProjects.css';
 
 const AdminStandardProjects = () => {
-    const [projects, setProjects] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const cachedProjects = adminCache.get('admin_standard_projects');
+    const [projects, setProjects] = useState(() => cachedProjects || []);
+    const [isLoading, setIsLoading] = useState(() => !cachedProjects);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
@@ -27,14 +30,22 @@ const AdminStandardProjects = () => {
     }, []);
 
     const fetchProjects = async () => {
-        setIsLoading(true);
+        const cached = adminCache.get('admin_standard_projects');
+        if (cached) {
+            setIsLoading(false);
+        } else {
+            setIsLoading(true);
+        }
+
         try {
             const res = await client.get('/api/project-templates');
             const data = res.data;
             const projectList = 
                 data?.data?.templates || 
                 data?.templates || {};
-            setProjects(Object.values(projectList));
+            const list = Object.values(projectList);
+            setProjects(list);
+            adminCache.set('admin_standard_projects', list);
         } catch (error) {
             console.error('Failed to load standard projects:', error);
             toast.error('Failed to load standard projects.');
@@ -92,20 +103,20 @@ const AdminStandardProjects = () => {
             if (editingProject) {
                 const res = await client.put(`/api/project-templates/${editingProject.id}`, submitData);
                 if (res.data.status === 'success' || res.data.message) {
-                    
+                    adminCache.invalidate('admin_standard_projects');
                     closeModal();
                     fetchProjects();
                 }
             } else {
                 const res = await client.post('/api/project-templates', submitData);
                 if (res.data.status === 'success' || res.data.message) {
-                    
+                    adminCache.invalidate('admin_standard_projects');
                     closeModal();
                     fetchProjects();
                 }
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Action failed.');
+            toast.error(getErrorMessage(error, 'Action failed.'));
         } finally {
             setIsSubmitting(false);
         }
@@ -117,11 +128,11 @@ const AdminStandardProjects = () => {
         try {
             const res = await client.delete(`/api/project-templates/${id}`);
             if (res.data.status === 'success' || res.data.message) {
-                
+                adminCache.invalidate('admin_standard_projects');
                 fetchProjects();
             }
-        } catch {
-            toast.error('Failed to delete standard project.');
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to delete standard project.'));
         }
     };
 
@@ -139,38 +150,40 @@ const AdminStandardProjects = () => {
                 <div className="card" style={{ padding: '24px' }}>
                     <div className="projects-grid">
                         {projects.map(p => (
-                            // eslint-disable-next-line
-                            <div 
-                                key={p.id} 
-                                className="project-card" 
-                                onClick={() => openModal(p)}
-                            >
-                                <div 
-                                    className="project-card-header" 
-                                    style={{ 
-                                        backgroundImage: p.image_url ? `url(${formatStaticUrl(p.image_url)})` : 'none',
-                                        backgroundColor: p.image_url ? 'transparent' : 'var(--blue-600)'
-                                    }}
+                            // The open button and the remove button are siblings: a button inside a button is not valid
+                            <div key={p.id} className="project-card">
+                                <button
+                                    type="button"
+                                    className="project-card-open"
+                                    onClick={() => openModal(p)}
                                 >
-                                    {!p.image_url && <BookOpen size={48} />}
-                                    <button
-                                        type="button"
-                                        className="project-remove-btn"
-                                        onClick={(e) => { e.stopPropagation(); handleDelete(p.id, p.name); }}
-                                        title="Delete Project"
-                                        aria-label={`Delete project ${p.name}`}
+                                    <span
+                                        className="project-card-header"
+                                        style={{
+                                            backgroundImage: cssUrl(p.image_url),
+                                            backgroundColor: p.image_url ? 'transparent' : 'var(--blue-600)'
+                                        }}
                                     >
-                                        <X size={14} />
-                                    </button>
-                                </div>
-                                <div className="project-card-body">
-                                    <div className="project-card-title" title={p.name}>
-                                        {p.name}
-                                    </div>
-                                    <div className="project-card-desc">
-                                        {p.description || "No description provided."}
-                                    </div>
-                                </div>
+                                        {!p.image_url && <BookOpen size={48} aria-hidden="true" />}
+                                    </span>
+                                    <span className="project-card-body">
+                                        <span className="project-card-title" title={p.name}>
+                                            {p.name}
+                                        </span>
+                                        <span className="project-card-desc">
+                                            {p.description || "No description provided."}
+                                        </span>
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="project-remove-btn"
+                                    onClick={() => handleDelete(p.id, p.name)}
+                                    title="Delete Project"
+                                    aria-label={`Delete project ${p.name}`}
+                                >
+                                    <X size={14} aria-hidden="true" />
+                                </button>
                             </div>
                         ))}
                         {projects.length === 0 && (

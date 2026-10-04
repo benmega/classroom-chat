@@ -135,7 +135,7 @@
     box-shadow: var(--shadow-glow);
     outline: none;
     transform: translateY(-2px);
-    background: white;
+    background: var(--bg-primary);
 }
 
 /* Optional Section Styling */
@@ -181,7 +181,7 @@
 }
 
 .is-expanded {
-    background: white;
+    background: var(--bg-primary);
     border-color: var(--primary-color);
     box-shadow: var(--shadow-md);
 }
@@ -276,7 +276,7 @@
     display: inline-flex;
     align-items: center;
     padding: 12px 28px;
-    background: white;
+    background: var(--bg-primary);
     color: var(--text-primary);
     text-decoration: none;
     border-radius: var(--radius-md);

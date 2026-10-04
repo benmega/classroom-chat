@@ -10,6 +10,6 @@ This document originally listed prompts for migrating the app from server-render
 - `deploy.sh` and the GitHub Actions deploy workflows build the frontend as part of every deploy.
 
 ## What's left of the old stack, and why
-`frontend/templates/` and `frontend/static/` (Jinja2 templates/CSS) are **not deleted**. They're kept solely because `create_app()` registers `frontend/templates` as a Jinja loader fallback so Flask-Admin's built-in "advanced panel" templates (`admin/advanced_panel.html`, `admin/admin_base.html`) still resolve. Do not build new user-facing features here — everything new belongs in `frontend/src/`.
+The legacy Jinja2 templates, JS and CSS under `frontend/templates/` and `frontend/static/` have been removed; the only Jinja template left is `frontend/templates/dev_login.html` (the localhost-only dev login page). Do not build new user-facing features there — everything new belongs in `frontend/src/`.
 
-If you're looking for genuinely current priorities or open work, check `issues/` for any tickets not yet moved to `issues/completed/`, or ask the project maintainer — this file is a historical record, not a live roadmap.
+If you're looking for genuinely current priorities or open work, check the open GitHub Issues (`gh issue list --state open`, https://github.com/benmega/classroom-chat/issues) and file new work there, or ask the project maintainer — this file is a historical record, not a live roadmap.

@@ -10,25 +10,9 @@ import pytest
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
-from tests.factories import ChallengeFactory, UserFactory
+from tests.factories import ChallengeFactory
 
 # tests/app/models/test_challenge.py
-
-
-def test_complete_challenge(init_db):
-    sample_challenge = ChallengeFactory(slug="test-slug")
-    sample_user = UserFactory()
-    assert ChallengeLog.query.count() == 0
-
-    # Call complete_challenge method
-    sample_challenge.complete_challenge(sample_user)
-
-    log_entry = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
-    assert log_entry is not None
-
-    # UPDATED: Check 'challenge_slug' against 'sample_challenge.slug'
-    assert log_entry.challenge_slug == sample_challenge.slug
-    assert log_entry.user_id == sample_user.id
 
 
 @pytest.mark.parametrize(
@@ -68,12 +52,34 @@ def test_created_at_timestamp(init_db):
     assert isinstance(challenge_with_timestamp.created_at, datetime)
 
 
-def test_scale_value_with_custom_multiplier(init_db):
+@pytest.mark.parametrize(
+    "difficulty, multiplier, expected_value",
+    [
+        ("medium", 1.5, 15),  # 10 * 1.0 * 1.5
+        ("hard", 2.0, 40),  # 10 * 2.0 * 2.0
+    ],
+)
+def test_scale_value_with_custom_multiplier(
+    init_db, difficulty, multiplier, expected_value
+):
     sample_challenge = ChallengeFactory(value=10)
-    sample_challenge.difficulty = "medium"
-    assert (
-        sample_challenge.scale_value(difficulty_multiplier=1.5) == 15
-    )  # 10 * 1.0 * 1.5
+    sample_challenge.difficulty = difficulty
+    assert sample_challenge.scale_value(difficulty_multiplier=multiplier) == expected_value
+
+
+def test_challenge_repr(init_db):
+    challenge = ChallengeFactory(
+        name="Dungeons of Kithgard",
+        slug="dungeons-of-kithgard",
+        domain="codecombat.com",
+        difficulty="medium",
+        value=10,
+        is_active=True,
+    )
+    repr_str = repr(challenge)
+    assert "Challenge" in repr_str
+    assert "Dungeons of Kithgard" in repr_str
+    assert "codecombat.com" in repr_str
 
 
 def test_challenge_slug_auto_generation(init_db):
@@ -106,31 +112,6 @@ def test_challenge_explicit_slug(init_db):
 
     assert challenge.slug == "complex-algos-v1"
     assert challenge.name == "Complex Algorithms"
-
-
-def test_complete_challenge_logs_slug(init_db):
-    """
-    Test that completing a challenge creates a log entry using the SLUG,
-    not the name.
-    """
-    sample_user = UserFactory()
-    challenge_name = "Super Hard Level"
-    challenge_slug = "super-hard-level-slug"
-
-    challenge = Challenge(
-        name=challenge_name, slug=challenge_slug, domain="codecombat.com", value=10
-    )
-    db.session.add(challenge)
-    db.session.commit()
-
-    challenge.complete_challenge(sample_user)
-
-    log = ChallengeLog.query.filter_by(user_id=sample_user.id).first()
-
-    assert log is not None
-    assert log.challenge_slug == challenge_slug  # Crucial check: Must match slug
-    assert log.challenge_slug != challenge_name  # Ensure it didn't use the name
-    assert log.domain == "codecombat.com"
 
 
 def test_challenge_log_model_structure(init_db):

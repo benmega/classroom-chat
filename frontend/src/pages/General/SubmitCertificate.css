@@ -7,7 +7,7 @@
 }
 
 .form-card {
-    background: white;
+    background: var(--bg-primary);
     padding: 2rem;
     border-radius: 20px;
     box-shadow: var(--shadow-lg);
@@ -57,7 +57,7 @@
 
 .form-control:focus {
     border-color: var(--primary-color);
-    background: white;
+    background: var(--bg-primary);
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
     outline: none;
 }
@@ -155,7 +155,7 @@
 }
 
 .submit-button:hover:not(:disabled) {
-    background: var(--primary-color-dark, var(--blue-600));
+    background: var(--blue-600);
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }

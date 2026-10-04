@@ -1,7 +1,10 @@
 name: Linting
 
 on:
+  # Push runs are limited to long-lived branches so a push to a PR branch is
+  # linted once (by the pull_request run) instead of twice.
   push:
+    branches: [ main, master, working ]
   pull_request:
   # Allow other workflows (e.g. deploy) to require this as a gate.
   workflow_call:
@@ -56,4 +59,13 @@ jobs:
 
     - name: Run ESLint
       run: npm run lint
+
+    # Advisory only: surfaces vulnerable / outdated packages in the log without
+    # failing the lint gate that the deploy workflows depend on.
+    - name: Audit dependencies (advisory)
+      run: npm audit --audit-level=high
+      continue-on-error: true
+
+    - name: List outdated dependencies (advisory)
+      run: npm outdated || true
 

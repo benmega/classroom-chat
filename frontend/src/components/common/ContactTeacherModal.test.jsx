@@ -75,4 +75,44 @@ describe('ContactTeacherModal', () => {
             expect(toast.error).toHaveBeenCalledWith('Failed to send');
         });
     });
+
+    it('shows the text of an @api_response error envelope', async () => {
+        client.post.mockRejectedValueOnce({
+            response: { data: { status: 'error', data: null, error: 'No teacher is linked to your account.' } },
+        });
+
+        render(<ContactTeacherModal isOpen={true} onClose={vi.fn()} />);
+        fireEvent.change(screen.getByLabelText(/Message/i), { target: { value: 'Help' } });
+        fireEvent.click(screen.getByRole('button', { name: /Send Message/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('No teacher is linked to your account.');
+        });
+    });
+
+    it('shows the message field of a failure that has no error field', async () => {
+        client.post.mockRejectedValueOnce({
+            response: { data: { success: false, message: 'Your teacher is not accepting messages.' } },
+        });
+
+        render(<ContactTeacherModal isOpen={true} onClose={vi.fn()} />);
+        fireEvent.change(screen.getByLabelText(/Message/i), { target: { value: 'Help' } });
+        fireEvent.click(screen.getByRole('button', { name: /Send Message/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Your teacher is not accepting messages.');
+        });
+    });
+
+    it('falls back to a generic message when the failure has no usable text', async () => {
+        client.post.mockRejectedValueOnce(new Error('Network Error'));
+
+        render(<ContactTeacherModal isOpen={true} onClose={vi.fn()} />);
+        fireEvent.change(screen.getByLabelText(/Message/i), { target: { value: 'Help' } });
+        fireEvent.click(screen.getByRole('button', { name: /Send Message/i }));
+
+        await waitFor(() => {
+            expect(toast.error).toHaveBeenCalledWith('Failed to send message.');
+        });
+    });
 });

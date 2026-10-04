@@ -43,6 +43,12 @@ export const COURSE_IMAGES = {
     'oz4': '/images/courses/ozaria2.jpg',
     'ozaria-4': '/images/courses/ozaria2.jpg',
 
+    // 3D Modeling (no dedicated art yet - reuse the generic classroom banner)
+    '3d-1': '/images/courses/codeai.png',
+    '3d1': '/images/courses/codeai.png',
+    '3d-2': '/images/courses/codeai.png',
+    '3d2': '/images/courses/codeai.png',
+
     // Official Code.org / CodeAI Banner
     'code-org': '/images/courses/codeai.png',
     'codeorg': '/images/courses/codeai.png',
@@ -71,6 +77,7 @@ export const DOMAIN_DEFAULT_IMAGES = {
     'studio.code.org': '/images/courses/codeai.png',
     'code.org': '/images/courses/codeai.png',
     'codeai': '/images/courses/codeai.png',
+    '3d-modeling': '/images/courses/codeai.png',
 };
 
 export const getCourseHeaderImage = (courseId, courseName = '', domain = '') => {
@@ -113,6 +120,9 @@ export const getCourseHeaderImage = (courseId, courseName = '', domain = '') => 
     if (normName.includes('web dev 2') || normName.includes('wd2') || normName.includes('wd 2')) {
         return COURSE_IMAGES['wd-2'];
     }
+    if (normName.includes('3d') || normName.includes('tinkercad') || normName.includes('blender')) {
+        return COURSE_IMAGES['3d-1'];
+    }
     if (normName.includes('junior')) {
         return COURSE_IMAGES['cc-junior'];
     }
@@ -141,6 +151,7 @@ export const getCourseHeaderImage = (courseId, courseName = '', domain = '') => 
     if (normId.startsWith('cs')) return COURSE_IMAGES['cs-1'];
     if (normId.startsWith('gd')) return COURSE_IMAGES['gd-1'];
     if (normId.startsWith('wd')) return COURSE_IMAGES['wd-1'];
+    if (normId.startsWith('3d')) return COURSE_IMAGES['3d-1'];
 
     return null;
 };

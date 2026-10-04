@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Zap, TrendingUp, BarChart2 } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import { getApiUrl } from '../../utils/apiUrl';
 import ContributionGraph from '../../components/profile/ContributionGraph';
 import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
@@ -76,7 +77,7 @@ const ParentReportCard = () => {
                 // Persist so the nav rail can offer a quick-return link
                 localStorage.setItem('parent_last_report_child_id', studentId);
             } catch (err) {
-                setError(err.response?.data?.error || 'Failed to load report card');
+                setError(getErrorMessage(err, 'Failed to load report card'));
             } finally {
                 setIsLoading(false);
             }
@@ -84,7 +85,6 @@ const ParentReportCard = () => {
         fetchReport();
     }, [studentId, error]);
 
-    // Fetch historical progress data separately after the main report loads
     useEffect(() => {
         if (!studentId || error) return;
         const fetchHistory = async () => {
@@ -184,7 +184,8 @@ const ParentReportCard = () => {
 
     const ccLevels = reportData.cc_levels !== undefined ? reportData.cc_levels : (reportData.course_progress?.codecombat?.levels_completed || 0);
     const ozLevels = reportData.oz_levels !== undefined ? reportData.oz_levels : (reportData.course_progress?.ozaria?.levels_completed || 0);
-    const totalLevels = ccLevels + ozLevels;
+    const tdLevels = reportData.td_levels !== undefined ? reportData.td_levels : (reportData.course_progress?.['3d-modeling']?.levels_completed || 0);
+    const totalLevels = ccLevels + ozLevels + tdLevels;
 
     const isReportEmpty = 
         totalLevels === 0 &&
@@ -201,7 +202,6 @@ const ParentReportCard = () => {
     return (
         <>
         <div className="report-card-page animate-page-entry">
-            {/* ── Header ── */}
             <header className="report-header glass-panel">
                 <div className="report-header-inner">
                     <button
@@ -246,7 +246,6 @@ const ParentReportCard = () => {
                 </div>
             </header>
 
-            {/* ── Body Sections ── */}
             <DesktopNotice />
             
             {isReportEmpty ? (
@@ -260,7 +259,6 @@ const ParentReportCard = () => {
                     <div className="column-left">
                         <CourseProgress target={reportData} isParentView={true} studentId={studentId} />
 
-                        {/* Achievements */}
                         {reportData.unlocked_achievements && reportData.unlocked_achievements.length > 0 && (
                             <section className="dashboard-panel">
                                 <div className="panel-header">
@@ -295,7 +293,6 @@ const ParentReportCard = () => {
 
 
 
-                        {/* Recent Events Feed */}
                         {historyData?.recent_events && historyData.recent_events.length > 0 && (
                             <section className="dashboard-panel">
                                 <div className="panel-header">
@@ -328,7 +325,6 @@ const ParentReportCard = () => {
                             setSelectedProject={setSelectedProject}
                         />
 
-                        {/* Activity / Contribution Graph */}
                         {reportData.contribution_data?.rows?.some(row => row && row.some(cell => cell && cell.level > 0)) && (
                             <section className="dashboard-panel">
                                 <div className="panel-header">

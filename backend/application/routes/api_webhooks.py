@@ -1,8 +1,4 @@
-"""
-File: api_webhooks.py
-Type: py
-Summary: Flask routes for external service callbacks (YouTube Uploader & Transcriber Lambdas).
-"""
+
 
 import os
 

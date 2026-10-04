@@ -1,7 +1,14 @@
-import os
+from unittest.mock import patch
 
+import pytest
 from application.extensions import db
 from application.models.challenge import Challenge
+from application.models.classroom import Classroom
+from application.models.message import Message, message_classrooms, message_users
+from application.models.user import User
+from application.routes.admin import advanced_ops
+from sqlalchemy import func, select
+from tests.factories import ClassroomFactory, UserFactory
 
 
 def login_as_admin(client, admin_user):
@@ -14,7 +21,6 @@ def login_as_admin(client, admin_user):
 def test_crud_schema(client, sample_admin):
     login_as_admin(client, sample_admin)
 
-    # Valid resource
     resp = client.get("/api/admin/crud/schema/challenge")
     assert resp.status_code == 200
     assert resp.json["resource"] == "challenge"
@@ -27,13 +33,11 @@ def test_crud_schema(client, sample_admin):
 def test_crud_list_and_one(client, sample_admin):
     login_as_admin(client, sample_admin)
 
-    # List challenges
     resp = client.get("/api/admin/crud/challenge")
     assert resp.status_code == 200
     assert "data" in resp.json
     assert "total" in resp.json
 
-    # Try listing invalid resource
     resp = client.get("/api/admin/crud/nonexistent")
     assert resp.status_code == 404
 
@@ -86,10 +90,28 @@ def test_crud_create_update_delete(client, sample_admin):
     assert resp.status_code == 404
 
 
+def test_crud_classroom(client, sample_admin):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/crud/classroom",
+        json={
+            "id": "TEST_CLS_101",
+            "name": "Test Classroom 101",
+            "language": "Python",
+        },
+    )
+    assert resp.status_code == 200
+    assert resp.json["data"]["id"] == "TEST_CLS_101"
+    assert resp.json["data"]["name"] == "Test Classroom 101"
+
+    del_resp = client.delete("/api/admin/crud/classroom/TEST_CLS_101")
+    assert del_resp.status_code == 200
+
+
 def test_bulk_add_challenges(client, sample_admin):
     login_as_admin(client, sample_admin)
 
-    # Empty payload
     resp = client.post("/api/admin/challenges/bulk_add", json={})
     assert resp.status_code == 400
 
@@ -100,7 +122,6 @@ def test_bulk_add_challenges(client, sample_admin):
     assert resp.status_code == 200
     assert resp.json["data"]["skipped"] == 1
 
-    # Empty challenges set
     resp = client.post(
         "/api/admin/challenges/bulk_add",
         json={"course_id": "1", "domain": "domain", "challenges": []},
@@ -115,118 +136,132 @@ def test_bulk_add_challenges(client, sample_admin):
             "challenges": [
                 {"name": "Bulk 1", "slug": "bulk-1"},
                 {"name": "Bulk 2", "slug": "bulk-2"},
-                {"name": "Invalid"},  # missing slug, should be skipped
+                {"name": "Invalid"},
             ],
         },
     )
     assert resp.status_code == 200
-    # The response is wrapped by api_response decorator!
     data = resp.json["data"]
     assert data["added"] == 2
     assert data["skipped"] == 1
 
 
-def test_document_routes(client, sample_admin, test_app):
-    login_as_admin(client, sample_admin)
 
-    upload_dir = test_app.config["UPLOAD_FOLDER"]
-    category_dir = os.path.join(upload_dir, "other")
-    os.makedirs(category_dir, exist_ok=True)
-    test_file = os.path.join(category_dir, "test_doc.txt")
-    with open(test_file, "w") as f:
-        f.write("Hello World doc test")
-
-    try:
-        resp_view_403 = client.get(
-            "/api/admin/documents/other/..%2F..%2F..%2Fetc%2Fpasswd/view"
-        )
-        assert resp_view_403.status_code in [403, 404]
-
-        resp_dl_403 = client.get(
-            "/api/admin/documents/other/..%2F..%2F..%2Fetc%2Fpasswd/download"
-        )
-        assert resp_dl_403.status_code in [403, 404]
-
-        resp_stats = client.get("/api/admin/documents/stats")
-        assert resp_stats.status_code == 200
-        stats_data = resp_stats.get_json()["data"]["stats"]
-        assert "total_files" in stats_data
-        assert "by_category" in stats_data
-        assert stats_data["total_files"] >= 1
-
-        resp = client.get("/api/admin/documents")
-        assert resp.status_code == 200
-        docs = resp.json["data"]["documents"]
-        assert any(d["filename"] == "test_doc.txt" for d in docs)
-
-        resp = client.get("/api/admin/documents/invalid_cat/test_doc.txt/view")
-        assert resp.status_code == 400
-        resp = client.get("/api/admin/documents/other/nonexistent.txt/view")
-        assert resp.status_code == 404
-        resp = client.get("/api/admin/documents/other/test_doc.txt/view")
-        assert resp.status_code == 200
-        assert resp.data == b"Hello World doc test"
-
-        resp = client.get("/api/admin/documents/invalid_cat/test_doc.txt/download")
-        assert resp.status_code == 400
-        resp = client.get("/api/admin/documents/other/nonexistent.txt/download")
-        assert resp.status_code == 404
-        resp = client.get("/api/admin/documents/other/test_doc.txt/download")
-        assert resp.status_code == 200
-        assert resp.headers.get("Content-Disposition") is not None
-
-        # Empty fields
-        resp = client.post("/api/admin/delete-document", data={})
-        assert resp.status_code == 400
-        resp = client.post(
-            "/api/admin/delete-document",
-            data={"category": "invalid_cat", "filename": "test_doc.txt"},
-        )
-        assert resp.status_code == 400
-        resp = client.post(
-            "/api/admin/delete-document",
-            data={"category": "other", "filename": "nonexistent.txt"},
-        )
-        assert resp.status_code == 404
-
-        resp_del_403 = client.post(
-            "/api/admin/delete-document",
-            data={"category": "other", "filename": "../../../etc/passwd"},
-        )
-        assert resp_del_403.status_code in [403, 404]
-
-        resp = client.post(
-            "/api/admin/delete-document",
-            data={"category": "other", "filename": "test_doc.txt"},
-        )
-        assert resp.status_code == 200
-        assert resp.json["data"]["success"] is True
-        assert not os.path.exists(test_file)
-
-    finally:
-        if os.path.exists(test_file):
-            os.remove(test_file)
+def _add_messages(user, count, **kwargs):
+    messages = [Message(user_id=user.id, content=f"m{i}", **kwargs) for i in range(count)]
+    db.session.add_all(messages)
+    db.session.commit()
+    return messages
 
 
 def test_advanced_ops(client, sample_admin):
-    import sys
-    from unittest.mock import MagicMock
-
-    mock_psutil = MagicMock()
-    mock_psutil.Process.return_value.memory_info.return_value.rss = 100 * 1024 * 1024
-    mock_psutil.Process.return_value.cpu_percent.return_value = 5.0
-    mock_psutil.Process.return_value.create_time.return_value = 1000.0
-    mock_psutil.time.time.return_value = 2000.0
-    sys.modules["psutil"] = mock_psutil
-
     login_as_admin(client, sample_admin)
 
-    # stats-extended
-    resp = client.get("/api/admin/advanced/stats-extended")
-    assert resp.status_code == 200
-    assert "memory_usage_mb" in resp.json["data"]
-
-    # purge-history
+    # purge-history with nothing to purge
     resp = client.post("/api/admin/advanced/purge-history")
     assert resp.status_code == 200
-    assert resp.json["data"]["deleted_messages"] >= 0
+    assert resp.json["data"]["deleted_messages"] == 0
+
+
+def test_purge_history_deletes_every_message(client, sample_admin, sample_user):
+    _add_messages(sample_user, 2, is_global=True)
+    login_as_admin(client, sample_admin)
+    assert Message.query.count() == 2
+
+    resp = client.post("/api/admin/advanced/purge-history")
+
+    assert resp.status_code == 200
+    assert resp.json["status"] == "success"
+    assert resp.json["data"] == {
+        "message": "History purged successfully.",
+        "deleted_messages": 2,
+    }
+    assert Message.query.count() == 0
+
+
+def test_purge_history_leaves_users_and_classrooms_alone(
+    client, sample_admin, sample_user
+):
+    classroom = ClassroomFactory()
+    _add_messages(sample_user, 2, is_global=True)
+    users, classrooms = User.query.count(), Classroom.query.count()
+    login_as_admin(client, sample_admin)
+
+    resp = client.post("/api/admin/advanced/purge-history")
+
+    assert resp.status_code == 200
+    assert User.query.count() == users
+    assert Classroom.query.count() == classrooms
+    assert db.session.get(Classroom, classroom.id) is not None
+
+
+def _targeted_message(author, classroom, recipient):
+    msg = Message(user_id=author.id, content="targeted")
+    msg.target_classrooms.append(classroom)
+    msg.target_users.append(recipient)
+    db.session.add(msg)
+    db.session.commit()
+    return msg
+
+
+def test_purge_history_removes_the_targets_of_the_purged_messages(
+    client, sample_admin, sample_user
+):
+    _targeted_message(sample_user, ClassroomFactory(), UserFactory())
+    login_as_admin(client, sample_admin)
+
+    resp = client.post("/api/admin/advanced/purge-history")
+
+    assert resp.status_code == 200
+    assert Message.query.count() == 0
+    assert db.session.execute(select(func.count()).select_from(message_classrooms)).scalar() == 0
+    assert db.session.execute(select(func.count()).select_from(message_users)).scalar() == 0
+
+
+def test_message_created_after_a_purge_does_not_inherit_the_old_audience(
+    client, sample_admin, sample_user
+):
+    _targeted_message(sample_user, ClassroomFactory(), UserFactory())
+    login_as_admin(client, sample_admin)
+    assert client.post("/api/admin/advanced/purge-history").status_code == 200
+
+    fresh = Message(user_id=sample_user.id, content="fresh")
+    db.session.add(fresh)
+    db.session.commit()
+    db.session.expire_all()
+
+    assert fresh.target_classrooms == []
+    assert fresh.target_users == []
+
+
+
+def test_purge_history_rolls_back_and_hides_nothing_when_the_delete_fails(
+    client, sample_admin, sample_user
+):
+    _add_messages(sample_user, 2, is_global=True)
+    login_as_admin(client, sample_admin)
+
+    with patch.object(db.session, "commit", side_effect=RuntimeError("disk full")):
+        resp = client.post("/api/admin/advanced/purge-history")
+
+    assert resp.status_code == 500
+    assert resp.json["status"] == "error"
+    assert "Failed to purge history" in resp.json["error"]
+    assert Message.query.count() == 2
+
+
+@pytest.mark.parametrize("who", ["anonymous", "student"])
+def test_purge_history_is_refused_to_non_admins_and_deletes_nothing(
+    client, sample_user, who
+):
+    _add_messages(sample_user, 2, is_global=True)
+    if who == "student":
+        with client.session_transaction() as sess:
+            sess["user"] = sample_user.id
+
+    resp = client.post("/api/admin/advanced/purge-history")
+
+    assert resp.status_code == (401 if who == "anonymous" else 403)
+    assert Message.query.count() == 2
+
+

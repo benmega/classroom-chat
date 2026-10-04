@@ -1,8 +1,4 @@
-"""
-File: config.py
-Type: py
-Summary: Configuration classes and settings for different environments.
-"""
+
 
 import os
 from typing import ClassVar
@@ -11,6 +7,48 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Browser origins allowed to call the API with credentials (CORS and Socket.IO).
+# Localhost origins are defaults only outside production.
+DEFAULT_DEV_CORS_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://localhost:5175",
+    "http://localhost:4173",
+    "http://localhost:8000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174",
+    "http://127.0.0.1:5175",
+    "http://127.0.0.1:4173",
+    "http://127.0.0.1:8000",
+]
+DEFAULT_PROD_CORS_ORIGINS = [
+    "https://blossom.benmega.com",
+    "https://d2pa3ix3n5behv.cloudfront.net",
+]
+# Sites the CodeCombat/Ozaria bookmarklet posts from (/challenge/submit only).
+BOOKMARKLET_ORIGINS = [
+    "https://codecombat.com",
+    "https://www.codecombat.com",
+    "https://ozaria.com",
+    "https://www.ozaria.com",
+]
+
+
+def split_csv(value):
+    """Split a comma-separated string, trimming whitespace and dropping empty entries."""
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def cors_origins_from_env(default):
+    """Origins from the CORS_ORIGINS env var, or a copy of ``default`` when it is unset or blank."""
+    return split_csv(os.getenv("CORS_ORIGINS", "")) or list(default)
+
+
+# backend/instance: the SQLite databases and the application log (app.log) live here.
+INSTANCE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(os.path.dirname(__file__)), "instance")
+)
+
 
 class Config:
     # BASE_DIR is classroom-chat/
@@ -18,9 +56,9 @@ class Config:
         os.path.join(os.path.dirname(os.path.dirname(__file__)), "..")
     )
 
-    INSTANCE_FOLDER = os.path.join(BASE_DIR, "backend", "instance")
+    INSTANCE_FOLDER = INSTANCE_DIR
     STATIC_FOLDER = os.path.join(BASE_DIR, "frontend", "static")
-    TEMPLATE_FOLDER = os.path.join(BASE_DIR, "frontend", "templates")
+    TEMPLATE_FOLDER = os.path.join(BASE_DIR, "frontend", "dist")
 
     SQLALCHEMY_DATABASE_URI = (
         f"sqlite:///{os.path.join(INSTANCE_FOLDER, 'dev_users.db')}"
@@ -28,7 +66,6 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
 
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     SECRET_KEY = os.getenv("SECRET_KEY")
     if not SECRET_KEY:
         # Generate a random one for dev if not provided, but don't allow this in production
@@ -37,12 +74,27 @@ class Config:
         SECRET_KEY = "dev-secret-key-change-me"
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "userData")
-    MAX_CONTENT_LENGTH = 500 * 1024 * 1024
+    # Global request body cap, just above SUBMISSION_MAX_BYTES. Project video
+    # uploads need far more, so the endpoints in LARGE_UPLOAD_ENDPOINTS get
+    # LARGE_UPLOAD_MAX_CONTENT_LENGTH instead (see create_app).
+    MAX_CONTENT_LENGTH = 25 * 1024 * 1024
+    LARGE_UPLOAD_MAX_CONTENT_LENGTH = 500 * 1024 * 1024
+    LARGE_UPLOAD_ENDPOINTS: ClassVar[set[str]] = {"user.new_project", "user.edit_project"}
     ALLOWED_EXTENSIONS: ClassVar[set[str]] = {"png", "jpg", "jpeg", "gif", "webp"}
     SUBMISSION_ALLOWED_EXTENSIONS: ClassVar[set[str]] = {
         "png", "jpg", "jpeg", "gif", "webp", "pdf", "doc", "docx", "txt", "ppt", "pptx", "zip"
     }
     SUBMISSION_MAX_BYTES = 20 * 1024 * 1024  # 20MB
+
+    # Image uploads (application/utilities/image_upload.py). Each cap sits under
+    # MAX_CONTENT_LENGTH, which is enforced on the request body before a route runs.
+    IMAGE_MAX_BYTES_AVATAR = 5 * 1024 * 1024
+    IMAGE_MAX_BYTES_WALLPAPER = 10 * 1024 * 1024
+    IMAGE_MAX_BYTES_PROJECT = 10 * 1024 * 1024
+    IMAGE_MAX_BYTES_NOTE = 10 * 1024 * 1024
+    IMAGE_MAX_BYTES_BADGE = 2 * 1024 * 1024
+    MAX_IMAGE_PIXELS = 25_000_000  # width * height
+    IMAGE_MAX_FRAMES = 100  # animated GIF / WebP / APNG
 
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
@@ -65,8 +117,33 @@ class Config:
     SES_SENDER_EMAIL = os.getenv("SES_SENDER_EMAIL", "noreply@benmega.com")
     ADMIN_EMAIL_ADDRESS = os.getenv("ADMIN_EMAIL_ADDRESS")
 
-    # SocketIO configuration
-    SOCKETIO_ASYNC_MODE = "gevent"
+    # S3 storage (notes images and project videos). The defaults are the production values.
+    AWS_REGION = os.getenv("AWS_REGION", "ap-southeast-1")
+    S3_NOTES_BUCKET = os.getenv("S3_NOTES_BUCKET", "classroom-chat-student-notes")
+    S3_UPLOAD_BUCKET = os.getenv(
+        "S3_UPLOAD_BUCKET", "youtube-upload-source-classroom-chat"
+    )
+
+    # SocketIO configuration. main.py reads the same variable to decide whether
+    # to gevent-monkey-patch, so the two always agree.
+    SOCKETIO_ASYNC_MODE = os.getenv("SOCKETIO_ASYNC_MODE") or "gevent"
+
+    # Rate limiter storage. The in-memory default is per process, which is only
+    # correct while a single worker serves the app (see docs/infrastructure_and_devops.md).
+    RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
+
+    # Background session cleanup (application/tasks.py). The scheduler must run in
+    # exactly one process: set SCHEDULER_ENABLED=0 on every worker but one.
+    SCHEDULER_ENABLED = os.getenv("SCHEDULER_ENABLED", "1").strip().lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+    SESSION_STALE_TIMEOUT_MINUTES = int(os.getenv("SESSION_STALE_TIMEOUT_MINUTES", 10))
+
+    # Number of reverse proxies in front of the app whose X-Forwarded-* headers
+    # are trusted (werkzeug ProxyFix). 0 ignores them.
+    TRUSTED_PROXY_COUNT = int(os.getenv("TRUSTED_PROXY_COUNT", 0))
 
 
 class DevelopmentConfig(Config):
@@ -95,6 +172,9 @@ class ProductionConfig(Config):
         "DATABASE_URL",
         f"sqlite:///{os.path.join(Config.INSTANCE_FOLDER, 'prod_users.db')}",
     )
+    # nginx is the one proxy in front of gunicorn.
+    TRUSTED_PROXY_COUNT = int(os.getenv("TRUSTED_PROXY_COUNT", 1))
+
     SESSION_COOKIE_DOMAIN = ".benmega.com"
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = True
@@ -110,11 +190,4 @@ class ProductionConfig(Config):
     TEMPLATE_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
     STATIC_FOLDER = os.path.join(Config.BASE_DIR, "frontend", "dist")
 
-    CORS_ORIGINS = (
-        os.getenv("CORS_ORIGINS", "").split(",")
-        if os.getenv("CORS_ORIGINS")
-        else [
-            "https://blossom.benmega.com",
-            "https://d2pa3ix3n5behv.cloudfront.net",
-        ]
-    )
+    CORS_ORIGINS = cors_origins_from_env(DEFAULT_PROD_CORS_ORIGINS)

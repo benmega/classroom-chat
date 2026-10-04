@@ -18,7 +18,7 @@ header {
     flex-shrink: 0;
     background: var(--bg-primary);
     border-bottom: 1px solid var(--border-subtle);
-    z-index: 1000;
+    z-index: var(--z-header);
     width: 100%;
 }
 
@@ -166,7 +166,7 @@ nav ul {
 }
 
 a.stat-badge:hover {
-    background: white;
+    background: var(--bg-primary);
     border-color: var(--primary-color);
     transform: translateY(-1px);
     box-shadow: var(--shadow-sm);
@@ -442,7 +442,7 @@ a.stat-badge:hover {
     color: var(--primary-dark); /* 5.25:1 on white ✓ */
 }
 
-.logout-btn {
+:where(.app-container) .logout-btn {
     border-top: 1px solid var(--border-subtle) !important;
     margin-top: 4px;
     color: var(--error-color) !important;
@@ -619,7 +619,7 @@ footer {
     position: fixed;
     inset: 0;
     background: rgba(15, 23, 42, 0.5);
-    z-index: 1001;
+    z-index: var(--z-dropdown);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
@@ -638,7 +638,7 @@ footer {
     width: 280px;
     background: var(--bg-primary);
     border-right: 1px solid var(--border-subtle);
-    z-index: 1002;
+    z-index: var(--z-sidebar);
     transform: translateX(-100%);
     transition: transform 0.2s ease;
     display: flex;
@@ -650,7 +650,7 @@ footer {
     transform: translateX(0);
 }
 
-.sidebar-header {
+:where(.app-container) .sidebar-header {
     height: 72px;
     display: flex;
     align-items: center;
@@ -674,13 +674,13 @@ footer {
     color: var(--primary-dark); /* 5.25:1 on bg-tertiary ✓ */
 }
 
-.sidebar-nav {
+:where(.app-container) .sidebar-nav {
     flex: 1;
     padding: 1.5rem 1rem;
     overflow-y: auto;
 }
 
-.sidebar-nav ul {
+:where(.app-container) .sidebar-nav ul {
     list-style: none;
     display: flex;
     flex-direction: column;
@@ -689,7 +689,7 @@ footer {
     margin: 0;
 }
 
-.sidebar-nav li a {
+:where(.app-container) .sidebar-nav li a {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -700,12 +700,12 @@ footer {
     transition: all 0.2s;
 }
 
-.sidebar-nav li a:hover {
+:where(.app-container) .sidebar-nav li a:hover {
     background: var(--primary-light);
     color: var(--primary-accessible); /* 5.48:1 on primary-light ✓ */
 }
 
-.sidebar-nav li a svg {
+:where(.app-container) .sidebar-nav li a svg {
     color: var(--primary-dark); /* 5.25:1 on white ✓ */
 }
 

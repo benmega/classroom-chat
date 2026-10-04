@@ -1,10 +1,4 @@
-"""
-File: activity_routes.py
-Type: py
-Summary: Read-only endpoint that merges a student's challenge completions,
-certificate submissions, file submissions, and course-connection requests
-into a single chronological activity timeline.
-"""
+
 
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login

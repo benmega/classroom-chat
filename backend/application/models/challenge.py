@@ -1,8 +1,4 @@
-"""
-File: challenge.py
-Type: py
-Summary: SQLAlchemy model for coding challenges and rewards.
-"""
+
 
 from sqlalchemy.event import listens_for
 
@@ -37,16 +33,6 @@ class Challenge(db.Model):
 
     def __repr__(self):
         return f"<Challenge(name={self.name}, domain={self.domain}, difficulty={self.difficulty}, value={self.value})>"
-
-    def complete_challenge(self, user):
-        """Logs the challenge completion and updates user progress."""
-        from .challenge_log import ChallengeLog
-
-        log = ChallengeLog(
-            user_id=user.id, domain=self.domain, challenge_slug=self.slug
-        )
-        db.session.add(log)
-        db.session.commit()
 
     def scale_value(self, difficulty_multiplier=1.0):
         """Scales the challenge value based on difficulty."""

@@ -17,7 +17,6 @@ flowchart TB
 
     %% External Services
     subgraph ExternalServices ["External Services"]
-        OpenAI[("OpenAI API\n(AI Teacher)")]
         Cognito[("AWS Cognito\n(SSO Auth)")]
         ExternalPlatforms[("External Coding Platforms\n(CodeCombat, Ozaria)")]
     end
@@ -86,7 +85,6 @@ flowchart TB
     SocketServer -->|Reads/Writes| SQLite
     FlaskAPI -->|Stores Uploads| FileSystem
 
-    FlaskAPI <-->|AI Prompts & Responses| OpenAI
     Auth <-->|OAuth/SSO Tokens| Cognito
     
     Scheduler -.->|Maintenance Tasks| SQLite
@@ -102,7 +100,7 @@ flowchart TB
     classDef db fill:#fff3cd,stroke:#ffc107,stroke-width:2px;
     classDef edge fill:#ffeeba,stroke:#ffc107,stroke-width:2px;
     
-    class OpenAI,Cognito,ExternalPlatforms external;
+    class Cognito,ExternalPlatforms external;
     class Student,Teacher,Parent user;
     class React,State,SocketClient,Axios frontend;
     class FlaskAPI,SocketServer,Scheduler,Auth backend;
@@ -132,13 +130,12 @@ The frontend is designed for fluid, real-time interactivity, built with **React 
 ## 3. Backend Architecture (Flask API)
 The backend is a monolithic API built with **Flask 3.1.1**, leveraging an **Application Factory** pattern to keep configuration modular.
 
-- **Routing (Blueprints)**: Endpoints are divided into logical modules (`user`, `admin`, `message`, `ai`, `shop`, etc.) allowing for clear separation of concerns.
+- **Routing (Blueprints)**: Endpoints are divided into logical modules (`user`, `admin`, `message`, `shop`, etc.) allowing for clear separation of concerns.
 - **Real-Time Communication**: Uses **Flask-SocketIO** with `gevent` for asynchronous event handling. Conversations use socket rooms to isolate message broadcasts.
 - **Background Tasks**: Managed by **Flask-APScheduler** to execute periodic maintenance and updates independently of user requests.
 - **Security & Auth**:
   - Integrates with **AWS Cognito** for SSO flows.
   - Secures routes with cookie-based Flask sessions, CSRF protection via Flask-WTF, and rate limiting via Flask-Limiter.
-- **AI Integration**: The `ai` module interfaces with the **OpenAI API** to provide an intelligent "AI Teacher" within chat interfaces.
 
 ## 4. Persistence Layer
 - **Relational Data (SQLite)**: The application utilizes **SQLite** (managed via SQLAlchemy ORM). The database file (`prod_users.db`) resides in the backend's `instance/` folder. This choice prioritizes simplicity and portability over distributed scaling.

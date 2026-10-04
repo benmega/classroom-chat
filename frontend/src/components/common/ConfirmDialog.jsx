@@ -1,12 +1,13 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */
 import React, { useState, useEffect, useRef } from 'react';
 import { confirmEvents } from '../../utils/confirm';
+import useModalA11y from '../../hooks/useModalA11y';
 
 const ConfirmDialog = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [config, setConfig] = useState(null);
     const resolveRef = useRef(null);
-    const confirmBtnRef = useRef(null);
+    const dialogRef = useRef(null);
 
     useEffect(() => {
         const handleShow = ({ message, options, resolve }) => {
@@ -21,14 +22,6 @@ const ConfirmDialog = () => {
         };
     }, []);
 
-    useEffect(() => {
-        if (isOpen && confirmBtnRef.current) {
-            confirmBtnRef.current.focus();
-        }
-    }, [isOpen]);
-
-    if (!isOpen || !config) return null;
-
     const handleConfirm = () => {
         setIsOpen(false);
         if (resolveRef.current) resolveRef.current(true);
@@ -39,17 +32,24 @@ const ConfirmDialog = () => {
         if (resolveRef.current) resolveRef.current(false);
     };
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-            handleCancel();
-        }
+    const handleAlt = () => {
+        setIsOpen(false);
+        if (resolveRef.current) resolveRef.current('alt');
     };
+
+    // Escape (only while this is the innermost dialog, so one stacked over a Modal leaves the Modal open),
+    // a Tab trap, and focus back on the opener once answered.
+    useModalA11y({ isOpen, onClose: handleCancel, containerRef: dialogRef });
+
+    if (!isOpen || !config) return null;
 
     const isDestructive = config.options?.destructive;
 
     return (
         // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <div
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby="confirm-dialog-title"
@@ -61,11 +61,11 @@ const ConfirmDialog = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 9999,
+                // Above the shared Modal overlay (10000): a confirmation can be raised from inside a Modal.
+                zIndex: 10001,
                 animation: 'fadeIn 0.2s ease',
                 padding: '1rem'
             }}
-            onKeyDown={handleKeyDown}
             onClick={(e) => { if (e.target === e.currentTarget) handleCancel(); }}
         >
             <div
@@ -86,20 +86,32 @@ const ConfirmDialog = () => {
                 <p style={{ margin: '0 0 1.5rem', color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.5 }}>
                     {config.message}
                 </p>
-                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    {/* A destructive confirmation starts on Cancel, any other on Confirm */}
                     <button
                         type="button"
                         className="btn-secondary"
                         onClick={handleCancel}
+                        data-autofocus={isDestructive ? '' : undefined}
                         style={{ flex: 1 }}
                     >
                         {config.options?.cancelText || 'Cancel'}
                     </button>
+                    {config.options?.altText && (
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={handleAlt}
+                            style={{ flex: 1 }}
+                        >
+                            {config.options.altText}
+                        </button>
+                    )}
                     <button
-                        ref={confirmBtnRef}
                         type="button"
                         className={isDestructive ? 'btn-danger' : 'btn-primary'}
                         onClick={handleConfirm}
+                        data-autofocus={isDestructive ? undefined : ''}
                         style={{ flex: 1 }}
                     >
                         {config.options?.confirmText || 'Confirm'}

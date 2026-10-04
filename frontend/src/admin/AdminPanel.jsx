@@ -21,13 +21,16 @@ import React, { useEffect, useState } from 'react';
 import './AdminPanel.css';
 import {
     Admin,
+    AutocompleteInput,
     BooleanField,
     BooleanInput,
     Create,
     Datagrid,
     DateField,
     DateInput,
+    DateTimeInput,
     Edit,
+    FunctionField,
     Layout,
     List,
     Menu,
@@ -36,13 +39,16 @@ import {
     ReferenceField,
     ReferenceInput,
     Resource,
+    SelectInput,
     SimpleForm,
     TextField,
     TextInput,
     Loading,
     defaultTheme,
 } from 'react-admin';
+import { Alert } from '@mui/material';
 import dataProvider from './dataProvider';
+import adminQueryClient from './adminQueryClient';
 import { FK_OVERRIDES, HIDDEN_FIELDS, READONLY_FIELDS, RESOURCES } from './adminSchema';
 import client from '../api/client';
 
@@ -50,6 +56,12 @@ import client from '../api/client';
 
 /** In-memory cache so each resource schema is only fetched once per page load. */
 const _schemaCache = {};
+
+const getCachedSchema = (name) => {
+    if (!_schemaCache[name]) return null;
+    const hidden = HIDDEN_FIELDS[name] || new Set();
+    return _schemaCache[name].filter(c => !hidden.has(c.name));
+};
 
 async function fetchSchema(resourceName) {
     if (_schemaCache[resourceName]) return _schemaCache[resourceName];
@@ -82,10 +94,47 @@ function makeField(col, resourceName) {
     if (/^BOOL/i.test(t))                       return <BooleanField key={col.name} source={col.name} />;
     if (/^(INT|BIGINT|SMALLINT|FLOAT|NUMERIC)/i.test(t)) return <NumberField  key={col.name} source={col.name} />;
     if (/^(DATE|DATETIME|TIMESTAMP)/i.test(t))  return <DateField   key={col.name} source={col.name} showTime />;
+    if (/^JSON/i.test(t)) {
+        return (
+            <FunctionField
+                key={col.name}
+                source={col.name}
+                sortable={false}
+                render={record => (record[col.name] == null ? '' : JSON.stringify(record[col.name]))}
+            />
+        );
+    }
 
     // Fallback: text
     return <TextField key={col.name} source={col.name} />;
 }
+
+/** Maps the text typed in a ReferenceInput's autocomplete to the backend's `q` search. */
+const searchToFilter = text => ({ q: text });
+
+/**
+ * JSON columns are edited as text. Text that does not parse yet is kept as a RawJsonText so
+ * the input shows exactly what was typed and validateJson blocks saving it; a bare JSON
+ * string value (which parses to a plain string) still round-trips.
+ */
+class RawJsonText {
+    constructor(text) {
+        this.text = text;
+    }
+}
+const formatJson = value => {
+    if (value == null) return '';
+    return value instanceof RawJsonText ? value.text : JSON.stringify(value, null, 2);
+};
+const parseJson = text => {
+    if (text == null || text === '') return null;
+    try {
+        return JSON.parse(text);
+    } catch {
+        return new RawJsonText(text);
+    }
+};
+const validateJson = value => (value instanceof RawJsonText ? 'Invalid JSON' : undefined);
 
 /**
  * Given a column descriptor, return the correct react-admin *input* component
@@ -102,18 +151,46 @@ function makeInput(col, resourceName, isCreate = false) {
         return <TextInput key={col.name} source={col.name} disabled={!canEditPK} />;
     }
 
-    // Foreign key with a known reference override → ReferenceInput
+    // Foreign key with a known reference override → searchable ReferenceInput showing displayField
     if (fkOverride) {
         return (
-            <ReferenceInput key={col.name} source={col.name} reference={fkOverride.reference} />
+            <ReferenceInput key={col.name} source={col.name} reference={fkOverride.reference} perPage={25}>
+                <AutocompleteInput
+                    optionText={fkOverride.displayField}
+                    filterToQuery={searchToFilter}
+                    disabled={isDisabled}
+                />
+            </ReferenceInput>
         );
     }
 
     const t = col.type;
 
+    // Enum columns only accept their declared values
+    if (col.enums) {
+        const choices = col.enums.map(value => ({ id: value, name: value }));
+        return <SelectInput key={col.name} source={col.name} choices={choices} disabled={isDisabled} />;
+    }
+
     if (/^BOOL/i.test(t))                        return <BooleanInput key={col.name} source={col.name} />;
     if (/^(INT|BIGINT|SMALLINT|FLOAT|NUMERIC)/i.test(t)) return <NumberInput  key={col.name} source={col.name} />;
-    if (/^(DATE|DATETIME|TIMESTAMP)/i.test(t))   return <DateInput   key={col.name} source={col.name} disabled={isDisabled} />;
+    // DATETIME starts with DATE, so the time-carrying types must be tested first
+    if (/^(DATETIME|TIMESTAMP)/i.test(t))        return <DateTimeInput key={col.name} source={col.name} disabled={isDisabled} />;
+    if (/^DATE/i.test(t))                        return <DateInput   key={col.name} source={col.name} disabled={isDisabled} />;
+    if (/^TEXT/i.test(t))                        return <TextInput   key={col.name} source={col.name} multiline disabled={isDisabled} />;
+    if (/^JSON/i.test(t)) {
+        return (
+            <TextInput
+                key={col.name}
+                source={col.name}
+                multiline
+                format={formatJson}
+                parse={parseJson}
+                validate={validateJson}
+                disabled={isDisabled}
+            />
+        );
+    }
 
     return <TextInput key={col.name} source={col.name} disabled={isDisabled} />;
 }
@@ -125,24 +202,46 @@ function makeInput(col, resourceName, isCreate = false) {
  * any hidden fields defined in adminSchema.js.
  */
 function useSchema(resourceName) {
-    const [fields, setFields] = useState(null);
-    const [error, setError]   = useState(null);
+    // Tagged with the resource it belongs to, so a result for another resource is never shown
+    const [result, setResult] = useState({ name: null, fields: null, error: null });
 
     useEffect(() => {
+        // A schema fetched earlier is served from the cache straight away (see below)
+        if (getCachedSchema(resourceName)) return;
+
+        let cancelled = false;
         const hidden = HIDDEN_FIELDS[resourceName] || new Set();
         fetchSchema(resourceName)
-            .then(cols => setFields(cols.filter(c => !hidden.has(c.name))))
-            .catch(err  => setError(err.message));
+            .then(cols => {
+                if (!cancelled) setResult({ name: resourceName, fields: cols.filter(c => !hidden.has(c.name)), error: null });
+            })
+            .catch(err => {
+                if (!cancelled) setResult({ name: resourceName, fields: null, error: err.response?.data?.error || err.message });
+            });
+        return () => { cancelled = true; };
     }, [resourceName]);
 
-    return { fields, error };
+    if (result.name === resourceName) return result;
+    // Revisiting a resource renders from the cache without a loading flash
+    return { fields: getCachedSchema(resourceName), error: null };
+}
+
+/** What a view shows until its schema has arrived: a spinner, or an alert if loading failed. */
+function SchemaState({ error, resourceName }) {
+    if (error) {
+        return (
+            <Alert severity="error" className="admin-schema-error">
+                Could not load the {resourceName} schema: {error}
+            </Alert>
+        );
+    }
+    return <Loading />;
 }
 
 /** List view — shows all non-hidden columns as a datagrid. */
 function DynamicList({ resourceName }) {
     const { fields, error } = useSchema(resourceName);
-    if (error)   return <p className="admin-schema-error">Schema error: {error}</p>;
-    if (!fields) return <Loading />;
+    if (error || !fields) return <SchemaState error={error} resourceName={resourceName} />;
 
     return (
         <List>
@@ -156,8 +255,7 @@ function DynamicList({ resourceName }) {
 /** Edit view — shows all editable columns as a form. */
 function DynamicEdit({ resourceName }) {
     const { fields, error } = useSchema(resourceName);
-    if (error)   return <p className="admin-schema-error">Schema error: {error}</p>;
-    if (!fields) return <Loading />;
+    if (error || !fields) return <SchemaState error={error} resourceName={resourceName} />;
 
     return (
         <Edit>
@@ -171,8 +269,7 @@ function DynamicEdit({ resourceName }) {
 /** Create view — shows all writable columns as a form (PKs excluded). */
 function DynamicCreate({ resourceName }) {
     const { fields, error } = useSchema(resourceName);
-    if (error)   return <p className="admin-schema-error">Schema error: {error}</p>;
-    if (!fields) return <Loading />;
+    if (error || !fields) return <SchemaState error={error} resourceName={resourceName} />;
 
     return (
         <Create>
@@ -194,12 +291,16 @@ function buildResource(name) {
         <Resource
             key={name}
             name={name}
-            list={()    => <DynamicList   resourceName={name} />}
-            edit={()    => <DynamicEdit   resourceName={name} />}
-            create={()  => <DynamicCreate resourceName={name} />}
+            list={<DynamicList   resourceName={name} />}
+            edit={<DynamicEdit   resourceName={name} />}
+            create={<DynamicCreate resourceName={name} />}
         />
     );
 }
+
+// Built once and passed as elements (not inline components): <Admin> keeps the same views
+// across AdminPanel re-renders instead of remounting them and dropping unsaved form input.
+const RESOURCE_ELEMENTS = RESOURCES.map(buildResource);
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
 
@@ -212,7 +313,7 @@ const CustomTopMenu = () => (
 );
 
 const CustomLayout = (props) => (
-    <Layout {...props} menu={() => null} sidebar={() => null}>
+    <Layout {...props} className="admin-crud-layout" menu={() => null} sidebar={() => null}>
         <CustomTopMenu />
         {props.children}
     </Layout>
@@ -229,12 +330,13 @@ const darkTheme = {
 
 const AdminPanel = () => (
     <Admin
+        queryClient={adminQueryClient}
         dataProvider={dataProvider}
         basename="/admin/advanced-crud"
         layout={CustomLayout}
         theme={darkTheme}
     >
-        {RESOURCES.map(buildResource)}
+        {RESOURCE_ELEMENTS}
     </Admin>
 );
 

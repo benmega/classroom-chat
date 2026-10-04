@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import './ConnectChild.css';
 
@@ -10,7 +11,7 @@ const ConnectChild = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, isAuthenticated, completeTutorial } = useAuthStore();
-    const [status, setStatus] = useState('loading'); // loading, success, error
+    const [status, setStatus] = useState('loading');
     const [message, setMessage] = useState('Connecting to student...');
     
     const code = searchParams.get('code');
@@ -25,7 +26,6 @@ const ConnectChild = () => {
         }
 
         if (!isAuthenticated) {
-            // Save code and redirect to signup
             localStorage.setItem('pendingConnectionCode', code);
             navigate('/signup?role=parent', { state: { from: location.pathname + location.search } });
             return;
@@ -53,7 +53,7 @@ const ConnectChild = () => {
                 }, 3000);
             } catch (err) {
                 setStatus('error');
-                setMessage(err.response?.data?.error || 'Failed to connect. The code might be invalid or already used.');
+                setMessage(getErrorMessage(err, 'Failed to connect. The code might be invalid or already used.'));
                 localStorage.removeItem('pendingConnectionCode');
             }
         };

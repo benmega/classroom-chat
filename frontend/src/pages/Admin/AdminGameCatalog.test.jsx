@@ -3,6 +3,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import AdminGameCatalog from './AdminGameCatalog';
 import client from '../../api/client';
+import toast from 'react-hot-toast';
+
+vi.mock('react-hot-toast', () => ({
+  default: { success: vi.fn(), error: vi.fn() },
+}));
 
 vi.mock('../../api/client', () => ({
   default: {
@@ -61,5 +66,23 @@ describe('AdminGameCatalog Component', () => {
     await waitFor(() => {
       expect(screen.getByText('No games found')).toBeInTheDocument();
     });
+  });
+
+  it('shows the reason the server gives when the catalog cannot be loaded', async () => {
+    client.get.mockRejectedValueOnce({ response: { status: 500, data: { error: 'Catalog unavailable' } } });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(<AdminGameCatalog />);
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Catalog unavailable'));
+  });
+
+  it('falls back to a generic message when the failure has no body', async () => {
+    client.get.mockRejectedValueOnce(new Error('Network Error'));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    render(<AdminGameCatalog />);
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to load game catalog.'));
   });
 });

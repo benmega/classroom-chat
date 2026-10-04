@@ -4,9 +4,8 @@ Type: py
 Summary: SQLAlchemy model for course information and mapping.
 """
 
-from datetime import datetime
-
 from ..extensions import db
+from ..utilities.helper_functions import utcnow_naive
 
 
 class Course(db.Model):
@@ -19,7 +18,7 @@ class Course(db.Model):
     domain = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, default="No description provided.")
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     default_challenge_value = db.Column(db.Integer, default=1)
 
     def __repr__(self):

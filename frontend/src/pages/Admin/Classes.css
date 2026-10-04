@@ -22,13 +22,6 @@
     margin-top: 1.5rem;
 }
 
-.classes-header-summary {
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
-    color: var(--text-muted, var(--text-muted));
-    font-weight: 600;
-}
-
 .classes-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -40,16 +33,32 @@
     border-radius: 12px;
     border: 1px solid var(--border-subtle, var(--border-subtle));
     /* Removed overflow: hidden to allow kebab menu to show */
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
     display: flex;
     flex-direction: column;
     aspect-ratio: 1 / 1;
     cursor: pointer;
 }
 
+.class-card[draggable="true"] {
+    user-select: none;
+}
+
 .class-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+.class-card.is-dragging {
+    opacity: 0.45;
+    transform: scale(0.98);
+    border: 2px dashed var(--primary-color, var(--blue-600));
+}
+
+.class-card.drag-over {
+    outline: 2px solid var(--primary-color, var(--blue-600));
+    outline-offset: 3px;
+    box-shadow: 0 0 16px rgba(37, 99, 235, 0.35);
 }
 
 .class-card-header {
@@ -63,6 +72,33 @@
     position: relative;
     border-top-left-radius: 11px;
     border-top-right-radius: 11px;
+}
+
+.class-card-drag-handle {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 4px;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: grab;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.class-card-drag-handle:hover,
+.class-card-drag-handle:focus-visible {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 1px;
+}
+
+.class-card-drag-handle:active {
+    cursor: grabbing;
 }
 
 .class-card-title-link {
@@ -100,61 +136,6 @@
     border-top: 1px solid var(--border-subtle, var(--border-subtle));
     display: flex;
     justify-content: flex-end;
-}
-
-/* Semantic Link for Classroom Name */
-.class-name-link {
-    font-weight: 700;
-    color: var(--primary-accessible, var(--blue-600));
-    font-size: 0.975rem;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: color 0.15s ease;
-    border-radius: 4px;
-}
-
-.class-name-link:hover {
-    color: var(--primary-color, var(--blue-600));
-    text-decoration: underline;
-}
-
-.class-name-link:focus-visible {
-    outline: 2px solid var(--primary-color, var(--blue-600));
-    outline-offset: 3px;
-}
-
-/* High Contrast Badges */
-.class-id-badge {
-    font-family: monospace;
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 4px 10px;
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-}
-
-.language-badge {
-    display: inline-block;
-    padding: 4px 10px;
-    background: #dbeafe;
-    color: var(--primary-accessible);
-    border: 1px solid #bfdbfe;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 700;
-}
-
-.students-count-badge {
-    font-weight: 600;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
 /* Create Classroom Modal Overlay & Card */

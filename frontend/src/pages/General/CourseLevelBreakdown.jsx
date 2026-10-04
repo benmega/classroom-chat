@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, ExternalLink, Brain, GraduationCap, Trophy, Play, Sparkles, BookOpen, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Check, ExternalLink, Trophy, Play, Box } from 'lucide-react';
 import client from '../../api/client';
 
 import './CourseProgressTree.css';
-import codecombatLogo from '../../assets/codecombat-logo.png';
-import ozariaLogo from '../../assets/ozaria-logo.png';
+import {
+    ALIGNED_NODES, matchCourse, getDomainConfig, findProjectForLevel,
+    findStudentProjectForTemplate, getStudentProjectStatus
+} from '../../constants/courseProgress';
 
-// Extensive educational concepts and descriptions dictionary for parents
 const COURSE_CONCEPTS = {
     'cc-junior': {
         concepts: ['Sequencing', 'Algorithms', 'Simple Loops', 'Problem Solving'],
@@ -88,6 +89,16 @@ const COURSE_CONCEPTS = {
         concepts: ['Big O Complexity', 'Sorting Algorithms', 'Data Structures', 'Searching Algorithms'],
         description: 'This course covers advanced computer science algorithms, measuring time/space efficiency (Big O), and building custom data storage pipelines.',
         skills: ['Binary trees', 'Complexity estimation', 'Algorithm comparison']
+    },
+    '3d-1': {
+        concepts: ['3D Printing Basics', 'Shapes & Alignment', 'Holes (Subtraction)', 'Grouping', 'Measuring in mm', 'Revolve'],
+        description: 'This course teaches 3D design in Tinkercad. You combine simple shapes, line them up exactly, cut holes with hole shapes, group parts together, size things in millimeters and spin shapes around an axis to build models you could really 3D print.',
+        skills: ['Aligning and snapping shapes', 'Cutting holes with Boolean subtraction', 'Grouping parts into one object', 'Measuring and resizing in mm']
+    },
+    '3d-2': {
+        concepts: ['Navigation', 'Mesh Modeling', 'Modifiers', 'Materials', 'Keyframe Animation'],
+        description: 'This course moves up to Blender, a professional 3D program. You learn to move around the 3D view, shape meshes by editing their points and faces, use modifiers to speed up your work, add colors and materials, and bring your creations to life with keyframe animation.',
+        skills: ['Navigating the 3D viewport', 'Editing meshes (vertices, edges, faces)', 'Using modifiers', 'Animating with keyframes']
     }
 };
 
@@ -95,7 +106,13 @@ const getCourseDetails = (node) => {
     if (node.id && COURSE_CONCEPTS[node.id]) {
         return COURSE_CONCEPTS[node.id];
     }
-    // Default fallback based on domain/name
+    if (node.domain === '3d-modeling') {
+        return {
+            concepts: ['3D Design', 'Spatial Thinking', 'Problem Solving'],
+            description: 'This course builds 3D modeling skills by turning ideas into models you design, check and share.',
+            skills: ['Building models step by step', 'Measuring and aligning parts', 'Sharing your work']
+        };
+    }
     const isOz = node.domain === 'ozaria';
     return {
         concepts: isOz ? ['Logic Flow', 'Variables', 'Code Structures'] : ['Syntax', 'Loops', 'Computational Thinking'],
@@ -108,7 +125,8 @@ const TRACK_NAMES = {
     ozaria: 'Ozaria',
     cs: 'Computer Science (CS)',
     gd: 'Game Development (GD)',
-    wd: 'Web Development (WD)'
+    wd: 'Web Development (WD)',
+    '3d': '3D Modeling'
 };
 
 const CourseLevelBreakdown = () => {
@@ -118,21 +136,46 @@ const CourseLevelBreakdown = () => {
     const selectedNode = location.state?.selectedNode;
 
     const [userObj, setUserObj] = useState(location.state?.userObj || null);
+    const [projects, setProjects] = useState([]);
 
+    const is3D = selectedNode?.domain === '3d-modeling';
+    const nodeConfig = ALIGNED_NODES.find(n => n.id === selectedNode?.id);
+    const nodeAliases = selectedNode?.aliases || nodeConfig?.aliases || (selectedNode?.title ? [selectedNode.title] : []);
+    const nodeAliasKey = nodeAliases.join('|');
+
+    // The 3D section needs the student's own projects (status + "Continue project"), which the
+    // full profile carries. Fetch the profile when we have no user at all, or (3D only) when the
+    // user passed through navigation state has no projects list. Only ever fetched once.
+    const profileRequested = useRef(false);
     useEffect(() => {
-        if (!userObj && slug) {
-            client.get(`/user/profile/${slug}`)
-                .then(res => {
-                    const target = res.data?.data?.target;
-                    if (target) {
-                        setUserObj(target);
-                    }
-                })
-                .catch(() => {});
-        }
-    }, [slug, userObj]);
+        const needsProfile = !userObj || (is3D && !Array.isArray(userObj.projects));
+        if (!needsProfile || !slug || profileRequested.current) return;
+        profileRequested.current = true;
+        client.get(`/user/profile/${slug}`)
+            .then(res => {
+                const target = res.data?.data?.target;
+                if (target) {
+                    setUserObj(prev => ({ ...(prev || {}), ...target }));
+                }
+            })
+            .catch(() => {});
+    }, [slug, userObj, is3D]);
 
-
+    // 3D Modeling is mini-project based: each challenge has one project template whose
+    // `chapter` is this course's name (same lookup the progress tree uses).
+    useEffect(() => {
+        if (!is3D) return undefined;
+        let cancelled = false;
+        client.get('/api/project-templates')
+            .then(res => {
+                if (cancelled) return;
+                const templates = Object.values(res.data?.data?.templates || {});
+                const aliases = nodeAliasKey.split('|');
+                setProjects(templates.filter(t => t.chapter && matchCourse(t.chapter, aliases)));
+            })
+            .catch(err => console.error('Failed to fetch project templates', err));
+        return () => { cancelled = true; };
+    }, [is3D, nodeAliasKey]);
 
     if (!selectedNode) {
         return (
@@ -147,11 +190,18 @@ const CourseLevelBreakdown = () => {
         );
     }
 
-    const isCodeCombat = selectedNode.domain === 'codecombat';
-    const gameBaseUrl = isCodeCombat ? 'https://codecombat.com' : 'https://ozaria.com';
-    const mainGameLink = `${gameBaseUrl}/play`;
-    
-    // Parse level completion status
+    const domainConfig = getDomainConfig(selectedNode.domain);
+    const isParent = location.pathname.startsWith('/parent');
+    const mainGameLink = domainConfig.playUrl;
+    const trackName = TRACK_NAMES[selectedNode.track];
+
+    // Which external tool(s) to offer for a 3D course: this course's tool, else every 3D tool.
+    const toolName = selectedNode.toolName || nodeConfig?.toolName;
+    const toolUrl = selectedNode.toolUrl || nodeConfig?.toolUrl;
+    const tools = toolUrl ? [{ id: toolName, name: toolName, url: toolUrl }] : (domainConfig.tools || []);
+
+    const openProject = (project) => navigate(`/project-info/${project.id}`, { state: { project } });
+
     const levels = selectedNode.levels || [];
     const nextLevelIndex = levels.findIndex(lvl => !lvl.is_completed);
     const nextLevel = nextLevelIndex !== -1 ? levels[nextLevelIndex] : null;
@@ -163,6 +213,23 @@ const CourseLevelBreakdown = () => {
 
     const courseDetails = getCourseDetails(selectedNode);
 
+    // Syllabus rows. For 3D each level is paired with its project; any project without a
+    // matching level is still listed so the student can find it.
+    const syllabusRows = levels.map(lvl => ({ ...lvl, project: is3D ? findProjectForLevel(lvl, projects) : null }));
+    if (is3D) {
+        projects.forEach(project => {
+            if (!syllabusRows.some(row => row.project?.id === project.id)) {
+                syllabusRows.push({ name: project.name, is_completed: false, project });
+            }
+        });
+    }
+    const nextProject = is3D && nextLevel ? findProjectForLevel(nextLevel, projects) : null;
+
+    // The student's own project for a template (null when not started) and its status label.
+    const studentProjects = userObj?.projects;
+    const ownProjectFor = (template) => (is3D ? findStudentProjectForTemplate(template, studentProjects) : null);
+    const nextOwnProject = ownProjectFor(nextProject);
+    const openOwnProject = (ownProject) => navigate(`/project/edit/${ownProject.id}`);
 
 
     return (
@@ -172,96 +239,124 @@ const CourseLevelBreakdown = () => {
                 <span>Back</span>
             </button>
 
-            {/* Header Course Card */}
-            <div className={`breakdown-header-card glass-panel mb-2rem p-2rem d-flex justify-between align-center flex-wrap gap-lg border-l-thick border-${selectedNode.domain}`}>
+            <div className={`breakdown-header-card glass-panel mb-2rem p-2rem d-flex justify-between align-center flex-wrap gap-lg border-l-thick border-${domainConfig.cssClass}`}>
                 <div className="d-flex align-center gap-md">
                     <div className="domain-badge-wrapper flex-shrink-0">
-                        <img 
-                            src={isCodeCombat ? codecombatLogo : ozariaLogo} 
-                            alt={selectedNode.domain} 
+                        <img
+                            src={selectedNode.logo || nodeConfig?.logo || domainConfig.logo}
+                            alt={toolName || domainConfig.label}
                             className="breakdown-logo-img"
                         />
                     </div>
                     <div>
                         <h1 className="text-primary mt-4px mb-4px">{selectedNode.title}</h1>
+                        {trackName && <span className="text-secondary text-sm">{trackName}</span>}
                     </div>
                 </div>
                 <div className="breakdown-progress-summary text-right">
                     <span className="text-2rem font-bold text-primary">{progressPercent}%</span>
                     <span className="text-secondary text-sm d-block">{completedLevelsCount}/{totalLevelsCount} Completed</span>
                     <div className="course-progress-bar h-12px w-200px mt-0-5rem bg-surface-sec radius-full overflow-hidden">
-                        <div 
-                            className="course-progress-fill h-100" 
-                            style={{ 
-                                width: `${progressPercent}%`, 
-                                background: isCodeCombat ? '#2b91af' : '#902edb' 
+                        <div
+                            className="course-progress-fill h-100"
+                            style={{
+                                width: `${progressPercent}%`,
+                                background: domainConfig.color
                             }}
                         ></div>
                     </div>
                 </div>
             </div>
 
-            {/* Main Redesigned Dashboard Grid */}
             <div className="breakdown-dashboard-grid d-flex gap-lg flex-wrap">
-                
-                {/* COLUMN 1: Student Play & Missed Levels Zone */}
+
                 <div className="dashboard-column flex-1 d-flex flex-col gap-lg min-w-300px">
-                    
-                    {/* Merged Play/Next Level Card */}
+
                     <div className="glass-panel p-1-5rem d-flex flex-col gap-md pos-rel overflow-hidden border-top-glow">
                         <h3 className="m-0 text-primary d-flex align-center gap-sm">
-                            <span>Next Level</span>
+                            <span>{is3D ? 'Next Project' : 'Next Level'}</span>
                         </h3>
-                        
+
                         {nextLevel ? (
-                            <div 
+                            <div
                                 className="next-level-card-content p-1rem bg-surface-sec radius-md d-flex flex-col gap-sm"
                                 style={{
-                                    borderLeft: isCodeCombat ? '4px solid #2b91af' : '4px solid #902edb',
+                                    borderLeft: `4px solid ${domainConfig.color}`,
                                 }}
                             >
                                 <span className="font-semibold text-primary text-md">{nextLevel.name}</span>
-                                <span className="text-secondary text-xs">Level {nextLevelIndex + 1} of {levels.length}</span>
+                                <span className="text-secondary text-xs">{is3D ? 'Project' : 'Level'} {nextLevelIndex + 1} of {levels.length}</span>
                             </div>
                         ) : (
                             <div className="text-center p-1-5rem bg-success-subtle radius-md border-success" style={{ borderColor: '#10b981' }}>
                                 <Trophy className="text-success mb-0-5rem" size={32} />
-                                <h4 className="m-0 text-success font-bold">100% Done</h4>
+                                <h4 className="m-0 text-success font-bold">{is3D && totalLevelsCount === 0 ? 'Projects coming soon' : '100% Done'}</h4>
                             </div>
                         )}
 
-                        <a 
-                            href={mainGameLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none no-decoration btn-${selectedNode.domain}`}
-                            style={{
-                                color: '#ffffff',
-                                backgroundColor: isCodeCombat ? '#2b91af' : '#902edb',
-                                transition: 'background-color 0.2s, transform 0.2s',
-                            }}
-                            onFocus={() => {}} onMouseOver={(e) => {
-                                e.currentTarget.style.backgroundColor = isCodeCombat ? '#217088' : '#7122ad';
-                                e.currentTarget.style.transform = 'translateY(-1px)';
-                            }}
-                            onBlur={() => {}} onMouseOut={(e) => {
-                                e.currentTarget.style.backgroundColor = isCodeCombat ? '#2b91af' : '#902edb';
-                                e.currentTarget.style.transform = 'none';
-                            }}
-                        >
-                            <Play size={18} fill="currentColor" />
-                            <span>Continue</span>
-                            <ExternalLink size={16} />
-                        </a>
+                        {is3D ? (
+                            !isParent && (
+                                <>
+                                    <p className="text-secondary text-sm line-height-relaxed m-0">
+                                        Build it, share your link + screenshot, and your teacher will check it off.
+                                    </p>
+                                    {nextProject && (
+                                        <button
+                                            type="button"
+                                            className="btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none btn-modeling3d"
+                                            onClick={() => (nextOwnProject ? openOwnProject(nextOwnProject) : openProject(nextProject))}
+                                        >
+                                            <Box size={18} aria-hidden="true" />
+                                            <span>{nextOwnProject ? 'Continue project' : 'Start project'}</span>
+                                        </button>
+                                    )}
+                                    {tools.map(tool => (
+                                        <a
+                                            key={tool.id}
+                                            href={tool.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="btn-play-game btn-modeling3d-outline d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer no-decoration"
+                                        >
+                                            <span>Open {tool.name}</span>
+                                            <ExternalLink size={16} aria-hidden="true" />
+                                            <span className="cpt-sr-only">(opens in new tab)</span>
+                                        </a>
+                                    ))}
+                                </>
+                            )
+                        ) : (
+                            <a
+                                href={mainGameLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`btn-play-game d-flex align-center justify-center gap-sm p-1rem font-bold text-center radius-md cursor-pointer border-none no-decoration btn-${domainConfig.cssClass}`}
+                                style={{
+                                    color: '#ffffff',
+                                    backgroundColor: domainConfig.color,
+                                    transition: 'background-color 0.2s, transform 0.2s',
+                                }}
+                                onFocus={() => {}} onMouseOver={(e) => {
+                                    e.currentTarget.style.backgroundColor = domainConfig.colorHover;
+                                    e.currentTarget.style.transform = 'translateY(-1px)';
+                                }}
+                                onBlur={() => {}} onMouseOut={(e) => {
+                                    e.currentTarget.style.backgroundColor = domainConfig.color;
+                                    e.currentTarget.style.transform = 'none';
+                                }}
+                            >
+                                <Play size={18} fill="currentColor" />
+                                <span>Continue</span>
+                                <ExternalLink size={16} />
+                            </a>
+                        )}
                     </div>
                 </div>
 
-                {/* COLUMN 2: Parents Insights Zone */}
                 <div className="dashboard-column flex-1 d-flex flex-col gap-lg min-w-300px">
                     <div className="glass-panel p-1-5rem h-100 d-flex flex-col gap-lg justify-between">
                         <div className="d-flex flex-col gap-md">
 
-                            {/* Friendly Concept Explanation */}
                             <div>
                                 <h4 className="text-sm font-bold text-primary mb-0-25rem">Summary</h4>
                                 <p className="text-secondary text-sm line-height-relaxed m-0">
@@ -269,17 +364,16 @@ const CourseLevelBreakdown = () => {
                                 </p>
                             </div>
 
-                            {/* Concept Badges */}
                             <div>
                                 <div className="d-flex flex-wrap" style={{ gap: '12px' }}>
                                     {courseDetails.concepts.map((concept, idx) => (
-                                        <span 
-                                            key={idx} 
+                                        <span
+                                            key={idx}
                                             className="badge-concept text-xs px-10px py-6px radius-full font-semibold"
                                             style={{
-                                                background: isCodeCombat ? 'rgba(43, 145, 175, 0.12)' : 'rgba(144, 46, 219, 0.12)',
-                                                color: isCodeCombat ? '#2b91af' : '#902edb',
-                                                border: isCodeCombat ? '1px solid rgba(43, 145, 175, 0.2)' : '1px solid rgba(144, 46, 219, 0.2)',
+                                                background: domainConfig.tint,
+                                                color: domainConfig.textColor,
+                                                border: `1px solid ${domainConfig.tintBorder}`,
                                             }}
                                         >
                                             {concept}
@@ -290,7 +384,6 @@ const CourseLevelBreakdown = () => {
 
                         </div>
 
-                        {/* Cognitive Skills List */}
                         <div>
                             <h4 className="text-xs uppercase tracking-wide text-secondary mb-0-5rem d-flex align-center gap-xs">
                                 <span>Skills</span>
@@ -306,26 +399,29 @@ const CourseLevelBreakdown = () => {
 
             </div>
 
-            {/* Full Levels Checklist */}
             <div className="glass-panel p-2rem mt-2rem">
                 <h3 className="mb-1rem text-primary d-flex align-center gap-sm">
-                    <span>Syllabus</span>
+                    <span>{is3D ? 'Projects' : 'Syllabus'}</span>
                 </h3>
                 <div className="levels-grid-checklist d-flex flex-col gap-sm mt-1-5rem">
-                    {levels.length > 0 ? (
-                        levels.map((lvl, index) => (
-                            <div 
-                                key={index} 
-                                className={`level-row-item d-flex justify-between align-center p-1rem bg-surface-sec radius-md border-subtle ${lvl.is_completed ? 'status-completed' : 'status-pending'}`}
+                    {syllabusRows.length > 0 ? (
+                        syllabusRows.map((lvl, index) => {
+                            const ownProject = ownProjectFor(lvl.project);
+                            const status = getStudentProjectStatus(ownProject);
+                            const actionLabel = lvl.is_completed ? 'View project' : (ownProject ? 'Continue project' : 'Start project');
+                            return (
+                            <div
+                                key={index}
+                                className={`level-row-item d-flex justify-between align-center flex-wrap gap-sm p-1rem bg-surface-sec radius-md border-subtle ${lvl.is_completed ? 'status-completed' : 'status-pending'}`}
                                 style={{
-                                    borderLeft: lvl.is_completed 
-                                        ? '4px solid #10b981' 
-                                        : `4px solid ${isCodeCombat ? '#2b91af' : '#902edb'}`,
+                                    borderLeft: lvl.is_completed
+                                        ? '4px solid #10b981'
+                                        : `4px solid ${domainConfig.color}`,
                                     opacity: lvl.is_completed ? 1 : 0.85
                                 }}
                             >
                                 <div className="d-flex align-center gap-md">
-                                    <div 
+                                    <div
                                         className={`level-status-dot d-flex align-center justify-center radius-full`}
                                         style={{
                                             width: '28px',
@@ -342,9 +438,9 @@ const CourseLevelBreakdown = () => {
                                     </div>
                                     <span className="font-semibold text-primary text-md">{lvl.name}</span>
                                 </div>
-                                <div>
+                                <div className="d-flex align-center gap-sm">
                                     {lvl.is_completed ? (
-                                        <span 
+                                        <span
                                             className="text-success text-xs font-bold uppercase tracking-wider px-8px py-4px radius-sm"
                                             style={{
                                                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -355,7 +451,7 @@ const CourseLevelBreakdown = () => {
                                             Done
                                         </span>
                                     ) : (
-                                        <span 
+                                        <span
                                             className="text-secondary text-xs font-bold uppercase tracking-wider px-8px py-4px radius-sm"
                                             style={{
                                                 backgroundColor: 'rgba(156, 163, 175, 0.1)',
@@ -363,15 +459,26 @@ const CourseLevelBreakdown = () => {
                                                 borderRadius: '4px',
                                             }}
                                         >
-                                            Pending
+                                            {is3D ? status.label : 'Pending'}
                                         </span>
+                                    )}
+                                    {lvl.project && !isParent && (
+                                        <button
+                                            type="button"
+                                            className={`btn-project-action ${lvl.is_completed ? 'secondary' : ''}`}
+                                            onClick={() => (!lvl.is_completed && ownProject ? openOwnProject(ownProject) : openProject(lvl.project))}
+                                            aria-label={`${actionLabel}: ${lvl.project.name}`}
+                                        >
+                                            {actionLabel}
+                                        </button>
                                     )}
                                 </div>
                             </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <p className="text-muted text-center p-2rem bg-surface-sec radius-md w-100">
-                            Empty
+                            {is3D ? 'Projects coming soon' : 'Empty'}
                         </p>
                     )}
                 </div>

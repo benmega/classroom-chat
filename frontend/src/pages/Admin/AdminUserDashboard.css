@@ -309,19 +309,19 @@
 
 .badge.admin { 
     background: rgba(2, 132, 199, 0.12); 
-    color: #0369a1; 
+    color: var(--sky-700);
     border: 1px solid rgba(2, 132, 199, 0.25); 
 }
 
 .badge.parent { 
     background: rgba(126, 34, 206, 0.12); 
-    color: #7e22ce; 
+    color: var(--purple-700);
     border: 1px solid rgba(126, 34, 206, 0.25); 
 }
 
 .badge.student {
     background: rgba(161, 98, 7, 0.12);
-    color: #a16207;
+    color: var(--yellow-700);
     border: 1px solid rgba(161, 98, 7, 0.25);
 }
 
@@ -881,7 +881,7 @@
 }
 
 .btn-compact.warning { 
-    background: linear-gradient(135deg, #fef08a, #fde047); 
+    background: linear-gradient(135deg, var(--yellow-200), var(--yellow-300));
     color: var(--warning-color); 
     box-shadow: 0 4px 12px rgba(253, 224, 71, 0.25);
 }
