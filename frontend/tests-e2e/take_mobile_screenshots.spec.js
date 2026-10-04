@@ -3,6 +3,7 @@ import { test, devices } from '@playwright/test';
 test.use({ ...devices['Pixel 5'] });
 
 test('take admin mobile screenshots', async ({ page }) => {
+  test.setTimeout(60000);
   await page.goto('/api/dev-login?role=admin');
   await page.waitForTimeout(1000);
 
@@ -26,6 +27,7 @@ test('take admin mobile screenshots', async ({ page }) => {
 });
 
 test('take parent mobile screenshots', async ({ page }) => {
+  test.setTimeout(60000);
   await page.context().clearCookies();
 
   await page.goto('http://localhost:5173/login');

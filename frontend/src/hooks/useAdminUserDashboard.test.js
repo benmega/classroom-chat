@@ -455,8 +455,8 @@ describe('useAdminUserDashboard', () => {
 
         await act(async () => { await result.current.handlePassChapterConfirm(); });
         expect(showConfirm).toHaveBeenLastCalledWith(
-            expect.stringContaining('pass this chapter'),
-            { title: 'Pass Chapter', confirmText: 'Pass Chapter', destructive: false }
+            expect.stringContaining('Pass this chapter'),
+            { title: 'Pass Chapter', altText: 'Pass, no ducks', confirmText: 'Pass & award ducks', destructive: false }
         );
     });
 
