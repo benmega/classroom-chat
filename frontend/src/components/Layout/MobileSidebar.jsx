@@ -39,11 +39,6 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/chat" onClick={close}>
-                                        <MessageSquare size={18} /> Messages
-                                    </Link>
-                                </li>
-                                <li>
                                     <button onClick={() => { onContactTeacher(); close(); }} className="sidebar-link-btn" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', background: 'none', border: 'none', padding: '0.75rem 1rem', color: 'var(--text-primary)', fontSize: '0.95rem', cursor: 'pointer', textAlign: 'left' }}>
                                         <HelpCircle size={18} /> Message Teacher
                                     </button>

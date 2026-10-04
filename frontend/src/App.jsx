@@ -126,7 +126,6 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
 
   if (user?.role === 'parent' && 
       !location.pathname.startsWith('/parent/') && 
-      !location.pathname.startsWith('/chat') && 
       !location.pathname.startsWith('/profile') && 
       !location.pathname.startsWith('/settings') &&
       !location.pathname.startsWith('/join-class')) {
