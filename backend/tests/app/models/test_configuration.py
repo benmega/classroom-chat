@@ -9,7 +9,7 @@ from application.models.configuration import Configuration
 
 
 def test_configuration_to_dict_has_no_ai_teacher_flag(init_db):
-    """The AI teacher was removed; the column is kept but no longer exposed."""
+    """The AI teacher was removed along with its ai_teacher_enabled column."""
     config = Configuration()
     db.session.add(config)
     db.session.commit()

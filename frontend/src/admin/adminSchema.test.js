@@ -46,8 +46,4 @@ describe('adminSchema', () => {
         expect(RESOURCES).not.toContain('AISettings');
         expect(RESOURCES).toContain('Configuration');
     });
-
-    it('hides the deprecated ai_teacher_enabled column on Configuration', () => {
-        expect(HIDDEN_FIELDS.Configuration.has('ai_teacher_enabled')).toBe(true);
-    });
 });

@@ -44,6 +44,21 @@ def cors_origins_from_env(default):
     return split_csv(os.getenv("CORS_ORIGINS", "")) or list(default)
 
 
+# Values that must never be used as a real secret in production: the .env.example
+# placeholders, the development fallbacks below, and the usual stand-ins.
+PLACEHOLDER_SECRETS = frozenset({
+    "change_me", "changeme", "change-me", "admin", "password", "secret", "test", "dev",
+    "placeholder", "dev-secret-key-change-me", "admin-dev-password",
+})
+
+
+def reject_placeholder_secret(name, value):
+    """Raise RuntimeError if ``value`` is an obvious placeholder (the value is never logged)."""
+    normalized = (value or "").strip().strip("'\"").lower()
+    if normalized in PLACEHOLDER_SECRETS or normalized.startswith(("change_me", "changeme", "your-", "your_")):
+        raise RuntimeError(f"{name} is set to a placeholder value; set a real secret in production.")
+
+
 # backend/instance: the SQLite databases and the application log (app.log) live here.
 INSTANCE_DIR = os.path.abspath(
     os.path.join(os.path.dirname(os.path.dirname(__file__)), "instance")
@@ -72,6 +87,8 @@ class Config:
         if os.getenv("FLASK_ENV") == "production":
             raise RuntimeError("SECRET_KEY must be set in production environment!")
         SECRET_KEY = "dev-secret-key-change-me"
+    elif os.getenv("FLASK_ENV") == "production":
+        reject_placeholder_secret("SECRET_KEY", SECRET_KEY)
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "userData")
     # Global request body cap, just above SUBMISSION_MAX_BYTES. Project video
@@ -103,6 +120,11 @@ class Config:
         if os.getenv("FLASK_ENV") == "production":
             raise RuntimeError("ADMIN_PASSWORD must be set in production environment!")
         ADMIN_PASSWORD = "admin-dev-password"  # Slightly better than 1234
+    elif os.getenv("FLASK_ENV") == "production":
+        reject_placeholder_secret("ADMIN_PASSWORD", ADMIN_PASSWORD)
+    # Read per request by routes/api_webhooks.py; only checked here when it is set.
+    if os.getenv("FLASK_ENV") == "production" and os.getenv("WEBHOOK_SECRET"):
+        reject_placeholder_secret("WEBHOOK_SECRET", os.getenv("WEBHOOK_SECRET"))
 
     # Cognito OAuth configuration
     COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")

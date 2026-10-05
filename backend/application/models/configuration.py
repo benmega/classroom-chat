@@ -9,9 +9,6 @@ from ..extensions import db
 
 class Configuration(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # Deprecated: the AI teacher feature was removed. Column kept until it can be
-    # dropped via migration once a prod DB copy is available.
-    ai_teacher_enabled = db.Column(db.Boolean, default=False)
     message_sending_enabled = db.Column(db.Boolean, default=True)
     duck_multiplier = db.Column(db.Float, default=1)
 
@@ -34,7 +31,6 @@ class Configuration(db.Model):
         config = cls.get_current()
         if config is None:
             config = cls(
-                ai_teacher_enabled=False,
                 message_sending_enabled=True,
                 duck_multiplier=1.0,
             )

@@ -86,7 +86,6 @@ The central entity for authentication and student tracking.
 - **`banned_words`**: List of prohibited words for chat moderation.
     - Fields: `id`, `word`, `severity`.
 - **`configuration`**: Global settings (message sending toggle, duck multiplier).
-- **`ai_settings`** and **`configuration.ai_teacher_enabled`**: Deprecated. The AI teacher feature was removed; the table and column are kept until a drop migration can be validated against a production DB copy.
 - **`session_logs`**: Tracking user sessions for analytics.
     - Fields: `id`, `user_id` (FK), `login_time`, `logout_time`.
 - **`connection_attempts`**: Logging of login attempts.

@@ -1,0 +1,21 @@
+# Copy of /etc/systemd/system/gunicorn-benmega.service as it runs on the EC2 host
+# (taken with `systemctl cat gunicorn-benmega` on 2026-10-03). deploy.sh does not
+# install this file; edit the live unit and this copy together.
+[Unit]
+Description=Gunicorn service for benmega.com
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/classroom-chat/backend
+# The -k GeventWebSocketWorker is CRITICAL for Socket.io to work in production
+ExecStart=/home/ubuntu/classroom-chat/venv/bin/gunicorn \
+    -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker \
+    -w 1 \
+    -b 0.0.0.0:8000 \
+    main:app \
+    --timeout 300
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
