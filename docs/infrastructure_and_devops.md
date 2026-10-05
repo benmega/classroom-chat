@@ -133,7 +133,7 @@ that loads the app) does not fail loudly, it just gives wrong answers:
 | Rate limiter | `limiter` in `extensions.py`; storage is `RATELIMIT_STORAGE_URI`, default `memory://` | Each worker counts separately, so every limit is multiplied by the worker count. Sharing the counters needs a shared store (for example Redis); the `redis` package is not installed and nothing is provisioned. |
 | Socket.IO presence and rooms | `_active_sessions` in `socket_events.py`; `socketio.init_app` has no `message_queue` | Presence, "first connection" detection and broadcasts only see the clients connected to the same worker. |
 | Session cleanup scheduler | APScheduler job `session_cleanup` (`tasks.py`), started by `create_app` | Every process that runs `create_app` starts its own scheduler and runs the job. The cleanup only spares users whose socket is open in its own process (`connected_user_ids()`), so in another process it would treat them as disconnected. |
-| Heartbeat CloudWatch metric | `heartbeat` in `routes/session_routes.py` | Published synchronously by whichever worker serves the heartbeat; it is not throttled, and any throttling added later would also be per process. |
+| Heartbeat CloudWatch metric | `heartbeat` in `routes/session_routes.py` | Published synchronously by whichever worker serves the heartbeat, through one CloudWatch client that each process creates on its first heartbeat; it is not throttled, and any throttling added later would also be per process. |
 
 Rate limits are keyed by user id for logged-in requests and by client address otherwise; the
 login, signup and the Cognito register, login and forgot-password routes are always keyed by address.
