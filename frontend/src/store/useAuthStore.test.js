@@ -115,6 +115,28 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().user).toBeNull();
   });
 
+  it('login reads the message field of an error body that has no error field', async () => {
+    server.use(
+      http.post('*/user/login', () => HttpResponse.json({ success: false, message: 'Too many attempts.' }, { status: 429 }))
+    );
+
+    const result = await useAuthStore.getState().login('testuser', 'password123');
+
+    expect(result).toEqual({ success: false, error: 'Too many attempts.' });
+  });
+
+  it('login does not show a proxy error page as the message', async () => {
+    server.use(
+      http.post('*/user/login', () =>
+        new HttpResponse('<html><body>502 Bad Gateway</body></html>', { status: 502, headers: { 'Content-Type': 'text/html' } })
+      )
+    );
+
+    const result = await useAuthStore.getState().login('testuser', 'password123');
+
+    expect(result).toEqual({ success: false, error: 'Login failed' });
+  });
+
   it('login falls back to a generic message when the server sends no error text', async () => {
     server.use(http.post('*/user/login', () => new HttpResponse(null, { status: 500 })));
 
@@ -131,6 +153,49 @@ describe('useAuthStore', () => {
     );
     const result = await useAuthStore.getState().loginParentCognito('parent@test.com', 'password');
     expect(result.success).toBe(true);
+  });
+
+  describe('loginParentCognito failures', () => {
+    const cognitoLogin = () => useAuthStore.getState().loginParentCognito('parent@test.com', 'password');
+
+    it('reports the error text of a rejected sign-in', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () => HttpResponse.json({ error: 'Incorrect email or password.' }, { status: 401 }))
+      );
+
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Incorrect email or password.' });
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+
+    it('reads the message field and a plain string body the same way as the other pages', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () => HttpResponse.json({ message: 'Account locked.' }, { status: 403 }))
+      );
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Account locked.' });
+
+      server.use(
+        http.post('*/api/auth/cognito/login', () => new HttpResponse('Sign-in is unavailable.', { status: 503 }))
+      );
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Sign-in is unavailable.' });
+    });
+
+    it('falls back to a generic message for a page that is not an error message', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () =>
+          new HttpResponse('<html><body>502 Bad Gateway</body></html>', { status: 502, headers: { 'Content-Type': 'text/html' } })
+        )
+      );
+
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Login failed' });
+    });
+
+    it('falls back to a generic message when the server answers without success', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () => HttpResponse.json({ success: false }))
+      );
+
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Login failed' });
+    });
   });
 
   it('completeTutorial updates user state', async () => {

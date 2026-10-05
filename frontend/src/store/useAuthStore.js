@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import toast from 'react-hot-toast';
 import client from '../api/client';
 import { resetSocket } from '../hooks/useChatSocket';
+import { getErrorMessage } from '../utils/apiError';
 
 
 const getHamburgerOverride = (username) => {
@@ -82,11 +83,9 @@ const useAuthStore = create((set, get) => ({
         role: user.role
       };
     } catch (error) {
-      const body = error.response?.data;
-      const serverError = typeof body === 'string' ? body : body?.error;
       return { 
         success: false, 
-        error: (typeof serverError === 'string' && serverError) || 'Login failed' 
+        error: getErrorMessage(error, 'Login failed') 
       };
     }
   },
@@ -106,7 +105,7 @@ const useAuthStore = create((set, get) => ({
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.error || 'Login failed' 
+        error: getErrorMessage(error, 'Login failed') 
       };
     }
   },
