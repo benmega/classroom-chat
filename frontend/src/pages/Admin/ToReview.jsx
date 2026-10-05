@@ -40,6 +40,54 @@ import SmartImage from '../../components/common/SmartImage';
 // A timestamp can be missing (submitted_at is nullable on certificates); new Date(null/undefined) would show a bogus date.
 const formatSubmittedAt = (value) => (value ? new Date(value).toLocaleString() : 'Unknown date');
 
+// The certificate PDF is served by the API host, whose X-Frame-Options forbid framing it from the frontend's
+// host, so the PDF is fetched (the API client sends the session cookie) and framed from a blob: URL instead.
+const CertificatePreview = ({ certId }) => {
+    const [pdfUrl, setPdfUrl] = useState(null);
+    const [failed, setFailed] = useState(false);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        let objectUrl = null;
+        let cancelled = false;
+        client.get(`/api/achievements/view_certificate/${certId}`, { responseType: 'blob', signal: controller.signal })
+            .then((response) => {
+                if (cancelled) return;
+                objectUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+                setPdfUrl(objectUrl);
+            })
+            .catch(() => {
+                if (!cancelled) setFailed(true);
+            });
+        return () => {
+            cancelled = true;
+            controller.abort();
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [certId]);
+
+    if (failed) {
+        return (
+            <div className="cert-preview-placeholder">
+                <AlertCircle size={20} aria-hidden="true" />
+                <span>Preview unavailable</span>
+            </div>
+        );
+    }
+    if (!pdfUrl) {
+        return <div className="cert-preview-placeholder" role="status" aria-label="Loading certificate preview" />;
+    }
+    return (
+        <iframe
+            src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+            title="Certificate Preview"
+            frameBorder="0"
+            scrolling="no"
+            tabIndex="-1"
+        ></iframe>
+    );
+};
+
 const ToReview = () => {
     const cachedReview = adminCache.get('admin_to_review');
 
@@ -699,13 +747,7 @@ const ToReview = () => {
                         className="cert-preview-thumbnail"
                         title="Click to view full certificate"
                     >
-                        <iframe 
-                            src={getApiUrl(`/api/achievements/view_certificate/${c.id}#toolbar=0&navpanes=0&scrollbar=0`)} 
-                            title="Certificate Preview" 
-                            frameBorder="0" 
-                            scrolling="no"
-                            tabIndex="-1"
-                        ></iframe>
+                        <CertificatePreview certId={c.id} />
                         <div className="preview-overlay">
                             <Eye size={20} />
                         </div>
