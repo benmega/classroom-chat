@@ -14,10 +14,10 @@ def check_for_schema_drift(app):
     """
     try:
         with app.app_context():
-            connection = db.engine.connect()
-            context = MigrationContext.configure(connection)
-            diff = compare_metadata(context, db.metadata)
-            connection.close()
+            # Closed on exit, including when the comparison raises
+            with db.engine.connect() as connection:
+                context = MigrationContext.configure(connection)
+                diff = compare_metadata(context, db.metadata)
 
             if diff:
                 banner = "!" * 80

@@ -30,6 +30,26 @@ def test_schema_check_exception(test_app):
             mock_log_exc.assert_called_once()
 
 
+def test_schema_check_closes_its_connection_when_the_comparison_fails(test_app):
+    real_connect = db.engine.connect
+    opened = []
+
+    def connect():
+        connection = real_connect()
+        opened.append(connection)
+        return connection
+
+    with patch.object(db.engine, "connect", side_effect=connect), patch(
+        "application.utilities.schema_check.compare_metadata",
+        side_effect=RuntimeError("comparison failed"),
+    ):
+        check_for_schema_drift(test_app)
+
+    # The list keeps the connection alive, so garbage collection cannot hide a leak
+    assert len(opened) == 1
+    assert opened[0].closed
+
+
 def test_schema_check_with_drift_logs_the_report_instead_of_printing(test_app, capsys):
     diff_data = [("add_table", "test_table")]
     with patch("application.utilities.schema_check.compare_metadata", return_value=diff_data):

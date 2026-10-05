@@ -264,7 +264,9 @@ blank database fails with `NoSuchTableError: users`).
   `tools/migrate_classroom.py` (runs on every deploy). Never put DDL in `tools/migrate_classroom.py`.
 - `db.create_all()` does not ALTER existing tables, so never rely on it for schema changes. The
   app factory only calls it outside production; `deploy.sh` uses it once to bootstrap a brand-new
-  database before stamping it to head.
+  database before stamping it to head. A new model table therefore needs a `create_table`
+  migration like any other change. In development the factory also compares the database with the
+  models at startup and logs a schema-drift report (`application/utilities/schema_check.py`).
 
 Create a new migration on a development machine (from `backend/`, with `FLASK_APP=main.py`):
 
