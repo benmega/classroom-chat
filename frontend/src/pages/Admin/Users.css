@@ -536,7 +536,7 @@
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     min-width: 180px;
-    z-index: 9999;
+    z-index: var(--z-dropdown);
     overflow: hidden;
     padding: 4px;
     animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);

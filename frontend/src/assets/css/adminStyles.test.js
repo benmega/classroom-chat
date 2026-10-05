@@ -126,6 +126,37 @@ describe('admin stylesheets', () => {
     expect(modal).toBeGreaterThan(Number(tokens['--z-modal']))
   })
 
+  it('puts every admin z-index on the shared scale, or on a small local layer inside a component', () => {
+    const offenders = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const { selector, body } of rulesOf(sheet(path))) {
+        for (const [prop, value] of declarationsOf(body)) {
+          if (prop !== 'z-index') continue
+          const token = value.match(/^var\((--z-[\w-]+)\)$/)?.[1]
+          const isLocalLayer = /^[0-9]$/.test(value)
+          if (!(token && token in tokens) && !isLocalLayer) offenders.push(`${path.replace('/src/', '')}: ${selector} { z-index: ${value} }`)
+        }
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  it('stacks in-page menus below the rail, and the Classes modal and the kiosk below the toasts', () => {
+    const z = (path, selector) => Number(resolveToken(declaration(ruleBody(sheet(path), selector), 'z-index')))
+    const rail = z('/src/components/Layout/AdminLayout.css', '.admin-sidebar')
+    const toast = Number(tokens['--z-toast'])
+
+    // Menus open over their own page but never over the drawer, its overlay or a dialog
+    expect(z('/src/pages/Admin/Users.css', '.kebab-dropdown')).toBeLessThan(rail)
+    expect(z('/src/components/admin/ColumnFilterDropdown.css', '.column-filter-dropdown')).toBeLessThan(rail)
+    expect(z('/src/pages/Admin/AdminAssignProject.css', '.aap-dropdown')).toBeLessThan(rail)
+
+    // The Classes modal covers the rail, and the kiosk page lets toasts (its upload progress) show above it
+    expect(z('/src/pages/Admin/Classes.css', '.modal-overlay')).toBeGreaterThan(rail)
+    expect(z('/src/pages/Admin/Classes.css', '.modal-overlay')).toBeLessThan(toast)
+    expect(z('/src/pages/Admin/KioskUpload.css', '.kiosk-container')).toBeLessThan(toast)
+  })
+
   it('keeps the create-classroom modal rules in Classes.css, not in the class dashboard sheet', () => {
     // The dashboard never renders .modal-overlay/.modal-card, but unscoped rules for them restyled the Classes modal
     // (a translucent card, and a dark one on dark-OS devices under that modal's dark heading text).
