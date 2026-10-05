@@ -12,14 +12,14 @@ flask-cors>=6.0.2,<7
 gunicorn
 cryptography~=45.0.6
 Flask-Talisman==1.1.0
-PyMuPDF>=1.24.3  # first release with the `pymupdf` import name
+PyMuPDF>=1.24.3,<2  # first release with the `pymupdf` import name
 Flask-Limiter~=3.12
 Flask-SocketIO~=5.3.6
 gevent
 gevent-websocket
-flask_apscheduler
-boto3
-flask_wtf
+flask_apscheduler~=1.13.1
+boto3~=1.42.21
+flask_wtf~=1.2.2
 Flask-Migrate~=4.1.0
 python-jose==3.5.0
 requests==2.33.0
