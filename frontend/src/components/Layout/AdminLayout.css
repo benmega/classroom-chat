@@ -97,7 +97,7 @@
 /* Brand text — only shown on mobile drawer */
 .admin-brand-text {
     display: none;
-    color: white;
+    color: var(--text-on-primary);
     font-weight: 800;
     font-size: 1.1rem;
     letter-spacing: -0.02em;
@@ -236,12 +236,12 @@
 /* Active */
 .admin-rail-item.active {
     background: var(--admin-accent);
-    color: white;
+    color: var(--text-on-primary);
     border-radius: var(--radius-md);
 }
 
 .admin-rail-item.active svg {
-    color: white;
+    color: var(--text-on-primary);
 }
 
 /* Logout button */
@@ -275,7 +275,7 @@
     top: -6px;
     right: -6px;
     background: linear-gradient(135deg, var(--admin-badge-from), var(--admin-badge-to));
-    color: white;
+    color: var(--text-on-primary);
     font-size: 0.58rem;
     font-weight: 800;
     min-width: 16px;
@@ -438,7 +438,7 @@
 
 .admin-mobile-close:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 /* ==========================================================================
@@ -492,7 +492,7 @@
     align-items: center;
     gap: 8px;
     background: var(--admin-dark-surface);
-    color: white;
+    color: var(--text-on-primary);
     padding: 0.75rem 1.5rem;
     border-radius: 12px;
     text-decoration: none;

@@ -4,8 +4,8 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Guards for the admin stylesheets (issue #76): custom properties must resolve, the admin
-// layers keep their order on the shared z-index scale, and the dark log console stays readable.
+// Guards for the admin stylesheets (issues #76 and #78): custom properties must resolve, colours come from tokens,
+// the admin layers keep their order on the shared z-index scale, and the dark log console stays readable.
 // Read from disk: vitest swaps imported CSS (even ?raw) for an empty string.
 const srcDir = fileURLToPath(new URL('../../', import.meta.url))
 const cssPaths = (dir) =>
@@ -58,6 +58,16 @@ const usesWithoutFallback = (text) => {
   }
   return found
 }
+
+// Every `selector { declarations }` pair, including the ones inside @media/@supports blocks.
+const rulesOf = (text) => [...text.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]) => ({ selector: selector.trim(), body }))
+const declarationsOf = (body) =>
+  body
+    .replace(/url\((['"]?)[^)]*\1\)/g, 'url()')
+    .split(';')
+    .map((d) => d.trim())
+    .filter((d) => d.includes(':'))
+    .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()])
 
 const ruleBody = (text, selector) => {
   for (const [, sel, body] of text.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
@@ -145,6 +155,28 @@ describe('admin stylesheets', () => {
     for (const stop of stops) {
       expect(contrast(resolveToken(declaration(avatar, 'color')), resolveToken(stop)), stop).toBeGreaterThanOrEqual(4.5)
     }
+  })
+
+  it('writes colours as tokens, not raw hex or white/black literals', () => {
+    // A var() fallback is ignored when its token is defined, so only one on an undefined token counts as a literal.
+    const withoutDeadFallbacks = (value) =>
+      value.replace(/var\(\s*(--[\w-]+)\s*,[^()]*(?:\([^()]*\)[^()]*)*\)/g, (whole, name) =>
+        name in definitions ? `var(${name})` : whole,
+      )
+    const literal = /#[0-9a-f]{3,8}\b|\b(?:white|black)\b/i
+
+    const offenders = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const { selector, body } of rulesOf(sheet(path))) {
+        for (const [prop, value] of declarationsOf(body)) {
+          // `--name: #hex` is the token definition itself
+          if (!prop.startsWith('--') && literal.test(withoutDeadFallbacks(value))) {
+            offenders.push(`${path.replace('/src/', '')}: ${selector} { ${prop}: ${value} }`)
+          }
+        }
+      }
+    }
+    expect(offenders).toEqual([])
   })
 
   it('draws the log console text and its sub-text with AA contrast', () => {

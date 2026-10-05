@@ -81,7 +81,7 @@
     width: 100%;
     padding: 16px;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 14px;
     font-weight: 700;

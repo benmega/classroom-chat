@@ -63,7 +63,7 @@
 }
 
 .submission-card {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 16px;
     border: 1px solid var(--border-subtle);
     padding: 1rem;
@@ -259,7 +259,7 @@
 
 .submission-actions .btn-approve {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     box-shadow: 0 4px 14px rgba(14, 178, 187, 0.3);
 }
 
@@ -277,7 +277,7 @@
 
 .submission-actions .btn-reject:hover:not(:disabled) {
     background: var(--error-color);
-    color: white;
+    color: var(--text-on-primary);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }

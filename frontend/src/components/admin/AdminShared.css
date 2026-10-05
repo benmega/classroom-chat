@@ -86,7 +86,7 @@
 :where(.admin-body, .admin-modal-overlay) .primary-btn {
     padding: 12px 20px;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 12px;
     font-weight: 700;

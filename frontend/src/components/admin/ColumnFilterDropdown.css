@@ -39,7 +39,7 @@
     top: 100%;
     left: 0;
     margin-top: 4px;
-    background: white;
+    background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -161,7 +161,7 @@
 
 .column-filter-apply-btn {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
 }
 
@@ -170,7 +170,7 @@
 }
 
 .column-filter-clear-btn {
-    background: white;
+    background: var(--bg-primary);
     color: var(--text-muted);
     border: 1px solid var(--border-subtle);
 }
