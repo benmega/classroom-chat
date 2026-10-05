@@ -129,6 +129,24 @@ describe('admin stylesheets', () => {
     expect(withDarkRules).toEqual([])
   })
 
+  it('draws the parent-message badge and avatar from shared tokens with AA contrast', () => {
+    const review = sheet('/src/pages/Admin/ToReview.css')
+    const badge = ruleBody(review, '.badge-parent-message')
+    expect(declaration(badge, 'color')).toMatch(/^var\(--/)
+    expect(declaration(badge, 'background')).toMatch(/^var\(--/)
+    expect(
+      contrast(resolveToken(declaration(badge, 'color')), resolveToken(declaration(badge, 'background'))),
+    ).toBeGreaterThanOrEqual(4.5)
+
+    // The avatar glyph is white on a two-stop gradient: both stops need the contrast
+    const avatar = ruleBody(review, '.avatar-placeholder.parent-avatar')
+    const stops = declaration(avatar, 'background').match(/var\(--[\w-]+\)/g)
+    expect(stops).toHaveLength(2)
+    for (const stop of stops) {
+      expect(contrast(resolveToken(declaration(avatar, 'color')), resolveToken(stop)), stop).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
   it('draws the log console text and its sub-text with AA contrast', () => {
     const panel = sheet('/src/pages/Admin/AdvancedPanel.css')
     const consoleBg = resolveToken(declaration(ruleBody(panel, '.advanced-modal-console'), 'background'))

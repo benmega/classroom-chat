@@ -117,7 +117,7 @@
 
 .filter-tabs .tab-btn.active {
     background: var(--primary-accessible);
-    color: #ffffff;
+    color: var(--text-on-primary);
     font-weight: 700;
     box-shadow: 0 2px 4px rgba(0, 109, 116, 0.25);
 }

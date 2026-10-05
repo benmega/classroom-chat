@@ -206,8 +206,8 @@
 }
 
 .badge-parent-message {
-    background: #e0f2fe;
-    color: #0284c7;
+    background: var(--sky-100);
+    color: var(--sky-700);
 }
 
 .parent-message-sender-row {
@@ -263,8 +263,8 @@
 }
 
 .avatar-placeholder.parent-avatar {
-    background: linear-gradient(135deg, #0ea5e9, #6366f1);
-    color: #fff;
+    background: linear-gradient(135deg, var(--sky-700), var(--indigo-600));
+    color: var(--text-on-primary);
 }
 
 .badge-resubmission {
