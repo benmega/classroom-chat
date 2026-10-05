@@ -251,14 +251,20 @@ sudo systemctl reload nginx
 - **`ai-coder.yml`**: the single AI workflow; runs when an issue or pull request receives the `ai-plan` label
   (plan, then code) or the `ai-draft` label (code directly). Runs are serialized per issue/PR.
   Do not add those labels casually; they start automated AI workflows. Only label events from the
-  repository owner start a run, both jobs have a timeout, and `.github/scripts/requirements.txt` lists the
+  repository owner start a run, every job has a timeout, and `.github/scripts/requirements.txt` lists the
   packages the AI scripts import (installed by the workflow and by `tests.yml`).
-  The jobs run with read-only tokens (the plan job may comment on and label the issue). The personal access
-  token is held only by the steps that run after the agent: push to the PR branch, open the draft PR and
-  remove the `ai-draft` label. The agent's file tools stay inside the repository and refuse `.git/` and
-  `.github/` (changes there are also reset before anything is committed), and its test runs get a minimal
-  environment without the secrets. The test runs still execute code the agent wrote with the runner's own
-  privileges, so the owner-only trigger is the main protection.
+  The work is split across four jobs. `analyze` (the plan; it may comment on and label the issue) and
+  `code` (the agent) run with read-only tokens, and `code` never holds the personal access token. The
+  agent's test runs execute code it wrote, so `code` ends by exporting its changes as one patch against the
+  commit it checked out, leaving out `.github/`, and uploads only that patch. `publish` takes a fresh
+  checkout, applies the patch (refusing a path inside `.git` and any change to `.github/`), then pushes to
+  the PR branch or opens the draft PR with the personal access token. `cleanup` removes the `ai-draft`
+  label. The agent's file tools also stay inside the repository and refuse `.git/` and `.github/`, and its
+  test runs get a minimal environment.
+  Not covered: the test runs still execute with the runner's privileges inside the `code` job, so code the
+  agent wrote can read the `OPENAI_API_KEY` and that job's read-only token there (never the personal access
+  token). The owner-only trigger is the main protection against that, and the OpenAI key should have a
+  spending limit.
 
 Required GitHub Secrets: `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
 `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `WEBHOOK_SECRET`, as well as AWS credentials for S3 uploads.

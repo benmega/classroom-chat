@@ -21,8 +21,10 @@ COMMAND_TIMEOUT = 60
 # script and the workflows), so the agent cannot rewrite the pipeline that runs it.
 PROTECTED_DIRS = {".git", ".github"}
 
-# Environment a tool subprocess keeps. Everything else (the OpenAI key, GitHub tokens) is dropped:
-# run_tests executes code the agent wrote.
+# Environment a tool subprocess keeps. Everything else (the OpenAI key, GitHub tokens) is not
+# inherited: run_tests executes code the agent wrote. That only stops plain inheritance, since the
+# code runs as the same user and can look further; the personal access token is therefore never
+# present in this job at all (see ai-coder.yml).
 CHILD_ENV_KEYS = (
     "PATH",
     "HOME",

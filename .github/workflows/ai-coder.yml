@@ -6,8 +6,10 @@ on:
   pull_request:
     types: [labeled]
 
-# Read-only by default; each job asks for what it needs. Only the steps that push or open a PR
-# hold the personal access token (the repository setting stops GITHUB_TOKEN from opening PRs).
+# Read-only by default; each job asks for what it needs. The personal access token (the repository
+# setting stops GITHUB_TOKEN from opening PRs) is held only by the 'publish' and 'cleanup' jobs.
+# The 'code' job runs the agent and the tests it wrote, so it never holds that token: it hands one
+# patch to 'publish', which applies it to a fresh checkout and does the push or opens the PR.
 permissions:
   contents: read
 
@@ -92,6 +94,8 @@ jobs:
       issues: read
       pull-requests: read
     needs: [analyze]
+    outputs:
+      has_patch: ${{ steps.export.outputs.has_patch }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -103,7 +107,7 @@ jobs:
 
       - name: Record Checked-Out Commit
         id: base
-        # The agent's test runs can commit and move HEAD: later steps rewind to this commit.
+        # The agent's test runs can commit and move HEAD: the patch is taken against this commit.
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Setup Python
@@ -136,35 +140,76 @@ jobs:
           ISSUE_PLAN: ${{ needs.analyze.outputs.plan }}
         run: python .github/scripts/agent_coder.py
 
-      - name: Discard Changes To Protected Paths
-        # The agent's file tools refuse .github/, but its test runs execute code it wrote, and
-        # that code can commit. Rewind to the commit that was checked out (the working tree is
-        # kept), then restore .github from it, so a change to the pipeline itself, committed or
-        # not, is never pushed.
+      - name: Export Agent Changes
+        id: export
         env:
           BASE: ${{ steps.base.outputs.sha }}
         run: |
-          git reset -q "$BASE"
-          git restore --source="$BASE" --staged --worktree -- .github
-          git clean -fdq -- .github
+          # Everything the agent changed relative to the checked-out commit, as one patch. The patch
+          # is all that leaves this job: its test runs executed code the agent wrote, so nothing in
+          # this workspace (the .git directory, its config and hooks, the files on disk) is ever
+          # used by a step that holds the personal access token. .github is never exported, and
+          # the publish job refuses a patch that touches it.
+          git add -A -- . ':!.github'
+          git diff --cached --binary --no-renames "$BASE" -- . ':!.github' > "$RUNNER_TEMP/agent.patch"
+          if [ -s "$RUNNER_TEMP/agent.patch" ]; then
+            echo "has_patch=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload Agent Patch
+        if: steps.export.outputs.has_patch == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-patch
+          path: ${{ runner.temp }}/agent.patch
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    name: Publish Agent Changes
+    # Only when the agent changed something. This job never runs the agent or its tests, and the
+    # only thing it takes from the 'code' job is the patch (untrusted data, checked below).
+    needs: [code]
+    if: needs.code.outputs.has_patch == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          # A fresh clone: the personal access token is stored in it for the push and the PR, and
+          # nothing from the agent's workspace is in it.
+          token: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          ref: ${{ github.event.pull_request.head.ref || github.event.repository.default_branch }}
+
+      - name: Download Agent Patch
+        uses: actions/download-artifact@v4
+        with:
+          name: agent-patch
+          path: ${{ runner.temp }}/agent-patch
+
+      - name: Apply Agent Patch
+        run: |
+          # git apply refuses paths inside .git and paths that lead through a symbolic link. The
+          # pipeline definition is refused here too, whatever the patch says (a rename out of
+          # .github is not caught by the path filter alone).
+          git apply --index --binary "$RUNNER_TEMP/agent-patch/agent.patch"
+          if ! git diff --cached --quiet -- .github; then
+            echo "::error::The agent patch changes .github, which is never published."
+            exit 1
+          fi
 
       - name: Push Changes (Iterative PR)
         if: github.event.pull_request != null
         env:
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          PUSH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
         run: |
-          # The checkout keeps no credentials, so hand the token to this one push as the HTTP
-          # header actions/checkout would have stored. Hooks are switched off for both git calls
-          # because they run with the token in the environment.
-          AUTH=$(printf 'x-access-token:%s' "$PUSH_TOKEN" | base64 -w0)
-          echo "::add-mask::$AUTH"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git -c core.hooksPath=/dev/null commit -m "AI Agent: Applied fixes based on review" || exit 0
-          git -c core.hooksPath=/dev/null -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH}" \
-            push origin "HEAD:refs/heads/$HEAD_REF"
+          git commit -m "AI Agent: Applied fixes based on review"
+          git push origin "HEAD:refs/heads/$HEAD_REF"
 
       - name: Create Pull Request (New Issue)
         if: github.event.pull_request == null
@@ -175,11 +220,20 @@ jobs:
           title: "AI Draft: ${{ github.event.issue.title }}"
           branch: "ai-draft/issue-${{ github.event.issue.number }}"
 
-      - name: Cleanup Label
-        # Only a direct 'ai-draft' leaves a label behind ('analyze' already consumed 'ai-plan')
-        if: always() && github.event.label.name == 'ai-draft'
+  cleanup:
+    name: Cleanup Label
+    # Only a direct 'ai-draft' leaves a label behind ('analyze' already consumed 'ai-plan'). It
+    # runs whatever happened to the agent, but not when the run was skipped (not the owner, fork PR).
+    needs: [code, publish]
+    if: ${{ always() && github.event.label.name == 'ai-draft' && needs.code.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Remove Label
         env:
           GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
           GH_REPO: ${{ github.repository }}
-        run: |
-          gh issue edit ${{ github.event.issue.number || github.event.pull_request.number }} --remove-label "ai-draft"
+          OBJ_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+        run: gh issue edit "$OBJ_NUMBER" --remove-label "ai-draft"

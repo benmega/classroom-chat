@@ -12,6 +12,7 @@ import subprocess
 import sys
 import textwrap
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -78,7 +79,7 @@ def test_tests_workflow_installs_the_script_requirements_so_their_tests_run():
 # ---- every job has a timeout, so a stuck run cannot hold a runner for GitHub's 6-hour default ----
 
 
-@pytest.mark.parametrize("job", ["analyze", "code"])
+@pytest.mark.parametrize("job", ["analyze", "code", "publish", "cleanup"])
 def test_each_job_has_a_timeout(job):
     match = re.search(r"^    timeout-minutes: (\d+)$", _jobs()[job], flags=re.M)
 
@@ -86,7 +87,7 @@ def test_each_job_has_a_timeout(job):
     assert 0 < int(match.group(1)) <= 60
 
 
-# ---- least privilege: read-only tokens, and the personal access token only after the agent ran ----
+# ---- least privilege: read-only tokens, and the personal access token never near the agent ----
 
 
 def _steps(job):
@@ -107,9 +108,10 @@ def test_workflow_default_permissions_are_read_only():
     assert not re.search(r"^\s+[\w-]+: write$", header, flags=re.M)
 
 
-def test_code_job_token_is_read_only():
-    assert not re.search(r": write$", _job_header("code"), flags=re.M)
-    assert not re.search(r": write$", "\n".join(_steps("code").values()), flags=re.M)
+@pytest.mark.parametrize("job", ["code", "publish", "cleanup"])
+def test_no_job_but_analyze_gets_a_write_token(job):
+    assert not re.search(r": write$", _job_header(job), flags=re.M)
+    assert not re.search(r": write$", "\n".join(_steps(job).values()), flags=re.M)
 
 
 def test_analyze_job_only_writes_issues_and_pull_requests():
@@ -130,30 +132,52 @@ def test_analyze_job_does_not_use_the_personal_access_token():
     assert "MY_WORKFLOW_TOKEN" not in _jobs()["analyze"]
 
 
-def test_agent_step_holds_no_personal_access_token():
-    step = _steps("code")["Run Agent Loop"]
-
-    assert "MY_WORKFLOW_TOKEN" not in step
-    assert "GH_TOKEN: ${{ github.token }}" in step
-
-
-def test_personal_access_token_is_used_only_after_the_agent_ran_and_protected_paths_were_reset():
-    names = list(_steps("code"))
-    ran = names.index("Run Agent Loop")
-    reset = names.index("Discard Changes To Protected Paths")
-
-    assert ran < reset < names.index("Push Changes (Iterative PR)") < names.index("Create Pull Request (New Issue)")
-    for index, (name, step) in enumerate(_steps("code").items()):
-        if "MY_WORKFLOW_TOKEN" in step:
-            assert index > reset, name
+def test_the_job_that_runs_the_agent_never_holds_the_personal_access_token():
+    """The agent's test runs execute code it wrote: whatever else runs in that job is not safe."""
+    assert "MY_WORKFLOW_TOKEN" not in _jobs()["code"]
+    assert "GH_TOKEN: ${{ github.token }}" in _steps("code")["Run Agent Loop"]
 
 
-def test_push_step_does_not_run_git_hooks():
-    push = _steps("code")["Push Changes (Iterative PR)"]
+def test_personal_access_token_is_held_only_by_jobs_that_never_run_the_agent():
+    holders = {job for job, text in _jobs().items() if "MY_WORKFLOW_TOKEN" in text}
 
-    assert push.count("git -c core.hooksPath=/dev/null ") == 2
-    assert "git add ." in push
-    assert not re.search(r"^\s*git (commit|push) ", push, flags=re.M)
+    assert holders == {"publish", "cleanup"}
+    for job in holders:
+        for needle in ("agent_coder", "pip install", "pytest", "setup-python"):
+            assert needle not in _jobs()[job], (job, needle)
+
+
+def test_publish_job_starts_from_a_fresh_checkout_and_takes_only_the_patch():
+    header = _job_header("publish")
+    steps = _steps("publish")
+    upload = _steps("code")["Upload Agent Patch"]
+
+    assert "needs: [code]" in header
+    assert "if: needs.code.outputs.has_patch == 'true'" in header
+    assert list(steps)[:2] == ["Checkout Code", "Download Agent Patch"]
+    assert "token: ${{ secrets.MY_WORKFLOW_TOKEN }}" in steps["Checkout Code"]
+    # The one thing that crosses from the agent's job: the patch, not the workspace.
+    assert "name: agent-patch" in steps["Download Agent Patch"]
+    assert "name: agent-patch" in upload
+    assert re.search(r"^          path: \$\{\{ runner\.temp \}\}/agent\.patch$", upload, flags=re.M)
+    assert "if: steps.export.outputs.has_patch == 'true'" in upload
+    assert "has_patch: ${{ steps.export.outputs.has_patch }}" in _job_header("code")
+
+
+def test_pull_request_is_opened_and_pushed_only_by_the_publish_job():
+    assert set(_steps("publish")) >= {"Push Changes (Iterative PR)", "Create Pull Request (New Issue)"}
+    for step in _steps("code").values():
+        assert "git push" not in step
+        assert "create-pull-request" not in step
+
+
+def test_cleanup_runs_after_a_failed_agent_but_not_a_skipped_run():
+    header = _job_header("cleanup")
+
+    assert "needs: [code, publish]" in header
+    assert "always()" in header
+    assert "needs.code.result != 'skipped'" in header
+    assert "github.event.label.name == 'ai-draft'" in header
 
 
 @pytest.mark.parametrize("job", ["analyze", "code"])
@@ -161,7 +185,7 @@ def test_only_the_repository_owner_can_start_an_ai_run(job):
     assert "github.event.sender.login == github.repository_owner" in _job_header(job)
 
 
-# ---- the protected paths are restored from the commit that was checked out ----
+# ---- the agent's changes reach the publish job as a patch, never as a workspace ----
 
 
 def _run_script(job, step):
@@ -186,28 +210,83 @@ def _git(repo, *args):
     return done.stdout.strip()
 
 
-def _make_repo(path, files):
-    path.mkdir()
-    _git(path, "init", "-q")
+def _configure(repo):
     for key, value in (("user.name", "test"), ("user.email", "test@example.com"), ("core.autocrlf", "false")):
-        _git(path, "config", key, value)
-    for name, content in files.items():
-        (path / name).parent.mkdir(parents=True, exist_ok=True)
-        (path / name).write_text(content, encoding="utf-8", newline="\n")
-    _git(path, "add", "-A")
-    _git(path, "commit", "-qm", "base")
-    return path
+        _git(repo, "config", key, value)
+    return repo
 
 
-def _run_step(repo, job, step, **env):
+def _write(path, content):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8", newline="\n")
+
+
+def _run_step(repo, job, step, check=True, **env):
     return subprocess.run(
         [_bash(), "-e", "-c", _run_script(job, step)],
         cwd=repo,
         env={**os.environ, **env},
-        check=True,
+        check=check,
         capture_output=True,
         text=True,
     )
+
+
+@pytest.fixture
+def handoff(tmp_path):
+    """The agent job's workspace and the publish job's fresh checkout of the same repository."""
+    origin = tmp_path / "origin"
+    origin.mkdir()
+    _git(origin, "init", "-q")
+    _configure(origin)
+    for name, content in {
+        ".github/workflows/ci.yml": "name: ci\n",
+        "backend/app.py": "print(1)\n",
+        "backend/old.py": "print('old')\n",
+    }.items():
+        _write(origin / name, content)
+    _git(origin, "add", "-A")
+    _git(origin, "commit", "-qm", "base")
+
+    runner_temp = tmp_path / "runner-temp"
+    runner_temp.mkdir()
+    workspaces = {}
+    for name in ("agent", "publish"):
+        _git(tmp_path, "clone", "-q", "-c", "core.autocrlf=false", str(origin), name)
+        workspaces[name] = _configure(tmp_path / name)
+    return SimpleNamespace(
+        origin=origin,
+        agent=workspaces["agent"],
+        publish=workspaces["publish"],
+        runner_temp=runner_temp,
+        base=_git(origin, "rev-parse", "HEAD"),
+    )
+
+
+def _export(h):
+    """Run the agent job's export step; returns the step's outputs."""
+    output = h.runner_temp / "github-output"
+    output.write_text("", encoding="utf-8")
+    _run_step(
+        h.agent,
+        "code",
+        "Export Agent Changes",
+        BASE=h.base,
+        RUNNER_TEMP=h.runner_temp.as_posix(),
+        GITHUB_OUTPUT=output.as_posix(),
+    )
+    return output.read_text(encoding="utf-8")
+
+
+def _deliver(h, patch_bytes=None):
+    """What upload-artifact and download-artifact do with the patch."""
+    target = h.runner_temp / "agent-patch" / "agent.patch"
+    target.parent.mkdir(exist_ok=True)
+    target.write_bytes(patch_bytes if patch_bytes is not None else (h.runner_temp / "agent.patch").read_bytes())
+
+
+def _apply(h, **kwargs):
+    return _run_step(h.publish, "publish", "Apply Agent Patch", RUNNER_TEMP=h.runner_temp.as_posix(), **kwargs)
 
 
 def test_checked_out_commit_is_recorded_before_the_agent_runs():
@@ -219,31 +298,73 @@ def test_checked_out_commit_is_recorded_before_the_agent_runs():
     assert 'echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"' in steps["Record Checked-Out Commit"]
 
 
-def test_protected_paths_are_reset_to_the_recorded_commit_not_to_head():
-    reset = _steps("code")["Discard Changes To Protected Paths"]
+def test_the_patch_is_taken_against_the_recorded_commit_and_leaves_out_the_pipeline():
+    export = _steps("code")["Export Agent Changes"]
+    script = _run_script("code", "Export Agent Changes")
+    names = list(_steps("code"))
 
-    assert "BASE: ${{ steps.base.outputs.sha }}" in reset
-    assert '--source="$BASE"' in reset
-    assert "HEAD" not in _run_script("code", "Discard Changes To Protected Paths")
+    assert names.index("Export Agent Changes") > names.index("Run Agent Loop")
+    assert "BASE: ${{ steps.base.outputs.sha }}" in export
+    assert '"$BASE"' in script
+    assert "HEAD" not in script
+    assert script.count("':!.github'") == 2
 
 
-def test_a_pipeline_change_committed_while_the_agent_ran_is_not_pushed(tmp_path):
-    """Code run by the agent's tests can commit: restoring from HEAD would keep that commit."""
-    repo = _make_repo(
-        tmp_path / "repo",
-        {".github/workflows/ci.yml": "name: ci\n", "backend/app.py": "print(1)\n"},
-    )
-    base = _git(repo, "rev-parse", "HEAD")
-    # A pipeline change committed during the run, a new pipeline file, and one other edit.
-    (repo / ".github/workflows/ci.yml").write_text("name: changed\n", newline="\n")
-    _git(repo, "commit", "-aqm", "committed during the run")
-    (repo / ".github/workflows/extra.yml").write_text("name: extra\n", newline="\n")
-    (repo / "backend/app.py").write_text("print(2)\n", newline="\n")
+def test_agent_changes_are_published_without_any_pipeline_change(handoff):
+    """Code run by the agent's tests can commit, so only a diff against the start commit counts."""
+    h = handoff
+    # The agent's edits: a change, a new file, a new binary file and a deletion.
+    _write(h.agent / "backend/app.py", "print(2)\n")
+    _write(h.agent / "backend/new.py", "print('new')\n")
+    (h.agent / "backend/blob.bin").write_bytes(b"\x00\xff\x10\x00")
+    (h.agent / "backend/old.py").unlink()
+    # What code run by its tests can add: a pipeline change committed, an uncommitted one, a new file.
+    _write(h.agent / ".github/workflows/ci.yml", "name: changed\n")
+    _git(h.agent, "commit", "-aqm", "committed during the run")
+    _write(h.agent / ".github/workflows/extra.yml", "name: extra\n")
+    _git(h.agent, "add", ".github")
 
-    _run_step(repo, "code", "Discard Changes To Protected Paths", BASE=base)
-    # What the push step then does.
-    _git(repo, "add", ".")
-    _git(repo, "commit", "-qm", "AI Agent")
+    assert "has_patch=true" in _export(h)
+    _deliver(h)
+    _apply(h)
+    _run_step(h.publish, "publish", "Push Changes (Iterative PR)", HEAD_REF="ai-fix")
 
-    assert _git(repo, "diff", "--name-only", base, "HEAD").splitlines() == ["backend/app.py"]
-    assert not (repo / ".github/workflows/extra.yml").exists()
+    changed = sorted(_git(h.origin, "diff", "--name-only", h.base, "ai-fix").splitlines())
+    assert changed == ["backend/app.py", "backend/blob.bin", "backend/new.py", "backend/old.py"]
+    assert _git(h.origin, "show", "ai-fix:.github/workflows/ci.yml") == "name: ci"
+
+
+def test_nothing_is_published_when_the_agent_changed_nothing(handoff):
+    h = handoff
+    # Only the pipeline changed, which is never exported.
+    _write(h.agent / ".github/workflows/ci.yml", "name: changed\n")
+    _git(h.agent, "commit", "-aqm", "committed during the run")
+
+    assert "has_patch" not in _export(h)
+
+
+@pytest.mark.parametrize(
+    "patch",
+    [
+        # A write into .git (hooks, config).
+        "diff --git a/.git/hooks/pre-commit b/.git/hooks/pre-commit\n"
+        "new file mode 100755\n--- /dev/null\n+++ b/.git/hooks/pre-commit\n@@ -0,0 +1 @@\n+echo hi\n",
+        # Moving the pipeline file out of .github, which a path filter on the new name misses.
+        "diff --git a/.github/workflows/ci.yml b/backend/moved.yml\n"
+        "similarity index 100%\nrename from .github/workflows/ci.yml\nrename to backend/moved.yml\n",
+        # A plain edit of the pipeline.
+        "diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml\n"
+        "--- a/.github/workflows/ci.yml\n+++ b/.github/workflows/ci.yml\n@@ -1 +1,2 @@\n name: ci\n+name: other\n",
+    ],
+    ids=["git-directory", "rename-out-of-github", "edit-github"],
+)
+def test_a_patch_that_touches_git_or_the_pipeline_is_refused(handoff, patch):
+    """The patch comes from a job that ran agent-written code: it is checked, not trusted."""
+    h = handoff
+    _deliver(h, patch.encode())
+
+    result = _apply(h, check=False)
+
+    # The step fails, so the commit and push steps after it never run: nothing is published.
+    assert result.returncode != 0
+    assert _git(h.publish, "rev-parse", "HEAD") == h.base
