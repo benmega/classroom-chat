@@ -777,3 +777,86 @@ def test_admin_panel_fk_overrides_match_real_columns():
         assert display_field in crud_routes._columns(crud_routes.get_model(reference)), (
             f"{key}: '{display_field}' is not a column of {reference} (record keys are column attribute names)"
         )
+
+
+# --------------------------------------------------------------------------- #
+# Removing admins and the last admin's role
+# --------------------------------------------------------------------------- #
+
+
+def test_delete_user_refuses_another_admin(admin_client):
+    other_admin = UserFactory(role="admin")
+
+    resp = admin_client.delete(f"{BASE}/user/{other_admin.id}")
+
+    assert resp.status_code == 403
+    assert resp.json == {"error": "Cannot remove another admin"}
+    assert db.session.get(User, other_admin.id) is not None
+
+
+def test_delete_user_refuses_the_logged_in_admin(admin_client, sample_admin):
+    admin_id = sample_admin.id
+
+    resp = admin_client.delete(f"{BASE}/users/{admin_id}")
+
+    assert resp.status_code == 403
+    assert db.session.get(User, admin_id) is not None
+    assert User.query.filter_by(role="admin").count() == 1
+
+
+def test_delete_user_removes_a_student_and_logs_it(admin_client, sample_admin, caplog):
+    student = UserFactory()
+    student_id, username = student.id, student.username
+
+    with caplog.at_level("INFO"):
+        resp = admin_client.delete(f"{BASE}/user/{student_id}")
+
+    assert resp.status_code == 200
+    assert db.session.get(User, student_id) is None
+    assert (
+        f"User removed via crud_delete: user_id={student_id} username={username} "
+        f"role=student by admin_id={sample_admin.id}"
+    ) in caplog.text
+
+
+def test_refused_user_delete_is_not_logged(admin_client, caplog):
+    other_admin = UserFactory(role="admin")
+
+    with caplog.at_level("INFO"):
+        admin_client.delete(f"{BASE}/user/{other_admin.id}")
+
+    assert "User removed" not in caplog.text
+
+
+@pytest.mark.parametrize("role", ["student", "parent", None])
+def test_put_refuses_to_remove_the_role_from_the_last_admin(admin_client, sample_admin, role):
+    resp = admin_client.put(
+        f"{BASE}/user/{sample_admin.id}", json={"nickname": "not saved", "role": role}
+    )
+
+    assert resp.status_code == 409
+    assert resp.json == {"error": "Cannot remove the role from the last admin"}
+    stored = db.session.get(User, sample_admin.id)
+    assert stored.role == "admin"
+    assert stored.nickname != "not saved"  # the whole edit is refused
+
+
+def test_put_demotes_an_admin_while_another_remains(admin_client, sample_admin):
+    other_admin = UserFactory(role="admin")
+
+    resp = admin_client.put(f"{BASE}/user/{other_admin.id}", json={"role": "student"})
+
+    assert resp.status_code == 200
+    assert db.session.get(User, other_admin.id).role == "student"
+    assert db.session.get(User, sample_admin.id).role == "admin"
+
+
+def test_put_of_the_unchanged_last_admin_record_is_accepted(admin_client, sample_admin):
+    url = f"{BASE}/user/{sample_admin.id}"
+    record = admin_client.get(url).json["data"]
+
+    resp = admin_client.put(url, json={**record, "nickname": "renamed"})
+
+    assert resp.status_code == 200
+    assert resp.json["data"]["role"] == "admin"
+    assert resp.json["data"]["nickname"] == "renamed"

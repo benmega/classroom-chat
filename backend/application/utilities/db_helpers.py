@@ -8,7 +8,7 @@ import logging
 
 from application.models.message import Message
 from application.models.user import User, db
-from flask import abort
+from flask import abort, session
 from sqlalchemy import or_, select
 
 logger = logging.getLogger(__name__)
@@ -124,6 +124,40 @@ def get_user(identifier):
     if user is None:
         abort(404, description="User not found.")
     return user
+
+
+def user_removal_refusal(user):
+    """
+    Why an admin may not delete this account, or None when removal is allowed.
+
+    Every route that deletes a user asks this first. An admin account is never
+    deleted directly (remove the role first), which also stops the caller and
+    the last remaining admin from being removed.
+    """
+    if user.role == "admin":
+        return "Cannot remove another admin"
+    return None
+
+
+def log_user_removal(via, user_id, username, role):
+    """Record a completed user deletion (the row, and so its details, are gone)."""
+    logger.info(
+        "User removed via %s: user_id=%s username=%s role=%s by admin_id=%s",
+        via,
+        user_id,
+        username,
+        role,
+        session.get("user"),
+    )
+
+
+def other_admin_exists(user_id):
+    """True when an admin account other than ``user_id`` exists."""
+    # The caller may hold unflushed edits to the user being checked
+    with db.session.no_autoflush:
+        return db.session.query(
+            User.query.filter(User.role == "admin", User.id != user_id).exists()
+        ).scalar()
 
 
 def save_message_to_db(

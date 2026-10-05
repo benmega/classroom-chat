@@ -6,6 +6,11 @@ from application.models.banned_words import BannedWords
 from application.models.classroom import Classroom
 from application.models.user import User
 from application.services import moderation_service
+from application.utilities.db_helpers import (
+    log_user_removal,
+    other_admin_exists,
+    user_removal_refusal,
+)
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import Enum, String, false, inspect, or_
 from sqlalchemy.exc import DataError, DBAPIError, IntegrityError, SQLAlchemyError, StatementError
@@ -379,8 +384,13 @@ def update(resource, id):
     columns = _columns(model)
     values = {k: v for k, v in params.items() if k not in protected and k in columns}
 
+    previous_role = item.role if isinstance(item, User) else None
     for key, value in _coerce_values(columns, values).items():
         setattr(item, key, value)
+
+    if previous_role == "admin" and item.role != "admin" and not other_admin_exists(item.id):
+        db.session.rollback()
+        raise _ApiError("Cannot remove the role from the last admin", 409)
 
     _commit()
     _banned_words_changed(item)
@@ -405,9 +415,19 @@ def delete(resource, id):
     if not item:
         return jsonify({"error": "Item not found"}), 404
 
+    removed_user = None
+    if isinstance(item, User):
+        refusal = user_removal_refusal(item)
+        if refusal:
+            raise _ApiError(refusal, 403)
+        removed_user = (item.id, item.username, item.role)
+
     db.session.delete(item)
     _commit()
     _banned_words_changed(item)
+
+    if removed_user:
+        log_user_removal("crud_delete", *removed_user)
 
     if isinstance(item, Classroom):
         from application.socket_events import close_classroom_room
