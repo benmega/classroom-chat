@@ -144,7 +144,7 @@
     padding: 1rem;
     font-size: 1.1rem;
     font-weight: 700;
-    color: white;
+    color: var(--text-on-primary);
     background: var(--primary-color);
     border: none;
     border-radius: 12px;

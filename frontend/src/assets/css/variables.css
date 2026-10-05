@@ -99,6 +99,32 @@
     --green-500: #22C55E;
     --green-900: #14532D;
     --amber-700: #B45309;
+    --amber-400: #FBBF24;
+    --amber-500: #F59E0B;
+    --amber-800: #92400E;
+    --indigo-400: #818CF8;
+    --indigo-500: #6366F1;
+    --red-700: #B91C1C;
+    --red-900: #7F1D1D;
+    --gray-400: #9CA3AF;
+
+    /* Colours with a single purpose that page CSS used as raw hex (value-identical to those literals) */
+    --success-subtle: #E6F4EA;       /* background of the "assigned" project status badge */
+    --codecombat-color: #2B91AF;     /* CodeCombat course accent (same value as --student-badge-color) */
+    --ozaria-color: #902EDB;         /* Ozaria course accent */
+    --settings-tint: #EDF7F6;        /* account settings page: about-me panel background */
+    --settings-border: #A4CFC9;      /* account settings page: about-me field border */
+    --settings-code-bg: #D2E7E6;     /* account settings page: pairing code box */
+    --settings-accent: #2D8B83;      /* account settings page: save button */
+    --settings-accent-hover: #25746D;
+    --primary-darker: #00666D;       /* contrast-tuned teal for small text on the pale teal tint */
+    --gold: #FFD700;                 /* top proficiency tier border, BitShift duck head */
+    --silver: #B0C4DE;               /* middle proficiency tier border */
+    --bronze: #CD7F32;               /* first proficiency tier border */
+    --duck-beak: #FF9900;            /* BitShift duck illustration */
+    --duck-eye: #1A1A1A;
+    --duck-label: #78350F;
+    --video-backdrop: #000000;       /* letterbox behind recorded and spotlight videos */
 
     /* White text/icons on gradients, dark overlays and other saturated fills (surfaces use --bg-primary) */
     --text-on-primary: #FFFFFF;

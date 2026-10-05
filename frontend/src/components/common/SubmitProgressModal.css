@@ -192,7 +192,7 @@
     padding: 1.15rem;
     font-size: 1.25rem;
     font-weight: 800;
-    color: white;
+    color: var(--text-on-primary);
     background: var(--gradient-primary);
     border: none;
     border-radius: var(--radius-lg);
@@ -229,7 +229,7 @@
 }
 
 .spinner .path {
-    stroke: white;
+    stroke: var(--text-on-primary);
     stroke-linecap: round;
     animation: dash 1.5s ease-in-out infinite;
 }

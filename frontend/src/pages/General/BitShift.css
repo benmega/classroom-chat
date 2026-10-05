@@ -109,7 +109,7 @@
 
 .balance-info-inline {
     font-size: 0.85rem;
-    color: #00666d; /* Darkened from primary-dark for contrast */
+    color: var(--primary-darker); /* Darkened from primary-dark for contrast */
     background: var(--primary-light);
     padding: 0.4rem 1rem;
     font-weight: 700;
@@ -253,22 +253,22 @@
 /* Active State (1) - the duck colours below are deliberate illustration constants, not theme colours */
 .bit-toggle.active .duck-body,
 .bit-toggle.active .duck-head {
-    fill: #FFD700; /* Vivid duck yellow */
-    stroke: #D97706; /* Warm amber outline */
+    fill: var(--gold); /* Vivid duck yellow */
+    stroke: var(--warning-color); /* Warm amber outline */
     stroke-width: 0.5px;
 }
 
 .bit-toggle.active .duck-beak {
-    fill: #FF9900; /* Bright orange beak */
+    fill: var(--duck-beak); /* Bright orange beak */
 }
 
 .bit-toggle.active .duck-eye {
-    fill: #1A1A1A;
+    fill: var(--duck-eye);
 }
 
 
 .bit-toggle.active .duck-text {
-    fill: #78350F; /* Dark brown for maximum legibility on yellow background */
+    fill: var(--duck-label); /* Dark brown for maximum legibility on yellow background */
 }
 
 .bit-toggle.active {

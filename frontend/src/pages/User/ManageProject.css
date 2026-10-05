@@ -269,7 +269,7 @@ label.file-upload-btn:has(input:focus-visible) {
 }
 
 .project-presentation-card {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 16px;
     overflow: hidden;
     box-shadow: var(--shadow-xl);
@@ -305,7 +305,7 @@ label.file-upload-btn:has(input:focus-visible) {
     left: 50%;
     transform: translate(-50%, -50%);
     background: rgba(0,0,0,0.5);
-    color: white;
+    color: var(--text-on-primary);
     width: 80px;
     height: 80px;
     border-radius: 50%;
@@ -431,7 +431,7 @@ label.file-upload-btn:has(input:focus-visible) {
 .floating-action-bar {
     flex-shrink: 0;
     width: 100%;
-    background: white;
+    background: var(--bg-primary);
     padding: 1rem 2rem;
     border-top: 1px solid var(--border-subtle);
     display: flex;
@@ -451,7 +451,7 @@ label.file-upload-btn:has(input:focus-visible) {
     align-items: center;
     gap: 8px;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     padding: 12px 24px;
     border-radius: 12px;
     font-weight: 600;
@@ -479,7 +479,7 @@ label.file-upload-btn:has(input:focus-visible) {
     align-items: center;
     gap: 8px;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     padding: 12px 30px;
     border-radius: 12px;
     font-weight: 600;
@@ -516,7 +516,7 @@ label.file-upload-btn:has(input:focus-visible) {
 }
 
 .admin-controls-panel {
-    background: white;
+    background: var(--bg-primary);
     padding: 1.5rem;
     border-radius: 12px;
     border: 1px solid var(--border-subtle);

@@ -472,9 +472,9 @@
 }
 
 /* Proficiency borders matching levels: bronze / silver / gold are deliberate constants, not theme colours */
-.tech-skill-card.proficiency-1 { border-bottom: 3px solid #cd7f32; }
-.tech-skill-card.proficiency-2 { border-bottom: 3px solid #b0c4de; }
-.tech-skill-card.proficiency-3 { border-bottom: 3px solid #ffd700; }
+.tech-skill-card.proficiency-1 { border-bottom: 3px solid var(--bronze); }
+.tech-skill-card.proficiency-2 { border-bottom: 3px solid var(--silver); }
+.tech-skill-card.proficiency-3 { border-bottom: 3px solid var(--gold); }
 
 /* =================================================================
    6. PROJECTS PORTFOLIO
@@ -1063,7 +1063,7 @@ a.cert-item:hover {
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    background: #000;
+    background: var(--video-backdrop);
     border-radius: var(--radius-md);
     overflow: hidden;
     margin-bottom: 2rem;

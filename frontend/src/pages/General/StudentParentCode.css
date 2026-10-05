@@ -48,7 +48,7 @@
     background: var(--primary-color);
     border: none;
     border-radius: 6px;
-    color: white;
+    color: var(--text-on-primary);
     cursor: pointer;
     transition: background 0.2s;
     display: flex;

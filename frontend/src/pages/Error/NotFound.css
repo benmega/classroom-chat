@@ -41,7 +41,7 @@
   font-weight: 800;
   margin-bottom: 1rem;
   letter-spacing: -0.025em;
-  background: linear-gradient(to bottom right, white, var(--text-muted));
+  background: linear-gradient(to bottom right, var(--text-on-primary), var(--text-muted));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -72,7 +72,7 @@
   justify-content: center;
   gap: 0.75rem;
   background-color: var(--primary-color);
-  color: white;
+  color: var(--text-on-primary);
   padding: 0.875rem 1.5rem;
   border-radius: 1rem;
   text-decoration: none;
@@ -103,7 +103,7 @@
 }
 
 .not-found-btn-back:hover {
-  border-color: #475569;
+  border-color: var(--text-muted);
   color: var(--bg-secondary);
   background-color: rgba(30, 41, 59, 0.8);
 }

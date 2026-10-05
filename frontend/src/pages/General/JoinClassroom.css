@@ -120,7 +120,7 @@
 .join-code-btn {
     padding: 0.5rem 1rem;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 8px;
     font-size: var(--font-sm);
@@ -178,7 +178,7 @@
 }
 
 .join-success-icon {
-    color: #22c55e;
+    color: var(--green-500);
     flex-shrink: 0;
 }
 

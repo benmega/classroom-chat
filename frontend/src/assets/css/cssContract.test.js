@@ -38,6 +38,28 @@ function bodyOf(css, selector) {
         .join('\n');
 }
 
+/**
+ * Every hex or `white` literal a rule writes outside var() (a var() fallback is dead while its token is defined),
+ * gradients included. Custom property definitions (--name: #hex) are tokens, not uses.
+ */
+function rawColours(rel) {
+    const found = [];
+    for (const { body } of rules(readCss(rel))) {
+        for (const decl of body.split(';')) {
+            const [prop, ...rest] = decl.split(':');
+            if (!rest.length || prop.trim().startsWith('--')) continue;
+            let value = rest.join(':');
+            for (let previous = null; previous !== value;) {
+                previous = value;
+                value = value.replace(/var\([^()]*\)/g, '');
+            }
+            const literals = value.match(/#[0-9a-fA-F]{3,8}\b|(?<![\w-])white(?![\w-])/g) || [];
+            for (const literal of literals) found.push(`${prop.trim()}: ${literal.toLowerCase()}`);
+        }
+    }
+    return found;
+}
+
 const countImportant = (rel) => (readCss(rel).match(/!important/g) || []).length;
 
 /** Colour literals used as plain declaration values (var() fallbacks and gradients are not literals here). */
@@ -191,31 +213,51 @@ describe('colour tokens (T3a)', () => {
         expect(tokenValue('--green-100')).toBe('#DCFCE7');
         expect(tokenValue('--green-800')).toBe('#166534');
         expect(tokenValue('--amber-700')).toBe('#B45309');
+        expect(tokenValue('--amber-400')).toBe('#FBBF24');
+        expect(tokenValue('--amber-500')).toBe('#F59E0B');
+        expect(tokenValue('--amber-800')).toBe('#92400E');
+        expect(tokenValue('--indigo-400')).toBe('#818CF8');
+        expect(tokenValue('--indigo-500')).toBe('#6366F1');
+        expect(tokenValue('--red-700')).toBe('#B91C1C');
+        expect(tokenValue('--red-900')).toBe('#7F1D1D');
+        expect(tokenValue('--gray-400')).toBe('#9CA3AF');
+        expect(tokenValue('--success-subtle')).toBe('#E6F4EA');
+        expect(tokenValue('--codecombat-color')).toBe('#2B91AF');
+        expect(tokenValue('--ozaria-color')).toBe('#902EDB');
+        expect(tokenValue('--settings-tint')).toBe('#EDF7F6');
+        expect(tokenValue('--settings-border')).toBe('#A4CFC9');
+        expect(tokenValue('--settings-code-bg')).toBe('#D2E7E6');
+        expect(tokenValue('--settings-accent')).toBe('#2D8B83');
+        expect(tokenValue('--settings-accent-hover')).toBe('#25746D');
+        expect(tokenValue('--primary-darker')).toBe('#00666D');
+        expect(tokenValue('--gold')).toBe('#FFD700');
+        expect(tokenValue('--silver')).toBe('#B0C4DE');
+        expect(tokenValue('--bronze')).toBe('#CD7F32');
+        expect(tokenValue('--duck-beak')).toBe('#FF9900');
+        expect(tokenValue('--duck-eye')).toBe('#1A1A1A');
+        expect(tokenValue('--duck-label')).toBe('#78350F');
+        expect(tokenValue('--video-backdrop')).toBe('#000000');
     });
 
     it('keeps no white keyword or hex literal in the Achievements page styles', () => {
         expect(colourLiterals('pages/General/Achievements.css')).toEqual([]);
     });
 
-    it('keeps only the documented constants in the BitShift styles', () => {
-        // #00666d is a contrast-tuned teal with no token; the rest is the duck illustration palette
-        expect(colourLiterals('pages/General/BitShift.css').sort()).toEqual([
-            'color: #00666d',
-            'fill: #1a1a1a',
-            'fill: #78350f',
-            'fill: #ff9900',
-            'fill: #ffd700',
-            'stroke: #d97706',
-        ]);
+    it('keeps no raw hex or white literal in the BitShift and Profile styles', () => {
+        expect(colourLiterals('pages/General/BitShift.css')).toEqual([]);
+        expect(colourLiterals('pages/Profile/Profile.css')).toEqual([]);
     });
 
-    it('keeps only the documented constants in the Profile styles', () => {
-        // bronze / silver / gold proficiency borders and the black video backdrop
-        expect(colourLiterals('pages/Profile/Profile.css').sort()).toEqual([
-            'background: #000',
-            'border-bottom: #b0c4de',
-            'border-bottom: #cd7f32',
-            'border-bottom: #ffd700',
-        ]);
+    it('keeps raw hex and white literals out of every non-admin stylesheet', () => {
+        const files = fs.readdirSync(SRC, { recursive: true })
+            .map((f) => f.split(path.sep).join('/'))
+            .filter((f) => f.endsWith('.css'))
+            // variables.css is where the literals live; the admin styles are covered by their own tests
+            .filter((f) => f !== 'assets/css/variables.css' && f !== 'components/Layout/AdminLayout.css')
+            .filter((f) => !/^(pages\/Admin|components\/admin)\//.test(f));
+        const found = files.flatMap((rel) => rawColours(rel).map((literal) => `${rel}: ${literal}`));
+        // Layout.css still holds the rule of the removed locker drawer; nothing renders .stat-badge.drawer
+        const leftovers = ['components/Layout/Layout.css: color: #6366f1'];
+        expect(found.filter((literal) => !leftovers.includes(literal))).toEqual([]);
     });
 });

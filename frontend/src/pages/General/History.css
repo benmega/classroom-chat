@@ -145,7 +145,7 @@
 
 .history-card:hover .card-icon {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     transform: rotate(-5deg);
 }
 

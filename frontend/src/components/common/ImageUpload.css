@@ -154,7 +154,7 @@
   left: 50%;
   transform: translateX(-50%);
   background: rgba(15, 23, 42, 0.75);
-  color: #ffffff;
+  color: var(--text-on-primary);
   padding: 0.35rem 0.75rem;
   border-radius: 20px;
   font-size: 0.75rem;
