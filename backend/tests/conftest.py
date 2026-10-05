@@ -68,6 +68,9 @@ def test_app(_isolated_upload_folder):
             return db.session.get(User, int(user_id))
 
     with app.app_context():
+        # create_app() has added its start-up rows (the default configuration).
+        # The first test starts as every later one does: with empty tables.
+        db.drop_all()
         db.create_all()
         yield app
         db.session.remove()
