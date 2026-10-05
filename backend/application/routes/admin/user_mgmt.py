@@ -17,7 +17,7 @@ from flask import current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 # Per-request ceilings on admin-entered amounts. They guard against typos and
 # NaN/inf input (which would poison a stored balance), not against large balances.

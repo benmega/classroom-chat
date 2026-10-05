@@ -12,7 +12,7 @@ from application.utilities.helper_functions import utcnow_naive
 from flask import Response, current_app, request
 from sqlalchemy import and_, case, func
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 # The longest chart range a caller can ask for by number of days ("all" follows the data)
 MAX_CHART_DAYS = 365

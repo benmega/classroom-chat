@@ -6,7 +6,7 @@ from flask import jsonify, request
 from sqlalchemy import case, func
 from sqlalchemy.orm import joinedload
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 # Page size of the filters other than "pending" when ?limit= is not given, and the largest
 # page any filter can be asked for. The review queue ("pending") is returned whole unless

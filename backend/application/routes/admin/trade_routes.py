@@ -5,7 +5,7 @@ from application.models.duck_trade import DuckTradeLog
 from application.models.user import User
 from flask import jsonify, request
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 
 @admin_bp.route("/pending_trades", methods=["GET"])

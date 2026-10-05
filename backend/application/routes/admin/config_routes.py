@@ -8,7 +8,7 @@ from application.services import moderation_service
 from application.utilities.db_helpers import banned_word_exists
 from flask import jsonify, request
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 # Upper bound for the global duck multiplier; it scales challenge rewards, so it
 # must stay finite and non-negative (a negative value would deduct ducks).
