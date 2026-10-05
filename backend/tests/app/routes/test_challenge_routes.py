@@ -1271,10 +1271,11 @@ def test_real_unique_index_duplicate_is_already_claimed_and_session_recovers(
 ):
     """A genuine IntegrityError (not a mocked one) means 'already claimed'.
 
-    The schema has no unique constraint on challenge_logs yet, so one is created
-    here on the throw-away test database only. The rival row differs by case, so
-    the duplicate check misses it but the index rejects the claim's own insert,
-    like the loser of a double-submit race.
+    The duplicate check sees every row the schema's own unique index would refuse,
+    so a stricter index (on the lowered slug) is created here on the throw-away
+    test database only. The rival row differs by case, so the duplicate check
+    misses it but the index rejects the claim's own insert, like the loser of a
+    double-submit race.
     """
     from sqlalchemy import text
 
@@ -1325,6 +1326,45 @@ def test_real_unique_index_duplicate_is_already_claimed_and_session_recovers(
     assert response.status_code == 200
     assert response.get_json()["success"] is True
     assert _claim_rows(user) == (2, 1)
+
+
+def test_schema_refuses_the_log_of_a_claim_that_lost_the_race(client, init_db):
+    """The unique index of the schema itself stops a second log of one claim.
+
+    The rival's row is written after the claim's duplicate check and before its
+    own insert, on the same connection, so the rollback removes both rows.
+    """
+    from sqlalchemy import event, insert
+
+    user, course, instance, challenge, url = _seed_claim(active_track="ozaria")
+    _login(client, user)
+    initial_ducks = user.duck_balance
+    rival = {
+        "user_id": user.id,
+        "domain": "codecombat.com",
+        "challenge_slug": challenge.slug,
+        "course_id": course.id,
+        "course_instance": instance.id,
+    }
+
+    def rival_logs_first(mapper, connection, target):
+        connection.execute(insert(ChallengeLog.__table__).values(**rival))
+
+    event.listen(ChallengeLog, "before_insert", rival_logs_first)
+    try:
+        response = client.post("/challenge/submit", json={"url": url})
+    finally:
+        event.remove(ChallengeLog, "before_insert", rival_logs_first)
+
+    assert response.status_code == 400
+    body = response.get_json()
+    assert body["success"] is False
+    assert "already claimed" in body["message"]
+    assert "UNIQUE" not in body["message"]
+    assert _claim_rows(user) == (0, 0)
+    db.session.refresh(user)
+    assert user.duck_balance == initial_ducks
+    assert user.active_track == "ozaria"
 
 
 def _helper_scenario():

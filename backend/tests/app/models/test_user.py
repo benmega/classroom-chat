@@ -121,6 +121,8 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
     today = datetime.now()
     logs = []
 
+    # A level may be logged once per course instance, so the days with several
+    # logs repeat their level in different instances.
     # level 1 (1 log)
     logs.append(
         ChallengeLog(
@@ -137,9 +139,10 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
                 user_id=user.id,
                 domain="codecombat.com",
                 challenge_slug="b",
+                course_instance=f"instance-{n}",
                 timestamp=today - timedelta(days=1),
             )
-            for _ in range(2)
+            for n in range(2)
         ]
     )
     # level 3 (5 logs)
@@ -149,9 +152,10 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
                 user_id=user.id,
                 domain="codecombat.com",
                 challenge_slug="c",
+                course_instance=f"instance-{n}",
                 timestamp=today - timedelta(days=2),
             )
-            for _ in range(5)
+            for n in range(5)
         ]
     )
     # level 4 (7 logs)
@@ -161,9 +165,10 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
                 user_id=user.id,
                 domain="codecombat.com",
                 challenge_slug="d",
+                course_instance=f"instance-{n}",
                 timestamp=today - timedelta(days=3),
             )
-            for _ in range(7)
+            for n in range(7)
         ]
     )
 
