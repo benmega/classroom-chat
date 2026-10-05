@@ -46,6 +46,12 @@ NOT_IMPORTED = {
     "gunicorn": "the production server, started by the service file",
 }
 
+# Lowest release of each package that has no published security advisory; the
+# runtime requirement must not allow anything older.
+ADVISORY_FLOORS = {
+    "flask-cors": "6.0.2",
+}
+
 # Test and lint tooling that must never ship in the production requirements.
 DEV_ONLY = {"pytest", "pytest-cov", "ruff", "mypy", "sqlalchemy2-stubs", "factory-boy", "flask-login"}
 # Packages only the optional scripts need.
@@ -69,6 +75,17 @@ def _requirement_name(line: str) -> str:
     match = re.match(r"[A-Za-z0-9][A-Za-z0-9._-]*", line)
     assert match, f"cannot parse requirement {line!r}"
     return _normalise(match.group(0))
+
+
+def _version_tuple(version: str) -> tuple[int, ...]:
+    parts = tuple(int(part) for part in version.split("."))
+    return parts + (0,) * (4 - len(parts))  # so 50.0 and 50.0.0 compare equal
+
+
+def _lowest_allowed(line: str) -> tuple[int, ...]:
+    """Oldest release a requirement line accepts: its ``==``, ``~=`` or ``>=`` version, or (0,) if unbounded below."""
+    match = re.search(r"(?:==|~=|>=)\s*(\d+(?:\.\d+)*)", line)
+    return _version_tuple(match.group(1)) if match else (0,)
 
 
 def declared_requirements(path: Path) -> set[str]:
@@ -166,6 +183,20 @@ def test_every_runtime_requirement_is_used():
     assert not unused, f"requirements.txt lists packages that no runtime code imports: {sorted(unused)}"
     assert NOT_IMPORTED.keys() <= RUNTIME, "NOT_IMPORTED names a package requirements.txt no longer lists"
     assert not NOT_IMPORTED.keys() & imported, "NOT_IMPORTED names a package the runtime code now imports"
+
+
+def test_runtime_requirements_stay_at_or_above_the_advisory_floors():
+    lines = {_requirement_name(line): line for line in _requirement_lines(BACKEND_DIR / "requirements.txt")}
+    for name, floor in ADVISORY_FLOORS.items():
+        allowed = _lowest_allowed(lines[name]) >= _version_tuple(floor)
+        assert allowed, f"{lines[name]!r} allows a release older than {floor}, which has a published advisory"
+
+
+def test_lowest_allowed_reads_the_oldest_accepted_version():
+    assert _lowest_allowed("Flask==3.1.3") == _version_tuple("3.1.3")
+    assert _lowest_allowed("cryptography~=50.0") == _version_tuple("50.0.0")
+    assert _lowest_allowed("flask-cors>=6.0.2,<7") == _version_tuple("6.0.2")
+    assert _lowest_allowed("gunicorn") == (0,)
 
 
 def test_no_requirements_file_lists_a_package_twice():
