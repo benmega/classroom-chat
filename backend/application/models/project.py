@@ -14,7 +14,10 @@ class Project(db.Model):
     description = db.Column(db.Text, nullable=True)  # The "Project Description"
     link = db.Column(db.String(255), nullable=True)  # The "Game Link"
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     teacher_comment = db.Column(db.Text, nullable=True)

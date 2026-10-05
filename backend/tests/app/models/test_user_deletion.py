@@ -161,6 +161,18 @@ def test_the_world_has_a_row_for_every_reference_to_a_user(world):
     assert referenced == {label for label, _table, _column in _user_references()}
 
 
+def test_every_reference_to_a_user_tells_the_database_what_a_delete_does():
+    """The foreign key carries the rule the relationships follow: a row that belongs
+    to the user goes with it. A new foreign key to users.id needs a rule too."""
+    rules = {
+        label: [fk.ondelete for fk in column.foreign_keys]
+        for label, _table, column in _user_references()
+    }
+
+    kept_without_the_user = {"parent_messages.resolved_by_id": ["SET NULL"]}
+    assert rules == {label: ["CASCADE"] for label in rules} | kept_without_the_user
+
+
 @pytest.mark.parametrize("who", ["student", "parent", "admin"])
 def test_deleting_a_user_leaves_no_row_pointing_at_it(world, who):
     user_id = world[who]

@@ -13,7 +13,10 @@ class SessionLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     start_time = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
     # set when user goes offline
