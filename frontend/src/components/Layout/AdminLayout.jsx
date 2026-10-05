@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
     Home,
@@ -60,8 +60,12 @@ const AdminLayout = ({ children }) => {
         }
     }, [isAuthenticated, userRole]);
 
-    // Close mobile menu on route change
+    // Close mobile menu on route change. Only a changed path closes it: the sidebar context hands out a
+    // new setSidebarOpen on every render, so closing on each run would shut the menu as soon as it opened.
+    const lastPathname = useRef(location.pathname);
     useEffect(() => {
+        if (lastPathname.current === location.pathname) return;
+        lastPathname.current = location.pathname;
         setSidebarOpen(false);
     }, [location.pathname, setSidebarOpen]);
 
@@ -198,9 +202,11 @@ const AdminLayout = ({ children }) => {
             {/* Mobile Hamburger Button */}
             <div className="admin-mobile-top-bar mobile-only">
                 <button
+                    type="button"
                     className="admin-hamburger"
                     onClick={() => setSidebarOpen(true)}
                     aria-label="Open Sidebar"
+                    aria-expanded={Boolean(isSidebarOpen)}
                 >
                     <Menu size={24} />
                 </button>

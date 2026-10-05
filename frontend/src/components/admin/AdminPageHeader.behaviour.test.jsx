@@ -1,12 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
 import AdminPageHeader from './AdminPageHeader';
-
-const toggleSidebar = vi.fn();
-vi.mock('../../hooks/useSidebar', () => ({
-  default: () => ({ toggleSidebar }),
-}));
 
 describe('AdminPageHeader', () => {
   it('shows the page title as the heading', () => {
@@ -31,12 +26,9 @@ describe('AdminPageHeader', () => {
     expect(container.querySelector('.header-actions')).toContainElement(screen.getByRole('button', { name: 'Add user' }));
   });
 
-  it('opens the sidebar from the menu button', () => {
-    toggleSidebar.mockClear();
-    const { container } = render(<AdminPageHeader title="Users" />);
+  it('renders without a sidebar provider, as it no longer reads the sidebar state', () => {
+    render(<AdminPageHeader title="Users" />);
 
-    fireEvent.click(container.querySelector('.hamburger-toggle'));
-
-    expect(toggleSidebar).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('heading', { level: 1, name: 'Users' })).toBeInTheDocument();
   });
 });
