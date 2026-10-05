@@ -5,6 +5,7 @@ from application.extensions import db
 from application.models.banned_words import BannedWords
 from application.models.configuration import Configuration
 from application.services import moderation_service
+from application.utilities.db_helpers import banned_word_exists
 from flask import jsonify, request
 
 from ..admin_routes import admin_bp
@@ -76,7 +77,7 @@ def add_banned_word():
     if not word:
         return jsonify({"success": False, "message": "Word cannot be empty"}), 400
 
-    if BannedWords.query.filter_by(word=word).first():
+    if banned_word_exists(word):
         return jsonify({"success": False, "message": "Word already banned"}), 400
 
     new_banned_word = BannedWords(word=word, reason=reason)

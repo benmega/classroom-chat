@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 from application.extensions import db
+from application.models.banned_words import BannedWords
 from application.models.challenge import Challenge
 from application.models.message import Message
 from application.models.user import User
@@ -860,3 +861,66 @@ def test_put_of_the_unchanged_last_admin_record_is_accepted(admin_client, sample
     assert resp.status_code == 200
     assert resp.json["data"]["role"] == "admin"
     assert resp.json["data"]["nickname"] == "renamed"
+
+
+# --------------------------------------------------------------------------- #
+# Banned words: no two spellings that differ only in case
+# --------------------------------------------------------------------------- #
+
+
+def _banned(word):
+    row = BannedWords(word=word)
+    db.session.add(row)
+    db.session.commit()
+    return row
+
+
+def test_create_banned_word_refuses_a_case_variant(admin_client):
+    _banned("bad")
+
+    resp = admin_client.post(f"{BASE}/bannedwords", json={"word": "BAD"})
+
+    assert resp.status_code == 409
+    assert resp.json == {"error": "Word already banned"}
+    assert [w.word for w in BannedWords.query.all()] == ["bad"]
+
+
+def test_create_banned_word_keeps_the_spelling_it_was_given(admin_client):
+    resp = admin_client.post(f"{BASE}/bannedwords", json={"word": "Mixed"})
+
+    assert resp.status_code == 200
+    assert resp.json["data"]["word"] == "Mixed"
+
+
+def test_update_banned_word_refuses_a_case_variant_of_another_word(admin_client):
+    _banned("bad")
+    other = _banned("worse")
+
+    resp = admin_client.put(f"{BASE}/bannedwords/{other.id}", json={"word": "Bad"})
+
+    assert resp.status_code == 409
+    assert resp.json == {"error": "Word already banned"}
+    assert db.session.get(BannedWords, other.id).word == "worse"
+
+
+def test_update_banned_word_may_change_the_case_of_its_own_word(admin_client):
+    row = _banned("bad")
+
+    resp = admin_client.put(f"{BASE}/bannedwords/{row.id}", json={"word": "Bad"})
+
+    assert resp.status_code == 200
+    assert db.session.get(BannedWords, row.id).word == "Bad"
+
+
+def test_put_of_an_unchanged_banned_word_record_is_accepted(admin_client):
+    # Rows saved before this check may already differ only in case: editing
+    # another field of one of them must still work
+    older, newer = _banned("dup"), _banned("DUP")
+    url = f"{BASE}/bannedwords/{newer.id}"
+    record = admin_client.get(url).json["data"]
+
+    resp = admin_client.put(url, json={**record, "reason": "kept"})
+
+    assert resp.status_code == 200
+    assert db.session.get(BannedWords, newer.id).reason == "kept"
+    assert db.session.get(BannedWords, older.id).word == "dup"

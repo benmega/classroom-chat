@@ -7,6 +7,7 @@ from application.models.classroom import Classroom
 from application.models.user import User
 from application.services import moderation_service
 from application.utilities.db_helpers import (
+    banned_word_exists,
     log_user_removal,
     other_admin_exists,
     user_removal_refusal,
@@ -352,6 +353,8 @@ def create(resource):
         raise _ApiError(f"Unknown field(s): {', '.join(unknown)}")
 
     item = model(**_coerce_values(columns, filtered_params))
+    if isinstance(item, BannedWords) and banned_word_exists(item.word):
+        raise _ApiError("Word already banned", 409)
     db.session.add(item)
     _commit()
     _banned_words_changed(item)
@@ -385,8 +388,17 @@ def update(resource, id):
     values = {k: v for k, v in params.items() if k not in protected and k in columns}
 
     previous_role = item.role if isinstance(item, User) else None
+    previous_word = item.word if isinstance(item, BannedWords) else None
     for key, value in _coerce_values(columns, values).items():
         setattr(item, key, value)
+
+    if (
+        isinstance(item, BannedWords)
+        and item.word != previous_word
+        and banned_word_exists(item.word, exclude_id=item.id)
+    ):
+        db.session.rollback()
+        raise _ApiError("Word already banned", 409)
 
     if previous_role == "admin" and item.role != "admin" and not other_admin_exists(item.id):
         db.session.rollback()

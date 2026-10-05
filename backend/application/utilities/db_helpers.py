@@ -6,6 +6,7 @@ Summary: Database helper functions for users, messages, and conversations.
 
 import logging
 
+from application.models.banned_words import BannedWords
 from application.models.message import Message
 from application.models.user import User, db
 from flask import abort, session
@@ -134,6 +135,27 @@ RESERVED_USERNAMES = frozenset({"ben", "benmega", "admin", "administrator"})
 def is_reserved_username(username):
     """True when ``username`` (compared case-insensitively) is a reserved name."""
     return str(username or "").strip().lower() in RESERVED_USERNAMES
+
+
+def banned_word_exists(word, exclude_id=None):
+    """
+    True when a banned word equal to ``word`` apart from case and padding exists.
+
+    Moderation case-folds every word, so "Bad" and "bad" would ban exactly the
+    same text; the column's own UNIQUE check is case-sensitive and lets both in.
+    Compared in Python because SQLite's lower() only folds ASCII. ``exclude_id``
+    leaves out the row being edited.
+    """
+    if not isinstance(word, str):
+        return False
+    key = word.strip().casefold()
+    # The caller may hold unflushed edits to the row being checked
+    with db.session.no_autoflush:
+        rows = db.session.query(BannedWords.id, BannedWords.word).all()
+    return any(
+        row_id != exclude_id and row_word.strip().casefold() == key
+        for row_id, row_word in rows
+    )
 
 
 def user_removal_refusal(user):
