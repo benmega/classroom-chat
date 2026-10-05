@@ -56,8 +56,15 @@ class Classroom(db.Model):
     sandbox_active = db.Column(db.Boolean, default=False, nullable=False)
     sandbox_activated_at = db.Column(db.DateTime, nullable=True)
 
-    # Course assignments this classroom has ever had
-    course_assignments = db.relationship("CourseInstance", backref="classroom")
+    # Course assignments this classroom has ever had. They cannot exist without
+    # it and are deleted with it.
+    course_assignments = db.relationship(
+        "CourseInstance", backref="classroom", cascade="all, delete-orphan"
+    )
+    # Declared for what happens on delete: these rows outlive the classroom and
+    # only lose their classroom_id. No code reads the collections.
+    challenges = db.relationship("Challenge")
+    submissions = db.relationship("Submission")
 
     # Students enrolled in this classroom (via user_classrooms join table)
     users = db.relationship(
