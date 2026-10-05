@@ -21,7 +21,8 @@ def generate_kebab_slug(text):
 @click.command("seed")
 @with_appcontext
 def seed_command():
-    """Seed the database with challenges and course instances from CSV files."""
+    """Seed the database from the CSV files in backend/instance/migration: courses,
+    achievements, course instances and challenges."""
     from application.extensions import db
     from application.models.challenge import Challenge
     from application.models.classroom import Classroom
@@ -35,6 +36,27 @@ def seed_command():
     )
     challenges_csv = os.path.join(base_dir, "level_seed_data.csv")
     instances_csv = os.path.join(base_dir, "course_instances_seed.csv")
+
+    # Courses come first: the course instances below are checked against them.
+    for label, filename, seed_rows in (
+        ("courses", "courses_seed.csv", seed_courses),
+        ("achievements", "achievements_seed.csv", seed_achievements),
+    ):
+        definitions_csv = os.path.join(base_dir, filename)
+        if not os.path.exists(definitions_csv):
+            click.echo(f"File not found: {definitions_csv}")
+            continue
+        click.echo(f"Seeding {label} from {definitions_csv}...")
+        try:
+            inserted = seed_rows(definitions_csv)
+            db.session.commit()
+            click.echo(
+                f"Successfully inserted {inserted} new {label}"
+                " (existing ones are left as they are)."
+            )
+        except Exception as e:
+            db.session.rollback()
+            click.echo(f"Error seeding {label}: {e}")
 
     if os.path.exists(instances_csv):
         click.echo(f"Seeding course instances from {instances_csv}...")
@@ -201,6 +223,73 @@ def seed_command():
     except Exception as e:
         db.session.rollback()
         click.echo(f"Error seeding 3D modeling track: {e}")
+
+
+def seed_courses(csv_path):
+    """Add the courses in ``csv_path`` that the database does not have yet.
+
+    Insert-only, keyed on the course id: a course that already exists is never
+    changed, so what an admin edited stays as it is. Does not commit; returns the
+    number of courses added.
+    """
+    from application.extensions import db
+    from application.models.course import Course
+
+    known_ids = {course_id for (course_id,) in db.session.query(Course.id)}
+    inserted = 0
+    with open(csv_path, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            course_id = (row.get("id") or "").strip()
+            if not course_id or course_id in known_ids:
+                continue
+
+            course = Course(id=course_id, name=row["name"], domain=row["domain"])
+            # A blank cell leaves the column to the model's default
+            if row.get("description"):
+                course.description = row["description"]
+            if row.get("default_challenge_value"):
+                default_value = float(row["default_challenge_value"])
+                course.default_challenge_value = (
+                    int(default_value) if default_value.is_integer() else default_value
+                )
+            db.session.add(course)
+            known_ids.add(course_id)
+            inserted += 1
+    return inserted
+
+
+def seed_achievements(csv_path):
+    """Add the achievements in ``csv_path`` that the database does not have yet.
+
+    Insert-only, keyed on the slug: an achievement that already exists is never
+    changed, so a name, reward or requirement edited by an admin stays as it is.
+    Does not commit; returns the number of achievements added.
+    """
+    from application.extensions import db
+    from application.models.achievements import Achievement
+
+    known_slugs = {slug for (slug,) in db.session.query(Achievement.slug)}
+    inserted = 0
+    with open(csv_path, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            slug = (row.get("slug") or "").strip()
+            if not slug or slug in known_slugs:
+                continue
+
+            db.session.add(
+                Achievement(
+                    slug=slug,
+                    name=row["name"],
+                    description=row.get("description") or None,
+                    type=row["type"],
+                    requirement_value=row.get("requirement_value") or None,
+                    reward=int(row.get("reward") or 1),
+                    source=row.get("source") or None,
+                )
+            )
+            known_slugs.add(slug)
+            inserted += 1
+    return inserted
 
 
 def _is_blank_or_placeholder(text):

@@ -234,10 +234,12 @@ does not match the code.
 6. **`python -m tools.migrate_classroom`**: idempotent *data* steps only (the reserved `global` and
    `archive` classrooms, enrolment backfills, archiving orphaned conversations, admin roles). It
    contains no DDL and is safe to re-run.
-7. **`flask seed`**: seed data that is backed by files in the repo: course instances
-   (`backend/instance/migration/course_instances_seed.csv`; rows whose classroom or course does
-   not exist are skipped with a warning), challenges (`level_seed_data.csv`) and the standard
-   project templates (`application/commands/projects_data.py`).
+7. **`flask seed`**: seed data that is backed by files in the repo: courses and achievements
+   (`backend/instance/migration/courses_seed.csv` and `achievements_seed.csv`; insert-only, a
+   row that already exists is never changed), course instances
+   (`course_instances_seed.csv`; rows whose classroom or course does
+   not exist are skipped with a warning), challenges (`level_seed_data.csv`, keyed on the slug)
+   and the standard project templates (`application/commands/projects_data.py`).
 8. **Admin role**: `sqlite3 ... UPDATE users SET role='admin' WHERE LOWER(username)='ben'`.
 
 After that the service restarts and the health check runs; if it fails, the code is reset to the
