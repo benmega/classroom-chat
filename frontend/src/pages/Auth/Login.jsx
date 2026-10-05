@@ -34,16 +34,18 @@ const Login = () => {
                 const pendingCode = localStorage.getItem('pendingConnectionCode');
                 const fromPath = location.state?.from || (pendingCode ? `/parent/connect?code=${pendingCode}` : null);
 
+                // replace: the sign-in page must not stay in history, and the route guard may already
+                // have replaced it with the destination, which a plain push would then duplicate.
                 if (fromPath) {
-                    navigate(fromPath);
+                    navigate(fromPath, { replace: true });
                 } else if (result.role === 'parent') {
-                    navigate('/parent/dashboard');
+                    navigate('/parent/dashboard', { replace: true });
                 } else {
                     const currentUser = useAuthStore.getState().user;
                     if (currentUser?.role === 'student' && currentUser?.slug) {
-                        navigate(`/course-progress/${currentUser.slug}`);
+                        navigate(`/course-progress/${currentUser.slug}`, { replace: true });
                     } else {
-                        navigate('/chat');
+                        navigate('/chat', { replace: true });
                     }
                 }
             } else {
