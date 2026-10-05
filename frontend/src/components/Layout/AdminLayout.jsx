@@ -22,6 +22,7 @@ import useSidebar from '../../hooks/useSidebar';
 import useLogout from '../../hooks/useLogout';
 import client from '../../api/client';
 import ContentLoader from '../common/ContentLoader';
+import '../admin/AdminShared.css';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
@@ -71,8 +72,8 @@ const AdminLayout = ({ children }) => {
 
     if (!isAuthenticated || user?.role !== 'admin') {
         return (
-            <div className="access-denied-container">
-                <div className="access-denied-card">
+            <div className="admin-access-denied-container">
+                <div className="admin-access-denied-card">
                     <Shield size={64} color="var(--error-color)" />
                     <h1>Access Denied</h1>
                     <p>You do not have administrative permission to view this page. Restricted area.</p>

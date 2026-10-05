@@ -69,6 +69,39 @@ const declarationsOf = (body) =>
     .filter((d) => d.includes(':'))
     .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()])
 
+// A selector list split at its top-level commas (a comma inside :where(a, b) or :not(...) does not count).
+const splitSelectors = (list) => {
+  const parts = []
+  let depth = 0
+  let start = 0
+  for (let i = 0; i < list.length; i++) {
+    if (list[i] === '(') depth++
+    else if (list[i] === ')') depth--
+    else if (list[i] === ',' && depth === 0) {
+      parts.push(list.slice(start, i))
+      start = i + 1
+    }
+  }
+  parts.push(list.slice(start))
+  return parts.map((p) => p.trim()).filter(Boolean)
+}
+// The classes of a selector's first compound, after any zero-specificity :where(...) scope in front of it.
+const firstCompound = (selector) => {
+  let rest = selector.trim()
+  const scoped = rest.startsWith(':where(')
+  while (rest.startsWith(':where(')) {
+    let depth = 0
+    let i = 0
+    for (; i < rest.length; i++) {
+      if (rest[i] === '(') depth++
+      else if (rest[i] === ')' && --depth === 0) break
+    }
+    rest = rest.slice(i + 1).trim()
+  }
+  const classes = [...rest.split(/[\s>+~]/)[0].matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1])
+  return { scoped, classes }
+}
+
 const ruleBody = (text, selector) => {
   for (const [, sel, body] of text.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     if (sel.trim().endsWith(selector)) return body
@@ -177,6 +210,34 @@ describe('admin stylesheets', () => {
     )
   })
 
+  it('scopes admin rules for class names that other stylesheets also style', () => {
+    // CSS is global once a page's chunk has loaded, so an unscoped `.form-group` or `.section-title` in an admin sheet
+    // restyles every page that uses the name (and the other way round). Admin rules for a shared name sit behind a
+    // zero-specificity scope, :where(.admin-body) or the page's own root, which leaves their specificity unchanged.
+    const sheetsByClass = {}
+    for (const path of Object.keys(css)) {
+      for (const { selector } of rulesOf(sheet(path))) {
+        for (const one of splitSelectors(selector)) {
+          const [lead] = firstCompound(one).classes
+          if (lead) (sheetsByClass[lead] ||= new Set()).add(path)
+        }
+      }
+    }
+    const isShared = (name) => sheetsByClass[name]?.size > 1
+
+    const offenders = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const { selector } of rulesOf(sheet(path))) {
+        for (const one of splitSelectors(selector)) {
+          const { scoped, classes } = firstCompound(one)
+          // `.modal-body.advanced-modal-body` is already specific to its page through the second class
+          if (!scoped && classes.length && classes.every(isShared)) offenders.push(`${path.replace('/src/', '')}: ${one.replace(/\s+/g, ' ')}`)
+        }
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
   it('keeps admin media queries on the three shared breakpoints', () => {
     // Phones, tablets (where the rail becomes a drawer) and narrow desktops. A min-width is the next pixel up, so
     // no width falls in both a max-width and a min-width block.
@@ -202,7 +263,7 @@ describe('admin stylesheets', () => {
       throw new Error(`no phone rule for ${selector}`)
     }
     expect(declaration(phoneBannerRule('.classroom-banner'), 'flex-direction')).toBe('column')
-    expect(declaration(phoneBannerRule('.banner-actions'), 'flex-wrap')).toBe('wrap')
+    expect(declaration(phoneBannerRule(':where(.admin-class-dashboard) .banner-actions'), 'flex-wrap')).toBe('wrap')
 
     const libraryTab = ruleBody(sheet('/src/pages/Admin/AdminLibrary.css'), '.library-tab')
     expect(declaration(libraryTab, 'flex-shrink')).toBe('0')

@@ -107,6 +107,25 @@
     box-shadow: var(--shadow-md);
 }
 
+:where(.admin-body, .admin-modal-overlay) .secondary-btn {
+    padding: 10px 18px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    font-weight: 700;
+    color: var(--slate-700);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+:where(.admin-body, .admin-modal-overlay) .secondary-btn:hover {
+    background: var(--bg-secondary);
+}
+
+:where(.admin-body, .admin-modal-overlay) .secondary-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
+}
+
 :where(.admin-body, .admin-modal-overlay) .admin-select {
     cursor: pointer;
 }

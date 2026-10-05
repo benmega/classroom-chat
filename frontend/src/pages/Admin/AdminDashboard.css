@@ -228,7 +228,7 @@
 }
 
 /* Dashboard Content Grid */
-.dashboard-layout {
+:where(.admin-body) .dashboard-layout {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -383,8 +383,8 @@
 }
 
 .icon-primary { background: var(--primary-color); }
-.icon-success { background: var(--success-color); }
-.icon-error { background: var(--error-color); }
+:where(.admin-dashboard) .icon-success { background: var(--success-color); }
+:where(.admin-dashboard) .icon-error { background: var(--error-color); }
 
 .action-text-main {
     font-weight: 600;

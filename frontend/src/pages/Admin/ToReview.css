@@ -200,7 +200,7 @@
     color: var(--rose-700);
 }
 
-.badge-course {
+:where(.to-review-page) .badge-course {
     background: var(--violet-100);
     color: var(--violet-800);
 }
@@ -333,7 +333,7 @@
     color: var(--text-muted);
 }
 
-.avatar-placeholder {
+:where(.to-review-page) .avatar-placeholder {
     width: 32px;
     height: 32px;
     border-radius: 50%;
@@ -350,7 +350,7 @@
 }
 
 /* Specific Card Layouts: Projects */
-.project-title {
+:where(.to-review-page) .project-title {
     margin: 4px 0 0px 0;
     font-size: var(--font-lg);
     color: var(--text-primary);
@@ -532,19 +532,19 @@
     text-transform: uppercase;
 }
 
-.input-with-icon {
+:where(.to-review-page) .input-with-icon {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.input-icon {
+:where(.to-review-page) .input-icon {
     position: absolute;
     left: 12px;
     color: var(--text-muted);
 }
 
-.input-with-icon input {
+:where(.to-review-page) .input-with-icon input {
     width: 100%;
     padding: 10px 12px 10px 38px;
     border: 1px solid var(--border-subtle);
@@ -555,7 +555,7 @@
     transition: all 0.2s ease;
 }
 
-.input-with-icon input:focus {
+:where(.to-review-page) .input-with-icon input:focus {
     outline: 2px solid transparent;
     border-color: var(--primary-accessible);
     box-shadow: var(--focus-ring);
@@ -691,13 +691,13 @@
     }
 }
 
-.info-item {
+:where(.to-review-page) .info-item {
     display: flex;
     flex-direction: column;
     gap: 4px;
 }
 
-.info-label {
+:where(.to-review-page) .info-label {
     font-size: 0.8rem;
     font-weight: 700;
     color: var(--text-muted);
@@ -852,7 +852,7 @@
     gap: 6px;
 }
 
-.btn-approve, .btn-reject, .btn-secondary {
+.btn-approve, .btn-reject, :where(.to-review-page, .admin-modal-overlay) .btn-secondary {
     padding: 10px 18px;
     border-radius: 10px;
     font-weight: 700;
@@ -891,19 +891,19 @@
     transform: translateY(-1px);
 }
 
-.btn-secondary {
+:where(.to-review-page, .admin-modal-overlay) .btn-secondary {
     background: var(--bg-secondary);
     color: var(--text-secondary);
     border: 1px solid var(--border-subtle);
     text-decoration: none;
 }
 
-.btn-secondary:hover:not(:disabled) {
+:where(.to-review-page, .admin-modal-overlay) .btn-secondary:hover:not(:disabled) {
     background: var(--bg-tertiary);
     color: var(--text-primary);
 }
 
-.btn-approve:disabled, .btn-reject:disabled, .btn-secondary:disabled {
+.btn-approve:disabled, .btn-reject:disabled, :where(.to-review-page, .admin-modal-overlay) .btn-secondary:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
@@ -989,7 +989,7 @@
     /* Action buttons: minimum touch target */
     .btn-approve,
     .btn-reject,
-    .btn-secondary {
+    :where(.to-review-page, .admin-modal-overlay) .btn-secondary {
         min-height: 44px;
         padding: 0.6rem 1rem;
     }

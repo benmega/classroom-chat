@@ -242,69 +242,10 @@
     gap: 1.5rem;
 }
 
-.settings-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.settings-form .form-group {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.85rem 1rem;
-    background: var(--bg-primary);
-    border: 1px solid var(--border-subtle);
-    border-left: 4px solid var(--primary-color);
-    border-radius: 0 var(--radius-md) var(--radius-md) 0;
-    gap: 1rem;
-    transition: border-left-color var(--transition-fast);
-}
-
-.settings-form .form-group:hover {
-    border-left-color: var(--primary-accessible);
-}
-
-.settings-form .form-group label {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    flex: 0 0 150px;
-}
-
-.form-group input,
-.form-group select {
-    flex: 1;
-    max-width: 400px;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-    border: 1px solid var(--border-subtle);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 0.9rem;
-}
-
 .form-actions {
     display: flex;
     justify-content: flex-end;
     padding-top: 1rem;
-}
-
-.btn-save {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    border-radius: 8px;
-    border: none;
-    background: var(--primary-color);
-    color: var(--text-on-primary);
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition-fast);
-}
-
-.btn-save:hover {
-    background: var(--primary-hover, var(--blue-600));
 }
 
 .assignments-list {
@@ -380,19 +321,6 @@
     border-color: var(--error-color);
 }
 
-.badge-course {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: var(--primary-accessible);
-    color: var(--text-on-primary);
-    padding: 3px 9px;
-    border-radius: var(--radius-full);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-}
-
 .control-panel-card {
     background: transparent;
     border: none;
@@ -451,14 +379,6 @@
     flex: 0 0 200px;
 }
 
-.danger-zone-desc {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    line-height: 1.4;
-    margin: 0;
-    flex: 1;
-}
-
 .btn-danger {
     padding: 0.6rem 1rem;
     border-radius: 8px;
@@ -481,134 +401,6 @@
     font-style: italic;
     padding: 1rem 0;
     text-align: center;
-}
-
-/* Modal Styling */
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-subtle, var(--border-subtle));
-}
-
-.modal-header h3 {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 4px;
-    border-radius: 9999px;
-    transition: all 0.2s;
-}
-
-.close-btn:hover {
-    background: var(--bg-primary, var(--bg-secondary));
-    color: var(--text-primary);
-}
-
-.modal-form {
-    padding: 16px 20px;
-}
-
-.modal-form .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
-    background: none;
-    border: none;
-    border-left: none;
-    border-radius: 0;
-    padding: 0;
-    transition: none;
-}
-
-.modal-form .form-group:hover {
-    border-left-color: unset;
-    background: none;
-    box-shadow: none;
-}
-
-.modal-form .form-group label {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-secondary, var(--text-muted));
-    flex: unset;
-}
-
-.form-group input,
-.form-group select {
-    padding: 8px 12px;
-    border-radius: var(--radius-md, 6px);
-    border: 1px solid var(--border-subtle, var(--border-subtle));
-    background: var(--bg-secondary, var(--bg-primary));
-    color: var(--text-primary);
-    font-size: 0.875rem;
-    transition: all 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    outline: 2px solid transparent;
-    border-color: var(--primary-accessible);
-    box-shadow: var(--focus-ring);
-}
-
-.form-group input.error,
-.form-group select.error {
-    border-color: var(--error-color);
-}
-
-.error-text {
-    font-size: 0.775rem;
-    color: var(--error-color);
-    font-weight: 500;
-}
-
-.modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 28px;
-}
-
-.action-btn {
-    background: none;
-    border: 1px solid var(--border-subtle, var(--border-subtle));
-    padding: 6px;
-    border-radius: var(--radius-md, 8px);
-    cursor: pointer;
-    transition: all 0.2s;
-    color: var(--text-secondary, var(--text-muted));
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-btn:hover {
-    background: var(--bg-primary, var(--bg-secondary));
-    transform: translateY(-1px);
-}
-
-.action-btn.edit:hover {
-    color: var(--primary-color, #4f46e5);
-    border-color: var(--primary-color, #4f46e5);
-}
-
-.action-btn.delete:hover {
-    color: var(--error-color);
-    border-color: var(--error-color);
 }
 
 /* Banner Styles */
@@ -670,19 +462,19 @@
     vertical-align: middle;
 }
 
-.banner-actions {
+:where(.admin-class-dashboard) .banner-actions {
     display: flex;
     gap: 1rem;
     z-index: 1;
 }
 
-.banner-actions button {
+:where(.admin-class-dashboard) .banner-actions button {
     background: rgba(255,255,255,0.15);
     border: 1px solid rgba(255,255,255,0.3);
     color: var(--text-on-primary);
     backdrop-filter: blur(4px);
 }
-.banner-actions button:hover {
+:where(.admin-class-dashboard) .banner-actions button:hover {
     background: rgba(255,255,255,0.25);
 }
 
@@ -798,9 +590,6 @@
 .classroom-tabs .tab-btn:focus-visible,
 .back-btn-text:focus-visible,
 .btn-action-sm:focus-visible,
-.secondary-btn:focus-visible,
-.refresh-btn:focus-visible,
-.btn-save:focus-visible,
 .btn-danger:focus-visible,
 .student-info:focus-visible,
 .roster-search-input:focus-visible,
@@ -1056,7 +845,7 @@
         font-size: 1.75rem;
     }
 
-    .banner-actions {
+    :where(.admin-class-dashboard) .banner-actions {
         flex-wrap: wrap;
     }
 

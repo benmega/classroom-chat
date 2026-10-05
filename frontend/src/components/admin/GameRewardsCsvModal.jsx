@@ -182,7 +182,7 @@ const GameRewardsCsvModal = ({ isOpen, onClose }) => {
             </div>
           ) : (
             <div className="csv-dropzone-prompt">
-              <UploadCloud size={32} className="upload-icon" />
+              <UploadCloud size={32} className="csv-upload-icon" />
               <p className="prompt-main">
                 Drag and drop your <strong>.csv</strong> file here, or <span className="browse-link">browse</span>
               </p>

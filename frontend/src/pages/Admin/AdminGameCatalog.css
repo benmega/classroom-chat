@@ -62,7 +62,7 @@
   padding: 24px;
 }
 
-.table-responsive {
+:where(.admin-game-catalog) .table-responsive {
   width: 100%;
   overflow-x: auto;
 }
