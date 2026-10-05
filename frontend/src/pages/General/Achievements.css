@@ -134,13 +134,14 @@
     border: 2px solid var(--border-rich);
     border-radius: 12px;
     font-size: 0.9rem;
-    outline: none;
     transition: var(--transition-fast);
 }
 
 .search-box input:focus {
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-glow);
+    outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
+    outline-offset: 2px;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
     background: var(--bg-primary);
 }
 

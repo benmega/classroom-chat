@@ -682,9 +682,10 @@
 }
 
 .connect-input:focus {
-    outline: none;
-    border-color: var(--primary-color, #0f766e);
-    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+    outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
+    outline-offset: 2px;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
 .connect-input::placeholder {

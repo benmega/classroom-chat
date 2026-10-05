@@ -150,6 +150,14 @@ describe('ContactTeacherModal', () => {
             expect(onClose).toHaveBeenCalledTimes(1);
         });
 
+        it('leaves the focus outline of its fields to the global input styles', () => {
+            render(<ContactTeacherModal isOpen={true} onClose={vi.fn()} />);
+
+            // An inline outline: none would beat the global transparent outline that forced-colors mode paints.
+            expect(screen.getByLabelText(/Subject/i).style.outline).toBe('');
+            expect(screen.getByLabelText(/Message/i).style.outline).toBe('');
+        });
+
         it('does not react to Escape while closed', async () => {
             const user = userEvent.setup();
             const onClose = vi.fn();

@@ -123,7 +123,6 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
                                     background: "var(--bg-secondary)",
                                     color: "var(--text-primary)",
                                     fontSize: "0.875rem",
-                                    outline: "none",
                                     width: "100%",
                                     boxSizing: "border-box",
                                 }}
@@ -153,7 +152,6 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
                                     color: "var(--text-primary)",
                                     fontSize: "0.875rem",
                                     resize: "vertical",
-                                    outline: "none",
                                     width: "100%",
                                     boxSizing: "border-box",
                                     fontFamily: "inherit",

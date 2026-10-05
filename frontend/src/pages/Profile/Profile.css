@@ -1383,53 +1383,6 @@ a.cert-item:hover {
     color: var(--text-secondary);
 }
 
-/* Custom premium styling for the input range slider */
-.morph-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 8px;
-    border-radius: 9999px;
-    background: var(--border-subtle);
-    outline: none;
-    transition: background 150ms ease;
-    margin: 8px 0;
-}
-
-.morph-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid var(--bg-primary);
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-}
-
-.morph-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 3px 12px rgba(14, 178, 187, 0.6);
-}
-
-.morph-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid var(--bg-primary);
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-}
-
-.morph-slider::-moz-range-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 3px 12px rgba(14, 178, 187, 0.6);
-}
-
 .morph-slider-status {
     text-align: center;
     font-size: 0.85rem;

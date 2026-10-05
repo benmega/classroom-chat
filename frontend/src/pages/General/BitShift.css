@@ -77,9 +77,9 @@
 }
 
 .input-combined-container:focus-within {
-    border-color: var(--primary-color);
+    border-color: var(--primary-accessible);
     transform: translateY(-4px) scale(1.02);
-    box-shadow: var(--shadow-glow);
+    box-shadow: var(--focus-ring);
     /* The input inside has no outline of its own: this one shows in forced-colors mode, where the border
        colour change is lost */
     outline: 2px solid transparent;

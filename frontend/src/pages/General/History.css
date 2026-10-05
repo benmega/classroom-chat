@@ -59,9 +59,10 @@
 }
 
 .search-bar input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-glow);
+    outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
+    outline-offset: 2px;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
     background: var(--bg-primary);
 }
 

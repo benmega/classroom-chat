@@ -122,6 +122,47 @@ describe('focus indicators (T6c)', () => {
         const css = readCss('pages/General/BitShift.css');
         expect(bodyOf(css, '.input-combined-container:focus-within')).toMatch(/outline:\s*2px solid transparent/);
     });
+
+    // These used to set outline: none and show only a border-colour change or a faint tinted glow (--shadow-glow is
+    // none). They now draw the same two-tone ring as every other input, plus the transparent outline for forced colours.
+    it.each([
+        ['pages/General/History.css', '.search-bar input:focus'],
+        ['pages/General/Achievements.css', '.search-box input:focus'],
+        ['pages/Parent/ParentDashboard.css', '.connect-input:focus'],
+        ['pages/General/JoinClassroom.css', '.join-code-input:focus'],
+        ['components/common/SubmitProgressModal.css', '.form-control:focus'],
+        ['components/common/UserSearchInput.css', '.search-input-wrapper-common:focus-within'],
+        ['pages/General/BitShift.css', '.input-combined-container:focus-within'],
+    ])('%s: %s draws the shared focus ring', (rel, selector) => {
+        const body = bodyOf(readCss(rel), selector);
+        expect(body).toMatch(/box-shadow:\s*var\(--focus-ring\)/);
+        expect(body).toMatch(/outline:\s*2px solid transparent/);
+        expect(body).toMatch(/border-color:\s*var\(--primary-accessible\)/);
+    });
+
+    it('leaves outline: none only where something else shows the focus', () => {
+        const files = fs.readdirSync(SRC, { recursive: true })
+            .map((f) => f.split(path.sep).join('/'))
+            .filter((f) => f.endsWith('.css') && !/^(pages\/Admin|components\/admin)\//.test(f));
+        const found = [];
+        for (const rel of files) {
+            for (const r of rules(readCss(rel))) {
+                if (/outline:\s*none/.test(r.body)) found.push(`${rel}: ${r.selectors.join(', ')}`);
+            }
+        }
+        expect(found.sort()).toEqual([
+            // the pill around it carries the focus ring
+            'components/common/UserSearchInput.css: .user-search-input-common',
+            // a stylesheet no component imports
+            'components/common/ConfirmDialog.css: .confirm-dialog',
+            // a disabled field, never focusable
+            'pages/User/EditProfile.css: .connection-code-value',
+            // the container around it carries the focus ring
+            'pages/General/BitShift.css: .bit-shift-page .input-combined-container .digital-ducks-input',
+            // a stylesheet no component imports
+            'pages/General/SubmitCertificate.css: .form-control:focus',
+        ].sort());
+    });
 });
 
 describe('react-admin layout rules (T6d)', () => {
