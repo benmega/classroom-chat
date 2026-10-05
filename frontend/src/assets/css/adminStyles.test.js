@@ -191,6 +191,23 @@ describe('admin stylesheets', () => {
     expect(offenders).toEqual([])
   })
 
+  it('keeps the class dashboard banner and the library tab strip usable on a phone', () => {
+    // At 360px the banner's join code and print button were clipped, and the library's four tabs were squeezed
+    // into each other because they could shrink instead of scrolling the strip.
+    const phoneBannerRule = (selector) => {
+      const blocks = [...sheet('/src/pages/Admin/AdminClassDashboard.css').matchAll(/@media\s*\(max-width:\s*640px\)\s*\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g)]
+      for (const [, inner] of blocks) {
+        for (const { selector: sel, body } of rulesOf(inner)) if (sel === selector) return body
+      }
+      throw new Error(`no phone rule for ${selector}`)
+    }
+    expect(declaration(phoneBannerRule('.classroom-banner'), 'flex-direction')).toBe('column')
+    expect(declaration(phoneBannerRule('.banner-actions'), 'flex-wrap')).toBe('wrap')
+
+    const libraryTab = ruleBody(sheet('/src/pages/Admin/AdminLibrary.css'), '.library-tab')
+    expect(declaration(libraryTab, 'flex-shrink')).toBe('0')
+  })
+
   it('keeps the create-classroom modal rules in Classes.css, not in the class dashboard sheet', () => {
     // The dashboard never renders .modal-overlay/.modal-card, but unscoped rules for them restyled the Classes modal
     // (a translucent card, and a dark one on dark-OS devices under that modal's dark heading text).

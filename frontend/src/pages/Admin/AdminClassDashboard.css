@@ -1044,6 +1044,22 @@
 }
 
 @media (max-width: 640px) {
+    /* The title, join code and button do not fit in one row on a phone: stack them */
+    .classroom-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.25rem;
+    }
+
+    .banner-content h1 {
+        font-size: 1.75rem;
+    }
+
+    .banner-actions {
+        flex-wrap: wrap;
+    }
+
     .class-hud-row {
         grid-template-columns: 1fr;
     }
