@@ -32,6 +32,7 @@ describe('ProjectPortfolio', () => {
                 image_url: '/img1.png',
                 video_url: 'http://video',
                 teacher_comment: 'Good job',
+                status: 'approved',
                 link: 'http://link1'
             },
             {
@@ -41,6 +42,7 @@ describe('ProjectPortfolio', () => {
                 image_url: '/img2.png',
                 video_url: null,
                 teacher_comment: null,
+                status: 'pending',
                 link: null
             }
         ];
@@ -56,8 +58,9 @@ describe('ProjectPortfolio', () => {
         expect(screen.getByText('Project 1')).toBeInTheDocument();
         expect(screen.getByText('Project 2')).toBeInTheDocument();
 
-        // In progress badge
-        expect(screen.getByText('In Progress')).toBeInTheDocument();
+        // Only the pending project gets the in-progress badge
+        expect(screen.getAllByText('In Progress')).toHaveLength(1);
+        expect(screen.getByText('Project 2').closest('.project-card')).toHaveTextContent('In Progress');
 
         // Details click
         const detailsBtns = screen.getAllByText('Details');
@@ -121,16 +124,69 @@ describe('ProjectPortfolio', () => {
         });
 
         it('truncates a long teacher comment the same way and leaves a short one alone', () => {
-            renderOne({ description: 'd', teacher_comment: 'c'.repeat(100) });
+            renderOne({ description: 'd', status: 'approved', teacher_comment: 'c'.repeat(100) });
             expect(card().querySelector('.card-teacher-feedback').textContent).toContain(`${'c'.repeat(80)}...`);
             expect(card().querySelector('.card-teacher-feedback').textContent).not.toContain('c'.repeat(81));
         });
 
         it('shows a short teacher comment without an ellipsis', () => {
-            renderOne({ description: 'd', teacher_comment: 'Nice work' });
+            renderOne({ description: 'd', status: 'approved', teacher_comment: 'Nice work' });
             const feedback = card().querySelector('.card-teacher-feedback');
             expect(feedback.textContent).toContain('Nice work');
             expect(feedback.textContent).not.toContain('...');
+        });
+    });
+
+    describe('review status', () => {
+        const renderOne = (project) => render(
+            <ProjectPortfolio projects={[{ id: 1, name: 'P', image_url: '/i.png', ...project }]} isOwner={false} setSelectedProject={vi.fn()} />,
+            { wrapper: MemoryRouter }
+        );
+        const card = () => screen.getByText('P').closest('.project-card');
+
+        it('badges a pending project as in progress', () => {
+            renderOne({ status: 'pending' });
+            expect(screen.getByText('In Progress')).toBeInTheDocument();
+        });
+
+        it('shows no badge on an approved project, whether or not it has a comment', () => {
+            const { unmount } = renderOne({ status: 'approved', teacher_comment: null });
+            expect(screen.queryByText('In Progress')).not.toBeInTheDocument();
+            expect(screen.queryByText('Revision Requested')).not.toBeInTheDocument();
+            unmount();
+
+            renderOne({ status: 'approved', teacher_comment: 'Well done' });
+            expect(screen.queryByText('In Progress')).not.toBeInTheDocument();
+            expect(screen.queryByText('Revision Requested')).not.toBeInTheDocument();
+        });
+
+        it('badges a rejected project as a revision request and shows the feedback in the revision style', () => {
+            renderOne({ status: 'rejected', teacher_comment: 'Add comments to the loop' });
+            expect(screen.getByText('Revision Requested')).toBeInTheDocument();
+            expect(screen.queryByText('In Progress')).not.toBeInTheDocument();
+
+            const feedback = card().querySelector('.card-teacher-feedback');
+            expect(feedback).toHaveTextContent('Add comments to the loop');
+            expect(feedback).toHaveClass('revision-feedback');
+        });
+
+        it('shows the note of an approved project in the plain positive style', () => {
+            renderOne({ status: 'approved', teacher_comment: 'Well done' });
+            const feedback = card().querySelector('.card-teacher-feedback');
+            expect(feedback).toHaveTextContent('Well done');
+            expect(feedback).not.toHaveClass('revision-feedback');
+            expect(feedback).not.toHaveClass('pending-feedback');
+        });
+
+        it('does not present the old revision note of a resubmitted project as approval', () => {
+            // A rejected project that was edited goes back to pending but keeps its comment
+            renderOne({ status: 'pending', teacher_comment: 'Add comments to the loop' });
+            expect(screen.getByText('In Progress')).toBeInTheDocument();
+
+            const feedback = card().querySelector('.card-teacher-feedback');
+            expect(feedback).toHaveTextContent('Add comments to the loop');
+            expect(feedback).toHaveClass('pending-feedback');
+            expect(feedback).not.toHaveClass('revision-feedback');
         });
     });
 });

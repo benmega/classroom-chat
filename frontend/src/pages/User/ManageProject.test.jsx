@@ -84,7 +84,7 @@ describe('ManageProject', () => {
     it('renders code snippet and teacher comment in preview', async () => {
         server.use(
             http.get('*/user/project/edit/1', async () => {
-                return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'My Cool Game', description: 'A game I built', image_url: 'cover.jpg', teacher_comment: 'Great job!', code_snippet: 'print("hello")', link: 'http://example.com' } } });
+                return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'My Cool Game', description: 'A game I built', image_url: 'cover.jpg', status: 'approved', teacher_comment: 'Great job!', code_snippet: 'print("hello")', link: 'http://example.com' } } });
             })
         );
 
@@ -99,6 +99,68 @@ describe('ManageProject', () => {
         expect(await screen.findByText('Core Information')).toBeInTheDocument();
         expect(screen.getByText('Teacher Note: Great job!')).toBeInTheDocument();
         expect(screen.getByText('print("hello")')).toBeInTheDocument();
+    });
+
+    describe('review feedback', () => {
+        const openProject = async (project) => {
+            server.use(
+                http.get('*/user/project/edit/1', () =>
+                    HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'Maze', ...project } } })
+                )
+            );
+            render(
+                <MemoryRouter initialEntries={['/manage-project/1']}>
+                    <Routes>
+                        <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                    </Routes>
+                </MemoryRouter>
+            );
+            await screen.findByText('Core Information');
+        };
+        const previewNote = () => document.querySelector('.preview-section-core .card-teacher-feedback');
+
+        it('shows the revision banner and the feedback of a rejected project and offers to resubmit', async () => {
+            await openProject({ status: 'rejected', teacher_comment: 'Add comments to the loop' });
+
+            const banner = document.querySelector('.revision-notice-banner');
+            expect(banner).toHaveTextContent('Revision Requested');
+            expect(banner).toHaveTextContent('"Add comments to the loop"');
+            expect(banner).toHaveTextContent('save to resubmit your project for review');
+            expect(previewNote()).toHaveTextContent('Revision Note: Add comments to the loop');
+            expect(previewNote()).toHaveClass('revision-feedback');
+
+            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+            expect(screen.getByRole('button', { name: 'Resubmit for Review' })).toBeInTheDocument();
+        });
+
+        it('shows the banner but no feedback note for a rejected project without a comment', async () => {
+            await openProject({ status: 'rejected', teacher_comment: null });
+
+            const banner = document.querySelector('.revision-notice-banner');
+            expect(banner).toHaveTextContent('Revision Requested');
+            expect(banner.querySelector('.revision-notice-feedback')).toBeNull();
+            expect(previewNote()).toBeNull();
+        });
+
+        it('shows no revision banner on an approved project and calls its comment a teacher note', async () => {
+            await openProject({ status: 'approved', teacher_comment: 'Well done' });
+
+            expect(document.querySelector('.revision-notice-banner')).toBeNull();
+            expect(previewNote()).toHaveTextContent('Teacher Note: Well done');
+            expect(previewNote()).not.toHaveClass('revision-feedback');
+            expect(previewNote()).not.toHaveClass('pending-feedback');
+        });
+
+        it('does not call the old revision note of a resubmitted project a teacher note', async () => {
+            // A rejected project that was edited goes back to pending but keeps its comment
+            await openProject({ status: 'pending', teacher_comment: 'Add comments to the loop' });
+
+            expect(document.querySelector('.revision-notice-banner')).toBeNull();
+            expect(previewNote()).toHaveTextContent('Previous Note: Add comments to the loop');
+            expect(previewNote()).toHaveClass('pending-feedback');
+            expect(screen.queryByText(/Teacher Note/)).not.toBeInTheDocument();
+        });
     });
 
     it('navigates through tabs', async () => {

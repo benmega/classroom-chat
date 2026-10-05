@@ -1,8 +1,9 @@
 import React, { useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ExternalLink, Code, CheckCircle, FileText, AlertCircle } from 'lucide-react';
+import { X, ExternalLink, Code, FileText } from 'lucide-react';
 import { formatStaticUrl } from '../../utils/formatters';
 import { safeUrl } from '../../utils/safeUrl';
+import { getFeedbackStyle } from '../../utils/projectFeedback';
 import SmartImage from '../common/SmartImage';
 import useModalA11y from '../../hooks/useModalA11y';
 
@@ -39,6 +40,8 @@ const ProjectModal = ({ project, onClose }) => {
     useModalA11y({ isOpen: Boolean(project), onClose, containerRef: dialogRef });
 
     if (!project) return null;
+
+    const { Icon: FeedbackIcon, className: feedbackClass, reviewTitle } = getFeedbackStyle(project.status);
 
     return createPortal(
         <div role="presentation" className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -85,10 +88,9 @@ const ProjectModal = ({ project, onClose }) => {
                         <h3 className="section-heading"><FileText size={18} /> Description</h3>
                         <p>{project.description}</p>
                         {project.teacher_comment && (
-                            <div className={`teacher-feedback ${project.status === 'rejected' ? 'revision-feedback' : ''}`}>
+                            <div className={`teacher-feedback ${feedbackClass}`}>
                                 <h4>
-                                    {project.status === 'rejected' ? <AlertCircle size={16} /> : <CheckCircle size={16} />}
-                                    {project.status === 'rejected' ? ' Revision Requested' : ' Instructor Review'}
+                                    <FeedbackIcon size={16} /> {reviewTitle}
                                 </h4>
                                 <blockquote>"{project.teacher_comment}"</blockquote>
                             </div>

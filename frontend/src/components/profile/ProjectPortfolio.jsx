@@ -1,14 +1,25 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Code, Play, Settings, ExternalLink, Layers, Clock, AlertCircle } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 import { safeUrl } from '../../utils/safeUrl';
+import { getFeedbackStyle } from '../../utils/projectFeedback';
 
 // Cut long text for the card; short or missing text gets no ellipsis.
 const truncate = (text, max = 80) => {
     if (!text) return '';
     return text.length > max ? `${text.slice(0, max)}...` : text;
+};
+
+// The teacher's note on a card, styled by the review status.
+const CardFeedback = ({ project }) => {
+    const { Icon, className } = getFeedbackStyle(project.status);
+    return (
+        <div className={`card-teacher-feedback ${className}`}>
+            <Icon size={14} /> {truncate(project.teacher_comment)}
+        </div>
+    );
 };
 
 const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) => {
@@ -48,7 +59,7 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
                                         <span className="rejected-badge" title="Revision Requested">
                                             <AlertCircle size={12} /> Revision Requested
                                         </span>
-                                    ) : (!project.teacher_comment || project.status === 'pending') ? (
+                                    ) : project.status === 'pending' ? (
                                         <span className="in-progress-badge" title="Pending Admin Approval">
                                             <Clock size={12} /> In Progress
                                         </span>
@@ -57,11 +68,7 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
                                 <div className="project-content">
                                     <h3>{project.name}</h3>
                                     
-                                    {project.teacher_comment && (
-                                        <div className={`card-teacher-feedback ${project.status === 'rejected' ? 'revision-feedback' : ''}`}>
-                                            {project.status === 'rejected' ? <AlertCircle size={14} /> : <CheckCircle size={14} />} {truncate(project.teacher_comment)}
-                                        </div>
-                                    )}
+                                    {project.teacher_comment && <CardFeedback project={project} />}
 
                                     {project.description && <p>{truncate(project.description)}</p>}
                                     <div className="project-footer">

@@ -614,6 +614,11 @@
     color: var(--error-color, #ef4444);
 }
 
+.card-teacher-feedback.pending-feedback {
+    border-left: 3px solid var(--border-subtle);
+    color: var(--text-secondary);
+}
+
 .card-teacher-feedback svg {
     flex-shrink: 0;
     margin-top: 2px;
@@ -1259,6 +1264,12 @@ a.cert-item:hover {
 }
 .teacher-feedback.revision-feedback h4 {
     color: var(--error-color, #ef4444);
+}
+.teacher-feedback.pending-feedback {
+    border-left: 4px solid var(--border-subtle);
+}
+.teacher-feedback.pending-feedback h4 {
+    color: var(--text-secondary);
 }
 .teacher-feedback blockquote {
     margin: 0;

@@ -15,6 +15,7 @@ describe('ProjectModal Component', () => {
     image_url: '/uploads/game.png',
     code_snippet: 'console.log("Hello World");',
     teacher_comment: 'Great effort on controls!',
+    status: 'approved',
   };
 
   it('returns null if project is null', () => {
@@ -73,6 +74,57 @@ describe('ProjectModal Component', () => {
     const overlay = document.querySelector('.modal-overlay');
     fireEvent.click(overlay);
     expect(mockOnClose).toHaveBeenCalledTimes(2);
+  });
+
+  describe('teacher feedback', () => {
+    // No video: an iframe would try to load the embed URL.
+    const noVideoProject = { ...mockProject, video_url: null };
+    const feedback = () => document.querySelector('.teacher-feedback');
+
+    it('shows the comment of an approved project as an instructor review in the positive style', () => {
+      render(<ProjectModal project={{ ...noVideoProject, status: 'approved' }} onClose={mockOnClose} />);
+
+      expect(feedback()).toHaveTextContent('Instructor Review');
+      expect(feedback()).toHaveTextContent('Great effort on controls!');
+      expect(feedback()).not.toHaveClass('revision-feedback');
+      expect(feedback()).not.toHaveClass('pending-feedback');
+    });
+
+    it('shows the comment of a rejected project as a revision request in the revision style', () => {
+      render(
+        <ProjectModal
+          project={{ ...noVideoProject, status: 'rejected', teacher_comment: 'Add comments to the loop' }}
+          onClose={mockOnClose}
+        />
+      );
+
+      expect(feedback()).toHaveTextContent('Revision Requested');
+      expect(feedback()).toHaveTextContent('"Add comments to the loop"');
+      expect(feedback()).toHaveClass('revision-feedback');
+      expect(screen.queryByText(/Instructor Review/)).not.toBeInTheDocument();
+    });
+
+    it('does not present the old revision note of a resubmitted project as an instructor review', () => {
+      // A rejected project that was edited goes back to pending but keeps its comment
+      render(
+        <ProjectModal
+          project={{ ...noVideoProject, status: 'pending', teacher_comment: 'Add comments to the loop' }}
+          onClose={mockOnClose}
+        />
+      );
+
+      expect(feedback()).toHaveTextContent('Previous Feedback');
+      expect(feedback()).toHaveTextContent('"Add comments to the loop"');
+      expect(feedback()).toHaveClass('pending-feedback');
+      expect(feedback()).not.toHaveClass('revision-feedback');
+      expect(screen.queryByText(/Instructor Review/)).not.toBeInTheDocument();
+    });
+
+    it('shows no feedback block without a comment', () => {
+      render(<ProjectModal project={{ ...noVideoProject, status: 'rejected', teacher_comment: null }} onClose={mockOnClose} />);
+
+      expect(feedback()).toBeNull();
+    });
   });
 
   describe('dialog behaviour', () => {
