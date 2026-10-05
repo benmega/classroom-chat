@@ -6,10 +6,10 @@ on:
   pull_request:
     types: [labeled]
 
+# Read-only by default; each job asks for what it needs. Only the steps that push or open a PR
+# hold the personal access token (the repository setting stops GITHUB_TOKEN from opening PRs).
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  contents: read
 
 # One AI run per issue/PR at a time: repeated 'ai-plan'/'ai-draft' label events queue instead of
 # running the agent twice. Other labels get a unique group so they never replace a pending AI run.
@@ -20,15 +20,22 @@ concurrency:
 jobs:
   analyze:
     name: Architect Plan
-    if: github.event.label.name == 'ai-plan'
+    # Only the repository owner can start an AI run (other collaborators can also apply labels).
+    if: github.event.label.name == 'ai-plan' && github.event.sender.login == github.repository_owner
     runs-on: ubuntu-latest
     # GitHub's default is 6 hours: cap a stuck job well below that.
     timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     outputs:
       plan: ${{ steps.gen_plan.outputs.plan }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -42,7 +49,7 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
           ISSUE_BODY: ${{ github.event.issue.body || github.event.pull_request.body }}
           OBJ_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
-          GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           pip install -r .github/scripts/requirements.txt
           PLAN=$(python .github/scripts/analyze_issue.py)
@@ -67,8 +74,10 @@ jobs:
     name: Agent Coder
     # Runs for a directly applied 'ai-draft' (analyze is skipped) or after 'analyze' planned an 'ai-plan'.
     # A failed analyze blocks it, and fork PRs are skipped: the agent pushes to the PR branch of this repo.
+    # Only the repository owner can start a run (other collaborators can also apply labels).
     if: >-
       ${{ !cancelled()
+      && github.event.sender.login == github.repository_owner
       && (needs.analyze.result == 'success'
       || (needs.analyze.result == 'skipped' && github.event.label.name == 'ai-draft'))
       && (github.event.pull_request == null
@@ -77,12 +86,18 @@ jobs:
     # The agent loop is capped at 12 model turns and each pytest run at agent_coder.TEST_TIMEOUT;
     # this bounds the whole job.
     timeout-minutes: 60
+    # Read-only: the agent's own token can read the issue and nothing else.
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
     needs: [analyze]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          # No credentials are left in .git/config: the agent's test runs execute in this checkout.
+          persist-credentials: false
           # Check out the PR branch if it's a PR, otherwise default branch
           ref: ${{ github.event.pull_request.head.ref || github.event.repository.default_branch }}
 
@@ -106,7 +121,9 @@ jobs:
       - name: Run Agent Loop
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          # The read-only job token: the personal access token is held only by the steps below.
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           ISSUE_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
           ISSUE_BODY: ${{ github.event.issue.body || github.event.pull_request.body }}
           OBJ_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
@@ -114,16 +131,30 @@ jobs:
           ISSUE_PLAN: ${{ needs.analyze.outputs.plan }}
         run: python .github/scripts/agent_coder.py
 
+      - name: Discard Changes To Protected Paths
+        # The agent's file tools refuse .github/, but its test runs execute code it wrote.
+        # Reset that directory so a change to the pipeline itself is never committed or pushed.
+        run: |
+          git restore --source=HEAD --staged --worktree -- .github
+          git clean -fdq -- .github
+
       - name: Push Changes (Iterative PR)
         if: github.event.pull_request != null
         env:
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PUSH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
         run: |
+          # The checkout keeps no credentials, so hand the token to this one push as the HTTP
+          # header actions/checkout would have stored. Hooks are switched off for both git calls
+          # because they run with the token in the environment.
+          AUTH=$(printf 'x-access-token:%s' "$PUSH_TOKEN" | base64 -w0)
+          echo "::add-mask::$AUTH"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          git commit -m "AI Agent: Applied fixes based on review" || exit 0
-          git push origin "HEAD:refs/heads/$HEAD_REF"
+          git -c core.hooksPath=/dev/null commit -m "AI Agent: Applied fixes based on review" || exit 0
+          git -c core.hooksPath=/dev/null -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${AUTH}" \
+            push origin "HEAD:refs/heads/$HEAD_REF"
 
       - name: Create Pull Request (New Issue)
         if: github.event.pull_request == null
@@ -139,5 +170,6 @@ jobs:
         if: always() && github.event.label.name == 'ai-draft'
         env:
           GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           gh issue edit ${{ github.event.issue.number || github.event.pull_request.number }} --remove-label "ai-draft"

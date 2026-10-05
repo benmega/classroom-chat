@@ -323,3 +323,123 @@ def test_patch_file_replaces_the_given_lines(agent_coder, sample_file):
     assert agent_coder.patch_file("sample.txt", 2, "3", "TWO-THREE") == "Updated sample.txt from line 2 to 3."
 
     assert sample_file.read_text(encoding="utf-8") == "one\nTWO-THREE\n"
+
+
+# ---- the file tools stay inside the repository ----
+
+
+@pytest.fixture
+def repo(tmp_path, monkeypatch):
+    """A repository root (the working directory) with git and CI directories, and a file outside it."""
+    root = tmp_path / "repo"
+    (root / "src").mkdir(parents=True)
+    (root / ".git").mkdir()
+    (root / ".github" / "workflows").mkdir(parents=True)
+    (root / "src" / "app.py").write_text("print('hi')\n", encoding="utf-8")
+    (root / ".git" / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
+    (root / ".github" / "workflows" / "ai.yml").write_text("name: x\n", encoding="utf-8")
+    (tmp_path / "outside.txt").write_text("SECRET\n", encoding="utf-8")
+    monkeypatch.chdir(root)
+    return root
+
+
+def _forbidden_paths(repo):
+    outside = repo.parent / "outside.txt"
+    return [
+        "../outside.txt",
+        "src/../../outside.txt",
+        str(outside),
+        ".git/HEAD",
+        "src/../.git/HEAD",
+        ".github/workflows/ai.yml",
+        str(repo / ".git" / "HEAD"),
+    ]
+
+
+def test_read_file_reads_inside_the_repository(agent_coder, repo):
+    assert agent_coder.read_file("src/app.py") == "1: print('hi')\n"
+    assert agent_coder.read_file(str(repo / "src" / "app.py")) == "1: print('hi')\n"
+
+
+def test_read_file_refuses_paths_outside_the_repository_and_protected_directories(agent_coder, repo):
+    for path in _forbidden_paths(repo):
+        result = agent_coder.read_file(path)
+
+        assert result.startswith(path), path
+        assert result.endswith(("is outside the repository.", "is not available to the agent.")), path
+        assert "SECRET" not in result
+        assert "refs/heads" not in result
+
+
+def test_patch_file_refuses_paths_outside_the_repository_and_protected_directories(agent_coder, repo):
+    before = {p: p.read_text(encoding="utf-8") for p in (repo / ".git" / "HEAD", repo / ".github" / "workflows" / "ai.yml", repo.parent / "outside.txt")}
+
+    for path in _forbidden_paths(repo):
+        result = agent_coder.patch_file(path, 1, 1, "overwritten")
+
+        assert result.endswith(("is outside the repository.", "is not available to the agent.")), path
+
+    assert {p: p.read_text(encoding="utf-8") for p in before} == before
+
+
+def test_patch_file_still_patches_a_repository_file(agent_coder, repo):
+    assert agent_coder.patch_file("src/app.py", 1, 1, "print('bye')") == "Updated src/app.py from line 1 to 1."
+
+    assert (repo / "src" / "app.py").read_text(encoding="utf-8") == "print('bye')\n"
+
+
+def test_a_symlink_inside_the_repository_cannot_lead_out_of_it(agent_coder, repo):
+    link = repo / "src" / "link.txt"
+    try:
+        link.symlink_to(repo.parent / "outside.txt")
+    except (OSError, NotImplementedError):
+        pytest.skip("symlinks are not available here")
+
+    assert agent_coder.read_file("src/link.txt") == "src/link.txt is outside the repository."
+    assert agent_coder.patch_file("src/link.txt", 1, 1, "x") == "src/link.txt is outside the repository."
+    assert (repo.parent / "outside.txt").read_text(encoding="utf-8") == "SECRET\n"
+
+
+# ---- tool subprocesses cannot see the agent's secrets ----
+
+
+@pytest.fixture
+def secret_env(monkeypatch):
+    for name in ("OPENAI_API_KEY", "GH_TOKEN", "MY_WORKFLOW_TOKEN", "PUSH_TOKEN"):
+        monkeypatch.setenv(name, f"{name.lower()}-value")
+
+
+def _capture_run(agent_coder, monkeypatch):
+    calls = []
+
+    def fake_run(cmd, **kwargs):
+        calls.append((cmd, kwargs))
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(agent_coder, "subprocess", SimpleNamespace(run=fake_run))
+    return calls
+
+
+def test_pytest_does_not_inherit_the_agents_secrets(agent_coder, monkeypatch, secret_env):
+    calls = _capture_run(agent_coder, monkeypatch)
+
+    agent_coder.run_tests()
+
+    env = calls[0][1]["env"]
+    assert env["FLASK_ENV"] == "testing"
+    assert env["PATH"]
+    assert not {"OPENAI_API_KEY", "GH_TOKEN", "MY_WORKFLOW_TOKEN", "PUSH_TOKEN"} & set(env)
+
+
+def test_grep_does_not_inherit_the_agents_secrets_and_skips_protected_directories(agent_coder, monkeypatch, secret_env):
+    calls = _capture_run(agent_coder, monkeypatch)
+
+    agent_coder.search_code("--files-without-match")
+
+    cmd, kwargs = calls[0]
+    assert "--exclude-dir=.git" in cmd
+    assert "--exclude-dir=.github" in cmd
+    # The query is passed as the value of -e, so it can never be read as an option.
+    assert cmd[cmd.index("-e") + 1] == "--files-without-match"
+    assert "OPENAI_API_KEY" not in kwargs["env"]
+    assert "GH_TOKEN" not in kwargs["env"]

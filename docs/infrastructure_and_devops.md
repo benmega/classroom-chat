@@ -249,11 +249,19 @@ sudo systemctl reload nginx
 - **`tests.yml`**: On pushes and PRs to `main`/`master`: a backend job (mypy, Alembic single-head check, Pytest) and a frontend job (Vitest with coverage, Playwright E2E against a locally started backend). Also the test gate for both deploy workflows.
 - **`ai-coder.yml`**: the single AI workflow; runs when an issue or pull request receives the `ai-plan` label
   (plan, then code) or the `ai-draft` label (code directly). Runs are serialized per issue/PR.
-  Do not add those labels casually; they start automated AI workflows.
+  Do not add those labels casually; they start automated AI workflows. Only label events from the
+  repository owner start a run, both jobs have a timeout, and `.github/scripts/requirements.txt` lists the
+  packages the AI scripts import (installed by the workflow and by `tests.yml`).
+  The jobs run with read-only tokens (the plan job may comment on and label the issue). The personal access
+  token is held only by the steps that run after the agent: push to the PR branch, open the draft PR and
+  remove the `ai-draft` label. The agent's file tools stay inside the repository and refuse `.git/` and
+  `.github/` (changes there are also reset before anything is committed), and its test runs get a minimal
+  environment without the secrets. The test runs still execute code the agent wrote with the runner's own
+  privileges, so the owner-only trigger is the main protection.
 
 Required GitHub Secrets: `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
 `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `WEBHOOK_SECRET`, as well as AWS credentials for S3 uploads.
-The `ai-coder.yml` workflow additionally uses the `OPENAI_API_KEY` secret; the Flask app itself no longer reads it.
+The `ai-coder.yml` workflow additionally uses the `OPENAI_API_KEY` and `MY_WORKFLOW_TOKEN` (personal access token) secrets; the Flask app itself no longer reads the OpenAI key.
 
 ---
 

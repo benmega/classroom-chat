@@ -80,3 +80,78 @@ def test_each_job_has_a_timeout(job):
 
     assert match, f"{job} has no timeout-minutes"
     assert 0 < int(match.group(1)) <= 60
+
+
+# ---- least privilege: read-only tokens, and the personal access token only after the agent ran ----
+
+
+def _steps(job):
+    """Map each step name in a job of ai-coder.yml to the text of that step."""
+    parts = re.split(r"^      - name: (.+)\n", _jobs()[job], flags=re.M)
+    return dict(zip(parts[1::2], parts[2::2], strict=True))
+
+
+def _job_header(job):
+    """The job's own settings: everything before its first step."""
+    return _jobs()[job].split("\n    steps:\n", 1)[0]
+
+
+def test_workflow_default_permissions_are_read_only():
+    header = _text(AI_WORKFLOW).split("\njobs:\n", 1)[0]
+
+    assert re.search(r"^permissions:\n  contents: read$", header, flags=re.M)
+    assert not re.search(r"^\s+[\w-]+: write$", header, flags=re.M)
+
+
+def test_code_job_token_is_read_only():
+    assert not re.search(r": write$", _job_header("code"), flags=re.M)
+    assert not re.search(r": write$", "\n".join(_steps("code").values()), flags=re.M)
+
+
+def test_analyze_job_only_writes_issues_and_pull_requests():
+    writes = re.findall(r"^      ([\w-]+): write$", _job_header("analyze"), flags=re.M)
+
+    assert sorted(writes) == ["issues", "pull-requests"]
+
+
+@pytest.mark.parametrize("job", ["analyze", "code"])
+def test_checkout_leaves_no_credentials_in_the_repository(job):
+    checkout = _steps(job)["Checkout Code"]
+
+    assert "persist-credentials: false" in checkout
+    assert "token:" not in checkout
+
+
+def test_analyze_job_does_not_use_the_personal_access_token():
+    assert "MY_WORKFLOW_TOKEN" not in _jobs()["analyze"]
+
+
+def test_agent_step_holds_no_personal_access_token():
+    step = _steps("code")["Run Agent Loop"]
+
+    assert "MY_WORKFLOW_TOKEN" not in step
+    assert "GH_TOKEN: ${{ github.token }}" in step
+
+
+def test_personal_access_token_is_used_only_after_the_agent_ran_and_protected_paths_were_reset():
+    names = list(_steps("code"))
+    ran = names.index("Run Agent Loop")
+    reset = names.index("Discard Changes To Protected Paths")
+
+    assert ran < reset < names.index("Push Changes (Iterative PR)") < names.index("Create Pull Request (New Issue)")
+    for index, (name, step) in enumerate(_steps("code").items()):
+        if "MY_WORKFLOW_TOKEN" in step:
+            assert index > reset, name
+
+
+def test_push_step_does_not_run_git_hooks():
+    push = _steps("code")["Push Changes (Iterative PR)"]
+
+    assert push.count("git -c core.hooksPath=/dev/null ") == 2
+    assert "git add ." in push
+    assert not re.search(r"^\s*git (commit|push) ", push, flags=re.M)
+
+
+@pytest.mark.parametrize("job", ["analyze", "code"])
+def test_only_the_repository_owner_can_start_an_ai_run(job):
+    assert "github.event.sender.login == github.repository_owner" in _job_header(job)
