@@ -90,28 +90,117 @@ def test_add_achievement_post(client, init_db, test_admin):
     assert ach.reward == 10
 
 
-def test_add_achievement_no_requirement(client, init_db, test_admin):
-    """Test creating achievement without requirement value."""
+def _add_achievement(client, **fields):
+    form = {"name": "Req Test", "slug": "req-test", "type": "ducks", "reward": "5"}
+    return client.post("/api/achievements/add", data={**form, **fields})
+
+
+@pytest.mark.parametrize("ach_type", ["ducks", "progress", "chat"])
+@pytest.mark.parametrize(
+    "requirement", [None, "", "   ", "abc", "10.5", "1e3", "5 projects", "[10]"]
+)
+def test_add_achievement_rejects_missing_or_non_numeric_requirement(
+    client, init_db, test_admin, ach_type, requirement
+):
+    """A requirement the engine cannot read as a whole number never unlocks, so it is refused."""
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+    fields = {"type": ach_type}
+    if requirement is not None:
+        fields["requirement_value"] = requirement
+
+    response = _add_achievement(client, **fields)
+
+    assert response.status_code == 400
+    assert response.json["status"] == "error"
+    assert response.json["message"] == "Requirement must be a whole number."
+    assert Achievement.query.filter_by(slug="req-test").first() is None
+
+
+@pytest.mark.parametrize("requirement", [True, 1.5, [10], {"n": 10}, None, ""])
+def test_add_achievement_rejects_invalid_json_requirement(
+    client, init_db, test_admin, requirement
+):
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
 
     response = client.post(
         "/api/achievements/add",
-        data={
-            "name": "Quick Starter",
-            "slug": "quick-start",
-            "description": "Complete the tutorial",
-            "requirement_value": "",
-            "type": "progress",
-            "reward": "5",
+        json={
+            "name": "Req Test",
+            "slug": "req-test",
+            "type": "ducks",
+            "reward": 5,
+            "requirement_value": requirement,
         },
-        follow_redirects=True,
+    )
+
+    assert response.status_code == 400
+    assert response.json["message"] == "Requirement must be a whole number."
+    assert Achievement.query.filter_by(slug="req-test").first() is None
+
+
+@pytest.mark.parametrize(
+    "submitted, stored",
+    [("10", "10"), (" 7 ", "7"), ("007", "7"), (10, "10"), (10.0, "10"), ("+3", "3")],
+)
+def test_add_achievement_stores_the_requirement_as_a_plain_whole_number(
+    client, init_db, test_admin, submitted, stored
+):
+    from application.services.achievement_engine import _parse_requirement
+
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = client.post(
+        "/api/achievements/add",
+        json={
+            "name": "Req Test",
+            "slug": "req-test",
+            "type": "chat",
+            "reward": 5,
+            "requirement_value": submitted,
+        },
     )
 
     assert response.status_code == 200
-    ach = Achievement.query.filter_by(slug="quick-start").first()
-    assert ach is not None
+    ach = Achievement.query.filter_by(slug="req-test").one()
+    assert ach.requirement_value == stored
+    # Whatever the route accepts is something the engine can unlock on
+    assert _parse_requirement(ach) == int(stored)
+
+
+@pytest.mark.parametrize("fields", [{}, {"requirement_value": ""}, {"requirement_value": " "}])
+def test_add_certificate_achievement_may_leave_the_requirement_blank(
+    client, init_db, test_admin, fields
+):
+    """The approved certificate is the condition, so a blank requirement is stored as none."""
+    from application.services.achievement_engine import _parse_requirement
+
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _add_achievement(client, type="certificate", **fields)
+
+    assert response.status_code == 200
+    ach = Achievement.query.filter_by(slug="req-test").one()
     assert ach.requirement_value is None
+    assert _parse_requirement(ach) == 1
+
+
+@pytest.mark.parametrize("requirement", ["abc", "10.5"])
+def test_add_certificate_achievement_still_rejects_a_non_numeric_requirement(
+    client, init_db, test_admin, requirement
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _add_achievement(
+        client, type="certificate", requirement_value=requirement
+    )
+
+    assert response.status_code == 400
+    assert Achievement.query.filter_by(slug="req-test").first() is None
 
 
 def test_add_achievement_no_user(client, init_db):
@@ -440,12 +529,14 @@ def test_add_achievement_post_json(client, init_db, test_admin):
             "description": "desc",
             "type": "ducks",
             "reward": 10,
+            "requirement_value": 25,
         },
     )
     assert response.status_code == 200
     assert response.json["status"] == "success"
     ach = Achievement.query.filter_by(slug="json-ach").first()
     assert ach is not None
+    assert ach.requirement_value == "25"
 
 
 def test_add_achievement_missing_fields(client, init_db, test_admin):
@@ -469,6 +560,7 @@ def test_add_achievement_duplicate_slug(
             "slug": test_achievement.slug,
             "type": "ducks",
             "reward": 10,
+            "requirement_value": "10",
         },
     )
     assert response.status_code == 400
@@ -497,6 +589,7 @@ def test_add_achievement_with_badge(
             "slug": "badge-ach",
             "type": "ducks",
             "reward": 10,
+            "requirement_value": "10",
             "badge": img_file,
         },
         content_type="multipart/form-data",
@@ -525,6 +618,7 @@ def test_add_achievement_invalid_badge_ext(mock_allowed, client, init_db, test_a
             "slug": "badge-ach-2",
             "type": "ducks",
             "reward": 10,
+            "requirement_value": "10",
             "badge": img_file,
         },
         content_type="multipart/form-data",
@@ -551,6 +645,7 @@ def test_add_achievement_rejects_gif_and_svg_badges(
             "slug": "bad-badge",
             "type": "ducks",
             "reward": 10,
+            "requirement_value": "10",
             "badge": (BytesIO(b"fake image"), filename),
         },
         content_type="multipart/form-data",
@@ -638,7 +733,8 @@ def test_add_achievement_reward_defaults_and_parsing(
         sess["user"] = test_admin.id
 
     response = client.post(
-        "/api/achievements/add", data={"name": "Rewarded", "slug": "rewarded", **form}
+        "/api/achievements/add",
+        data={"name": "Rewarded", "slug": "rewarded", "requirement_value": "5", **form},
     )
 
     assert response.status_code == 200
@@ -801,6 +897,7 @@ def test_add_achievement_badge_subprocess_fail(
             "slug": "badge-ach-3",
             "type": "ducks",
             "reward": 10,
+            "requirement_value": "10",
             "badge": img_file,
         },
         content_type="multipart/form-data",
@@ -829,6 +926,7 @@ def test_add_achievement_badge_subprocess_exception(
             "slug": "badge-ach-4",
             "type": "ducks",
             "reward": 10,
+            "requirement_value": "10",
             "badge": img_file,
         },
         content_type="multipart/form-data",
@@ -1424,6 +1522,95 @@ def test_edit_achievement_updates_fields(client, init_db, test_admin, test_achie
     assert test_achievement.source == "codecombat.com"
 
 
+@pytest.mark.parametrize("requirement", ["", "   ", "abc", "10.5", "1e3"])
+def test_edit_achievement_rejects_blank_or_non_numeric_requirement(
+    client, init_db, test_admin, test_achievement, requirement
+):
+    """The admin form always sends the field, so a cleared box arrives as ''."""
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(
+        client, test_achievement.id, name="Changed", requirement_value=requirement
+    )
+
+    assert response.status_code == 400
+    assert response.json["message"] == "Requirement must be a whole number."
+    db.session.refresh(test_achievement)
+    assert test_achievement.requirement_value == "100"
+    assert test_achievement.name != "Changed"
+
+
+def test_edit_achievement_normalises_the_requirement(
+    client, init_db, test_admin, test_achievement
+):
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(client, test_achievement.id, requirement_value=" 12 ")
+
+    assert response.status_code == 200
+    db.session.refresh(test_achievement)
+    assert test_achievement.requirement_value == "12"
+
+
+def test_edit_certificate_achievement_may_clear_the_requirement(
+    client, init_db, test_admin
+):
+    cert = AchievementFactory(type="certificate", requirement_value="1")
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(client, cert.id, requirement_value="")
+
+    assert response.status_code == 200
+    db.session.refresh(cert)
+    assert cert.requirement_value is None
+
+
+def test_edit_achievement_to_a_numeric_type_needs_a_requirement(
+    client, init_db, test_admin
+):
+    """Changing a blank-requirement certificate to a counting type, without a
+    requirement, would leave an achievement that never unlocks."""
+    cert = AchievementFactory(type="certificate", requirement_value=None)
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(client, cert.id, type="ducks")
+
+    assert response.status_code == 400
+    assert response.json["message"] == "Requirement must be a whole number."
+    db.session.refresh(cert)
+    assert cert.type == "certificate"
+
+    ok = _edit(client, cert.id, type="ducks", requirement_value="50")
+
+    assert ok.status_code == 200
+    db.session.refresh(cert)
+    assert (cert.type, cert.requirement_value) == ("ducks", "50")
+
+
+def test_edit_achievement_without_touching_type_or_requirement_leaves_it_alone(
+    client, init_db, test_admin
+):
+    """An older achievement with an unreadable requirement can still be renamed
+    through a request that does not mention the requirement."""
+    legacy = AchievementFactory(type="ducks", requirement_value="ten")
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    response = _edit(client, legacy.id, name="Renamed Legacy")
+
+    assert response.status_code == 200
+    db.session.refresh(legacy)
+    assert legacy.name == "Renamed Legacy"
+    assert legacy.requirement_value == "ten"
+
+
 def test_edit_achievement_partial_update_keeps_other_fields(
     client, init_db, test_admin, test_achievement
 ):
@@ -1909,7 +2096,7 @@ def _add_with_badge(client, slug, data, filename="badge.png", **extra):
     return client.post(
         "/api/achievements/add",
         data={"name": f"Badge {slug}", "slug": slug, "type": "ducks", "reward": 10,
-              "badge": (BytesIO(data), filename), **extra},
+              "requirement_value": "10", "badge": (BytesIO(data), filename), **extra},
         content_type="multipart/form-data",
     )
 
@@ -1957,7 +2144,10 @@ def test_add_badge_removes_leftover_files_of_other_types(mock_run, admin_session
 
 @patch(RUN_SPRITE)
 def test_add_without_a_badge_does_not_touch_files_or_the_sprite(mock_run, admin_session, badge_dir):
-    response = admin_session.post("/api/achievements/add", data={"name": "Plain", "slug": "plain"})
+    response = admin_session.post(
+        "/api/achievements/add",
+        data={"name": "Plain", "slug": "plain", "requirement_value": "10"},
+    )
 
     assert response.status_code == 200
     mock_run.assert_not_called()
