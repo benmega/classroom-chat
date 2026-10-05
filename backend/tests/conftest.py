@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 from application import create_app
-from application.config import Config, TestingConfig
+from application.config import Config, DevelopmentConfig, ProductionConfig, TestingConfig
 from application.extensions import db, limiter, socketio
 from application.models.achievements import Achievement, UserAchievement
 from application.models.challenge import Challenge
@@ -43,6 +43,21 @@ def _isolated_upload_folder(tmp_path_factory):
     with pytest.MonkeyPatch.context() as patch_config:
         patch_config.setattr(Config, "UPLOAD_FOLDER", str(folder))
         yield folder
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _in_memory_databases():
+    """Keep create_app(DevelopmentConfig / ProductionConfig) off the real instance databases.
+
+    Those two configs default to instance/dev_users.db and instance/prod_users.db
+    (or DEV_DATABASE_URI / DATABASE_URL from .env), and create_app() creates the
+    tables and seeds rows in whatever database it is given. Tests that need a file
+    database build their own config (see test_schema.py).
+    """
+    with pytest.MonkeyPatch.context() as patch_config:
+        for config_class in (Config, DevelopmentConfig, ProductionConfig):
+            patch_config.setattr(config_class, "SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:")
+        yield
 
 
 @pytest.fixture(scope="session")

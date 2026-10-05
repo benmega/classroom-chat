@@ -54,6 +54,17 @@ def test_create_app_configs():
             assert app_dev is not None
 
 
+@pytest.mark.parametrize("config_class", [DevelopmentConfig, ProductionConfig])
+def test_apps_built_from_dev_and_prod_configs_use_an_in_memory_database(config_class):
+    """create_all and seeding must never run against instance/dev_users.db or prod_users.db."""
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
+        app = create_app(config_class)
+
+    assert app.config["SQLALCHEMY_DATABASE_URI"] == "sqlite:///:memory:"
+    with app.app_context():
+        assert db.engine.url.database == ":memory:"
+
+
 APP_HANDLER_NAMES = ("app_console", "app_file")
 THIRD_PARTY_LOGGERS = ("werkzeug", "sqlalchemy.engine", "engineio", "socketio")
 
