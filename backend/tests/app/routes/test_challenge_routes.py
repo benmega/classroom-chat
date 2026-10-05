@@ -4,6 +4,8 @@ Type: py
 Summary: Unit tests for challenge routes Flask routes.
 """
 
+import html
+import json
 import logging
 import re
 from unittest.mock import patch
@@ -652,6 +654,65 @@ def test_submit_challenge_other_host_is_not_recognised(client, init_db):
     assert response.get_json()["success"] is False
     assert "does not recognize this challenge" in response.get_json()["message"]
     assert _claim_rows(user) == (0, 0)
+
+
+def _popup_alert_text(body):
+    """The string the popup page's alert() will show, decoded as a browser would."""
+    match = re.search(r"alert\((.*)\); window\.close\(\);</script>", body)
+    assert match, body
+    return json.loads(match.group(1))
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "A Bug's Life",
+        "I'll be Back",
+        'Say "hi"',
+        "Back\\slash",
+        "Two" + chr(10) + "lines",
+        "</script><img src=x onerror=alert(1)>",
+        "Tom & Jerry <3",
+    ],
+)
+def test_submit_challenge_get_success_page_escapes_the_challenge_name(
+    client, init_db, name
+):
+    """The bookmarklet opens this GET; the name must reach the alert and the page
+    as text, whatever characters it holds."""
+    user, _, _, challenge, url = _seed_claim()
+    challenge.name = name
+    db.session.commit()
+    _login(client, user)
+
+    response = client.get("/challenge/submit", query_string={"url": url})
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    alert_text = _popup_alert_text(body)
+    assert alert_text.startswith(f"Congratulations on completing {name}! You earned ")
+    assert body.count("<script>") == 1
+    assert body.count("</script>") == 1
+    assert body.endswith(f"{html.escape(alert_text)}</body></html>")
+
+
+def test_submit_challenge_get_failure_page_keeps_the_message_intact(client, init_db):
+    user, _, instance, _, _ = _seed_claim()
+    _login(client, user)
+    url = (
+        "https://codecombat.com/play/level/no-such-level"
+        f"?course={instance.course_id}&course-instance={instance.id}"
+    )
+
+    response = client.get("/challenge/submit", query_string={"url": url})
+
+    assert response.status_code == 400
+    body = response.get_data(as_text=True)
+    assert _popup_alert_text(body) == (
+        "Failed: Couldn't identify challenge 'no-such-level'. "
+        "Check the link and try again."
+    )
+    assert "Couldn&#x27;t identify challenge &#x27;no-such-level&#x27;" in body
 
 
 def test_detect_and_handle_ozaria_domain(init_db):

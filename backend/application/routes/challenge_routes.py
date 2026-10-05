@@ -1,8 +1,10 @@
 
 
+import json
 import logging
 import os
 import re
+from html import escape
 from urllib.parse import parse_qs, urlparse
 
 from application import Configuration
@@ -66,6 +68,25 @@ CHALLENGE_ORIGINS = [*FRONTEND_ORIGINS, *BOOKMARKLET_ORIGINS]
 def _wants_json():
     """True when the caller is an API client rather than a browser form."""
     return request.is_json or request.accept_mimetypes.accept_json
+
+
+def _popup_page(text):
+    """The page the bookmarklet's popup tab shows: an alert, then the same text.
+
+    The text can contain challenge names and error messages, so it is data: it
+    is JSON-encoded for the script (with <, > and & escaped so it cannot close
+    the script element) and HTML-escaped for the page body.
+    """
+    script_text = (
+        json.dumps(text)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
+    return (
+        f"<html><body><script>alert({script_text}); window.close();</script>"
+        f"{escape(text)}</body></html>"
+    )
 
 
 @challenge.route("/submit", methods=["GET", "POST"])
@@ -190,7 +211,7 @@ def submit_challenge():
             )
 
         if is_get_submission:
-            return f"<html><body><script>alert('{message}'); window.close();</script>{message}</body></html>"
+            return _popup_page(message)
 
         return jsonify(
             {
@@ -235,12 +256,7 @@ def submit_challenge():
                 msg = "This course wasn't connected yet. A request to add it has already been submitted."
 
     if is_get_submission:
-        # Escape single quotes in the message for JS alert
-        safe_msg = msg.replace("'", "\\'")
-        return (
-            f"<html><body><script>alert('Failed: {safe_msg}'); window.close();</script>Failed: {msg}</body></html>",
-            400,
-        )
+        return _popup_page(f"Failed: {msg}"), 400
 
     return jsonify(
         {
