@@ -68,7 +68,7 @@ classroom-chat/
 - Global auth/session state via `zustand` (`src/store/useAuthStore.js`).
 - Data fetching via `axios` (`src/api/client.js`) and `@tanstack/react-query` in places; real-time chat via `socket.io-client` (`src/hooks/useChatSocket.js`).
 - Admin has two surfaces: a hand-built admin UI (`src/pages/Admin/*`, `src/admin/AdminPanel.css`) and a generic `react-admin`-powered CRUD/debug panel (`src/admin/AdminPanel.jsx`, mounted at `/admin/advanced-crud`) backed by `routes/admin/crud_routes.py`.
-- The legacy Jinja2 templates, JS and CSS from before the React migration were removed; `frontend/templates/dev_login.html` is the only Jinja template left. Where Flask hands a browser navigation over to the SPA it goes through `application/utilities/spa.py` (`serve_spa_index`): in production that serves the built React `index.html` from `frontend/dist`; in development it returns a JSON 404 pointing at the Vite server on port 5173. New UI work should always go in `frontend/src/`.
+- The legacy Jinja2 templates, JS and CSS from before the React migration were removed; `frontend/templates/dev_login.html` is the only Jinja template left. Where Flask hands a browser navigation over to the SPA it goes through `application/utilities/spa.py` (`serve_spa_index`): it renders `index.html` from `frontend/dist` when a build exists there (the deployed SPA is built and hosted by `deploy-frontend.yml` on S3 + CloudFront, and `deploy.sh` does not build it); otherwise, as in development, it returns a JSON 404 pointing at the Vite server on port 5173. New UI work should always go in `frontend/src/`.
 
 ---
 

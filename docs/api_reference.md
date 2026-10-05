@@ -64,7 +64,7 @@ All admin routes require `admin_only` (a session user whose `role` is `admin`).
 ## 8. Webhooks & Server Info
 - **`POST /api/webhooks/youtube`, `POST /api/webhooks/transcribe`**: External integrations (e.g. Lambda transcriber in `infrastructure/lambda_transcriber/`).
 - **`GET /server/health`**: Health check (used by `deploy.sh`'s post-deploy check).
-- **`GET /`, `GET /<path>`**: SPA catch-all in `general_routes.py`; returns the React `index.html` via `application/utilities/spa.py` (production: `frontend/dist`). In development the React app runs on the Vite dev server, which proxies API paths to Flask.
+- **`GET /`, `GET /<path>`**: SPA catch-all in `general_routes.py`; renders the React `index.html` from `frontend/dist` via `application/utilities/spa.py` when a build is there, and otherwise returns a JSON 404. The deployed SPA is not served by Flask: it is hosted on S3 + CloudFront (see [infrastructure_and_devops.md](infrastructure_and_devops.md)). In development the React app runs on the Vite dev server, which proxies API paths to Flask.
 
 ---
 

@@ -72,7 +72,8 @@ git checkout deploy
 python3 -m venv venv
 venv/bin/pip install -r backend/requirements.txt
 
-# 3. Create swap file (prevents OOM-kill on low-RAM instances)
+# 3. Optional: create a swap file on a low-RAM instance (deploy.sh no longer builds the
+#    frontend, so a deploy does not need one)
 sudo fallocate -l 1G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
@@ -175,6 +176,16 @@ It covers:
 
 `/dev-login` is deliberately not proxied: it is disabled in production. The React app uses
 `/api/achievements/*`, which is covered by the `api` prefix.
+
+This is the only nginx site `deploy.sh` installs. It no longer installs a site for
+`blossom.benmega.com` or builds the frontend: the SPA comes from S3 + CloudFront only. A host that
+was deployed with an older `deploy.sh` may still have that old site enabled. It is no longer
+managed, so remove it by hand once:
+
+```bash
+sudo rm -f /etc/nginx/sites-enabled/blossom-frontend /etc/nginx/sites-available/blossom-frontend
+sudo systemctl reload nginx
+```
 
 > **Note on Frontend Routing**: The frontend SPA (`blossom.benmega.com`) is hosted on **AWS S3** and served globally via **AWS CloudFront**. CloudFront handles SSL termination and redirects, and the S3 bucket is configured to serve `index.html` for client-side routing.
 
