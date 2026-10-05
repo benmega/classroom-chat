@@ -371,3 +371,33 @@ describe('shared class names (T1a)', () => {
         expect(bodyOf(layout, '.stat-badge .stat-label')).toMatch(/display:\s*none/);
     });
 });
+
+describe('page scroll (T6b)', () => {
+    const index = () => readCss('index.css');
+
+    it('does not lock html and body for every page', () => {
+        expect(bodyOf(index(), 'html, body')).not.toMatch(/overflow/);
+    });
+
+    it('locks the viewport only while a signed-in shell is mounted', () => {
+        const selector = (tag) => `${tag}:has(:where(.app-container, .admin-app-container))`;
+        expect(bodyOf(index(), selector('html'))).toMatch(/overflow:\s*hidden/);
+        expect(bodyOf(index(), selector('body'))).toMatch(/overflow:\s*hidden/);
+    });
+
+    // The parent report prints html, body and the shell with overflow: visible !important, which beats the lock.
+    it('leaves the lock at the specificity of the old html, body rule and lets the report print rules lift it', () => {
+        expect(index()).toMatch(/html:has\(:where\(/);
+        expect(index()).not.toMatch(/html:has\((?!:where)/);
+        const print = rules(readCss('pages/Parent/ParentReportCard.css'))
+            .find((r) => r.selectors.includes('html') && r.selectors.includes('.app-container'));
+        expect(print.body).toMatch(/overflow:\s*visible\s*!important/);
+    });
+
+    it('keeps the shells locking themselves and rendering the classes the rule looks for', () => {
+        expect(bodyOf(readCss('components/Layout/Layout.css'), '.app-container')).toMatch(/overflow:\s*hidden/);
+        expect(bodyOf(readCss('components/Layout/AdminLayout.css'), '.admin-app-container')).toMatch(/overflow:\s*hidden/);
+        expect(fs.readFileSync(path.join(SRC, 'components/Layout/Layout.jsx'), 'utf8')).toContain('className="app-container');
+        expect(fs.readFileSync(path.join(SRC, 'components/Layout/AdminLayout.jsx'), 'utf8')).toContain('admin-app-container');
+    });
+});

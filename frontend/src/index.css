@@ -10,6 +10,14 @@ html, body {
   height: 100dvh;
   margin: 0;
   padding: 0;
+}
+
+/* The signed-in shells (.app-container, .admin-app-container) fill the viewport and scroll inside themselves,
+   so the document is locked only while one is mounted. Every other page (sign-in, landing, error screens)
+   scrolls normally, which keeps content on a short window reachable. :where() keeps the specificity of the
+   old html, body rule. */
+html:has(:where(.app-container, .admin-app-container)),
+body:has(:where(.app-container, .admin-app-container)) {
   overflow: hidden;
 }
 
