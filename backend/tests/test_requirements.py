@@ -38,8 +38,16 @@ PROVIDED_BY = {
     "jinja2": "flask",
 }
 
+# Runtime requirements that no module under application/ or main.py imports, so the
+# "is it used" check below needs to be told why each one is still needed.
+NOT_IMPORTED = {
+    "cryptography": "the RSA/EC backend python-jose uses whenever it can be imported",
+    "gevent-websocket": "loaded by the gunicorn worker class named in the service file",
+    "gunicorn": "the production server, started by the service file",
+}
+
 # Test and lint tooling that must never ship in the production requirements.
-DEV_ONLY = {"pytest", "pytest-cov", "ruff", "mypy", "sqlalchemy2-stubs", "factory-boy"}
+DEV_ONLY = {"pytest", "pytest-cov", "ruff", "mypy", "sqlalchemy2-stubs", "factory-boy", "flask-login"}
 # Packages only the optional scripts need.
 TOOLS_ONLY = {"playwright", "qrcode", "reportlab"}
 
@@ -143,6 +151,21 @@ LOCAL = _local_module_names(BACKEND_DIR, BACKEND_DIR / "tests")
 def test_every_import_is_declared(label, sources, declared, needs_file):
     missing = undeclared_imports(_python_files(*sources), declared, LOCAL)
     assert not missing, f"{label} code imports packages that {needs_file} does not list: {missing}"
+
+
+def test_every_runtime_requirement_is_used():
+    # The reverse of test_every_import_is_declared: a package nothing imports only
+    # adds install time and attack surface to the production venv.
+    imported: set[str] = set()
+    for path in _python_files("application", "main.py"):
+        for name in third_party_imports(path, LOCAL):
+            imported.add(IMPORT_TO_DIST.get(name, _normalise(name)))
+            if name in PROVIDED_BY:
+                imported.add(PROVIDED_BY[name])
+    unused = RUNTIME - imported - NOT_IMPORTED.keys()
+    assert not unused, f"requirements.txt lists packages that no runtime code imports: {sorted(unused)}"
+    assert NOT_IMPORTED.keys() <= RUNTIME, "NOT_IMPORTED names a package requirements.txt no longer lists"
+    assert not NOT_IMPORTED.keys() & imported, "NOT_IMPORTED names a package the runtime code now imports"
 
 
 def test_no_requirements_file_lists_a_package_twice():
