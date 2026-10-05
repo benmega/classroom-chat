@@ -144,21 +144,23 @@ def test_challenge_log_model_structure(init_db):
     assert not hasattr(saved_log, "challenge_name")
 
 
-def test_challenge_name_uniqueness_scoped_by_domain(init_db):
+def test_only_the_slug_of_a_challenge_is_unique(init_db):
     """
-    Verify that two challenges can share the same name if they are in different domains,
-    but cannot share the same name in the same domain.
+    Challenges may share a name, in different domains or in the same one.
+    The slug is what tells them apart and cannot be reused.
     """
     from sqlalchemy.exc import IntegrityError
 
-    c1 = Challenge(name="Unique Test Name", slug="slug-c1", domain="codecombat.com")
-    c2 = Challenge(name="Unique Test Name", slug="slug-c2", domain="www.ozaria.com")
-    db.session.add(c1)
-    db.session.add(c2)
+    c1 = Challenge(name="Shared Name", slug="slug-c1", domain="codecombat.com")
+    c2 = Challenge(name="Shared Name", slug="slug-c2", domain="www.ozaria.com")
+    c3 = Challenge(name="Shared Name", slug="slug-c3", domain="codecombat.com")
+    db.session.add_all([c1, c2, c3])
     db.session.commit()  # Should succeed
 
-    c3 = Challenge(name="Unique Test Name", slug="slug-c3", domain="codecombat.com")
-    db.session.add(c3)
+    assert Challenge.query.filter_by(name="Shared Name").count() == 3
+
+    db.session.add(Challenge(name="Another Name", slug="slug-c1", domain="other.com"))
     with pytest.raises(IntegrityError):
         db.session.commit()
+    db.session.rollback()
 

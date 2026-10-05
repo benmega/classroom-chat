@@ -12,16 +12,14 @@ from ..extensions import db
 class Challenge(db.Model):
     __tablename__ = "challenges"
 
-    __table_args__ = (
-        db.UniqueConstraint("name", "domain", name="uq_challenges_name_domain"),
-    )
-
     id = db.Column(db.Integer, primary_key=True)
+    # Levels may share a name, even inside one domain: only the slug is unique
     name = db.Column(db.String(255), nullable=False)
     slug = db.Column(db.String(255), nullable=False, unique=True)
     domain = db.Column(db.String(100), nullable=False)
     difficulty = db.Column(db.String(50), nullable=False, default="medium")
-    value = db.Column(db.Integer, nullable=False, default=1)
+    # Duck reward; fractions such as 1.5 are allowed
+    value = db.Column(db.Float, nullable=False, default=1)
     sequence = db.Column(db.Integer, nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
