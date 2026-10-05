@@ -91,6 +91,10 @@ const proxy = {
 export default defineConfig({
   plugins: [react(), lucideOptimize()],
   build: {
+    // Vite 7 raised the default target to chrome107/firefox104/safari16, which stops esbuild from lowering
+    // native private fields and `??=` and so raises the minimum browser version of every page. These are
+    // the targets Vite 5 built for, which this app shipped with: raising the floor should be a decision.
+    target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'],
     rollupOptions: {
       output: {
         // Split heavy vendor libs into separate cached chunks.

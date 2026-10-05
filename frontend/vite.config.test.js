@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import { transformWithEsbuild } from 'vite'
 import config from './vite.config.js'
 
 // Guards the route-level code splitting: the student entry path (index.html) must only
@@ -56,6 +57,24 @@ describe('vite manualChunks', () => {
       expect(manualChunks(dep(pkg))).toBeUndefined()
     },
   )
+})
+
+// Vite 7 defaults to chrome107/firefox104/safari16, which leaves native private class fields and `??=` in
+// the bundle: Safari 14 and Firefox 78-89 then fail to parse the app. The config pins the Vite 5 targets.
+describe('vite build target', () => {
+  it('pins the browser floor instead of taking the Vite default', () => {
+    expect(config.build.target).toEqual(['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'])
+  })
+
+  it('makes esbuild lower syntax older browsers cannot parse', async () => {
+    const source = [
+      'class A { #x = 1; get() { return this.#x } }',
+      'let a; a ??= 2; export { A, a }',
+    ].join('\n')
+    const { code } = await transformWithEsbuild(source, 'probe.js', { target: config.build.target })
+    expect(code).not.toMatch(/\?\?=/)
+    expect(code).not.toMatch(/#x/)
+  })
 })
 
 describe('lucide per-icon import rewrite', () => {
