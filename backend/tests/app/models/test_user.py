@@ -811,7 +811,106 @@ def test_start_session_is_idempotent(sample_user):
     assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 2
 
 
-def test_end_session_closes_every_open_session(sample_user):
+def test_a_second_open_session_is_refused_by_the_database(sample_user):
+    now = datetime.utcnow()
+    db.session.add(SessionLog(user_id=sample_user.id, start_time=now, last_seen=now))
+    db.session.commit()
+
+    db.session.add(SessionLog(user_id=sample_user.id, start_time=now, last_seen=now))
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+
+    assert len(_open_logs(sample_user.id)) == 1
+
+
+def test_ended_sessions_and_other_users_are_not_limited(sample_user, sample_admin):
+    now = datetime.utcnow()
+    db.session.add_all(
+        [
+            SessionLog(user_id=sample_user.id, start_time=now, last_seen=now, end_time=now),
+            SessionLog(user_id=sample_user.id, start_time=now, last_seen=now, end_time=now),
+            SessionLog(user_id=sample_user.id, start_time=now, last_seen=now),
+            SessionLog(user_id=sample_admin.id, start_time=now, last_seen=now),
+        ]
+    )
+    db.session.commit()
+
+    assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 3
+    assert len(_open_logs(sample_user.id)) == 1
+    assert len(_open_logs(sample_admin.id)) == 1
+
+
+def _lookup_misses_once(monkeypatch):
+    """The first lookup of the open session finds none, as it does for a request
+    that looked just before another request's insert was committed."""
+    real = SessionLog._open_session
+    misses = [None]
+
+    def lookup(user_id):
+        return misses.pop() if misses else real(user_id)
+
+    monkeypatch.setattr(SessionLog, "_open_session", lookup)
+
+
+def test_start_session_returns_the_session_another_request_opened_first(
+    sample_user, monkeypatch
+):
+    theirs = SessionLog.start_session(sample_user.id)
+    _lookup_misses_once(monkeypatch)
+
+    ours = SessionLog.start_session(sample_user.id)
+
+    assert ours.id == theirs.id
+    assert [log.id for log in _open_logs(sample_user.id)] == [theirs.id]
+    assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 1
+
+
+def test_start_session_reraises_an_integrity_error_it_cannot_explain(init_db):
+    # No user_id: the insert is refused, and not because a session is already open
+    with pytest.raises(IntegrityError):
+        SessionLog.start_session(None)
+    db.session.rollback()
+
+    assert SessionLog.query.count() == 0
+
+
+def test_set_online_keeps_the_session_another_request_opened_first(
+    add_sample_user, init_db, monkeypatch
+):
+    user = add_sample_user("testuser_race", "pwd")
+    theirs = SessionLog.start_session(user.id)
+    assert user.is_online is not True
+    _lookup_misses_once(monkeypatch)
+
+    User.set_online(user.id, True)
+
+    assert db.session.get(User, user.id).is_online is True
+    assert [log.id for log in _open_logs(user.id)] == [theirs.id]
+    assert SessionLog.query.filter_by(user_id=user.id).count() == 1
+
+
+@pytest.mark.parametrize("online, commits", [(True, 2), (False, 1)])
+def test_set_online_gives_up_when_the_integrity_error_stays(
+    add_sample_user, init_db, online, commits
+):
+    user = add_sample_user("testuser_stuck", "pwd")
+    user_id = user.id
+    refused = IntegrityError("INSERT", {}, Exception("refused"))
+
+    with patch.object(db.session, "commit", side_effect=refused) as commit:
+        with pytest.raises(IntegrityError):
+            User.set_online(user_id, online)
+
+    # Going online is tried once more; nothing was persisted either way
+    assert commit.call_count == commits
+    assert SessionLog.query.filter_by(user_id=user_id).count() == 0
+    assert db.session.get(User, user_id).is_online is not True
+
+
+def test_end_session_closes_every_open_session(
+    sample_user, several_open_sessions_allowed
+):
     now = datetime.utcnow()
     orphan_start = now - timedelta(hours=5)
     orphan_seen = now - timedelta(hours=4)
@@ -866,7 +965,9 @@ def test_touch_without_open_session_does_nothing(sample_user):
     assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 1
 
 
-def test_touch_only_bumps_the_newest_open_session(sample_user):
+def test_touch_only_bumps_the_newest_open_session(
+    sample_user, several_open_sessions_allowed
+):
     now = datetime.utcnow()
     orphan_seen = now - timedelta(hours=4)
     orphan = SessionLog(

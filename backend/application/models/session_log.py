@@ -2,6 +2,8 @@
 
 
 
+from sqlalchemy.exc import IntegrityError
+
 from ..extensions import db
 from ..utilities.helper_functions import utcnow_naive
 
@@ -20,6 +22,17 @@ class SessionLog(db.Model):
         db.DateTime, default=utcnow_naive, nullable=False, index=True
     )
 
+    __table_args__ = (
+        # A user has at most one open session (one that has not ended)
+        db.Index(
+            "uq_session_logs_one_open_per_user",
+            "user_id",
+            unique=True,
+            sqlite_where=db.text("end_time IS NULL"),
+            postgresql_where=db.text("end_time IS NULL"),
+        ),
+    )
+
     user = db.relationship(
         "User",
         backref=db.backref("session_logs", lazy=True, cascade="all, delete-orphan"),
@@ -36,24 +49,42 @@ class SessionLog(db.Model):
         return None
 
     @classmethod
+    def _open_session(cls, user_id):
+        """The user's open session, or None. The newest one, should a database
+        from before the one-open-session index still hold several."""
+        return (
+            cls.query.filter_by(user_id=user_id, end_time=None)
+            .order_by(cls.start_time.desc(), cls.id.desc())
+            .first()
+        )
+
+    @classmethod
     def start_session(cls, user_id, commit=True):
         """Log a new session start (idempotent).
 
         If the user already has an open session (second tab, repeat login) that
         session is returned instead of opening another one.
+
+        The database allows one open session per user, so the insert is refused
+        (IntegrityError) when another request opened the session after the lookup
+        here. With commit=True that request's session is returned. With
+        commit=False the error surfaces at the caller's commit, which has to roll
+        back and call again.
         """
-        log = (
-            cls.query.filter_by(user_id=user_id, end_time=None)
-            .order_by(cls.start_time.desc())
-            .first()
-        )
+        log = cls._open_session(user_id)
         if log:
             return log
 
         log = cls(user_id=user_id)
         db.session.add(log)
         if commit:
-            db.session.commit()
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                log = cls._open_session(user_id)
+                if log is None:
+                    raise
         return log
 
     @classmethod
@@ -65,11 +96,7 @@ class SessionLog(db.Model):
         user has none open. Only the newest open session is touched: older
         ones are orphans and must keep their last_seen (see end_session).
         """
-        log = (
-            cls.query.filter_by(user_id=user_id, end_time=None)
-            .order_by(cls.start_time.desc(), cls.id.desc())
-            .first()
-        )
+        log = cls._open_session(user_id)
         if log:
             log.last_seen = now or utcnow_naive()
             if commit:
@@ -82,7 +109,8 @@ class SessionLog(db.Model):
 
         The newest open session ends now. Older ones are orphans that stopped
         receiving heartbeats, so they end at their last_seen (as the periodic
-        cleanup does) rather than being stretched to now.
+        cleanup does) rather than being stretched to now. Only a database from
+        before the one-open-session index can hold such orphans.
         """
         logs = (
             cls.query.filter_by(user_id=user_id, end_time=None)

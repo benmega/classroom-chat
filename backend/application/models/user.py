@@ -448,19 +448,28 @@ class User(db.Model):
         from .session_log import SessionLog
 
         # The session log and is_online change together in a single commit.
-        if online:
-            # Returns the already-open session if there is one
-            SessionLog.start_session(user.id, commit=False)
-            user.is_online = True
-        else:
-            SessionLog.end_session(user.id, commit=False)
-            user.is_online = False
+        for retry in (True, False):
+            if online:
+                # Returns the already-open session if there is one
+                SessionLog.start_session(user.id, commit=False)
+                user.is_online = True
+            else:
+                SessionLog.end_session(user.id, commit=False)
+                user.is_online = False
 
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+            try:
+                db.session.commit()
+                return
+            except IntegrityError:
+                db.session.rollback()
+                # The database allows one open session per user: another request
+                # opened this user's session after the lookup in start_session.
+                # The second pass finds that session and keeps it.
+                if not (online and retry):
+                    raise
+            except Exception:
+                db.session.rollback()
+                raise
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
