@@ -9,6 +9,6 @@ This document originally listed prompts for migrating the app from server-render
 - The production frontend is built by `.github/workflows/deploy-frontend.yml` (`npm run build`) and published to S3 + CloudFront; the EC2 host serves the API only, and `deploy.sh` does not build the frontend. Flask still has a catch-all in `general_routes.py` that renders `index.html` from `frontend/dist` when a build exists there (`ProductionConfig.TEMPLATE_FOLDER`/`STATIC_FOLDER` in `backend/application/config.py`).
 
 ## What's left of the old stack, and why
-The legacy Jinja2 templates, JS and CSS under `frontend/templates/` and `frontend/static/` have been removed; the only Jinja template left is `frontend/templates/dev_login.html` (the localhost-only dev login page). Do not build new user-facing features there — everything new belongs in `frontend/src/`.
+The legacy Jinja2 templates, JS and CSS under `frontend/templates/` and `frontend/static/` have been removed; the only Jinja template left is `backend/application/templates/dev_login.html` (the localhost-only dev login page). Do not build new user-facing features there — everything new belongs in `frontend/src/`.
 
 If you're looking for genuinely current priorities or open work, check the open GitHub Issues (`gh issue list --state open`, https://github.com/benmega/classroom-chat/issues) and file new work there, or ask the project maintainer — this file is a historical record, not a live roadmap.
