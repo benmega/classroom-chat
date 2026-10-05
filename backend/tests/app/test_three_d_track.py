@@ -6,6 +6,7 @@ from application.commands.three_d_data import THREE_D_CHALLENGES, THREE_D_COURSE
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
+from application.models.configuration import Configuration
 from application.models.course import Course
 from application.models.duck_transaction import DuckTransaction
 from application.models.project import Project
@@ -253,6 +254,45 @@ def test_approving_template_with_dangling_slug_is_safe(
     assert resp.status_code == 200
     assert resp.get_json()["challenge_completed"] is False
     assert ChallengeLog.query.filter_by(user_id=sample_user.id).count() == 0
+
+
+def _approval_ducks(client, project, user):
+    ducks_before = user.duck_balance
+    resp = _approve(client, project)
+    assert resp.status_code == 200
+    assert resp.get_json()["challenge_completed"] is True
+    db.session.expire_all()
+    return db.session.get(User, user.id).duck_balance - ducks_before
+
+
+@pytest.mark.parametrize(("multiplier", "ducks"), [(0, 0), (1.0, 1), (2.0, 2)])
+def test_approving_linked_project_scales_ducks_by_the_configured_multiplier(
+    client, sample_admin, sample_user, seeded, multiplier, ducks
+):
+    login_as_admin(client, sample_admin)
+    Configuration.get_or_create().duck_multiplier = multiplier
+    db.session.commit()
+    project = _make_project(sample_user, "Name Tag Model")
+
+    assert _approval_ducks(client, project, sample_user) == ducks
+    # The completion is still recorded when the multiplier pays nothing
+    assert (
+        ChallengeLog.query.filter_by(
+            user_id=sample_user.id, challenge_slug="name-tag-model"
+        ).count()
+        == 1
+    )
+
+
+def test_approving_linked_project_without_a_configuration_row_awards_the_base_value(
+    client, sample_admin, sample_user, seeded
+):
+    login_as_admin(client, sample_admin)
+    Configuration.query.delete()
+    db.session.commit()
+    project = _make_project(sample_user, "Name Tag Model")
+
+    assert _approval_ducks(client, project, sample_user) == 1
 
 
 def test_project_template_routes_persist_challenge_slug(

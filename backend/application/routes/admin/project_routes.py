@@ -89,8 +89,11 @@ def _complete_linked_challenge(student, project):
 
         from application.models.configuration import Configuration
 
-        config = Configuration.query.first()
-        multiplier = (config.duck_multiplier if config else 1) or 1
+        config = Configuration.get_current()
+        # An unset multiplier means no scaling; a configured 0 stays 0, as on the challenge routes
+        multiplier = config.duck_multiplier if config else None
+        if multiplier is None:
+            multiplier = 1
         if student.has_double_duck:
             multiplier *= 2
 
