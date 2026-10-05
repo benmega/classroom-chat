@@ -273,9 +273,31 @@ blank database fails with `NoSuchTableError: users`).
   migration like any other change. In development the factory also compares the database with the
   models at startup and logs a schema-drift report (`application/utilities/schema_check.py`).
 
-Create a new migration on a development machine (from `backend/`, with `FLASK_APP=main.py`):
+### Development databases
+
+A development database is normally built by `create_all`, so Alembic has no revision for it, and
+`create_all` never alters a table that already exists. After a pull that changes the models the
+next start therefore logs the schema-drift report. What to do depends on the database (commands
+from `backend/`, with `FLASK_APP=main.py`):
+
+- **Built by `create_all` (no Alembic revision)**: delete the database file and the next start
+  builds a new one. To keep its data instead, stamp it with the revision that was head when it was
+  built and upgrade from there: `flask db stamp <revision>`, then `flask db upgrade`. `flask db
+  heads` at the commit the database was built from prints that revision; for a database built
+  just before the constraint migrations of October 2026 it is `5c02b3fd911f`. Do not run
+  `flask db upgrade` without the stamp (it replays the whole history against a schema that already
+  has most of it and fails part-way), and do not run `flask db migrate` (it refuses a database
+  that is not at head, and the migrations for a pulled change already exist).
+- **Stamped** (it was upgraded with `flask db upgrade` before): run `flask db upgrade`.
+
+Only a model change of your own needs a new migration. The database has to be at head first, as
+above (`flask db stamp head` for a database that `create_all` built from the code you started
+from). Then:
 
 ```bash
 flask db migrate -m "describe the change"
 flask db upgrade
 ```
+
+`flask seed` reports rows that the database rejected when its schema is older than the models;
+the same steps apply before seeding again.

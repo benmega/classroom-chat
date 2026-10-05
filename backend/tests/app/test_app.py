@@ -703,7 +703,10 @@ def test_seed_command_skips_only_the_rows_the_database_rejects(test_app):
         output = _run_seed(test_app, _SAME_NAME_LEVELS_CSV)
 
         assert f"Successfully {expected} challenges. Skipped 2 rows" in output
-        assert "run `flask db upgrade` and seed again" in output
+        assert "its schema is older than the models" in output
+        # `flask db upgrade` alone is wrong for a database create_all built
+        assert "`flask db upgrade`, or for a development database" in output
+        assert "delete it or stamp it and then upgrade" in output
         assert "Skipping challenge 'salazar-part-2': UNIQUE constraint failed" in output
         assert "Skipping challenge 'salazar-part-3': UNIQUE constraint failed" in output
         assert "Error seeding challenges" not in output

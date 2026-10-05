@@ -7,6 +7,10 @@ Run these from the `backend/` directory with `FLASK_APP=main.py`:
 
 Do not run `flask db init`; this directory already exists.
 
+A development database that `create_all` built has no Alembic revision, and neither command works
+on it as it is: delete it, or stamp it first. See "Development databases" in
+docs/infrastructure_and_devops.md.
+
 This is the only supported way to change the schema. Production is upgraded by deploy.sh in this
 order: backup, bootstrap/stamp check, `flask db upgrade`, `flask seed`. The root revision is an
 empty placeholder, so the history cannot build a database from scratch; a brand-new database is

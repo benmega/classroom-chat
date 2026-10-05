@@ -175,8 +175,11 @@ def seed_command():
             )
             if skipped_challenges:
                 summary += (
-                    f" Skipped {skipped_challenges} rows the database rejected;"
-                    " run `flask db upgrade` and seed again."
+                    f" Skipped {skipped_challenges} rows the database rejected:"
+                    " its schema is older than the models. Update it and seed"
+                    " again: `flask db upgrade`, or for a development database"
+                    " that create_all built, delete it or stamp it and then"
+                    " upgrade (docs/infrastructure_and_devops.md, section 8)."
                 )
             click.echo(summary)
         except Exception as e:

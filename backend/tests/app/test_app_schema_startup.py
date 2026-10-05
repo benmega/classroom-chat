@@ -124,6 +124,49 @@ def test_development_start_reports_a_column_the_database_lacks(start_app, caplog
     assert "proficiency" in caplog.text
 
 
+def test_drift_report_for_a_database_create_all_built_says_delete_or_stamp(
+    start_app, caplog
+):
+    """'flask db upgrade' cannot be run on a database Alembic has no revision for."""
+    start_app(DevelopmentConfig)
+    with start_app(DevelopmentConfig).app_context():
+        db.session.execute(sa.text("ALTER TABLE skills DROP COLUMN proficiency"))
+        db.session.commit()
+
+    with caplog.at_level("ERROR", logger="application"):
+        app = start_app(DevelopmentConfig)
+
+    assert "This database has no Alembic revision" in caplog.text
+    assert "delete the database file" in caplog.text
+    assert "flask db stamp <revision>" in caplog.text
+    # Looking the revision up leaves the database as it was
+    assert "alembic_version" not in _tables(app)
+
+
+def test_drift_report_for_a_stamped_database_says_upgrade(start_app, caplog):
+    start_app(DevelopmentConfig)
+    with start_app(DevelopmentConfig).app_context():
+        db.session.execute(sa.text("ALTER TABLE skills DROP COLUMN proficiency"))
+        db.session.execute(
+            sa.text(
+                "CREATE TABLE alembic_version "
+                "(version_num VARCHAR(32) NOT NULL PRIMARY KEY)"
+            )
+        )
+        db.session.execute(
+            sa.text("INSERT INTO alembic_version VALUES ('5c02b3fd911f')")
+        )
+        db.session.commit()
+
+    with caplog.at_level("ERROR", logger="application"):
+        start_app(DevelopmentConfig)
+
+    assert "This database is at Alembic revision 5c02b3fd911f." in caplog.text
+    assert "flask db upgrade" in caplog.text
+    assert "flask db stamp" not in caplog.text
+    assert "delete the database file" not in caplog.text
+
+
 def test_development_start_reports_nothing_for_a_schema_built_from_the_models(
     start_app, caplog
 ):
