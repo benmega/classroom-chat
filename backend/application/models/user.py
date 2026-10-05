@@ -82,7 +82,14 @@ class User(db.Model):
         "ChallengeLog",
         primaryjoin="User.id == foreign(ChallengeLog.user_id)",
         lazy="dynamic",
-        viewonly=True,
+        cascade="all, delete-orphan",
+    )
+    # Declared for the cascade: these rows belong to the user and are deleted
+    # with it. No code reads the collections.
+    duck_trades = db.relationship("DuckTradeLog", cascade="all, delete-orphan")
+    submissions = db.relationship("Submission", cascade="all, delete-orphan")
+    course_instance_requests = db.relationship(
+        "CourseInstanceRequest", cascade="all, delete-orphan"
     )
 
     # Many-to-many classroom enrollment via user_classrooms join table

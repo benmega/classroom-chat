@@ -38,6 +38,10 @@ class ParentMessage(db.Model):
     )
 
     # Relationships
+    # Deleting the parent deletes the messages; deleting the admin who resolved
+    # one only clears resolved_by_id. The ORM does both itself (no
+    # passive_deletes), so neither depends on the database enforcing the
+    # ON DELETE rules above.
     parent = db.relationship(
         "User",
         foreign_keys=[parent_id],
@@ -45,13 +49,13 @@ class ParentMessage(db.Model):
             "parent_messages_sent",
             lazy="select",
             cascade="all, delete-orphan",
-            passive_deletes=True,
         ),
         lazy="joined",
     )
     resolved_by = db.relationship(
         "User",
         foreign_keys=[resolved_by_id],
+        backref=db.backref("parent_messages_resolved", lazy="select"),
         lazy="joined",
     )
 
