@@ -119,7 +119,7 @@ describe('admin stylesheets', () => {
   it('keeps the create-classroom modal rules in Classes.css, not in the class dashboard sheet', () => {
     // The dashboard never renders .modal-overlay/.modal-card, but unscoped rules for them restyled the Classes modal
     // (a translucent card, and a dark one on dark-OS devices under that modal's dark heading text).
-    expect(sheet('/src/pages/Admin/AdminClassDashboard.css')).not.toMatch(/\.modal-(overlay|card)/)
+    expect(sheet('/src/pages/Admin/AdminClassDashboard.css')).not.toMatch(/\.modal-(overlay|card)\b/)
     expect(sheet('/src/pages/Admin/Classes.css')).toMatch(/\.modal-overlay\s*\{/)
     expect(sheet('/src/pages/Admin/Classes.css')).toMatch(/\.modal-card\s*\{/)
   })

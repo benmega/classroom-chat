@@ -1031,12 +1031,6 @@
         align-items: flex-start;
     }
 
-    /* Modal card: full width on small screens */
-    .modal-card {
-        max-width: calc(100vw - 2rem);
-        max-height: calc(100dvh - 2rem);
-    }
-
     /* Assignments list: smaller tiles on mobile */
     .assignments-list {
         gap: 12px;
