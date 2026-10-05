@@ -77,26 +77,33 @@ def run_tests():
     return f"STDOUT: {stdout}\nSTDERR: {stderr}\nCode: {result.returncode}"
 
 
+def _login(entry):
+    """Author login of a comment or review (the author is null for a deleted account)."""
+    return (entry.get("author") or {}).get("login", "ghost")
+
+
 def get_discussion_context():
     """Fetch full context including comments and reviews from GitHub."""
     obj_num = os.getenv("OBJ_NUMBER")
     is_pr = os.getenv("IS_PR") == "true"
     cmd = "pr" if is_pr else "issue"
+    # Only pull requests have reviews: 'gh issue view' rejects the field as unknown.
+    fields = "body,comments,reviews" if is_pr else "body,comments"
     try:
         result = subprocess.run(
-            ["gh", cmd, "view", obj_num, "--json", "body,comments,reviews"],
+            ["gh", cmd, "view", obj_num, "--json", fields],
             capture_output=True,
             text=True,
         )
+        if result.returncode != 0:
+            return f"Error fetching discussion: {result.stderr.strip()}"
         data = json.loads(result.stdout)
         context = f"Main Description: {data.get('body')}\n\nComments:\n"
         for c in data.get("comments", []):
-            context += f"- {c['author']['login']}: {c['body']}\n"
+            context += f"- {_login(c)}: {c['body']}\n"
         if is_pr:
             for r in data.get("reviews", []):
-                context += (
-                    f"- REVIEW ({r['state']}) by {r['author']['login']}: {r['body']}\n"
-                )
+                context += f"- REVIEW ({r['state']}) by {_login(r)}: {r['body']}\n"
         return context
     except Exception as e:
         return f"Error fetching discussion: {e!s}"
@@ -108,6 +115,7 @@ def get_discussion_context():
 def main():
     obj_type = "Pull Request" if os.getenv("IS_PR") == "true" else "Issue"
     plan_context = os.getenv("ISSUE_PLAN") or "No plan provided."
+    description = os.getenv("ISSUE_BODY") or "No description provided."
 
     messages = [
         {
@@ -127,7 +135,7 @@ def main():
         },
         {
             "role": "user",
-            "content": f"Title: {os.getenv('ISSUE_TITLE')}\nArchitect Plan: {plan_context}\n\nImplement the fix.",
+            "content": f"Title: {os.getenv('ISSUE_TITLE')}\nDescription: {description}\nArchitect Plan: {plan_context}\n\nImplement the fix.",
         },
     ]
 
