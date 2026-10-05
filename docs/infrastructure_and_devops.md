@@ -7,6 +7,54 @@ still served by the EC2 Flask backend (`api-blossom.benmega.com`, the `VITE_API_
 
 ---
 
+## Origins
+
+The browser talks to two origins, both under `benmega.com`:
+
+| Origin | Served by | What it serves |
+| :--- | :--- | :--- |
+| `https://blossom.benmega.com` | CloudFront in front of an S3 bucket; published by `deploy-frontend.yml` | The React SPA: `index.html`, the hashed JS and CSS, and everything from `frontend/public` (including `/static/...` and `/images/...`) |
+| `https://api-blossom.benmega.com` | EC2: nginx (TLS, CORS preflight) in front of gunicorn on `127.0.0.1:8000`; the Route 53 record is kept current by `infrastructure/update-dns.sh` | The JSON API (`/api`, `/user`, `/message`, `/challenge`, `/duck_trade`, `/notes`, `/server`), Socket.IO (`/socket.io`) and uploaded files (for example `/user/profile_pictures/...`, `/user/project_images/...`) |
+
+The instance can be stopped when idle. The "server is sleeping" page (`ServerOffline.jsx`) starts it
+through an API Gateway endpoint, `VITE_WAKEUP_API_URL`, which is a third origin used only for that.
+
+**How the frontend chooses an origin.** `deploy-frontend.yml` builds with
+`VITE_API_URL=https://api-blossom.benmega.com`; unset (development) means the same origin, which is the
+Vite proxy. `getApiUrl()` in `frontend/src/utils/apiUrl.js` leaves absolute URLs alone, keeps `/static/...`
+and `/images/...` on the frontend origin (they are bundled from `frontend/public`) and puts every other
+path on the API origin. The Socket.IO endpoint and the bookmarklet links use `getAbsoluteApiBaseUrl()`.
+nginx on the API host does not proxy `/static`, so a `/static/...` path built against the API origin
+is a 404.
+
+**Deep links.** S3 cannot rewrite paths, so the CloudFront distribution maps its 403 and 404 responses
+to `/index.html` with status 200 (a custom error response, configured on the distribution, not in
+this repo) and React Router takes over, for example for `/admin/submissions` after a hard refresh.
+
+**Cookies and CSRF (production).** The two hosts are subdomains of `benmega.com`, so the SPA's
+requests are same-site and carry the cookies with `withCredentials`.
+
+- The session cookie has domain `.benmega.com`, `Secure`, `HttpOnly` and `SameSite=Lax` (not `None`:
+  nothing is embedded cross-site). The CodeCombat/Ozaria bookmarklet opens `/challenge/submit` with
+  `window.open`, a top-level GET navigation, which `Lax` allows.
+- CSRF uses Flask-WTF's double submit. Every API response sets `csrf_token_v2` (domain `.benmega.com`,
+  `Secure`, `SameSite=Lax`, deliberately not `HttpOnly`); the SPA reads it from `document.cookie` and
+  sends it back as `X-CSRFToken` (`frontend/src/api/client.js`). `WTF_CSRF_SSL_STRICT` is off
+  because Flask-WTF's strict check wants the `Referer` host to equal the request host, which cannot
+  hold when the SPA and the API are on different hosts. The token, `SameSite=Lax` and the CORS
+  allow-list remain.
+
+**CORS.** `CORS_ORIGINS` defaults to `https://blossom.benmega.com` and the CloudFront domain
+(`DEFAULT_PROD_CORS_ORIGINS` in `config.py`). Socket.IO uses the same list. The CodeCombat and Ozaria
+origins (`BOOKMARKLET_ORIGINS`) are allowed on `/challenge/submit` only. `deploy.yml` does not write
+`CORS_ORIGINS` (the status quo is to rely on the code defaults), and because it rewrites
+`backend/.env` on every deploy, a value added to that file by hand would be lost; change the default
+list in `config.py` instead. nginx answers CORS preflight requests itself and names only
+`https://blossom.benmega.com`, so serving the SPA from another host also means editing that line in
+`infrastructure/nginx/api-blossom.benmega.com.conf`.
+
+---
+
 ## 1. Directory Layout (EC2 Server - Backend Only)
 
 ```
@@ -189,13 +237,13 @@ sudo rm -f /etc/nginx/sites-enabled/blossom-frontend /etc/nginx/sites-available/
 sudo systemctl reload nginx
 ```
 
-> **Note on Frontend Routing**: The frontend SPA (`blossom.benmega.com`) is hosted on **AWS S3** and served globally via **AWS CloudFront**. CloudFront handles SSL termination and redirects, and the S3 bucket is configured to serve `index.html` for client-side routing.
+> **Note on Frontend Routing**: The frontend SPA (`blossom.benmega.com`) is hosted on **AWS S3** and served via **AWS CloudFront**, which terminates TLS for that host. Client-side routes work on a hard refresh because CloudFront maps 403/404 responses to `/index.html`, not because of any S3 or nginx setting. See [Origins](#origins).
 
 ---
 
 ## 6. CI/CD Pipeline (GitHub Actions)
 
-- **`deploy-frontend.yml`**: Triggers on push to `deploy`. Builds the React SPA and uploads the static assets directly to the AWS S3 bucket. Runs are serialised (`concurrency` group); a newer push queues behind an in-flight run instead of cancelling it.
+- **`deploy-frontend.yml`**: Triggers on push to `deploy` (and manually). Builds the React SPA with `VITE_API_URL` pointing at the API origin, runs `aws s3 sync --delete` to the S3 bucket and invalidates the CloudFront cache. It is the only place the frontend is built for production. Runs are serialised (`concurrency` group); a newer push queues behind an in-flight run instead of cancelling it.
 - **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, online SQLite DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)). Runs are serialised (`concurrency` group) so two deploys never run `deploy.sh` at the same time.
 - **`lint.yml`**: Ruff (Python) + ESLint (React) on every PR and on pushes to `main`/`master`/`working`. Also the lint gate for both deploy workflows.
 - **`tests.yml`**: On pushes and PRs to `main`/`master`: a backend job (mypy, Alembic single-head check, Pytest) and a frontend job (Vitest with coverage, Playwright E2E against a locally started backend). Also the test gate for both deploy workflows.
