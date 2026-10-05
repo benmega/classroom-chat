@@ -5,7 +5,7 @@ import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import { loadCropper } from '../../utils/loadCropper';
 import { getErrorMessage } from '../../utils/apiError';
-import { getAbsoluteApiBaseUrl } from '../../utils/apiUrl';
+import { getAbsoluteApiBaseUrl, getApiUrl } from '../../utils/apiUrl';
 import './Shop.css'; // Let's use a standard CSS file
 import WallpaperCropModal from '../../components/profile/WallpaperCropModal';
 import Skeleton from '../../components/common/Skeleton';
@@ -392,7 +392,7 @@ const Shop = () => {
                                             ></div>
                                             <div className="mini-header-content">
                                                 <div className="mini-avatar">
-                                                    <img src={user?.profile_picture_url ? (user.profile_picture_url.startsWith('http') ? user.profile_picture_url : (fullApiUrl + user.profile_picture_url)) : `https://ui-avatars.com/api/?name=${user?.username || 'User'}&background=random`} alt="Avatar" />
+                                                    <img src={user?.profile_picture_url ? getApiUrl(user.profile_picture_url) : `https://ui-avatars.com/api/?name=${user?.username || 'User'}&background=random`} alt="Avatar" />
                                                 </div>
                                                 <div className="mini-info">
                                                     <div className="mini-name">{user?.nickname || user?.username || 'Student'}</div>
