@@ -895,10 +895,18 @@ def test_the_seed_files_in_the_repository_fit_together():
     # Every seeded level belongs to a seeded course
     assert {row["course_id"] for row in levels} <= set(course_ids)
 
+    # The types the achievement engine knows how to check
     known_types = {
-        "ducks", "project", "progress", "chat", "consistency",
-        "community", "session", "trade", "certificate",
-    }  # fmt: skip
+        "ducks",
+        "project",
+        "progress",
+        "chat",
+        "consistency",
+        "community",
+        "session",
+        "trade",
+        "certificate",
+    }
     domains = {row["domain"] for row in courses}
     for row in achievements:
         assert row["name"] and row["type"] in known_types, row["slug"]
