@@ -200,15 +200,6 @@ a.stat-badge:hover {
     color: var(--secondary-color);
 }
 
-.stat-badge.drawer .stat-icon {
-    color: #6366f1;
-    transition: transform var(--transition-fast);
-}
-
-.stat-badge.drawer:hover .stat-icon {
-    transform: scale(1.15) rotate(-5deg);
-}
-
 .stat-content {
     display: flex;
     flex-direction: column;
@@ -487,10 +478,6 @@ a.stat-badge:hover {
 
 .dropdown-stat-link.packets {
     color: var(--secondary-color) !important;
-}
-
-.dropdown-stat-link.drawer {
-    color: var(--text-secondary) !important;
 }
 
 .dropdown-stat-link:hover {

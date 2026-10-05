@@ -80,7 +80,7 @@ describe('Layout Component', () => {
     it('renders correctly for student user', () => {
         useLayout.mockReturnValue({
             ...defaultLayoutContext,
-            user: { role: 'student', username: 'student1', drawer: 'Draw1' },
+            user: { role: 'student', username: 'student1' },
             isAuthenticated: true,
         });
 
@@ -100,6 +100,26 @@ describe('Layout Component', () => {
         // Hamburger toggle for mobile
         expect(screen.getByLabelText(/Toggle Sidebar/i)).toBeInTheDocument();
         expect(screen.getByTestId('mobile-sidebar')).toBeInTheDocument();
+    });
+
+    it('shows the duck balance in the header and no badge for the removed locker drawer', () => {
+        useLayout.mockReturnValue({
+            ...defaultLayoutContext,
+            user: { role: 'student', username: 'student1', duck_balance: 12 },
+            isAuthenticated: true,
+        });
+
+        render(
+            <MemoryRouter>
+                <Layout>
+                    <div>Student Content</div>
+                </Layout>
+            </MemoryRouter>
+        );
+
+        expect(screen.getByTestId('nav-bit-shift')).toHaveTextContent('12');
+        expect(screen.queryByText('Drawer')).not.toBeInTheDocument();
+        expect(screen.queryByText('N/A')).not.toBeInTheDocument();
     });
 
     it('renders correctly for parent user', () => {
