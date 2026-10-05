@@ -56,3 +56,13 @@ git_diff*
 app.log
 ${DATABASE_PATH}
 .vite/
+
+# Root-level scratch files (CI log dumps, cleanup lists, one-off exports)
+/deploy_log.txt
+/files_to_clean*.txt
+/git_history.png
+/test_out.pdf
+/toast_success.txt
+/run_grep.js
+/projects.json
+/projects_out.json
