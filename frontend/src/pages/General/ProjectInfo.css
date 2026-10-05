@@ -104,29 +104,7 @@
     border: 1px solid rgba(14, 178, 187, 0.2);
 }
 
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: var(--font-xs);
-    font-weight: 700;
-    padding: 4px 12px;
-    border-radius: var(--radius-full);
-}
-
-.status-badge.assigned {
-    background: var(--success-subtle);
-    color: var(--success-dark);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.status-badge.unassigned {
-    background: var(--bg-tertiary);
-    color: var(--text-muted);
-    border: 1px solid var(--border-subtle);
-}
-
-.project-title {
+:where(.project-info-page) .project-title {
     font-size: 2.25rem;
     line-height: 1.2;
     margin: 0;
@@ -256,7 +234,7 @@
     gap: 1.25rem;
 }
 
-.info-item {
+:where(.project-info-page) .info-item {
     display: flex;
     gap: 1rem;
     align-items: flex-start;
@@ -281,7 +259,7 @@
     gap: 0.15rem;
 }
 
-.info-label {
+:where(.project-info-page) .info-label {
     font-size: var(--font-xs);
     color: var(--text-muted);
     text-transform: uppercase;

@@ -240,12 +240,6 @@ a.stat-badge:hover {
     .stat-badge .stat-value {
         font-size: 0.9rem;
     }
-    .stat-label {
-        display: none;
-    }
-    .stat-value {
-        font-size: 0.8rem;
-    }
     .stat-badge .stat-icon {
         width: 16px;
         height: 16px;
@@ -573,12 +567,6 @@ footer {
     border-top: 1px solid var(--border-subtle);
     flex-shrink: 0;
     background: var(--bg-primary);
-}
-
-@media (max-width: 992px) {
-    .user-info {
-        display: none;
-    }
 }
 
 /* Header-specific User Search Styles (Layout & Sizing only) */

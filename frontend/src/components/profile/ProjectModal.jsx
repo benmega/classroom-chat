@@ -41,12 +41,12 @@ const ProjectModal = ({ project, onClose }) => {
     if (!project) return null;
 
     return createPortal(
-        <div role="presentation" className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <div role="presentation" className="profile-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
             <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="modal-content project-modal">
                 <button className="close-modal" onClick={onClose} aria-label="Close"><X size={24} /></button>
                 <div className="modal-header">
                     <h2 id={titleId}>{project.name}</h2>
-                    <div className="modal-actions">
+                    <div className="profile-modal-actions">
                         {safeUrl(project.link) && <a href={safeUrl(project.link)} className="btn-primary" target="_blank" rel="noreferrer"><ExternalLink size={18} /> Launch Live</a>}
                         {safeUrl(project.github_link) && <a href={safeUrl(project.github_link)} className="btn-secondary" target="_blank" rel="noreferrer"><Code size={18} /> Source</a>}
                     </div>

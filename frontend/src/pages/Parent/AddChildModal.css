@@ -1,4 +1,4 @@
-.modal-overlay {
+.add-child-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -28,7 +28,7 @@
     to { transform: translateY(0); opacity: 1; }
 }
 
-.modal-header {
+.add-child-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -37,7 +37,7 @@
     border-bottom: 1px solid var(--border-subtle, #e5e7eb);
 }
 
-.modal-header h2 {
+.add-child-header h2 {
     margin: 0;
     font-size: 1.25rem;
     color: var(--text-primary, #111827);
@@ -45,7 +45,7 @@
     font-family: var(--font-heading, inherit);
 }
 
-.close-btn {
+.add-child-close {
     background: transparent;
     border: none;
     color: var(--text-muted, #6b7280);
@@ -58,7 +58,7 @@
     transition: all 0.2s;
 }
 
-.close-btn:hover {
+.add-child-close:hover {
     background: var(--bg-secondary, #f3f4f6);
     color: var(--text-primary, #111827);
 }
@@ -97,7 +97,7 @@
     background: transparent;
 }
 
-.modal-body {
+.add-child-body {
     padding: 1.5rem;
 }
 
@@ -149,11 +149,11 @@
     line-height: 1.5;
 }
 
-.form-group {
+.add-child-form-group {
     margin-bottom: 1.2rem;
 }
 
-.form-group label {
+.add-child-form-group label {
     display: block;
     margin-bottom: 0.5rem;
     color: var(--text-primary, #111827);
@@ -161,9 +161,9 @@
     font-weight: 500;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.add-child-form-group input,
+.add-child-form-group select,
+.add-child-form-group textarea {
     width: 100%;
     padding: 0.75rem;
     border-radius: 8px;
@@ -175,16 +175,16 @@
     transition: all 0.2s;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.add-child-form-group input:focus,
+.add-child-form-group select:focus,
+.add-child-form-group textarea:focus {
     outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
     outline-offset: 2px;
     border-color: var(--primary-color, #0f766e);
     box-shadow: 0 0 0 1px var(--primary-color, #0f766e);
 }
 
-.error-message {
+.add-child-error {
     color: var(--red-700);
     background: var(--error-subtle);
     padding: 0.75rem;

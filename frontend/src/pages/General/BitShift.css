@@ -464,8 +464,7 @@
     text-shadow: 0 0 15px rgba(14, 178, 187, 0.3);
 }
 
-/* Specificity (0,2,0) beats .btn-premium and the unscoped .submit-button rules in SubmitProgressModal.css and
-   SubmitCertificate.css whichever order the stylesheets load in, so these need no !important. */
+/* Specificity (0,2,0) beats .btn-premium whichever order the stylesheets load in, so these need no !important. */
 .bit-shift-page .submit-button {
     padding: 1rem;
     font-size: 1.15rem;

@@ -344,7 +344,7 @@
 }
 
 /* ── Badge image centering ────────────────────────── */
-.badge-wrapper {
+:where(.achievements-page) .badge-wrapper {
     position: relative;
     width: 72px;
     height: 72px;
@@ -359,7 +359,7 @@
 /* The sprite is natively 128×128px. We scale it down and keep it perfectly
    centered inside the wrapper by using absolute positioning.
    Scoped to .badge-wrapper so it doesn't conflict with other badge uses. */
-.badge-wrapper .badge {
+:where(.achievements-page) .badge-wrapper .badge {
     position: absolute;
     top: 50%;
     left: 50%;

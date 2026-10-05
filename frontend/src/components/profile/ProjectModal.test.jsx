@@ -70,7 +70,7 @@ describe('ProjectModal Component', () => {
     fireEvent.click(closeBtn);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
 
-    const overlay = document.querySelector('.modal-overlay');
+    const overlay = document.querySelector('.profile-modal-overlay');
     fireEvent.click(overlay);
     expect(mockOnClose).toHaveBeenCalledTimes(2);
   });
@@ -95,7 +95,7 @@ describe('ProjectModal Component', () => {
 
       expect(screen.getByRole('heading', { name: 'Awesome Game Project' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /Description/ })).toBeInTheDocument();
-      expect(document.querySelector('.modal-overlay')).toHaveAttribute('role', 'presentation');
+      expect(document.querySelector('.profile-modal-overlay')).toHaveAttribute('role', 'presentation');
     });
 
     it('does not close when the dialog itself is clicked', () => {

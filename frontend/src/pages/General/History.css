@@ -31,13 +31,13 @@
     opacity: 0.8;
 }
 
-.search-bar {
+:where(.history-page) .search-bar {
     position: relative;
     width: 100%;
     max-width: 380px;
 }
 
-.search-bar svg {
+:where(.history-page) .search-bar svg {
     position: absolute;
     left: 1.25rem;
     top: 50%;
@@ -46,7 +46,7 @@
     pointer-events: none;
 }
 
-.search-bar input {
+:where(.history-page) .search-bar input {
     width: 100%;
     padding: 1rem 1.25rem 1rem 3.5rem;
     font-size: 1rem;
@@ -58,7 +58,7 @@
     box-shadow: var(--shadow-sm);
 }
 
-.search-bar input:focus {
+:where(.history-page) .search-bar input:focus {
     outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
     outline-offset: 2px;
     border-color: var(--primary-accessible);
@@ -87,7 +87,7 @@
     opacity: 0.9;
 }
 
-.stat-value {
+:where(.history-page) .stat-value {
     font-size: 2rem;
     font-family: var(--font-heading);
     font-weight: 800;
@@ -96,7 +96,7 @@
     margin-bottom: 0.5rem;
 }
 
-.stat-label {
+:where(.history-page) .stat-label {
     font-size: 0.75rem;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -252,7 +252,7 @@
         padding: 2rem;
     }
     
-    .search-bar {
+    :where(.history-page) .search-bar {
         max-width: 100%;
     }
 }

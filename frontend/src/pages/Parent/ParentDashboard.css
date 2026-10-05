@@ -29,17 +29,6 @@
     margin-bottom: 1rem;
 }
 
-.section-title {
-    font-family: var(--font-heading, inherit);
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-
 .section-icon {
     flex-shrink: 0;
 }
@@ -72,9 +61,6 @@
 .children-section-header {
     display: flex;
     align-items: center;
-}
-.children-section-header .section-title {
-    font-size: 1.05rem;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -280,25 +266,6 @@
     gap: 0.5rem;
 }
 
-.activity-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.6rem 0.875rem;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.55);
-    border: 1px solid rgba(99, 102, 241, 0.1);
-    cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-    animation: slide-in-up 0.3s ease both;
-}
-
-.activity-item:hover {
-    transform: translateX(4px);
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.1);
-}
-
 .activity-icon-wrap {
     width: 30px;
     height: 30px;
@@ -308,14 +275,6 @@
     justify-content: center;
     flex-shrink: 0;
     font-size: 0;
-}
-
-.activity-item-body {
-    display: flex;
-    align-items: baseline;
-    gap: 0.4rem;
-    flex: 1;
-    min-width: 0;
 }
 
 .activity-child {
@@ -497,7 +456,7 @@
 }
 
 /* Activity indicator dot */
-.activity-dot {
+:where(.parent-dashboard) .activity-dot {
     position: absolute;
     bottom: 3px;
     right: 3px;
@@ -875,7 +834,6 @@
     .win-trophy-glow { width: 36px; height: 36px; }
     .win-achievement-icon { font-size: 1rem; }
 
-    .activity-item  { padding: 0.5rem 0.625rem; }
     .activity-child { font-size: 0.8rem; }
     .activity-desc  { font-size: 0.77rem; }
 
@@ -899,7 +857,7 @@
 }
 
 @media (max-width: 900px) {
-    .dashboard-layout {
+    :where(.parent-dashboard) .dashboard-layout {
         grid-template-columns: 1fr !important;
         gap: 1.5rem !important;
     }

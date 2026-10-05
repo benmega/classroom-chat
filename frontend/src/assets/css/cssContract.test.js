@@ -23,7 +23,8 @@ function rules(css) {
     let match;
     while ((match = re.exec(css)) !== null) {
         out.push({
-            selectors: match[1].split(',').map((s) => s.trim().replace(/\s+/g, ' ')),
+            // a comma inside parentheses (:where(.a, .b)) does not end a selector
+            selectors: match[1].split(/,(?![^(]*\))/).map((s) => s.trim().replace(/\s+/g, ' ')),
             body: match[2],
         });
     }
@@ -148,11 +149,11 @@ describe('focus indicators (T6c)', () => {
     // These used to set outline: none and show only a border-colour change or a faint tinted glow (--shadow-glow is
     // none). They now draw the same two-tone ring as every other input, plus the transparent outline for forced colours.
     it.each([
-        ['pages/General/History.css', '.search-bar input:focus'],
+        ['pages/General/History.css', ':where(.history-page) .search-bar input:focus'],
         ['pages/General/Achievements.css', '.search-box input:focus'],
         ['pages/Parent/ParentDashboard.css', '.connect-input:focus'],
         ['pages/General/JoinClassroom.css', '.join-code-input:focus'],
-        ['components/common/SubmitProgressModal.css', '.form-control:focus'],
+        ['components/common/SubmitProgressModal.css', '.submit-progress-control:focus'],
         ['components/common/UserSearchInput.css', '.search-input-wrapper-common:focus-within'],
         ['pages/General/BitShift.css', '.input-combined-container:focus-within'],
     ])('%s: %s draws the shared focus ring', (rel, selector) => {
@@ -181,8 +182,6 @@ describe('focus indicators (T6c)', () => {
             'pages/User/EditProfile.css: .connection-code-value',
             // the container around it carries the focus ring
             'pages/General/BitShift.css: .bit-shift-page .input-combined-container .digital-ducks-input',
-            // a stylesheet no component imports
-            'pages/General/SubmitCertificate.css: .form-control:focus',
         ].sort());
     });
 });
@@ -259,5 +258,116 @@ describe('colour tokens (T3a)', () => {
         // Layout.css still holds the rule of the removed locker drawer; nothing renders .stat-badge.drawer
         const leftovers = ['components/Layout/Layout.css: color: #6366f1'];
         expect(found.filter((literal) => !leftovers.includes(literal))).toEqual([]);
+    });
+});
+
+describe('shared class names (T1a)', () => {
+    const allCss = () => fs.readdirSync(SRC, { recursive: true })
+        .map((f) => f.split(path.sep).join('/'))
+        .filter((f) => f.endsWith('.css'));
+    // The admin stylesheets are covered by their own lane; AdminLayout.css only styles the admin shell
+    const isAdmin = (rel) => /^(pages\/Admin|components\/admin)\//.test(rel) || rel === 'components/Layout/AdminLayout.css';
+
+    /** The class a selector starts with: `.a .b` defines .a for the whole app, `:where(.root) .b` defines nothing. */
+    function leadingClasses(rel) {
+        const found = new Set();
+        for (const { selectors } of rules(readCss(rel))) {
+            for (const selector of selectors) {
+                const match = selector.match(/^\.([A-Za-z_][\w-]*)/);
+                if (match) found.add(match[1]);
+            }
+        }
+        return found;
+    }
+
+    function definers(files) {
+        const owners = {};
+        for (const rel of files) for (const cls of leadingClasses(rel)) (owners[cls] ??= []).push(rel);
+        return owners;
+    }
+
+    it('keeps every class a page stylesheet defines out of the other stylesheets', () => {
+        const owners = definers(allCss().filter((rel) => !isAdmin(rel)));
+        const shared = Object.keys(owners).filter((cls) => owners[cls].length > 1).sort();
+        expect(shared).toEqual([
+            // print rules that reset the layout containers on purpose
+            'app-container',
+            'desktop-nav-rail',
+            'main-layout-content',
+            // the same navigation component, split over three files (no markup uses it any more)
+            'profile-toggle',
+        ]);
+    });
+
+    it('lets only the shared base stylesheets define a class an admin stylesheet also defines', () => {
+        const shared = new Set([
+            'index.css',
+            'components/common/Modal.css', // .form-group is global on purpose, with the modal shell classes
+            'components/common/Skeleton.css',
+            'assets/css/sprite.css',
+        ]);
+        const adminOwned = definers(allCss().filter(isAdmin));
+        const offenders = [];
+        for (const rel of allCss().filter((f) => !isAdmin(f) && !shared.has(f))) {
+            for (const cls of leadingClasses(rel)) {
+                if (adminOwned[cls]) offenders.push(`${rel}: .${cls}`);
+            }
+        }
+        expect(offenders).toEqual([]);
+    });
+
+    // A selector that starts with :where(.root) keeps the specificity of the bare class it replaced, so the page
+    // keeps winning against the shared base styles exactly as before, but no longer reaches other pages.
+    it.each([
+        ['pages/Profile/Profile.css', ['profile-page', 'report-card-page'], ['pages/Profile/index.jsx', 'pages/Parent/ParentReportCard.jsx'], 'dashboard-panel'],
+        ['pages/User/EditProfile.css', ['edit-profile-page'], ['pages/User/EditProfile.jsx'], 'form-control'],
+        ['pages/User/ManageProject.css', ['manage-project-page'], ['pages/User/ManageProject.jsx', 'pages/Admin/AdminAssignProject.jsx'], 'form-group'],
+        ['pages/Parent/ConnectChild.css', ['connect-child-page'], ['pages/Parent/ConnectChild.jsx', 'pages/General/JoinClassroomLink.jsx'], 'btn-primary'],
+        ['pages/Parent/ParentDashboard.css', ['parent-dashboard'], ['pages/Parent/ParentDashboard.jsx'], 'activity-dot'],
+        ['pages/General/Achievements.css', ['achievements-page'], ['pages/General/Achievements.jsx'], 'badge-wrapper'],
+        ['pages/General/Activity.css', ['activity-page'], ['pages/General/Activity.jsx'], 'status-pill'],
+        ['pages/General/ProjectInfo.css', ['project-info-page'], ['pages/General/ProjectInfo.jsx'], 'info-label'],
+        ['pages/General/CourseProgressTree.css', ['course-progress-page', 'course-progress-container'], ['pages/General/CourseProgressTree.jsx', 'pages/General/CourseLevelBreakdown.jsx'], 'gap-md'],
+        ['pages/Auth/Auth.css', ['auth-page'], ['pages/Auth/Login.jsx', 'pages/Auth/Signup.jsx', 'pages/Auth/ForgotPassword.jsx', 'pages/Auth/ResetPassword.jsx'], 'input-icon'],
+        ['components/common/ImageUpload.css', ['image-upload-wrapper'], ['components/common/ImageUpload.jsx'], 'progress-bar-fill'],
+        ['components/common/SubmitProgressModal.css', ['submit-challenge-popover'], ['components/common/SubmitProgressModal.jsx'], 'spinner'],
+        ['components/common/UserSearchInput.css', ['user-search-common-container'], ['components/common/UserSearchInput.jsx'], 'status-indicator'],
+    ])('%s scopes its shared class names under a root its markup renders', (rel, roots, jsxFiles, sample) => {
+        expect(bodyOf(readCss(rel), `:where(${roots.map((r) => `.${r}`).join(', ')}) .${sample}`)).not.toBe('');
+        const markup = jsxFiles.map((f) => fs.readFileSync(path.join(SRC, f), 'utf8')).join('\n');
+        for (const root of roots) expect(markup).toMatch(new RegExp(`["'\`\\s]${root}["'\`\\s]`));
+    });
+
+    it('renames the classes of the portalled and unmounted modals instead of scoping them', () => {
+        const profile = readCss('pages/Profile/Profile.css');
+        expect(bodyOf(profile, '.profile-modal-footer')).not.toBe('');
+        expect(bodyOf(profile, '.profile-modal-actions')).not.toBe('');
+        expect(rules(profile).some((r) => r.selectors.includes('.profile-modal-overlay'))).toBe(true);
+        expect(profile).not.toMatch(/\.modal-(overlay|footer|actions)\b/);
+        const addChild = readCss('pages/Parent/AddChildModal.css');
+        expect(addChild).not.toMatch(/\.(modal-overlay|modal-header|modal-body|close-btn|form-group|error-message)\b/);
+        expect(readCss('components/common/SubmitProgressModal.css')).not.toMatch(/\.form-control\b/);
+        const denied = readCss('pages/Error/AccessDenied.css');
+        expect(bodyOf(denied, '.access-denied-page')).toMatch(/min-height/);
+        expect(denied).not.toMatch(/\.access-denied-(container|card)\b/);
+    });
+
+    it('no longer carries the rules nothing renders, which used to restyle other pages', () => {
+        expect(fs.existsSync(path.join(SRC, 'pages/General/SubmitCertificate.css'))).toBe(false);
+        expect(readCss('pages/General/Landing.css')).not.toMatch(/\.section-title\b/);
+        expect(readCss('pages/Parent/ParentDashboard.css')).not.toMatch(/\.section-title\b|\.activity-item\b/);
+        expect(readCss('pages/General/CourseProgressTree.css')).not.toMatch(/\.modal-(card|header|actions|backdrop)\b/);
+        expect(readCss('pages/General/ProjectInfo.css')).not.toMatch(/\.status-badge\b/);
+        expect(readCss('pages/General/StudentParentCode.css')).not.toMatch(/\.refresh-btn\b/);
+        expect(readCss('components/common/SubmitProgressModal.css')).not.toMatch(/\.(form-title|submit-button)\b/);
+        expect(readCss('index.css')).not.toMatch(/\.danger-zone-desc\b/);
+    });
+
+    it('keeps the header stat rules from reaching the same class names elsewhere', () => {
+        const layout = readCss('components/Layout/Layout.css');
+        // the header badge already hides its label and sizes its value through .stat-badge; the bare rules in the
+        // narrow-screen block used to hide every .stat-label and shrink every .stat-value in the app
+        expect(rules(layout).filter((r) => r.selectors.some((s) => /^\.(stat-label|stat-value|user-info)$/.test(s)))).toEqual([]);
+        expect(bodyOf(layout, '.stat-badge .stat-label')).toMatch(/display:\s*none/);
     });
 });

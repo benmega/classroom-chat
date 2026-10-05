@@ -89,7 +89,7 @@
   transform: translateY(-2px);
 }
 
-.upload-icon {
+:where(.image-upload-wrapper) .upload-icon {
   color: var(--text-secondary);
   transition: color 0.2s ease;
 }
@@ -190,7 +190,7 @@
   gap: 0.75rem;
 }
 
-.spinner {
+:where(.image-upload-wrapper) .spinner {
   animation: rotate 2s linear infinite;
   color: var(--primary-accessible);
 }
@@ -207,7 +207,7 @@
   overflow: hidden;
 }
 
-.progress-bar-fill {
+:where(.image-upload-wrapper) .progress-bar-fill {
   height: 100%;
   background-color: var(--primary-color);
   transition: width 0.3s ease;

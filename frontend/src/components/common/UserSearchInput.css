@@ -56,7 +56,7 @@
     font-weight: 500;
 }
 
-.status-indicator {
+:where(.user-search-common-container) .status-indicator {
     display: flex;
     align-items: center;
     justify-content: center;

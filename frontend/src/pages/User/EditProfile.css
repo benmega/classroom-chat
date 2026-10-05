@@ -12,7 +12,7 @@
     font-family: var(--font-body, 'Inter', sans-serif);
 }
 
-.settings-form {
+:where(.edit-profile-page) .settings-form {
     width: 100%;
     max-width: 1200px;
     display: flex;
@@ -49,7 +49,7 @@
     object-fit: cover;
 }
 
-.upload-overlay {
+:where(.edit-profile-page) .upload-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -69,12 +69,12 @@
     padding: 8px;
 }
 
-.avatar-wrapper:hover .upload-overlay {
+:where(.edit-profile-page) .avatar-wrapper:hover .upload-overlay {
     opacity: 1;
 }
 
 /* The file input inside is visually hidden, so keyboard focus is shown on the whole overlay (inside, the wrapper clips). */
-.upload-overlay:has(input:focus-visible) {
+:where(.edit-profile-page) .upload-overlay:has(input:focus-visible) {
     opacity: 1;
     outline: 2px solid var(--text-on-primary);
     outline-offset: -4px;
@@ -272,7 +272,7 @@
 }
 
 /* Global inputs matching the mockup */
-.form-group label {
+:where(.edit-profile-page) .form-group label {
     display: block;
     font-weight: 500;
     margin-bottom: 0.5rem;
@@ -280,7 +280,7 @@
     font-size: 0.85rem;
 }
 
-.form-control {
+:where(.edit-profile-page) .form-control {
     width: 100%;
     padding: 0.75rem 1rem;
     border-radius: 12px;
@@ -291,11 +291,11 @@
     transition: all 0.2s;
 }
 
-.form-control::placeholder {
+:where(.edit-profile-page) .form-control::placeholder {
     color: var(--slate-400);
 }
 
-.form-control:focus {
+:where(.edit-profile-page) .form-control:focus {
     border-color: var(--primary-color);
     background: var(--bg-primary);
     outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
@@ -303,7 +303,7 @@
     box-shadow: 0 0 0 3px rgba(14, 178, 187, 0.1);
 }
 
-.form-control.readonly {
+:where(.edit-profile-page) .form-control.readonly {
     background: var(--slate-100);
     color: var(--slate-500);
     border-color: var(--border-subtle);
@@ -329,7 +329,7 @@
     position: relative;
 }
 
-.password-toggle-btn {
+:where(.edit-profile-page) .password-toggle-btn {
     position: absolute;
     right: 0rem;
     top: 50%;
@@ -377,7 +377,7 @@
     box-shadow: none;
 }
 
-.btn-secondary {
+:where(.edit-profile-page) .btn-secondary {
     padding: 0.75rem 2rem;
     background: var(--bg-primary);
     color: var(--text-muted);
@@ -392,7 +392,7 @@
     transition: all 0.2s;
 }
 
-.btn-secondary:hover:not(:disabled) {
+:where(.edit-profile-page) .btn-secondary:hover:not(:disabled) {
     background: var(--bg-tertiary);
     border-color: var(--slate-300);
 }

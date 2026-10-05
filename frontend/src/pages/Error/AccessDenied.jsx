@@ -7,8 +7,8 @@ import './AccessDenied.css';
 
 const AccessDenied = () => {
   return (
-    <div className="access-denied-container">
-      <div className="access-denied-card">
+    <div className="access-denied-page">
+      <div className="access-denied-page-card">
         
         <img 
           src={youShallNotPassImage} 

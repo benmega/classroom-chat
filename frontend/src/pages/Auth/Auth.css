@@ -114,7 +114,7 @@
     position: relative;
 }
 
-.input-icon {
+:where(.auth-page) .input-icon {
     position: absolute;
     left: 1.25rem;
     top: 50%;
