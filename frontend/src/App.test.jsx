@@ -450,6 +450,29 @@ describe('App Component', () => {
     expect(window.location.pathname).toBe('/profile/jane-doe');
   });
 
+  it('sends an unknown address to the landing page, replacing it in history so Back does not bounce', async () => {
+    useAuthStore.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: false,
+      isServerOffline: false,
+      user: null,
+      checkAuth: vi.fn(),
+    });
+    const push = vi.spyOn(window.history, 'pushState');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    window.history.pushState({}, 'Test page', '/no-such-page');
+    push.mockClear();
+
+    renderApp();
+
+    expect(await screen.findByText('Landing Page Mock')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/');
+    expect(push).not.toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith(expect.anything(), '', expect.stringMatching(/^\/$/));
+    push.mockRestore();
+    replace.mockRestore();
+  });
+
   it('calls checkAuth on mount', () => {
     const mockCheckAuth = vi.fn();
     useAuthStore.mockReturnValue({

@@ -436,7 +436,7 @@ function App() {
 
         <Route path="/user/profile/:slug" element={<LegacyProfileRedirect />} />
 
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>
       </RouteAwareBoundary>
