@@ -363,6 +363,17 @@ describe('shared class names (T1a)', () => {
         expect(readCss('index.css')).not.toMatch(/\.danger-zone-desc\b/);
     });
 
+    it('styles the submit modal certificate progress bar the markup renders', () => {
+        const css = readCss('components/common/SubmitProgressModal.css');
+        const scope = ':where(.submit-challenge-popover)';
+        expect(bodyOf(css, `${scope} .progress-bar-wrapper`)).toMatch(/height:\s*10px/);
+        expect(bodyOf(css, `${scope} .progress-bar-fill`)).toMatch(/height:\s*100%/);
+        const markup = fs.readFileSync(path.join(SRC, 'components/common/SubmitProgressModal.jsx'), 'utf8');
+        for (const cls of ['progress-container', 'progress-bar-wrapper', 'progress-bar-fill', 'progress-text']) {
+            expect(markup).toContain(cls);
+        }
+    });
+
     it('keeps the header stat rules from reaching the same class names elsewhere', () => {
         const layout = readCss('components/Layout/Layout.css');
         // the header badge already hides its label and sizes its value through .stat-badge; the bare rules in the

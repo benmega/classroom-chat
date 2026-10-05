@@ -181,6 +181,32 @@
     gap: 12px;
 }
 
+/* The certificate upload progress bar. These rules sat in SubmitCertificate.css, which nothing imported. */
+:where(.submit-challenge-popover) .progress-container {
+    padding-top: 10px;
+}
+
+:where(.submit-challenge-popover) .progress-bar-wrapper {
+    width: 100%;
+    height: 10px;
+    background: var(--border-subtle);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+:where(.submit-challenge-popover) .progress-bar-fill {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.3s ease-out;
+}
+
+:where(.submit-challenge-popover) .progress-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-accessible);
+}
+
 :where(.submit-challenge-popover) .spinner {
     animation: rotate 2s linear infinite;
     width: 24px;
