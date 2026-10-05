@@ -97,12 +97,14 @@ def _add_achievement(client, **fields):
 
 @pytest.mark.parametrize("ach_type", ["ducks", "progress", "chat"])
 @pytest.mark.parametrize(
-    "requirement", [None, "", "   ", "abc", "10.5", "1e3", "5 projects", "[10]"]
+    "requirement",
+    [None, "", "   ", "abc", "10.5", "1e3", "5 projects", "[10]", "0", "-5", "-0", "000"],
 )
 def test_add_achievement_rejects_missing_or_non_numeric_requirement(
     client, init_db, test_admin, ach_type, requirement
 ):
-    """A requirement the engine cannot read as a whole number never unlocks, so it is refused."""
+    """A requirement the engine cannot read as a whole number never unlocks, and one below 1
+    unlocks for everybody, so both are refused."""
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
     fields = {"type": ach_type}
@@ -113,11 +115,13 @@ def test_add_achievement_rejects_missing_or_non_numeric_requirement(
 
     assert response.status_code == 400
     assert response.json["status"] == "error"
-    assert response.json["message"] == "Requirement must be a whole number."
+    assert response.json["message"] == "Requirement must be a whole number of at least 1."
     assert Achievement.query.filter_by(slug="req-test").first() is None
 
 
-@pytest.mark.parametrize("requirement", [True, 1.5, [10], {"n": 10}, None, ""])
+@pytest.mark.parametrize(
+    "requirement", [True, 1.5, [10], {"n": 10}, None, "", 0, -1, 0.0, -5.0, "0", "-5"]
+)
 def test_add_achievement_rejects_invalid_json_requirement(
     client, init_db, test_admin, requirement
 ):
@@ -136,7 +140,7 @@ def test_add_achievement_rejects_invalid_json_requirement(
     )
 
     assert response.status_code == 400
-    assert response.json["message"] == "Requirement must be a whole number."
+    assert response.json["message"] == "Requirement must be a whole number of at least 1."
     assert Achievement.query.filter_by(slug="req-test").first() is None
 
 
@@ -147,7 +151,10 @@ def test_add_achievement_rejects_invalid_json_requirement(
 def test_add_achievement_stores_the_requirement_as_a_plain_whole_number(
     client, init_db, test_admin, submitted, stored
 ):
-    from application.services.achievement_engine import _parse_requirement
+    from application.services.achievement_engine import (
+        _parse_requirement,
+        check_achievement,
+    )
 
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
@@ -166,8 +173,10 @@ def test_add_achievement_stores_the_requirement_as_a_plain_whole_number(
     assert response.status_code == 200
     ach = Achievement.query.filter_by(slug="req-test").one()
     assert ach.requirement_value == stored
-    # Whatever the route accepts is something the engine can unlock on
+    # Whatever the route accepts is something the engine can unlock on, and a
+    # user who has done nothing yet does not meet it.
     assert _parse_requirement(ach) == int(stored)
+    assert check_achievement(test_admin, ach) is False
 
 
 @pytest.mark.parametrize("fields", [{}, {"requirement_value": ""}, {"requirement_value": " "}])
@@ -188,7 +197,7 @@ def test_add_certificate_achievement_may_leave_the_requirement_blank(
     assert _parse_requirement(ach) == 1
 
 
-@pytest.mark.parametrize("requirement", ["abc", "10.5"])
+@pytest.mark.parametrize("requirement", ["abc", "10.5", "0", "-1"])
 def test_add_certificate_achievement_still_rejects_a_non_numeric_requirement(
     client, init_db, test_admin, requirement
 ):
@@ -1522,7 +1531,9 @@ def test_edit_achievement_updates_fields(client, init_db, test_admin, test_achie
     assert test_achievement.source == "codecombat.com"
 
 
-@pytest.mark.parametrize("requirement", ["", "   ", "abc", "10.5", "1e3"])
+@pytest.mark.parametrize(
+    "requirement", ["", "   ", "abc", "10.5", "1e3", "0", "-5", "+0", "000"]
+)
 def test_edit_achievement_rejects_blank_or_non_numeric_requirement(
     client, init_db, test_admin, test_achievement, requirement
 ):
@@ -1535,7 +1546,7 @@ def test_edit_achievement_rejects_blank_or_non_numeric_requirement(
     )
 
     assert response.status_code == 400
-    assert response.json["message"] == "Requirement must be a whole number."
+    assert response.json["message"] == "Requirement must be a whole number of at least 1."
     db.session.refresh(test_achievement)
     assert test_achievement.requirement_value == "100"
     assert test_achievement.name != "Changed"
@@ -1582,7 +1593,7 @@ def test_edit_achievement_to_a_numeric_type_needs_a_requirement(
     response = _edit(client, cert.id, type="ducks")
 
     assert response.status_code == 400
-    assert response.json["message"] == "Requirement must be a whole number."
+    assert response.json["message"] == "Requirement must be a whole number of at least 1."
     db.session.refresh(cert)
     assert cert.type == "certificate"
 

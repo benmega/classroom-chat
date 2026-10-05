@@ -57,7 +57,7 @@ ALLOWED_EXTENSIONS = {"pdf"}
 SLUG_RE = re.compile(r"[a-z0-9-]+")
 SLUG_ERROR = "Slug may only contain lowercase letters, digits and hyphens."
 REWARD_ERROR = "Reward must be a whole number of at least 1."
-REQUIREMENT_ERROR = "Requirement must be a whole number."
+REQUIREMENT_ERROR = "Requirement must be a whole number of at least 1."
 
 # Badge uploads are normalised to <slug>.png, the only name every consumer looks for.
 # The other extensions are what older uploads may have left behind.
@@ -239,14 +239,15 @@ def _parse_reward(value):
 
 
 def _parse_requirement_value(value, achievement_type):
-    """Return the requirement text to store for ``value``: a whole number as
-    digits, or None for a blank certificate requirement. Raises ValueError for
-    anything else.
+    """Return the requirement text to store for ``value``: a whole number of at
+    least 1 as digits, or None for a blank certificate requirement. Raises
+    ValueError for anything else.
 
     The achievement engine reads the requirement as a whole number and never
-    unlocks an achievement whose requirement it cannot read, so such a value is
-    refused here instead of being saved. Certificates are the exception: the
-    approved certificate is their condition, so the requirement may be blank.
+    unlocks an achievement whose requirement it cannot read, while a requirement
+    of 0 or less is met by every user. Both are refused here instead of being
+    saved. Certificates are the exception for a blank value: the approved
+    certificate is their condition, so the requirement may be blank.
     """
     if isinstance(value, float) and value.is_integer():
         value = int(value)
@@ -255,7 +256,10 @@ def _parse_requirement_value(value, achievement_type):
         if achievement_type == "certificate":
             return None
         raise ValueError(value)
-    return str(int(text))
+    number = int(text)
+    if number < 1:
+        raise ValueError(value)
+    return str(number)
 
 
 def _certificate_dir():
