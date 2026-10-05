@@ -101,6 +101,11 @@ jobs:
           # Check out the PR branch if it's a PR, otherwise default branch
           ref: ${{ github.event.pull_request.head.ref || github.event.repository.default_branch }}
 
+      - name: Record Checked-Out Commit
+        id: base
+        # The agent's test runs can commit and move HEAD: later steps rewind to this commit.
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -132,10 +137,15 @@ jobs:
         run: python .github/scripts/agent_coder.py
 
       - name: Discard Changes To Protected Paths
-        # The agent's file tools refuse .github/, but its test runs execute code it wrote.
-        # Reset that directory so a change to the pipeline itself is never committed or pushed.
+        # The agent's file tools refuse .github/, but its test runs execute code it wrote, and
+        # that code can commit. Rewind to the commit that was checked out (the working tree is
+        # kept), then restore .github from it, so a change to the pipeline itself, committed or
+        # not, is never pushed.
+        env:
+          BASE: ${{ steps.base.outputs.sha }}
         run: |
-          git restore --source=HEAD --staged --worktree -- .github
+          git reset -q "$BASE"
+          git restore --source="$BASE" --staged --worktree -- .github
           git clean -fdq -- .github
 
       - name: Push Changes (Iterative PR)

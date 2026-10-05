@@ -5,8 +5,12 @@ scripts in .github as text and pin the properties that have gone wrong before.
 """
 
 import ast
+import os
 import re
+import shutil
+import subprocess
 import sys
+import textwrap
 from pathlib import Path
 
 import pytest
@@ -155,3 +159,91 @@ def test_push_step_does_not_run_git_hooks():
 @pytest.mark.parametrize("job", ["analyze", "code"])
 def test_only_the_repository_owner_can_start_an_ai_run(job):
     assert "github.event.sender.login == github.repository_owner" in _job_header(job)
+
+
+# ---- the protected paths are restored from the commit that was checked out ----
+
+
+def _run_script(job, step):
+    """The shell script of a step, as the runner would write it to a file."""
+    text = _steps(job)[step]
+    block = re.search(r"^        run: \|\n((?:(?: {10}.*)?\n)+)", text, flags=re.M)
+    if block:
+        return textwrap.dedent(block.group(1))
+    return re.search(r"^        run: (.+)$", text, flags=re.M).group(1) + "\n"
+
+
+def _bash():
+    found = shutil.which("bash")
+    # Windows' System32 bash.exe starts WSL, which cannot run the repository paths below.
+    if shutil.which("git") is None or found is None or "system32" in found.lower().replace("/", "\\"):
+        pytest.skip("git and a POSIX bash are needed to run the workflow's shell steps")
+    return found
+
+
+def _git(repo, *args):
+    done = subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True)
+    return done.stdout.strip()
+
+
+def _make_repo(path, files):
+    path.mkdir()
+    _git(path, "init", "-q")
+    for key, value in (("user.name", "test"), ("user.email", "test@example.com"), ("core.autocrlf", "false")):
+        _git(path, "config", key, value)
+    for name, content in files.items():
+        (path / name).parent.mkdir(parents=True, exist_ok=True)
+        (path / name).write_text(content, encoding="utf-8", newline="\n")
+    _git(path, "add", "-A")
+    _git(path, "commit", "-qm", "base")
+    return path
+
+
+def _run_step(repo, job, step, **env):
+    return subprocess.run(
+        [_bash(), "-e", "-c", _run_script(job, step)],
+        cwd=repo,
+        env={**os.environ, **env},
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_checked_out_commit_is_recorded_before_the_agent_runs():
+    steps = _steps("code")
+    names = list(steps)
+
+    assert names.index("Record Checked-Out Commit") < names.index("Run Agent Loop")
+    assert "id: base" in steps["Record Checked-Out Commit"]
+    assert 'echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"' in steps["Record Checked-Out Commit"]
+
+
+def test_protected_paths_are_reset_to_the_recorded_commit_not_to_head():
+    reset = _steps("code")["Discard Changes To Protected Paths"]
+
+    assert "BASE: ${{ steps.base.outputs.sha }}" in reset
+    assert '--source="$BASE"' in reset
+    assert "HEAD" not in _run_script("code", "Discard Changes To Protected Paths")
+
+
+def test_a_pipeline_change_committed_while_the_agent_ran_is_not_pushed(tmp_path):
+    """Code run by the agent's tests can commit: restoring from HEAD would keep that commit."""
+    repo = _make_repo(
+        tmp_path / "repo",
+        {".github/workflows/ci.yml": "name: ci\n", "backend/app.py": "print(1)\n"},
+    )
+    base = _git(repo, "rev-parse", "HEAD")
+    # A pipeline change committed during the run, a new pipeline file, and one other edit.
+    (repo / ".github/workflows/ci.yml").write_text("name: changed\n", newline="\n")
+    _git(repo, "commit", "-aqm", "committed during the run")
+    (repo / ".github/workflows/extra.yml").write_text("name: extra\n", newline="\n")
+    (repo / "backend/app.py").write_text("print(2)\n", newline="\n")
+
+    _run_step(repo, "code", "Discard Changes To Protected Paths", BASE=base)
+    # What the push step then does.
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-qm", "AI Agent")
+
+    assert _git(repo, "diff", "--name-only", base, "HEAD").splitlines() == ["backend/app.py"]
+    assert not (repo / ".github/workflows/extra.yml").exists()
