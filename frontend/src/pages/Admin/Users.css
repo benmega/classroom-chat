@@ -31,13 +31,13 @@
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     font-size: 0.95rem;
-    outline: none;
     transition: all 0.2s;
 }
 
 .search-bar input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
 .primary-btn {

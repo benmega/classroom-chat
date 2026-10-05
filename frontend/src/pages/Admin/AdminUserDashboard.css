@@ -551,10 +551,10 @@
 .dense-group select:focus, 
 .inline-input:focus, 
 .inline-select:focus {
-    outline: none;
+    outline: 2px solid transparent;
     background: var(--bg-primary);
     border-color: var(--primary-accessible, #006D74);
-    box-shadow: 0 0 0 3px rgba(0, 109, 116, 0.15);
+    box-shadow: var(--focus-ring);
 }
 
 .dense-toggles {

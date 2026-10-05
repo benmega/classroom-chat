@@ -157,6 +157,26 @@ describe('admin stylesheets', () => {
     expect(z('/src/pages/Admin/KioskUpload.css', '.kiosk-container')).toBeLessThan(toast)
   })
 
+  it('draws keyboard focus with the shared ring and never drops the outline without drawing one elsewhere', () => {
+    const weakFocusRules = []
+    const droppedOutlines = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const { selector, body } of rulesOf(sheet(path))) {
+        const decls = Object.fromEntries(declarationsOf(body))
+        const label = `${path.replace('/src/', '')}: ${selector.replace(/\s+/g, ' ')}`
+        // A :focus rule (not :focus-visible/:focus-within) must use the ring, as the global input:focus rule does
+        if (/:focus(?![-\w])/.test(selector) && decls['box-shadow'] !== 'var(--focus-ring)') weakFocusRules.push(label)
+        if (/^(none|0)$/.test(decls.outline ?? '')) droppedOutlines.push(label)
+      }
+    }
+    expect(weakFocusRules).toEqual([])
+    // The one exception: the library card button hands its ring to the card around it (checked next)
+    expect(droppedOutlines).toEqual(['pages/Admin/AdminStandardProjects.css: .project-card-open:focus-visible'])
+    expect(sheet('/src/pages/Admin/AdminStandardProjects.css')).toMatch(
+      /\.project-card:has\(\.project-card-open:focus-visible\)\s*\{[^}]*outline:\s*2px solid/,
+    )
+  })
+
   it('keeps the create-classroom modal rules in Classes.css, not in the class dashboard sheet', () => {
     // The dashboard never renders .modal-overlay/.modal-card, but unscoped rules for them restyled the Classes modal
     // (a translucent card, and a dark one on dark-OS devices under that modal's dark heading text).

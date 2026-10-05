@@ -556,13 +556,13 @@
     color: var(--text-primary);
     font-size: 0.875rem;
     transition: all 0.2s;
-    outline: none;
 }
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-faint);
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
 .form-group input.error,
@@ -891,8 +891,9 @@
 }
 
 .enroll-modal-search:focus {
-    outline: none;
-    border-bottom: 1px solid var(--primary-color);
+    outline: 2px solid transparent;
+    border-bottom: 1px solid var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
 .enroll-modal-user-list {

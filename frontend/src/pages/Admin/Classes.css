@@ -228,14 +228,14 @@
     border-radius: 10px;
     border: 1px solid var(--border-subtle, var(--border-subtle));
     font-size: 0.95rem;
-    outline: none;
     transition: all 0.2s ease;
 }
 
 .modal-form input:focus,
 .modal-form select:focus {
-    border-color: var(--primary-color, var(--blue-600));
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
 .modal-footer {

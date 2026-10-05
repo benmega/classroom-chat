@@ -166,8 +166,9 @@
 }
 
 .admin-input-subtle:focus {
-    outline: none;
-    border-color: var(--primary-color, #3b82f6);
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
     background: var(--bg-primary, #ffffff);
+    box-shadow: var(--focus-ring);
 }
 

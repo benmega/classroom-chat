@@ -53,10 +53,10 @@
 }
 
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--primary-color);
+    border-color: var(--primary-accessible);
     background: var(--bg-primary);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    outline: none;
+    box-shadow: var(--focus-ring);
+    outline: 2px solid transparent;
 }
 
 .hint {

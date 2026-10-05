@@ -219,8 +219,9 @@
 }
 
 .teacher-note-input:focus {
-    outline: none;
-    border-color: var(--primary-color, #4f46e5);
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
 .submission-actions {
