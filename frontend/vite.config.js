@@ -123,6 +123,9 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', 'tests-e2e/**', 'tests/e2e/**'],
     coverage: {
       provider: 'v8',
+      // Vitest 4 only reports files a test loaded unless told where the sources are, so an
+      // untested file would drop out of the totals instead of counting against them.
+      include: ['src/**/*.{js,jsx}'],
       exclude: [
         'node_modules/**',
         'dist/**',
@@ -142,10 +145,12 @@ export default defineConfig({
         'src/pages/General/LandingMobile.jsx',
         'src/hooks/useViewport.js',
       ],
+      // Branches was 80 while Vitest 2 counted the test files themselves in the totals (they
+      // are almost fully covered). Counting only src/, branch coverage is about 75%.
       thresholds: {
         lines: 80,
         statements: 80,
-        branches: 80,
+        branches: 75,
         functions: 55,
       },
     },

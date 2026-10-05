@@ -2,7 +2,7 @@
 
 ## Prerequisites
 - Python 3.11 (matches CI; 3.10 is the minimum the pinned dependencies support)
-- Node.js 20+ and npm (for the Vite/React frontend)
+- Node.js 20.19+ or 22.12+ and npm (for the Vite/React frontend)
 - SQLite (bundled with Python — no separate database server needed for local dev)
 
 ## Installation Steps

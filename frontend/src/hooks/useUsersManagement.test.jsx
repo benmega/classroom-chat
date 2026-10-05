@@ -181,7 +181,7 @@ describe('useUsersManagement', () => {
       [Symbol.iterator]: function* () { for (const e of entries) yield e; }
     });
     const fakeFormData = makeFormData([['new_password', '123'], ['confirm_password', '456']]);
-    window.FormData = vi.fn(() => fakeFormData);
+    window.FormData = vi.fn(function () { return fakeFormData; });
 
     const fakeEvent = { preventDefault: vi.fn(), target: {} };
 
@@ -203,7 +203,7 @@ describe('useUsersManagement', () => {
       ['new_password', 'secret123'],
       ['confirm_password', 'secret123'],
     ]);
-    window.FormData = vi.fn(() => fakeFormData);
+    window.FormData = vi.fn(function () { return fakeFormData; });
 
     const fakeEvent = { preventDefault: vi.fn(), target: {} };
 
