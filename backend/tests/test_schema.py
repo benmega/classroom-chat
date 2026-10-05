@@ -1,17 +1,23 @@
 """
 File: test_schema.py
 Type: py
-Summary: The database built by the Alembic migrations must match the models.
+Summary: The database the migrations produce must match the models.
 
-The shared test app builds its tables with db.create_all(), and so does create_app(),
-so comparing that database with the models can never fail. These tests build the
-schema the way production does, by running the migrations into a fresh SQLite file
-on a separate Flask app, and only then compare it with the models.
+The shared test app builds its tables with db.create_all(), and so does create_app()
+outside production, so comparing that database with the models can never fail. These
+tests build the schema the two ways a real database gets one, each time in a fresh
+SQLite file on a separate Flask app, and only then compare it with the models.
 
-Running the migrations from an empty database does not work today (the first
-migrations assume tables that already exist), so the two migration tests are marked
-xfail until GitHub issue #60 is resolved. The drift check itself is exercised by the
-other tests, against schemas built from the models.
+A new database: the migrations cannot build a schema from nothing (the root revision
+is an empty placeholder and the next ones alter tables that must already exist), so
+the supported path is db.create_all() followed by a stamp to head. deploy.sh does
+that when it finds no alembic_version table.
+
+An existing database: schemas/legacy_b2fd06ed54ab.sql is the schema of a long-lived
+database. `flask db upgrade` runs every later revision on it and the result must
+match the models. This is the test that fails when a model gains a table, column,
+index or constraint without a migration, or when a new migration cannot cope with
+DDL that differs from what the models generate.
 """
 
 import logging
@@ -26,18 +32,17 @@ import pytest
 import sqlalchemy as sa
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
-from alembic.util.exc import CommandError
+from alembic.script import ScriptDirectory
 from application.extensions import db
 from application.models import setup_models
 from flask import Flask
 from flask_migrate import Migrate
-from sqlalchemy.exc import SQLAlchemyError
 
 MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "migrations"
 
-# What xfail may swallow: the migrations failing on the database (or Alembic refusing
-# to run them), never a typo in the test itself.
-MIGRATION_ERRORS = (SQLAlchemyError, CommandError)
+# Schema only, no rows. The revision is the one that database was stamped with.
+LEGACY_SCHEMA = Path(__file__).resolve().parent / "schemas" / "legacy_b2fd06ed54ab.sql"
+LEGACY_REVISION = "b2fd06ed54ab"
 
 
 @pytest.fixture
@@ -159,36 +164,70 @@ def _schema_drift(engine, metadata):
         connection.close()
 
 
-@pytest.mark.xfail(
-    strict=False,
-    raises=MIGRATION_ERRORS,
-    reason="flask db upgrade fails on an empty database: the first migrations assume "
-    "existing tables. Tracked in GitHub issue #60",
-)
-def test_migrations_run_on_an_empty_database(migration_app):
-    """`flask db upgrade` must build the whole schema from nothing."""
+def _head_revisions():
+    return set(ScriptDirectory(str(MIGRATIONS_DIR)).get_heads())
+
+
+def _stamped_revisions(engine):
+    with engine.connect() as connection:
+        return set(MigrationContext.configure(connection).get_current_heads())
+
+
+def _schema_sql(engine):
+    """Every table and index with the SQL that defines it, except Alembic's own table."""
+    with engine.connect() as connection:
+        rows = connection.execute(
+            sa.text("SELECT name, sql FROM sqlite_master WHERE name != 'alembic_version'")
+        )
+        return {name: sql for name, sql in rows}
+
+
+def _load_schema(engine, path):
+    connection = engine.raw_connection()
+    try:
+        connection.driver_connection.executescript(path.read_text(encoding="utf-8"))
+    finally:
+        connection.close()
+
+
+def test_the_migrations_have_exactly_one_head():
+    heads = _head_revisions()
+
+    assert len(heads) == 1, (
+        f"The migration history has {len(heads)} heads: {sorted(heads)}. A new "
+        "revision's down_revision must be the current head (`flask db heads`)."
+    )
+
+
+def test_a_new_database_is_built_from_the_models_and_stamped_to_head(migration_app):
+    """The supported way to create a database. Once it is stamped, the migrations
+    have nothing left to run on it and must leave it alone."""
+    db.create_all()
+    flask_migrate.stamp(directory=str(MIGRATIONS_DIR), revision="head")
+    schema_before = _schema_sql(db.engine)
+
     flask_migrate.upgrade(directory=str(MIGRATIONS_DIR))
 
-    tables = sa.inspect(db.engine).get_table_names()
-    assert "users" in tables
-    assert "alembic_version" in tables
+    assert _stamped_revisions(db.engine) == _head_revisions()
+    assert _schema_sql(db.engine) == schema_before
+    assert _schema_drift(db.engine, db.metadata) == []
 
 
-@pytest.mark.xfail(
-    strict=False,
-    raises=(*MIGRATION_ERRORS, AssertionError),
-    reason="needs a database the migrations can build, and any drift it reveals still "
-    "has to be triaged. Tracked in GitHub issue #60",
-)
-def test_migrated_schema_matches_models(migration_app):
+def test_upgrading_a_legacy_database_gives_the_schema_of_the_models(migration_app):
     """The schema the migrations build must match the models.
 
-    This catches a developer who adds a column to a model but forgets the migration.
+    This catches a developer who changes a model but forgets the migration, and a
+    migration that only works on a schema built from the models.
     """
+    _load_schema(db.engine, LEGACY_SCHEMA)
+    flask_migrate.stamp(directory=str(MIGRATIONS_DIR), revision=LEGACY_REVISION)
+    # The legacy schema is behind the models, or the comparison below proves nothing
+    assert _schema_drift(db.engine, db.metadata)
+
     flask_migrate.upgrade(directory=str(MIGRATIONS_DIR))
 
+    assert _stamped_revisions(db.engine) == _head_revisions()
     drift = _schema_drift(db.engine, db.metadata)
-
     assert not drift, (
         "Database schema built by the migrations does not match the models. "
         "Missing migrations?\nDifferences detected:\n"
@@ -196,8 +235,8 @@ def test_migrated_schema_matches_models(migration_app):
     )
 
 
-# The drift check itself. These run against schemas that exist today, so a broken
-# check shows up now and not on the day the migrations can be run from scratch.
+# The drift check itself, against schemas built from the models and by hand: a check
+# that reports nothing would make the two tests above pass whatever the migrations do.
 
 
 def test_drift_check_is_clean_for_a_schema_built_from_the_models(migration_app):

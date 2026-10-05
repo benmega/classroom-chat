@@ -253,6 +253,10 @@ blank database fails with `NoSuchTableError: users`).
   review the generated file and commit it with the model change. Run `flask db heads` before
   pushing; there must be exactly one head. `backend/scripts/lint_migrations.py` (run by
   `scripts/preflight.ps1`) lints migrations for idempotency.
+- `backend/tests/test_schema.py` fails when a model changes without a migration. It upgrades the
+  schema of a long-lived database (`backend/tests/schemas/legacy_b2fd06ed54ab.sql`, no rows) to
+  head and compares the result with the models, checks that a database built from the models and
+  stamped needs no migration, and that there is one head.
 - No raw-SQL or one-off database scripts (ad hoc `sqlite3` files, `ALTER TABLE` snippets, helper
   scripts kept under `backend/instance/`). Steps 2 and 8 above are the only raw SQL left in
   `deploy.sh`; do not add more.
