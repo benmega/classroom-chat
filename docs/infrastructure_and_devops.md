@@ -258,7 +258,8 @@ blank database fails with `NoSuchTableError: users`).
 - `backend/tests/test_schema.py` fails when a model changes without a migration. It upgrades the
   schema of a long-lived database (`backend/tests/schemas/legacy_b2fd06ed54ab.sql`, no rows) to
   head and compares the result with the models, checks that a database built from the models and
-  stamped needs no migration, and that there is one head.
+  stamped needs no migration, and that there is one head. The comparison includes CHECK
+  constraints and the `WHERE` clause of partial indexes, which Alembic's own autogenerate skips.
 - No raw-SQL or one-off database scripts (ad hoc `sqlite3` files, `ALTER TABLE` snippets, helper
   scripts kept under `backend/instance/`). Steps 2 and 7 above are the only raw SQL left in
   `deploy.sh`; do not add more.

@@ -113,4 +113,8 @@ The central entity for authentication and student tracking.
 
 ## 4. Integrity & Hooks
 - **Slugging**: `before_insert` event on the `User` model automatically generates unique URL-friendly slugs from nicknames.
-- **Cascading Deletes**: Relationships like `achievements` and `notes` are configured with `cascade="all, delete-orphan"` to ensure cleanup when a user is removed.
+- **Cascading Deletes**: Deleting a user deletes every row that belongs to it (projects, skills, notes, achievements, certificates, messages, duck transactions and trades, challenge logs, submissions, course instance requests, session logs, a parent's messages to the teacher, ...) through `cascade="all, delete-orphan"` relationships on the models. A parent message whose resolving admin is deleted stays and only loses `resolved_by_id`. Deleting a classroom deletes its course instances and clears `classroom_id` on the challenges and submissions that referred to it. `backend/tests/app/models/test_user_deletion.py` and `test_classroom_deletion.py` fail when a foreign key to `users.id` or `classrooms.id` is added without a row for it in those tests.
+- **Rules held by the database** (declared on the models and added to existing databases by migrations):
+    - `challenge_logs`: one row per `(user_id, challenge_slug, course_instance)` (unique index `uq_challenge_logs_user_slug_instance`), and one row per `(user_id, challenge_slug)` among the rows without a course instance (partial unique index `uq_challenge_logs_user_slug_no_instance`).
+    - `session_logs`: one open session (`end_time IS NULL`) per user (partial unique index `uq_session_logs_one_open_per_user`).
+    - `configuration`: a single row, with `id = 1` (CHECK constraint `ck_configuration_singleton`).
