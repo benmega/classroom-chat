@@ -19,6 +19,45 @@ test.describe('Page scrolling on a short window', () => {
     await expect(page.getByRole('link', { name: 'Forgot Password?' })).toBeInViewport();
   });
 
+  // The scroll lock of a dialog opened inside the shell must not outlive the shell: it used to write the
+  // computed overflow (hidden, from the shell rule) back as an inline style on close.
+  test('a page reached after closing a dialog and signing out still scrolls the document', async ({ page, backend }) => {
+    await backend.mockSession(STUDENT);
+    await backend.mockLayout();
+    await backend.mock('/user/profile', {
+      status: 'success',
+      data: {
+        target: { id: STUDENT.id, username: STUDENT.username, role: STUDENT.role },
+        viewer: { id: STUDENT.id, username: STUDENT.username, role: STUDENT.role },
+      },
+    });
+    await backend.mock('/user/logout', {});
+    await page.goto('/profile');
+    await expect(page.locator('.profile-page')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Join Classroom' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Join a classroom' });
+    await expect(dialog).toBeVisible();
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
+
+    // Leave the shell without a page load: sign out, then follow the landing page's Login button.
+    await page.getByRole('button', { name: 'Logout' }).click();
+    await page.getByRole('button', { name: 'Login' }).click();
+    await expect(page).toHaveURL(/\/login$/);
+    await expect(page.getByRole('textbox', { name: 'Username or email' })).toBeVisible();
+
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe('');
+    expect(await page.evaluate(() => document.scrollingElement.scrollHeight)).toBeGreaterThan(360);
+    await page.mouse.move(640, 180);
+    await page.mouse.wheel(0, 2000);
+
+    await expect.poll(() => page.evaluate(() => document.scrollingElement.scrollTop)).toBeGreaterThan(0);
+    await expect(page.getByRole('link', { name: 'Forgot Password?' })).toBeInViewport();
+  });
+
   test('the signed-in shell keeps the document locked and scrolls inside itself', async ({ page, backend }) => {
     await backend.mockSession(STUDENT);
     await backend.mockLayout();
