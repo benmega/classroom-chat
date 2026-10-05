@@ -30,7 +30,8 @@ still served by the EC2 Flask backend (`api-blossom.benmega.com`, the `VITE_API_
 ## 2. Environment Variables
 
 The file `backend/.env` must exist on the server. It is **never committed** and is
-**injected fresh on every deploy** by `deploy.yml` from GitHub Secrets.
+**injected fresh on every deploy** by `deploy.yml` from GitHub Secrets, which also sets the file to
+mode 600 (owner only; the gunicorn unit runs as the same account).
 
 See `backend/.env.example` for the full list of required variables. The code reads these variables (the Cognito and SES settings are listed in `config.py`):
 

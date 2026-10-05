@@ -11,6 +11,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEPLOY_SH = REPO_ROOT / "deploy.sh"
+DEPLOY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "deploy.yml"
 NGINX_DIR = REPO_ROOT / "infrastructure" / "nginx"
 
 pytestmark = pytest.mark.skipif(
@@ -46,3 +47,15 @@ def test_deploy_sh_keeps_its_app_processes_from_starting_the_scheduler():
     assert export < first_app_process < seed < service_restart
     # The export lives in the database subshell, which is closed before the restart.
     assert "\n)\n" in script[seed:service_restart]
+
+
+@pytest.mark.skipif(not DEPLOY_WORKFLOW.exists(), reason="deploy workflow is not present")
+def test_deploy_workflow_restricts_the_env_file_before_writing_secrets():
+    """backend/.env holds the production secrets: owner-only, set before they are written."""
+    workflow = _text(DEPLOY_WORKFLOW)
+
+    restrict = workflow.index('chmod 600 "$ENV_FILE"')
+    write = workflow.index('} > "$ENV_FILE"')
+
+    assert restrict < write
+    assert '> "$APP_DIR/backend/.env"' not in workflow
