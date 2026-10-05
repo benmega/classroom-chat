@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ContactTeacherModal from './ContactTeacherModal';
 import client from '../../api/client';
@@ -113,6 +114,82 @@ describe('ContactTeacherModal', () => {
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('Failed to send message.');
+        });
+    });
+
+    describe('keyboard', () => {
+        it('is a modal dialog', () => {
+            render(<ContactTeacherModal isOpen={true} onClose={vi.fn()} />);
+
+            expect(screen.getByRole('dialog', { name: 'Contact Teacher' })).toHaveAttribute('aria-modal', 'true');
+        });
+
+        it('closes on Escape and discards the draft like Cancel does', async () => {
+            const user = userEvent.setup();
+            const onClose = vi.fn();
+            render(<ContactTeacherModal isOpen={true} onClose={onClose} />);
+            await user.type(screen.getByLabelText(/Message/i), 'Half-written note');
+
+            await user.keyboard('{Escape}');
+
+            expect(onClose).toHaveBeenCalledTimes(1);
+            expect(screen.getByLabelText(/Message/i)).toHaveValue('');
+        });
+
+        it('closes on Escape from the confirmation too', async () => {
+            const user = userEvent.setup();
+            const onClose = vi.fn();
+            client.post.mockResolvedValueOnce({ data: { status: 'success' } });
+            render(<ContactTeacherModal isOpen={true} onClose={onClose} />);
+            await user.type(screen.getByLabelText(/Message/i), 'Hello');
+            await user.click(screen.getByRole('button', { name: /Send Message/i }));
+            expect(await screen.findByText('Message Sent!')).toBeInTheDocument();
+
+            await user.keyboard('{Escape}');
+
+            expect(onClose).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not react to Escape while closed', async () => {
+            const user = userEvent.setup();
+            const onClose = vi.fn();
+            render(<ContactTeacherModal isOpen={false} onClose={onClose} />);
+
+            await user.keyboard('{Escape}');
+
+            expect(onClose).not.toHaveBeenCalled();
+        });
+
+        it('starts on the subject field and keeps Tab and Shift+Tab inside the dialog', async () => {
+            const user = userEvent.setup();
+            render(<ContactTeacherModal isOpen={true} onClose={vi.fn()} />);
+            const close = screen.getByRole('button', { name: 'Close' });
+            const cancel = screen.getByRole('button', { name: 'Cancel' });
+            expect(screen.getByLabelText(/Subject/i)).toHaveFocus();
+
+            await user.tab();
+            expect(screen.getByLabelText(/Message/i)).toHaveFocus();
+            await user.tab();
+            // Send Message is disabled until there is text, so the trap skips it.
+            expect(cancel).toHaveFocus();
+            await user.tab();
+            expect(close).toHaveFocus();
+            await user.tab({ shift: true });
+            expect(cancel).toHaveFocus();
+        });
+
+        it('returns focus to the control that opened it', () => {
+            const opener = document.createElement('button');
+            document.body.appendChild(opener);
+            opener.focus();
+            const onClose = vi.fn();
+            const { rerender } = render(<ContactTeacherModal isOpen={true} onClose={onClose} />);
+            expect(opener).not.toHaveFocus();
+
+            rerender(<ContactTeacherModal isOpen={false} onClose={onClose} />);
+
+            expect(opener).toHaveFocus();
+            opener.remove();
         });
     });
 });
