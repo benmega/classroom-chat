@@ -146,6 +146,17 @@
     justify-content: center;
 }
 
+/* The badge sprite is natively 128px; the preview slot is 64px. The negative margin trims the layout box to
+   match the scaled image, and the explicit position and margin beat the .badge-wrapper .badge rule of the
+   student achievements page, which applies if that stylesheet is loaded too. */
+.admin-achievements-page .preview-badge .badge {
+    position: static;
+    flex: none;
+    margin: -32px;
+    transform: scale(0.5);
+    transform-origin: center;
+}
+
 :where(.admin-achievements-page) .reward-tag {
     background: var(--amber-50);
     color: var(--warning-color);

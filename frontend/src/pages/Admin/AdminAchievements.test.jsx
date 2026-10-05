@@ -74,6 +74,16 @@ describe('AdminAchievements', () => {
       expect(client.get).toHaveBeenCalledWith('/api/achievements/all');
     });
 
+    it('shows each badge from its sprite class, not from a per-badge image file', async () => {
+      render(<AdminAchievements />);
+      await screen.findByText('Old Timer');
+
+      const header = document.querySelector('.project-card-header');
+      expect(header.querySelector('.badge.badge-old-timer')).toBeInTheDocument();
+      expect(header.style.backgroundImage).toBe('');
+      expect(document.querySelector('img')).toBeNull();
+    });
+
     it('shows an empty state', async () => {
       mockList([]);
       render(<AdminAchievements />);
@@ -165,6 +175,16 @@ describe('AdminAchievements', () => {
 
       expect(toast.error).toHaveBeenCalledWith('Reward must be a whole number of at least 1.');
       expect(client.post).not.toHaveBeenCalled();
+    });
+
+    it('previews the badge from its sprite class once a slug is typed', async () => {
+      await openAddForm();
+      expect(document.querySelector('.preview-badge .badge')).toBeNull();
+
+      fillAddForm({ slug: 'master-coder' });
+
+      expect(document.querySelector('.preview-badge .badge')).toHaveClass('badge-master-coder');
+      expect(document.querySelector('.preview-badge img')).toBeNull();
     });
 
     it('restricts the slug input to lowercase letters, digits and hyphens', async () => {
