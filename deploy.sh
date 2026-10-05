@@ -172,6 +172,11 @@ echo "Initializing/updating database..."
     cd "$APP_DIR/backend"
     # Ensure we run in production mode so it hits prod_users.db
 
+    # The processes below load the whole app, which would otherwise start the
+    # session cleanup scheduler. It belongs to gunicorn only; this export stays
+    # inside this subshell, so the service restart below is unaffected.
+    export SCHEDULER_ENABLED=0
+
     # Heal invalid integer values in last_daily_duck column before starting flask context
     echo "Healing any invalid/integer last_daily_duck values in SQLite database..."
     run "$PYTHON_BIN" -c "

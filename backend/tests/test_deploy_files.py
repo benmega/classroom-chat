@@ -32,3 +32,17 @@ def test_deploy_sh_does_not_build_or_host_the_frontend():
     assert not (NGINX_DIR / "blossom.benmega.com.conf").exists()
     # The API site is still installed on every deploy.
     assert "api-blossom.benmega.com.conf" in script
+
+
+def test_deploy_sh_keeps_its_app_processes_from_starting_the_scheduler():
+    """The bootstrap and seed processes load the whole app: only gunicorn may run the cleanup job."""
+    script = _text(DEPLOY_SH)
+
+    export = script.index("export SCHEDULER_ENABLED=0")
+    first_app_process = script.index("from main import app")
+    seed = script.index("-m flask seed")
+    service_restart = script.rindex('systemctl restart "$SERVICE_NAME"')
+
+    assert export < first_app_process < seed < service_restart
+    # The export lives in the database subshell, which is closed before the restart.
+    assert "\n)\n" in script[seed:service_restart]
