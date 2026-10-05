@@ -42,7 +42,7 @@ jobs:
           OBJ_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
           GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
         run: |
-          pip install openai
+          pip install -r .github/scripts/requirements.txt
           PLAN=$(python .github/scripts/analyze_issue.py)
 
           # Post plan to issue for human visibility
@@ -89,12 +89,14 @@ jobs:
           cache-dependency-path: |
             backend/requirements.txt
             backend/requirements-dev.txt
+            .github/scripts/requirements.txt
 
       - name: Install Dependencies
-        # The agent's run_tests tool runs pytest, which lives in the dev requirements.
+        # agent_coder.py imports openai (script requirements); its run_tests tool runs pytest,
+        # which lives in the dev requirements.
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements-dev.txt
+          pip install -r backend/requirements-dev.txt -r .github/scripts/requirements.txt
 
       - name: Run Agent Loop
         env:
