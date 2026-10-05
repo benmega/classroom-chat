@@ -6,9 +6,13 @@ import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react-swc'
 
 // Rewrites named lucide-react imports into per-icon imports so the barrel file is not bundled.
+// Build only: the dev dependency scanner reads the original source and pre-bundles the
+// barrel, so in dev every per-icon import would look like a newly found dependency and make
+// Vite re-optimize and reload the page (a cold start took about a minute to settle).
 function lucideOptimize() {
   return {
     name: 'optimize-lucide',
+    apply: 'build',
     enforce: 'pre',
     transform(code, id) {
       if (id.includes('node_modules')) return;

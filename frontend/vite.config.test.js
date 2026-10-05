@@ -58,6 +58,30 @@ describe('vite manualChunks', () => {
   )
 })
 
+describe('lucide per-icon import rewrite', () => {
+  const plugin = config.plugins.flat().find((p) => p.name === 'optimize-lucide')
+
+  // In dev the dependency scanner pre-bundles the barrel from the original source, so rewriting to
+  // per-icon paths there makes Vite re-optimize and reload the page while it is loading.
+  it('only runs for production builds', () => {
+    expect(plugin.apply).toBe('build')
+  })
+
+  it('rewrites named imports to per-icon paths, keeping aliases and dropping the Icon suffix', () => {
+    const out = plugin.transform("import { Send, ArrowRightIcon, Gamepad2 as Pad } from 'lucide-react'", 'C:/repo/frontend/src/A.jsx')
+    expect(out).toBe([
+      "import Send from 'lucide-react/dist/esm/icons/send';",
+      "import ArrowRightIcon from 'lucide-react/dist/esm/icons/arrow-right';",
+      "import Pad from 'lucide-react/dist/esm/icons/gamepad-2';",
+    ].join('\n'))
+  })
+
+  it('leaves dependencies and files without lucide imports alone', () => {
+    expect(plugin.transform("import { Send } from 'lucide-react'", 'C:/repo/frontend/node_modules/x/index.js')).toBeUndefined()
+    expect(plugin.transform("import { useState } from 'react'", 'C:/repo/frontend/src/A.jsx')).toBeUndefined()
+  })
+})
+
 // Re-evaluates the config so the VITE_DEV_API handling can be exercised ('' = unset).
 const loadConfig = async (devApi = '') => {
   vi.resetModules()
