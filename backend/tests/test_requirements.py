@@ -185,6 +185,12 @@ def test_every_runtime_requirement_is_used():
     assert not NOT_IMPORTED.keys() & imported, "NOT_IMPORTED names a package the runtime code now imports"
 
 
+def test_every_runtime_requirement_has_a_version_bound():
+    # A bare package name lets any future release, including a new major, into the next install.
+    unbounded = [line for line in _requirement_lines(BACKEND_DIR / "requirements.txt") if _lowest_allowed(line) == (0,)]
+    assert not unbounded, f"requirements.txt has requirements without a version: {unbounded}"
+
+
 def test_runtime_requirements_stay_at_or_above_the_advisory_floors():
     lines = {_requirement_name(line): line for line in _requirement_lines(BACKEND_DIR / "requirements.txt")}
     for name, floor in ADVISORY_FLOORS.items():
