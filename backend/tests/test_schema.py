@@ -252,7 +252,11 @@ def test_drift_check_reports_a_missing_table(migration_app):
 
     drift = _schema_drift(db.engine, db.metadata)
 
-    assert [(kind, table.name) for kind, table in drift] == [("add_table", "skills")]
+    # The table is reported together with the index on it
+    assert [(kind, missing.name) for kind, missing in drift] == [
+        ("add_table", "skills"),
+        ("add_index", "ix_skills_user_id"),
+    ]
 
 
 def test_drift_check_reports_a_missing_column(migration_app):

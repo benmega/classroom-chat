@@ -14,8 +14,11 @@ class SessionLog(db.Model):
         db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
     )
     start_time = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
-    end_time = db.Column(db.DateTime, nullable=True)  # set when user goes offline
-    last_seen = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+    # set when user goes offline
+    end_time = db.Column(db.DateTime, nullable=True, index=True)
+    last_seen = db.Column(
+        db.DateTime, default=utcnow_naive, nullable=False, index=True
+    )
 
     user = db.relationship(
         "User",

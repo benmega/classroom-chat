@@ -28,6 +28,7 @@ class Challenge(db.Model):
         db.String(64),
         db.ForeignKey("classrooms.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
     description = db.Column(db.Text, nullable=True)
 

@@ -13,7 +13,9 @@ class Project(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)  # The "Project Description"
     link = db.Column(db.String(255), nullable=True)  # The "Game Link"
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+    )
 
     teacher_comment = db.Column(db.Text, nullable=True)
     packets_awarded = db.Column(db.Double, default=0.0, nullable=False)
