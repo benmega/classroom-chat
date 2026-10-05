@@ -10,6 +10,7 @@ from application.models.project import Project
 from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
 from application.models.user import User, save_new_user
+from application.utilities.db_helpers import is_reserved_username
 from application.utilities.helper_functions import allowed_file, get_s3_client, utcnow_naive
 from application.utilities.image_upload import (
     AVATAR_MAX_EDGE,
@@ -197,7 +198,9 @@ def signup():
             400,
         )
 
-    if User.query.filter_by(username=username).first():
+    # A reserved name is answered exactly like a taken one, so the reply does
+    # not reveal which names are in use.
+    if is_reserved_username(username) or User.query.filter_by(username=username).first():
         return "Username already exists.", 409
 
     try:

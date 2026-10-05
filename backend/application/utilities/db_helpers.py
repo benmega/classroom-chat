@@ -126,6 +126,16 @@ def get_user(identifier):
     return user
 
 
+# Usernames only staff accounts may hold. Self-service account creation never
+# hands them out. Keep in step with the role step of tools/migrate_classroom.py.
+RESERVED_USERNAMES = frozenset({"ben", "benmega", "admin", "administrator"})
+
+
+def is_reserved_username(username):
+    """True when ``username`` (compared case-insensitively) is a reserved name."""
+    return str(username or "").strip().lower() in RESERVED_USERNAMES
+
+
 def user_removal_refusal(user):
     """
     Why an admin may not delete this account, or None when removal is allowed.
