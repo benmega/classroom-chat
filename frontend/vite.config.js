@@ -58,17 +58,30 @@ const servePublicFirst = (req) => {
   }
 }
 
+// Vite matches a plain proxy key by string prefix, so '/user' would also capture the SPA
+// path '/users' and send it to Flask. A key starting with ^ is a regular expression: match
+// the prefix only as a whole path segment ('/user', '/user/...', '/user?...').
+const prefix = (name) => `^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/|\\?|$)`
+
+// Printed student cards and QR codes link to /user/profile/:slug, which is both a backend API
+// path and an SPA route (it redirects to /profile/:slug). A browser navigation asks for HTML
+// and must get the app, also on refresh; the API call for the same path asks for JSON and is
+// still proxied. Returning a URL makes Vite serve it instead of proxying.
+const serveProfileLinkAsPage = (req) => {
+  if (req.url.startsWith('/user/profile/') && req.headers.accept?.includes('text/html')) return req.url
+}
+
 // Only prefixes the frontend requests belong here. Everything under /api (admin,
 // achievements, dev-login, project-templates, session, ...) is already covered by '/api'.
 const proxy = {
-  '/api': API,
-  '/message': API,
-  '/user': API,
-  '/challenge': API,
-  '/duck_trade': API,
-  '/notes': API,
-  '/static': { target: API, changeOrigin: true, bypass: servePublicFirst },
-  '/socket.io': {
+  [prefix('/api')]: API,
+  [prefix('/message')]: API,
+  [prefix('/user')]: { target: API, bypass: serveProfileLinkAsPage },
+  [prefix('/challenge')]: API,
+  [prefix('/duck_trade')]: API,
+  [prefix('/notes')]: API,
+  [prefix('/static')]: { target: API, changeOrigin: true, bypass: servePublicFirst },
+  [prefix('/socket.io')]: {
     target: API,
     ws: true,
     changeOrigin: true,

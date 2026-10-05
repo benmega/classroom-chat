@@ -89,6 +89,14 @@ const loadConfig = async (devApi = '') => {
   return (await import('./vite.config.js')).default
 }
 const targetOf = (entry) => (typeof entry === 'string' ? entry : entry.target)
+// The proxy entry a request URL is forwarded by, chosen the way Vite does it: a key starting with
+// ^ is a RegExp, any other key a plain string prefix. Undefined means Vite serves the URL itself.
+const entryFor = (proxy, url) => {
+  const key = Object.keys(proxy).find((k) => (k[0] === '^' && new RegExp(k).test(url)) || url.startsWith(k))
+  return key === undefined ? undefined : proxy[key]
+}
+// '^/socket\\.io(/|\\?|$)' -> '/socket.io'
+const nameOf = (key) => key.slice(1).replace(/\(.*$/, '').replace(/\\/g, '')
 
 describe('vite dev/preview proxy', () => {
   afterEach(() => {
@@ -103,7 +111,7 @@ describe('vite dev/preview proxy', () => {
 
   it('only lists the backend prefixes the frontend uses, without /api sub-paths or dead routes', async () => {
     const { server } = await loadConfig()
-    expect(Object.keys(server.proxy).sort()).toEqual([
+    expect(Object.keys(server.proxy).map(nameOf).sort()).toEqual([
       '/api',
       '/challenge',
       '/duck_trade',
@@ -113,6 +121,30 @@ describe('vite dev/preview proxy', () => {
       '/static',
       '/user',
     ])
+  })
+
+  // A plain '/user' key is a string prefix, so it also took '/users' away from the SPA (a refresh
+  // there got the backend's answer instead of the app).
+  it.each(['/api', '/challenge', '/duck_trade', '/message', '/notes', '/socket.io', '/static', '/user'])(
+    'forwards %s, its sub-paths and its query string, and nothing that merely starts with it',
+    async (name) => {
+      const { server } = await loadConfig()
+      const entry = entryFor(server.proxy, name)
+      expect(entry).toBeDefined()
+      for (const url of [name, `${name}/`, `${name}/a/b.png`, `${name}?x=1`, `${name}/?x=1`]) {
+        expect(entryFor(server.proxy, url)).toBe(entry)
+      }
+      for (const url of [`${name}s`, `${name}s/1`, `${name}-old`, `${name}_x/1`, `${name}x?x=1`]) {
+        expect(entryFor(server.proxy, url)).toBeUndefined()
+      }
+    },
+  )
+
+  it('leaves the SPA routes whose paths start like a backend prefix to the dev server', async () => {
+    const { server } = await loadConfig()
+    for (const url of ['/users', '/users?role=student', '/messages', '/challenges', '/notes-archive', '/profile', '/admin/users', '/apis']) {
+      expect(entryFor(server.proxy, url)).toBeUndefined()
+    }
   })
 
   it('forwards every prefix to http://localhost:8000 by default', async () => {
@@ -127,13 +159,13 @@ describe('vite dev/preview proxy', () => {
 
   it('keeps websocket upgrades and origin rewriting on the Socket.IO entry', async () => {
     const { server } = await loadConfig()
-    expect(server.proxy['/socket.io']).toMatchObject({ ws: true, changeOrigin: true })
+    expect(entryFor(server.proxy, '/socket.io/?EIO=4&transport=websocket')).toMatchObject({ ws: true, changeOrigin: true })
   })
 })
 
 describe('vite /static proxy bypass', () => {
   const req = (url) => ({ url })
-  const bypass = async () => (await loadConfig()).server.proxy['/static'].bypass
+  const bypass = async () => entryFor((await loadConfig()).server.proxy, '/static/x').bypass
 
   afterEach(() => {
     vi.unstubAllEnvs()
@@ -173,5 +205,36 @@ describe('vite /static proxy bypass', () => {
   it('proxies malformed URLs instead of throwing', async () => {
     const fn = await bypass()
     expect(fn(req('/static/%E0%A4%A'))).toBeUndefined()
+  })
+})
+
+describe('vite /user/profile page-navigation bypass', () => {
+  const nav = (url) => ({ url, headers: { accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' } })
+  const api = (url) => ({ url, headers: { accept: 'application/json, text/plain, */*' } })
+  const bypass = async () => entryFor((await loadConfig()).server.proxy, '/user/profile/x').bypass
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.resetModules()
+  })
+
+  // /user/profile/:slug is an SPA route too (printed QR links), so a refresh must return the app
+  it('serves the app for a browser navigation to a profile link', async () => {
+    const fn = await bypass()
+    expect(fn(nav('/user/profile/some-slug'))).toBe('/user/profile/some-slug')
+    expect(fn(nav('/user/profile/some.slug%20x?ref=qr'))).toBe('/user/profile/some.slug%20x?ref=qr')
+  })
+
+  it('still proxies the API call for the same path', async () => {
+    const fn = await bypass()
+    expect(fn(api('/user/profile/some-slug'))).toBeUndefined()
+    expect(fn({ url: '/user/profile/some-slug', headers: {} })).toBeUndefined()
+  })
+
+  it('proxies every other /user path, whatever the request accepts', async () => {
+    const fn = await bypass()
+    for (const url of ['/user/profile', '/user/profile_pictures/a.jpg', '/user/login', '/user/api/auth/status']) {
+      expect(fn(nav(url))).toBeUndefined()
+    }
   })
 })
