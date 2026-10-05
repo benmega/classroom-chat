@@ -20,6 +20,7 @@ from application.utilities.image_upload import (
     process_image,
     write_bytes_atomic,
 )
+from application.utilities.spa import frontend_url
 from flask import (
     Blueprint,
     current_app,
@@ -593,12 +594,12 @@ def admin_certificates():
 def _send_certificate_approval_email(cert):
     from application.services.email_service import send_email
 
-    # We want absolute URLs
-    # request.host_url gives something like "https://blossom.benmega.com/"
-    # If not in request context, this might fail, but mark_reviewed is in request context.
+    # We want absolute URLs. The download is an API endpoint, so it is built from the
+    # host that received the request (mark_reviewed is in request context); the
+    # profile is a React page and comes from FRONTEND_URL.
     base_url = request.host_url.rstrip("/")
     download_link = f"{base_url}/api/achievements/download_certificate/{cert.id}"
-    profile_link = f"{base_url}/profile/{cert.user.slug}"
+    profile_link = frontend_url(f"profile/{cert.user.slug}")
 
     subject = f"Certificate Approved: {cert.achievement.name} - {cert.user.username}"
     body = f"""A new certificate has been approved!

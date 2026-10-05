@@ -10,7 +10,7 @@ from application.routes.admin.user_mgmt import (
     MAX_ADMIN_ADJUSTMENT,
     MAX_INITIAL_DUCKS,
 )
-from tests.factories import UserFactory
+from tests.factories import ClassroomFactory, UserFactory
 
 
 def login_as_admin(client, admin_user):
@@ -828,3 +828,35 @@ def test_update_user_details_errors_are_plain_strings(client, sample_admin, samp
     assert invalid.status_code == 400
     assert isinstance(invalid.get_json()["error"], str)
     assert "3-30 chars" in invalid.get_json()["error"]
+
+
+def test_join_code_link_opens_the_join_page_on_the_frontend(client, sample_admin, monkeypatch):
+    monkeypatch.setitem(client.application.config, "FRONTEND_URL", "https://spa.example.test/")
+    classroom = ClassroomFactory(join_code="JOIN1")
+    db.session.commit()
+    login_as_admin(client, sample_admin)
+
+    resp = client.get(f"/api/admin/classrooms/{classroom.id}/join-code")
+
+    assert resp.status_code == 200
+    # Not the API host the request arrived on (localhost:8000 under test)
+    assert resp.get_json()["data"] == {
+        "join_code": "JOIN1",
+        "join_url": "https://spa.example.test/join-class?code=JOIN1",
+    }
+
+
+def test_regenerated_join_code_link_opens_the_join_page_on_the_frontend(
+    client, sample_admin, monkeypatch
+):
+    monkeypatch.setitem(client.application.config, "FRONTEND_URL", "https://spa.example.test")
+    classroom = ClassroomFactory(join_code="JOIN1")
+    db.session.commit()
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(f"/api/admin/classrooms/{classroom.id}/join-code/regenerate")
+
+    assert resp.status_code == 200
+    data = resp.get_json()["data"]
+    assert data["join_code"] != "JOIN1"
+    assert data["join_url"] == f"https://spa.example.test/join-class?code={data['join_code']}"

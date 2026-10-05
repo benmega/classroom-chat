@@ -934,6 +934,33 @@ def test_mark_reviewed(client, init_db, test_admin, test_user, test_achievement)
     assert cert.status == "approved"
 
 
+def test_approval_email_links_the_profile_on_the_frontend_and_the_download_on_the_api(
+    client, init_db, test_admin, test_user, test_achievement, monkeypatch
+):
+    monkeypatch.setitem(client.application.config, "FRONTEND_URL", "https://spa.example.test/")
+    cert = UserCertificate(
+        user_id=test_user.id,
+        achievement_id=test_achievement.id,
+        url="http://test",
+        file_path="test.pdf",
+    )
+    db.session.add(cert)
+    db.session.commit()
+    with client.session_transaction() as sess:
+        sess["user"] = test_admin.id
+
+    with patch("application.services.email_service.send_email") as send_email:
+        response = client.post(f"/api/achievements/admin/certificates/reviewed/{cert.id}")
+
+    assert response.status_code == 200
+    body = send_email.call_args.args[1]
+    # The profile is a React page: the API host would not serve it
+    assert f"https://spa.example.test/profile/{test_user.slug}" in body
+    assert f"http://localhost:8000/profile/{test_user.slug}" not in body
+    # The download is an API endpoint, on the host that received the request
+    assert f"http://localhost:8000/api/achievements/download_certificate/{cert.id}" in body
+
+
 def test_reject_certificate(client, init_db, test_admin, test_user, test_achievement):
     cert = UserCertificate(
         user_id=test_user.id,

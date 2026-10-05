@@ -44,6 +44,7 @@ See `backend/.env.example` for the full list of required variables. The code rea
 | `WEBHOOK_SECRET` | webhook routes | Injected by `deploy.yml` |
 | `WEBHOOK_URL` | `infrastructure/lambda_transcriber/lambda_function.py` (Lambda environment, not the Flask app) | Optional |
 | `CORS_ORIGINS` | `config.py` (production), `routes/challenge_routes.py` | Comma-separated (whitespace and empty entries are ignored). Not written by `deploy.yml`, so the default origin list in `config.py` is used. Localhost origins are defaults only outside production; `/challenge/submit` additionally allows the CodeCombat/Ozaria bookmarklet origins |
+| `FRONTEND_URL` | `config.py`, `utilities/spa.py` (`frontend_url`) | Public address of the React app, used for links to its pages in emails and API responses (class invite links, the student profile link in the certificate email). Default `https://blossom.benmega.com` in production and `http://localhost:5173` elsewhere; a trailing slash is ignored. The API host serves no pages, so these links are never built from the request. Not written by `deploy.yml`, so production uses the default |
 | `SOCKETIO_ASYNC_MODE` | `main.py`, `config.py` | Default `gevent`. `main.py` loads `.env` before deciding whether to monkey-patch, so both read the same value |
 | `PORT`, `FLASK_DEBUG`, `FLASK_USE_RELOADER` | `main.py` (`python main.py` only) | Defaults 8000 / on / on |
 | `RATELIMIT_STORAGE_URI` | `config.py` (Flask-Limiter) | Default `memory://` (per process, see [Single-process assumptions](#single-process-assumptions)) |

@@ -630,6 +630,7 @@ export const EnrollStudentModal = ({
     onEnroll, 
     availableStudents = [], 
     joinCode, 
+    joinUrl, 
     onRegenerateJoinCode, 
     loading 
 }) => {
@@ -667,8 +668,6 @@ export const EnrollStudentModal = ({
         }
     };
 
-    const simulatedInviteLink = joinCode ? `https://classroom-chat.com/join?c=${joinCode}` : '';
-
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Invite students">
             <div className="enroll-modal-content">
@@ -676,7 +675,7 @@ export const EnrollStudentModal = ({
                 <div className="enroll-modal-link-section">
                     <div className="enroll-modal-link-label">Invite link</div>
                     <div className="enroll-modal-link-row">
-                        <span className="enroll-modal-link-text">{simulatedInviteLink || 'No code available'}</span>
+                        <span className="enroll-modal-link-text">{joinUrl || 'No code available'}</span>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button 
                                 type="button"
