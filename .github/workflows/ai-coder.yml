@@ -22,6 +22,8 @@ jobs:
     name: Architect Plan
     if: github.event.label.name == 'ai-plan'
     runs-on: ubuntu-latest
+    # GitHub's default is 6 hours: cap a stuck job well below that.
+    timeout-minutes: 10
     outputs:
       plan: ${{ steps.gen_plan.outputs.plan }}
     steps:
@@ -72,6 +74,9 @@ jobs:
       && (github.event.pull_request == null
       || github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: ubuntu-latest
+    # The agent loop is capped at 12 model turns and each pytest run at agent_coder.TEST_TIMEOUT;
+    # this bounds the whole job.
+    timeout-minutes: 60
     needs: [analyze]
     steps:
       - name: Checkout Code

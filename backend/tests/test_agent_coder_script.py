@@ -184,3 +184,142 @@ def test_discussion_reports_the_gh_error_instead_of_a_parse_failure(agent_coder,
     monkeypatch.setenv("IS_PR", "false")
 
     assert agent_coder.get_discussion_context() == "Error fetching discussion: HTTP 404: Not Found"
+
+
+# ---- timeouts: no tool can hang the job ----
+
+
+def test_every_subprocess_has_a_timeout(agent_coder, monkeypatch):
+    seen = []
+
+    def fake_run(cmd, **kwargs):
+        seen.append((cmd[0], kwargs.get("timeout")))
+        return subprocess.CompletedProcess(cmd, 0, stdout="{}", stderr="")
+
+    monkeypatch.setattr(agent_coder, "subprocess", SimpleNamespace(run=fake_run))
+    monkeypatch.setenv("OBJ_NUMBER", "90")
+
+    agent_coder.search_code("needle")
+    agent_coder.get_discussion_context()
+    agent_coder.run_tests()
+
+    assert [timeout for _, timeout in seen] == [
+        agent_coder.COMMAND_TIMEOUT,
+        agent_coder.COMMAND_TIMEOUT,
+        agent_coder.TEST_TIMEOUT,
+    ]
+
+
+@pytest.mark.parametrize("partial", [b"partial output", "partial output", None])
+def test_run_tests_reports_a_timeout_with_the_output_so_far(agent_coder, monkeypatch, partial):
+    def fake_run(cmd, **kwargs):
+        raise subprocess.TimeoutExpired(cmd, kwargs["timeout"], output=partial, stderr=partial)
+
+    monkeypatch.setattr(agent_coder, "subprocess", SimpleNamespace(run=fake_run))
+
+    result = agent_coder.run_tests()
+
+    assert result.startswith(f"Tests timed out after {agent_coder.TEST_TIMEOUT} seconds")
+    assert ("partial output" in result) == (partial is not None)
+
+
+def test_model_calls_have_a_timeout(agent_coder):
+    assert agent_coder.client.timeout == agent_coder.MODEL_TIMEOUT
+
+
+# ---- the tool loop survives a model that gets a call wrong ----
+
+
+def test_unknown_tool_is_reported_not_raised(agent_coder):
+    result = agent_coder.run_tool("delete_everything", "{}")
+
+    assert result.startswith("Unknown tool: delete_everything.")
+    assert "read_file" in result
+
+
+@pytest.mark.parametrize(
+    ("name", "arguments", "expected"),
+    [
+        ("read_file", "{}", "missing a required argument: 'path'"),
+        ("read_file", '{"path": "a.py", "mode": "w"}', "unexpected keyword argument 'mode'"),
+        ("search_code", "{not json", "not valid JSON"),
+        ("search_code", '["query"]', "expected a JSON object"),
+        ("patch_file", '{"path": "a.py"}', "missing a required argument"),
+    ],
+)
+def test_bad_arguments_are_reported_not_raised(agent_coder, name, arguments, expected):
+    result = agent_coder.run_tool(name, arguments)
+
+    assert result.startswith(f"Invalid arguments for {name}:")
+    assert expected in result
+
+
+@pytest.mark.parametrize("arguments", ["", "{}", None])
+def test_tools_without_parameters_accept_empty_arguments(agent_coder, monkeypatch, arguments):
+    monkeypatch.setitem(agent_coder.TOOL_FUNCTIONS, "run_tests", lambda: "all green")
+
+    assert agent_coder.run_tool("run_tests", arguments) == "all green"
+
+
+def test_a_tool_that_raises_is_reported_not_raised(agent_coder, monkeypatch):
+    def broken():
+        raise RuntimeError("disk on fire")
+
+    monkeypatch.setitem(agent_coder.TOOL_FUNCTIONS, "run_tests", broken)
+
+    assert agent_coder.run_tool("run_tests", "{}") == "Tool run_tests failed: disk on fire"
+
+
+def test_main_keeps_going_after_bad_tool_calls(agent_coder, monkeypatch):
+    def call(call_id, name, arguments):
+        return SimpleNamespace(id=call_id, function=SimpleNamespace(name=name, arguments=arguments))
+
+    bad_calls = [call("c1", "no_such_tool", "{}"), call("c2", "read_file", "{oops"), call("c3", "read_file", "{}")]
+    turns = iter(
+        [
+            SimpleNamespace(tool_calls=bad_calls),
+            SimpleNamespace(tool_calls=None),
+        ]
+    )
+    sent = []
+
+    def create(**kwargs):
+        sent.append(list(kwargs["messages"]))
+        return SimpleNamespace(choices=[SimpleNamespace(message=next(turns))])
+
+    fake_client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    monkeypatch.setattr(agent_coder, "client", fake_client)
+
+    agent_coder.main()
+
+    assert len(sent) == 2
+    tool_messages = [m for m in sent[1] if isinstance(m, dict) and m["role"] == "tool"]
+    assert [m["tool_call_id"] for m in tool_messages] == ["c1", "c2", "c3"]
+    assert tool_messages[0]["content"].startswith("Unknown tool: no_such_tool")
+    assert "not valid JSON" in tool_messages[1]["content"]
+    assert "missing a required argument" in tool_messages[2]["content"]
+
+
+# ---- patch_file rejects a line range outside the file ----
+
+
+@pytest.fixture
+def sample_file(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    target = tmp_path / "sample.txt"
+    target.write_text("one\ntwo\nthree\n", encoding="utf-8")
+    return target
+
+
+@pytest.mark.parametrize(("start", "end"), [(0, 1), (-1, 2), (2, 1), (1, 4), (4, 4)])
+def test_patch_file_rejects_a_range_outside_the_file(agent_coder, sample_file, start, end):
+    result = agent_coder.patch_file("sample.txt", start, end, "X")
+
+    assert result == f"Invalid line range {start}-{end}: sample.txt has 3 lines."
+    assert sample_file.read_text(encoding="utf-8") == "one\ntwo\nthree\n"
+
+
+def test_patch_file_replaces_the_given_lines(agent_coder, sample_file):
+    assert agent_coder.patch_file("sample.txt", 2, "3", "TWO-THREE") == "Updated sample.txt from line 2 to 3."
+
+    assert sample_file.read_text(encoding="utf-8") == "one\nTWO-THREE\n"

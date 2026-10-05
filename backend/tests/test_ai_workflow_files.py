@@ -69,3 +69,14 @@ def test_each_job_installs_the_script_requirements(job):
 
 def test_tests_workflow_installs_the_script_requirements_so_their_tests_run():
     assert "../.github/scripts/requirements.txt" in _text(WORKFLOWS / "tests.yml")
+
+
+# ---- every job has a timeout, so a stuck run cannot hold a runner for GitHub's 6-hour default ----
+
+
+@pytest.mark.parametrize("job", ["analyze", "code"])
+def test_each_job_has_a_timeout(job):
+    match = re.search(r"^    timeout-minutes: (\d+)$", _jobs()[job], flags=re.M)
+
+    assert match, f"{job} has no timeout-minutes"
+    assert 0 < int(match.group(1)) <= 60

@@ -1,14 +1,21 @@
+import inspect
 import json
 import os
 import pathlib
 import subprocess
 import sys
+from subprocess import TimeoutExpired
 
 from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Seconds to wait for one model response before the call fails.
+MODEL_TIMEOUT = 120
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), timeout=MODEL_TIMEOUT)
 
 MAX_TEST_OUTPUT = 4000
+# Seconds a tool may run: the whole backend suite for run_tests, a short command for the rest.
+TEST_TIMEOUT = 900
+COMMAND_TIMEOUT = 60
 
 
 # --- TOOLS ---
@@ -29,7 +36,10 @@ def search_code(query):
     """Search for specific strings or patterns using grep."""
     try:
         result = subprocess.run(
-            ["grep", "-rnI", query, "."], capture_output=True, text=True
+            ["grep", "-rnI", query, "."],
+            capture_output=True,
+            text=True,
+            timeout=COMMAND_TIMEOUT,
         )
         return result.stdout[:2000]
     except Exception as e:
@@ -52,8 +62,12 @@ def patch_file(path, start_line, end_line, new_content):
         with open(path, "r") as f:
             lines = f.readlines()
 
+        start, end = int(start_line), int(end_line)
+        if not 1 <= start <= end <= len(lines):
+            return f"Invalid line range {start}-{end}: {path} has {len(lines)} lines."
+
         # Adjust for 1-based indexing
-        lines[int(start_line) - 1 : int(end_line)] = [new_content + "\n"]
+        lines[start - 1 : end] = [new_content + "\n"]
 
         with open(path, "w") as f:
             f.writelines(lines)
@@ -62,18 +76,33 @@ def patch_file(path, start_line, end_line, new_content):
         return str(e)
 
 
+def _tail(output):
+    """Last MAX_TEST_OUTPUT characters of captured output (bytes after a timeout, None if empty)."""
+    if isinstance(output, bytes):
+        output = output.decode(errors="replace")
+    return (output or "")[-MAX_TEST_OUTPUT:]
+
+
 def run_tests():
     """Execute pytest from backend/ (its config and the app live there) and return results."""
-    result = subprocess.run(
-        [sys.executable, "-m", "pytest", "-q", "-x", "--disable-warnings"],
-        cwd="backend",
-        env={**os.environ, "FLASK_ENV": "testing"},
-        capture_output=True,
-        text=True,
-    )
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pytest", "-q", "-x", "--disable-warnings"],
+            cwd="backend",
+            env={**os.environ, "FLASK_ENV": "testing"},
+            capture_output=True,
+            text=True,
+            timeout=TEST_TIMEOUT,
+        )
+    except TimeoutExpired as e:
+        # A hanging test must not stall the job: report it so the agent can react.
+        return (
+            f"Tests timed out after {TEST_TIMEOUT} seconds and were stopped.\n"
+            f"STDOUT: {_tail(e.stdout)}\nSTDERR: {_tail(e.stderr)}"
+        )
     # Warnings are hidden and only the tail (the failure summary) is kept so a long run cannot
     # flood the model context.
-    stdout, stderr = result.stdout[-MAX_TEST_OUTPUT:], result.stderr[-MAX_TEST_OUTPUT:]
+    stdout, stderr = _tail(result.stdout), _tail(result.stderr)
     return f"STDOUT: {stdout}\nSTDERR: {stderr}\nCode: {result.returncode}"
 
 
@@ -94,6 +123,7 @@ def get_discussion_context():
             ["gh", cmd, "view", obj_num, "--json", fields],
             capture_output=True,
             text=True,
+            timeout=COMMAND_TIMEOUT,
         )
         if result.returncode != 0:
             return f"Error fetching discussion: {result.stderr.strip()}"
@@ -107,6 +137,41 @@ def get_discussion_context():
         return context
     except Exception as e:
         return f"Error fetching discussion: {e!s}"
+
+
+TOOL_FUNCTIONS = {
+    "list_files": list_files,
+    "search_code": search_code,
+    "read_file": read_file,
+    "patch_file": patch_file,
+    "run_tests": run_tests,
+    "get_discussion_context": get_discussion_context,
+}
+
+
+def run_tool(name, raw_arguments):
+    """Run one tool call from the model and return its result as text.
+
+    A call the model got wrong (unknown tool, malformed or missing arguments) or a tool that
+    raises is reported back to the model as the tool result instead of ending the whole run.
+    """
+    function = TOOL_FUNCTIONS.get(name)
+    if function is None:
+        return f"Unknown tool: {name}. Available tools: {', '.join(TOOL_FUNCTIONS)}."
+    try:
+        args = json.loads(raw_arguments or "{}")
+    except json.JSONDecodeError as e:
+        return f"Invalid arguments for {name}: not valid JSON ({e})."
+    if not isinstance(args, dict):
+        return f"Invalid arguments for {name}: expected a JSON object."
+    try:
+        inspect.signature(function).bind(**args)
+    except TypeError as e:
+        return f"Invalid arguments for {name}: {e}."
+    try:
+        return str(function(**args))
+    except Exception as e:
+        return f"Tool {name} failed: {e!s}"
 
 
 # --- MAIN LOOP ---
@@ -205,28 +270,7 @@ def main():
             break
 
         for tool_call in msg.tool_calls:
-            name, args = (
-                tool_call.function.name,
-                json.loads(tool_call.function.arguments),
-            )
-            if name == "list_files":
-                result = list_files()
-            elif name == "search_code":
-                result = search_code(args["query"])
-            elif name == "read_file":
-                result = read_file(args["path"])
-            elif name == "patch_file":
-                result = patch_file(
-                    args["path"],
-                    args["start_line"],
-                    args["end_line"],
-                    args["new_content"],
-                )
-            elif name == "run_tests":
-                result = run_tests()
-            elif name == "get_discussion_context":
-                result = get_discussion_context()
-
+            result = run_tool(tool_call.function.name, tool_call.function.arguments)
             messages.append(
                 {"role": "tool", "tool_call_id": tool_call.id, "content": result}
             )
