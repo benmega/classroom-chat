@@ -49,7 +49,10 @@ NOT_IMPORTED = {
 # Lowest release of each package that has no published security advisory; the
 # runtime requirement must not allow anything older.
 ADVISORY_FLOORS = {
+    "flask": "3.1.3",
+    "werkzeug": "3.1.6",
     "flask-cors": "6.0.2",
+    "cryptography": "50.0.0",
 }
 
 # Test and lint tooling that must never ship in the production requirements.
