@@ -120,7 +120,7 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     setupFiles: './src/test/setup.js',
-    exclude: ['node_modules', 'dist', 'tests-e2e/**', 'tests/e2e/**'],
+    exclude: ['node_modules', 'dist', 'tests-e2e/**'],
     coverage: {
       provider: 'v8',
       // Vitest 4 only reports files a test loaded unless told where the sources are, so an
