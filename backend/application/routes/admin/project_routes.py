@@ -118,7 +118,11 @@ def _complete_linked_challenge(student, project):
 def handle_project_review(project_id):
     project = Project.query.get_or_404(project_id)
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(
+            {"status": "error", "message": "Request body must be a JSON object."}
+        ), 400
     action = data.get("action")
     comment = data.get("teacher_comment")
 
@@ -196,7 +200,11 @@ def handle_project_review(project_id):
 @admin_bp.route("/assign-project", methods=["POST"])
 @admin_only
 def assign_project():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(
+            {"status": "error", "message": "Request body must be a JSON object."}
+        ), 400
 
     user_id = data.get("user_id")
     name = data.get("name")
