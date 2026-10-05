@@ -270,7 +270,7 @@ describe('ToReview Component', () => {
       { id: 42, username: 'eli', nickname: 'Eli', timestamp: '2023-01-02T10:00:00', bit_ducks: [1], byte_ducks: [] },
     ];
     const courseRequests = [
-      { id: 51, student_username: 'fay', requested_course_id: 'co1', course_instance_id: 'inst-1', url: 'https://example.com/c', requested_at: '2023-01-03T10:00:00' },
+      { id: 51, student_username: 'fay', requested_course_id: 'co1', course_instance_id: 'inst-1', url: 'https://example.com/c', created_at: '2023-01-03T10:00:00' },
     ];
 
     const loadItems = async (items = {}, tabLabel = null) => {
@@ -736,6 +736,30 @@ describe('ToReview Component', () => {
     });
 
     describe('course requests', () => {
+      it('shows when the request was made, from the created_at the API sends', async () => {
+        await loadItems({ courseRequests }, 'Course Requests');
+
+        expect(screen.getByText(new Date('2023-01-03T10:00:00').toLocaleString())).toBeInTheDocument();
+        expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
+      });
+
+      it('shows a placeholder instead of Invalid Date when a request has no date', async () => {
+        await loadItems({ courseRequests: [{ ...courseRequests[0], created_at: null }] }, 'Course Requests');
+
+        expect(screen.getByText('Unknown date')).toBeInTheDocument();
+        expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
+      });
+
+      it('sorts a request among the other items by when it was made', async () => {
+        await loadItems({
+          projects,
+          courseRequests: [{ ...courseRequests[0], created_at: '2022-12-31T10:00:00' }],
+        });
+
+        const cards = [...document.querySelectorAll('.review-card')];
+        expect(cards.map((c) => c.className.includes('course-review-card'))).toEqual([false, true]);
+      });
+
       it('shows the server reason when a request cannot be approved', async () => {
         await loadItems({ courseRequests }, 'Course Requests');
         client.post.mockRejectedValueOnce(rejectionFor({ success: false, message: 'Course already mapped' }, 409));

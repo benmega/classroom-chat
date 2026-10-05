@@ -37,7 +37,7 @@ import Modal from '../../components/common/Modal';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
-// submitted_at is nullable on certificates; new Date(null/undefined) would show a bogus date.
+// A timestamp can be missing (submitted_at is nullable on certificates); new Date(null/undefined) would show a bogus date.
 const formatSubmittedAt = (value) => (value ? new Date(value).toLocaleString() : 'Unknown date');
 
 const ToReview = () => {
@@ -471,7 +471,7 @@ const ToReview = () => {
         certificates.forEach(c => unified.push({ ...c, type: 'certificate', key: `cert-${c.id}`, timestamp: c.submitted_at || new Date().toISOString() }));
         pendingUsers.forEach(u => unified.push({ ...u, type: 'user', key: `user-${u.id}`, timestamp: new Date().toISOString() })); // default fallback
         trades.forEach(t => unified.push({ ...t, type: 'trade', key: `trade-${t.id}`, timestamp: t.timestamp || new Date().toISOString() }));
-        courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
+        courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.created_at || new Date().toISOString() }));
         parentMessages.forEach(m => unified.push({ ...m, type: 'parent_message', key: `parent-msg-${m.id}`, timestamp: m.created_at || new Date().toISOString() }));
 
         return unified.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -931,7 +931,7 @@ const ToReview = () => {
                         <CalendarCheck size={14} /> Course Request
                     </div>
                     <span className="card-time">
-                        <Clock size={12} /> {new Date(c.requested_at).toLocaleString()}
+                        <Clock size={12} /> {formatSubmittedAt(c.created_at)}
                     </span>
                 </div>
 
