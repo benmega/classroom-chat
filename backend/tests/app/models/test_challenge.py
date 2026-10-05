@@ -29,15 +29,24 @@ def test_scale_value(init_db, difficulty, expected_value):
     assert sample_challenge.scale_value() == expected_value
 
 
-def test_slug_auto_set(init_db):
-    challenge_without_slug = Challenge(
-        name="Challenge Without Slug", domain="Test Domain"
-    )
-    db.session.add(challenge_without_slug)
+@pytest.mark.parametrize(
+    "name, expected_slug",
+    [
+        ("Challenge Without Slug", "challenge-without-slug"),
+        ("Intro to Python_Loops!", "intro-to-python-loops"),
+        ("  Signs -- and   Portents  ", "signs-and-portents"),
+        # Nothing to build a slug from: the name is kept rather than an empty slug
+        ("???", "???"),
+    ],
+)
+def test_missing_slug_defaults_to_the_kebab_case_name(init_db, name, expected_slug):
+    """The before_insert listener fills in a slug only when none was given."""
+    challenge = Challenge(name=name, domain="codecombat.com")
+    db.session.add(challenge)
     db.session.commit()
 
-    # Assert that the slug was auto-generated based on the name
-    assert challenge_without_slug.slug == "Challenge Without Slug"
+    assert challenge.slug == expected_slug
+    assert challenge.name == name
 
 
 def test_created_at_timestamp(init_db):
@@ -80,24 +89,6 @@ def test_challenge_repr(init_db):
     assert "Challenge" in repr_str
     assert "Dungeons of Kithgard" in repr_str
     assert "codecombat.com" in repr_str
-
-
-def test_challenge_slug_auto_generation(init_db):
-    """
-    Test that a slug is automatically generated from the name
-    if not provided explicitly (via the before_insert listener).
-    """
-    challenge = Challenge(
-        name="Intro to Python Loops",
-        domain="codecombat.com",
-        difficulty="easy",
-        value=5,
-    )
-    db.session.add(challenge)
-    db.session.commit()
-
-    # The event listener should have copied name to slug
-    assert challenge.slug == "Intro to Python Loops"
 
 
 def test_challenge_explicit_slug(init_db):

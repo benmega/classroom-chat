@@ -1,5 +1,7 @@
 
 
+import re
+
 from sqlalchemy.event import listens_for
 
 from ..extensions import db
@@ -42,7 +44,15 @@ class Challenge(db.Model):
         )
 
 
+def _kebab_slug(text):
+    """Kebab-case ``text`` the way challenge slugs are written."""
+    slug = re.sub(r"[_\s]+", "-", (text or "").lower())
+    slug = re.sub(r"[^a-z0-9-]", "", slug)
+    return re.sub(r"-+", "-", slug).strip("-")
+
+
 @listens_for(Challenge, "before_insert")
 def set_default_slug(mapper, connection, target):
     if not target.slug:
-        target.slug = target.name
+        # A name with no letters or digits has no kebab form; keep it as it is.
+        target.slug = _kebab_slug(target.name) or target.name
