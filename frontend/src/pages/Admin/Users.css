@@ -615,13 +615,8 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* Table: allow horizontal scroll and force min-width */
     .table-responsive {
         border-radius: 0;
-    }
-
-    .users-table {
-        min-width: 600px;
     }
 
     /* Ensure action buttons are large enough for touch */
@@ -634,6 +629,128 @@
     .pagination-btn {
         padding: 8px 12px;
         min-height: 44px;
+    }
+}
+
+/* Phones: one card per user. Five columns do not fit in 360px, and a scroll wrapper would clip the
+   absolutely positioned kebab and column-filter menus, so the rows reflow instead. The header row
+   stays as a strip of sort and filter controls. */
+@media (max-width: 640px) {
+    .users-table,
+    .users-table thead,
+    .users-table tbody {
+        display: block;
+    }
+
+    .users-table thead tr {
+        position: relative; /* the filter menus open across the whole strip */
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0 16px;
+        padding: 6px 12px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .users-table thead th {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0;
+        background: none;
+        border-bottom: none;
+        white-space: nowrap;
+    }
+
+    .users-table thead th.col-actions {
+        display: none;
+    }
+
+    .users-table thead .column-filter-container {
+        position: static;
+    }
+
+    .users-table thead .column-filter-dropdown {
+        left: 12px;
+        right: 12px;
+        min-width: 0;
+    }
+
+    .users-table tbody tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0 12px;
+        padding: 12px;
+        border-bottom: 1px solid var(--bg-tertiary);
+    }
+
+    .users-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    /* Line break: the profile and its menu share the first line, the details wrap below it */
+    .users-table tbody tr::after {
+        content: '';
+        order: 2;
+        flex-basis: 100%;
+    }
+
+    .users-table tbody td {
+        display: block;
+        order: 3;
+        margin-top: 8px;
+        padding: 0;
+        border-bottom: none;
+    }
+
+    .users-table tbody td.col-profile {
+        order: 1;
+        flex: 1 1 0;
+        min-width: 0;
+        margin-top: 0;
+    }
+
+    .users-table tbody td.col-actions {
+        order: 1;
+        margin-top: 0;
+    }
+
+    .users-table tbody td:has(> .economy-empty) {
+        display: none;
+    }
+
+    .users-table .economy-info {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px 12px;
+    }
+
+    .users-table tbody td.empty-row {
+        flex: 1 1 100%;
+        margin-top: 0;
+    }
+
+    .users-table tbody tr.expanded-children-row {
+        display: block;
+        padding: 0;
+    }
+
+    .users-table tbody tr.expanded-children-row::after {
+        display: none;
+    }
+
+    .users-table tbody tr.expanded-children-row td {
+        margin-top: 0;
+    }
+
+    .children-list-container {
+        padding: 12px;
+    }
+
+    .child-item {
+        max-width: none;
     }
 }
 

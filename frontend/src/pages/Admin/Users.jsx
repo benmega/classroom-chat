@@ -354,7 +354,7 @@ const Users = () => {
                                             onSort={handleSort}
                                         />
                                     </th>
-                                    <th>Actions</th>
+                                    <th className="col-actions">Actions</th>
                                 </>
                             )}
                             {activeRole === 'student' && (
@@ -386,7 +386,7 @@ const Users = () => {
                                             onSort={handleSort}
                                         />
                                     </th>
-                                    <th>Actions</th>
+                                    <th className="col-actions">Actions</th>
                                 </>
                             )}
                             {activeRole === 'parent' && (
@@ -411,7 +411,7 @@ const Users = () => {
                                             onSort={handleSort}
                                         />
                                     </th>
-                                    <th>Actions</th>
+                                    <th className="col-actions">Actions</th>
                                 </>
                             )}
                         </tr>
@@ -422,7 +422,7 @@ const Users = () => {
                                 <React.Fragment key={u.id}>
                                     {activeRole === '' && (
                                         <tr className={u.role === 'admin' ? 'admin-row' : ''}>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="col-profile cursor-pointer">
                                                 <div className="user-profile-cell">
                                                     <SmartImage 
                                                         src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
@@ -455,7 +455,7 @@ const Users = () => {
                                                         <div className="level-info">Lvl: {u.total_levels || 0}</div>
                                                     </div>
                                                 ) : (
-                                                    <div style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>
+                                                    <div className="economy-empty" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>
                                                 )}
                                             </td>
                                             <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
@@ -464,7 +464,7 @@ const Users = () => {
                                                     {u.is_online ? 'Active' : 'Offline'}
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td className="col-actions">
                                                 <UserRowActions 
                                                     u={u} 
                                                     setModalUser={setModalUser} 
@@ -480,7 +480,7 @@ const Users = () => {
 
                                     {activeRole === 'student' && (
                                         <tr>
-                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
+                                            <td onClick={() => navigate(`/admin/users/${u.id}`)} className="col-profile cursor-pointer">
                                                 <div className="user-profile-cell">
                                                     <SmartImage 
                                                         src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
@@ -507,7 +507,7 @@ const Users = () => {
                                                     {u.is_online ? 'Active' : 'Offline'}
                                                 </div>
                                             </td>
-                                            <td>
+                                            <td className="col-actions">
                                                 <UserRowActions 
                                                     u={u} 
                                                     setModalUser={setModalUser} 
@@ -524,7 +524,7 @@ const Users = () => {
                                     {activeRole === 'parent' && (
                                         <>
                                             <tr>
-                                                <td onClick={() => navigate(`/admin/users/${u.id}`)} className="cursor-pointer">
+                                                <td onClick={() => navigate(`/admin/users/${u.id}`)} className="col-profile cursor-pointer">
                                                     <div className="user-profile-cell">
                                                         <SmartImage 
                                                             src={u.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : ''} 
@@ -564,7 +564,7 @@ const Users = () => {
                                                         {u.is_online ? 'Active' : 'Offline'}
                                                     </div>
                                                 </td>
-                                                <td>
+                                                <td className="col-actions">
                                                     <UserRowActions 
                                                         u={u} 
                                                         setModalUser={setModalUser} 
