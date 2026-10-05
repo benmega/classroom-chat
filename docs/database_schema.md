@@ -48,7 +48,8 @@ The central entity for authentication and student tracking.
 
 ### 2.5 User Portfolio & Submissions
 - **`projects`**: Student-created projects.
-    - Fields: `id`, `name`, `description`, `link`, `user_id` (FK), `teacher_comment`, `code_snippet`, `github_link`, `video_url`, `video_transcript`, `image_url`.
+    - Fields: `id`, `name`, `description`, `link`, `user_id` (FK), `teacher_comment` (the reviewer's feedback), `packets_awarded` (float, default `0.0`), `code_snippet`, `github_link`, `video_url`, `video_transcript`, `status`, `image_url`, `created_at`, `template_id` (nullable FK to `project_templates`, `ON DELETE SET NULL`, indexed; the template the project was built from).
+    - `status` is `pending` (the default), `approved` or `rejected`. Approving sets `approved` and records the packets awarded; rejecting sets `rejected`, takes back any packets the project had awarded and keeps the feedback in `teacher_comment`; a student's edit of a rejected project sets it back to `pending`. It is stored, not derived from `teacher_comment`.
 - **`project_templates`**: Admin-defined project outlines that students can instantiate.
     - Fields: `id`, `title`, `description`, `template_repo`.
 - **`skills`**: Individual skills listed on user profiles.
