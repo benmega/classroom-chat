@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import client from '../api/client';
-import { showConfirm } from '../utils/confirm';
 import { getErrorMessage } from '../utils/apiError';
 import { useAdminUserActions } from './useAdminUserActions';
 import toast from 'react-hot-toast';

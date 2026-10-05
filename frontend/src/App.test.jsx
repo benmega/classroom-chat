@@ -353,14 +353,14 @@ describe('App Component', () => {
       expect(window.location.pathname).toBe('/parent/dashboard');
     });
 
-    it('lets a parent use the chat, which is shared with students', async () => {
+    it('sends a parent who opens the chat to the parent dashboard', async () => {
       window.history.pushState({}, 'Test page', '/chat');
       signedInAs({ role: 'parent' });
 
       renderApp();
 
-      expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
-      expect(window.location.pathname).toBe('/chat');
+      expect(await screen.findByText('Parent Dashboard Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/parent/dashboard');
     });
 
     describe('where a signed-in user lands when they open /login', () => {
