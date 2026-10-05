@@ -1,9 +1,9 @@
 """Keep the requirements files and the imports in the code in step.
 
-requirements.txt: the test mocked the module, so nothing noticed until a clean
-install. These checks read the imports straight from the source with ``ast``
-(including imports inside functions) and compare them with what each
-requirements file declares:
+A package the code imports but requirements.txt does not list only fails on a
+clean install, because a test that mocks the module hides it. These checks read
+the imports straight from the source with ``ast`` (including imports inside
+functions) and compare them with what each requirements file declares:
 
 * requirements.txt       - what the app needs to run (application/, main.py)
 * requirements-dev.txt   - runtime plus what the tests need (tests/)
