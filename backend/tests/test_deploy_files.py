@@ -5,6 +5,7 @@ or in GitHub Actions, so CI cannot execute them. These checks read them as text
 and pin the properties that have gone wrong before.
 """
 
+import re
 from pathlib import Path
 
 import pytest
@@ -13,6 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 DEPLOY_SH = REPO_ROOT / "deploy.sh"
 DEPLOY_WORKFLOW = REPO_ROOT / ".github" / "workflows" / "deploy.yml"
 NGINX_DIR = REPO_ROOT / "infrastructure" / "nginx"
+NGINX_API_CONF = NGINX_DIR / "api-blossom.benmega.com.conf"
 
 pytestmark = pytest.mark.skipif(
     not DEPLOY_SH.exists(), reason="repository deploy files are not present"
@@ -59,3 +61,18 @@ def test_deploy_workflow_restricts_the_env_file_before_writing_secrets():
 
     assert restrict < write
     assert '> "$APP_DIR/backend/.env"' not in workflow
+
+
+@pytest.mark.skipif(not NGINX_API_CONF.exists(), reason="nginx config is not present")
+def test_nginx_proxies_exactly_the_url_prefixes_the_app_serves(app):
+    """A prefix missing from nginx never reaches Flask; a stale one proxies a path nothing serves."""
+    match = re.search(r"location ~ \^/\(([^)]*)\)\(/\|\$\)", _text(NGINX_API_CONF))
+    assert match, "API proxy location not found in the nginx config"
+    proxied = set(match.group(1).split("|"))
+
+    served = {rule.rule.strip("/").split("/")[0] for rule in app.url_map.iter_rules()}
+    # Not proxied on purpose: the root and the SPA catch-all (the frontend is on
+    # S3), Flask's own /static, and /dev-login (development only).
+    served -= {"", "<path:path>", "static", "dev-login"}
+
+    assert proxied == served

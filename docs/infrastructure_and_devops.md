@@ -169,14 +169,15 @@ It covers:
 - HTTP to HTTPS redirect and TLS (Let's Encrypt certificate for `api-blossom.benmega.com`)
 - Security headers (HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`)
 - CORS preflight: `OPTIONS` requests to the API routes are answered by nginx itself, ahead of Flask
-- Proxying of the API route prefixes (`api`, `user`, `session`, `message`, `upload`, `challenge`, `ai`,
-  `duck_trade`, `notes`, `server`) to Gunicorn on `127.0.0.1:8000`, with 300 s read/send timeouts and a
+- Proxying of the API route prefixes (`api`, `user`, `message`, `challenge`, `duck_trade`, `notes`,
+  `server`) to Gunicorn on `127.0.0.1:8000`, with 300 s read/send timeouts and a
   500 MB request body limit for uploads (Flask itself caps request bodies at 25 MB, except the project
   video upload endpoints, which may send up to 500 MB)
 - WebSocket (`/socket.io`) proxying with the `Upgrade` headers
 
 `/dev-login` is deliberately not proxied: it is disabled in production. The React app uses
-`/api/achievements/*`, which is covered by the `api` prefix.
+`/api/achievements/*`, which is covered by the `api` prefix. A new top-level URL prefix in the Flask
+app must be added to the nginx regex; `tests/test_deploy_files.py` fails when the two lists differ.
 
 This is the only nginx site `deploy.sh` installs. It no longer installs a site for
 `blossom.benmega.com` or builds the frontend: the SPA comes from S3 + CloudFront only. A host that
