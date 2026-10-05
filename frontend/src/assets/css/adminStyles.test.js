@@ -116,6 +116,19 @@ describe('admin stylesheets', () => {
     expect(modal).toBeGreaterThan(Number(tokens['--z-modal']))
   })
 
+  it('keeps the create-classroom modal rules in Classes.css, not in the class dashboard sheet', () => {
+    // The dashboard never renders .modal-overlay/.modal-card, but unscoped rules for them restyled the Classes modal
+    // (a translucent card, and a dark one on dark-OS devices under that modal's dark heading text).
+    expect(sheet('/src/pages/Admin/AdminClassDashboard.css')).not.toMatch(/\.modal-(overlay|card)/)
+    expect(sheet('/src/pages/Admin/Classes.css')).toMatch(/\.modal-overlay\s*\{/)
+    expect(sheet('/src/pages/Admin/Classes.css')).toMatch(/\.modal-card\s*\{/)
+  })
+
+  it('has no prefers-color-scheme overrides, since the app has no dark theme', () => {
+    const withDarkRules = Object.keys(css).filter((path) => isAdminSheet(path) && /prefers-color-scheme/.test(sheet(path)))
+    expect(withDarkRules).toEqual([])
+  })
+
   it('draws the log console text and its sub-text with AA contrast', () => {
     const panel = sheet('/src/pages/Admin/AdvancedPanel.css')
     const consoleBg = resolveToken(declaration(ruleBody(panel, '.advanced-modal-console'), 'background'))
