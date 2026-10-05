@@ -26,7 +26,7 @@ export const ADMIN = {
 };
 
 export const test = base.extend({
-  backend: async ({ page }, use) => {
+  backend: async ({ page }, provide) => {
     const unmocked = [];
     const pageErrors = [];
     page.on('pageerror', (error) => pageErrors.push(error.message));
@@ -70,7 +70,8 @@ export const test = base.extend({
       },
     };
 
-    await use(backend);
+    // Not named `use`, the name Playwright documents: the react-hooks lint rule mistakes that for a React hook.
+    await provide(backend);
 
     expect(unmocked, 'backend calls no mock answered').toEqual([]);
     expect(pageErrors, 'uncaught errors in the page').toEqual([]);
