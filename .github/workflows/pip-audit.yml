@@ -1,0 +1,52 @@
+name: Dependency Audit
+
+# Advisory only, like the npm audit step in lint.yml: it lists known vulnerabilities in the
+# backend runtime dependencies in the run log without failing anything. It is a separate workflow
+# (not a lint.yml step) so it never lengthens the lint gate that deploy.yml waits for.
+on:
+  pull_request:
+    paths:
+      - 'backend/requirements*.txt'
+      - '.github/workflows/pip-audit.yml'
+  push:
+    branches: [ main, master, working ]
+    paths:
+      - 'backend/requirements*.txt'
+      - '.github/workflows/pip-audit.yml'
+  # Advisories are published without any change in this repository, so check weekly as well.
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pip-audit:
+    name: pip-audit (advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+
+      # The runtime requirements are what deploy.sh installs; the test tooling in
+      # requirements-dev.txt never reaches the server.
+      - name: Audit runtime dependencies (advisory)
+        run: pip-audit -r requirements.txt --progress-spinner off
+        continue-on-error: true

@@ -247,6 +247,7 @@ sudo systemctl reload nginx
 - **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, online SQLite DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)). Runs are serialised (`concurrency` group) so two deploys never run `deploy.sh` at the same time.
 - **`lint.yml`**: Ruff (Python) + ESLint (React) on every PR and on pushes to `main`/`master`/`working`. Also the lint gate for both deploy workflows.
 - **`tests.yml`**: On pushes and PRs to `main`/`master`: a backend job (mypy, Alembic single-head check, Pytest) and a frontend job (Vitest with coverage, Playwright E2E against a locally started backend). Also the test gate for both deploy workflows.
+- **`pip-audit.yml`**: advisory only (a failing audit never fails the run and no deploy waits for it). Runs `pip-audit` on `backend/requirements.txt` when a requirements file changes, weekly, and on demand, and lists known vulnerabilities in the run log. Like `npm audit` in `lint.yml`, it reports and does not gate.
 - **`ai-coder.yml`**: the single AI workflow; runs when an issue or pull request receives the `ai-plan` label
   (plan, then code) or the `ai-draft` label (code directly). Runs are serialized per issue/PR.
   Do not add those labels casually; they start automated AI workflows. Only label events from the
