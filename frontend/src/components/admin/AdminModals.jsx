@@ -727,10 +727,11 @@ export const EnrollStudentModal = ({
                                     aria-pressed={selectedStudentId === student.id.toString()}
                                     data-testid={`user-row-${student.id}`}
                                 >
-                                    <img 
-                                        src={student.profile_pic_url || '/default-avatar.png'} 
+                                    <SmartImage 
+                                        src={student.profile_picture ? getApiUrl(`/user/profile_pictures/${student.profile_picture}`) : ''} 
                                         alt={student.username} 
                                         className="enroll-modal-user-avatar" 
+                                        fallbackType="avatar"
                                     />
                                     <div className="enroll-modal-user-info">
                                         <span className="enroll-modal-user-name">

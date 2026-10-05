@@ -3,6 +3,7 @@ import { Loader2, Activity, User } from 'lucide-react';
 import client from '../../api/client';
 import './AdminStudentActivity.css';
 import Skeleton from '../../components/common/Skeleton';
+import { getApiUrl } from '../../utils/apiUrl';
 
 const AdminStudentActivity = () => {
     const [students, setStudents] = useState([]);
@@ -79,7 +80,7 @@ const AdminStudentActivity = () => {
                                 <div className="activity-card-header">
                                     <div className="avatar-container">
                                         <img 
-                                            src={student.profile_picture_url} 
+                                            src={getApiUrl(student.profile_picture_url)} 
                                             alt={student.username} 
                                             className="avatar-img"
                                         />
