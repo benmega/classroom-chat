@@ -146,9 +146,64 @@ def _without_sqlite_noise(diff):
     ]
 
 
+def _sql_text(clause):
+    """A CHECK or WHERE expression in one spelling, or None when there is none."""
+    return None if clause is None else " ".join(str(clause).lower().split())
+
+
+def _checks_and_partial_indexes(connection, metadata):
+    """The drift Alembic does not look for: CHECK constraints, and the WHERE clause
+    that makes an index a partial one.
+
+    Only tables and indexes that exist on both sides are compared here. A missing
+    table or index is already reported by Alembic.
+    """
+    inspector = sa.inspect(connection)
+    preparer = connection.dialect.identifier_preparer
+    existing_tables = set(inspector.get_table_names())
+    drift = []
+
+    for table in metadata.sorted_tables:
+        if table.name not in existing_tables:
+            continue
+
+        wanted = {
+            # format_constraint applies the naming convention of the metadata
+            preparer.format_constraint(check): _sql_text(check.sqltext)
+            for check in table.constraints
+            if isinstance(check, sa.CheckConstraint) and check.name is not None
+        }
+        found = {
+            check["name"]: _sql_text(check["sqltext"])
+            for check in inspector.get_check_constraints(table.name)
+        }
+        for name in sorted(set(wanted) - set(found)):
+            drift.append(("add_check", table.name, name))
+        for name in sorted(set(found) - set(wanted), key=str):
+            drift.append(("remove_check", table.name, name))
+        for name in sorted(set(wanted) & set(found)):
+            if wanted[name] != found[name]:
+                drift.append(("modify_check", table.name, name))
+
+        reflected = {ix["name"]: ix for ix in inspector.get_indexes(table.name)}
+        for index in sorted(table.indexes, key=lambda ix: ix.name):
+            if index.name not in reflected:
+                continue
+            wanted_where = _sql_text(index.dialect_options["sqlite"]["where"])
+            found_where = _sql_text(
+                reflected[index.name].get("dialect_options", {}).get("sqlite_where")
+            )
+            if wanted_where != found_where:
+                drift.append(("modify_index_where", table.name, index.name))
+
+    return drift
+
+
 def _schema_drift(engine, metadata):
     """What an Alembic autogenerate against `engine` would still want to change so the
-    database matches `metadata`. An empty list means no migration is missing.
+    database matches `metadata`, plus the differences in CHECK constraints and
+    partial indexes that Alembic does not compare. An empty list means no migration
+    is missing.
 
     Column types and server defaults are not compared: SQLite only keeps a type
     affinity and the text of a default, so they never reflect back faithfully.
@@ -159,7 +214,9 @@ def _schema_drift(engine, metadata):
             connection,
             opts={"compare_type": False, "compare_server_default": False},
         )
-        return _without_sqlite_noise(compare_metadata(context, metadata))
+        return _without_sqlite_noise(
+            compare_metadata(context, metadata)
+        ) + _checks_and_partial_indexes(connection, metadata)
     finally:
         connection.close()
 
@@ -354,6 +411,89 @@ def test_a_missing_unique_rule_is_still_drift():
     drift = _schema_drift(engine, _items_with_unique_name())
 
     assert [entry[0] for entry in drift] == ["add_constraint"]
+
+
+def _sessions_with_rules():
+    """One table with a named CHECK constraint and a partial unique index."""
+    metadata = sa.MetaData(naming_convention={"ck": "ck_%(table_name)s_%(constraint_name)s"})
+    sa.Table(
+        "sessions",
+        metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("user_id", sa.Integer, nullable=False),
+        sa.Column("ended", sa.DateTime),
+        sa.CheckConstraint("id > 0", name="positive_id"),
+        sa.Index("uq_sessions_open", "user_id", unique=True, sqlite_where=sa.text("ended IS NULL")),
+    )
+    return metadata
+
+
+_SESSIONS = (
+    "CREATE TABLE sessions (id INTEGER NOT NULL PRIMARY KEY, user_id INTEGER NOT NULL,"
+    " ended DATETIME{check})"
+)
+_SESSIONS_CHECK = ", CONSTRAINT ck_sessions_positive_id CHECK (id > 0)"
+_SESSIONS_INDEX = "CREATE UNIQUE INDEX uq_sessions_open ON sessions (user_id){where}"
+_SESSIONS_WHERE = " WHERE ended IS NULL"
+
+
+def test_checks_and_partial_indexes_that_match_are_not_drift():
+    metadata = _sessions_with_rules()
+    engine = sa.create_engine("sqlite://", poolclass=sa.pool.StaticPool)
+    metadata.create_all(engine)
+
+    assert _schema_drift(engine, metadata) == []
+
+    # The same rules written by hand, in another spelling
+    engine = _engine_with(
+        [
+            _SESSIONS.format(check=", CONSTRAINT ck_sessions_positive_id CHECK (id  >  0)"),
+            _SESSIONS_INDEX.format(where=" where ended is null"),
+        ]
+    )
+    assert _schema_drift(engine, metadata) == []
+
+
+@pytest.mark.parametrize(
+    "check, expected",
+    [
+        ("", [("add_check", "sessions", "ck_sessions_positive_id")]),
+        (
+            ", CONSTRAINT ck_sessions_positive_id CHECK (id > 1)",
+            [("modify_check", "sessions", "ck_sessions_positive_id")],
+        ),
+        (
+            _SESSIONS_CHECK + ", CONSTRAINT ck_sessions_other CHECK (user_id > 0)",
+            [("remove_check", "sessions", "ck_sessions_other")],
+        ),
+    ],
+    ids=["missing", "different", "unknown to the models"],
+)
+def test_a_check_constraint_that_differs_is_drift(check, expected):
+    engine = _engine_with(
+        [
+            _SESSIONS.format(check=check),
+            _SESSIONS_INDEX.format(where=_SESSIONS_WHERE),
+        ]
+    )
+
+    assert _schema_drift(engine, _sessions_with_rules()) == expected
+
+
+@pytest.mark.parametrize(
+    "where", ["", " WHERE ended IS NOT NULL"], ids=["not partial", "another WHERE"]
+)
+def test_a_partial_index_with_another_where_clause_is_drift(where):
+    engine = _engine_with(
+        [
+            _SESSIONS.format(check=_SESSIONS_CHECK),
+            _SESSIONS_INDEX.format(where=where),
+        ]
+    )
+
+    assert _schema_drift(engine, _sessions_with_rules()) == [
+        ("modify_index_where", "sessions", "uq_sessions_open")
+    ]
 
 
 def test_running_the_migrations_leaves_logging_as_it_was():
