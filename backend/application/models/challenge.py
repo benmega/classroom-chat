@@ -37,11 +37,10 @@ class Challenge(db.Model):
         return f"<Challenge(name={self.name}, domain={self.domain}, difficulty={self.difficulty}, value={self.value})>"
 
     def scale_value(self, difficulty_multiplier=1.0):
-        """Scales the challenge value based on difficulty."""
+        """Scales the challenge value based on difficulty. Fractions are kept."""
         scale_factors = {"easy": 0.5, "medium": 1.0, "hard": 2.0}
-        return int(
-            self.value * scale_factors.get(self.difficulty, 1.0) * difficulty_multiplier
-        )
+        factor = scale_factors.get(self.difficulty, 1.0)
+        return self.value * factor * difficulty_multiplier
 
 
 def _kebab_slug(text):

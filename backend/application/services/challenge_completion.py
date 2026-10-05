@@ -52,7 +52,7 @@ def grant_challenge_completion(
     )
 
     if award_ducks:
-        amount = int(challenge.scale_value() * duck_multiplier)
+        amount = challenge.scale_value() * duck_multiplier
         if amount > 0:
             user.add_ducks(amount, reason=reason or f"Challenge: {challenge.slug}")
 

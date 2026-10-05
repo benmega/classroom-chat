@@ -1,3 +1,5 @@
+import math
+
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
@@ -5,6 +7,20 @@ from application.models.challenge import Challenge
 from flask import request
 
 from ..admin_routes import admin_bp
+
+
+def _reward_value(raw):
+    """Duck reward from a request payload: any finite number, fractions included.
+
+    A missing, empty or zero value means 1. Raises ValueError for anything else.
+    """
+    try:
+        value = float(raw or 1)
+    except TypeError as e:
+        raise ValueError("value must be a number") from e
+    if not math.isfinite(value):
+        raise ValueError("value must be a finite number")
+    return value
 
 
 @admin_bp.route("/challenges/bulk_add", methods=["POST"])
@@ -32,11 +48,17 @@ def bulk_add_challenges():
         course_id = item.get("course_id") or data.get("course_id")
         domain = item.get("domain") or data.get("domain")
         difficulty = item.get("difficulty") or "medium"
-        value = int(item.get("value") or 1)
 
         if not name or not slug or not course_id or not domain:
             skipped_count += 1
             errors.append(f"Missing required fields for challenge: {name or 'Unknown'}")
+            continue
+
+        try:
+            value = _reward_value(item.get("value"))
+        except ValueError:
+            skipped_count += 1
+            errors.append(f"Invalid value for challenge: {name}")
             continue
 
         existing = Challenge.query.filter_by(slug=slug).first()
@@ -167,13 +189,18 @@ def add_challenge():
     if Challenge.query.filter_by(slug=slug).first():
         return "Challenge with this slug already exists", 400
 
+    try:
+        value = _reward_value(data.get("value"))
+    except ValueError:
+        return "value must be a number", 400
+
     c = Challenge(
         name=name,
         slug=slug,
         course_id=course_id,
         domain=data.get("domain", "codecombat.com"),
         difficulty=data.get("difficulty", "medium"),
-        value=int(data.get("value", 1) or 1),
+        value=value,
         sequence=data.get("sequence"),
         description=data.get("description", ""),
         is_active=True
@@ -195,6 +222,12 @@ def edit_challenge(id):
     if not data:
         return "No data provided", 400
 
+    if "value" in data:
+        try:
+            value = _reward_value(data["value"])
+        except ValueError:
+            return "value must be a number", 400
+
     slug = data.get("slug")
     if slug:
         existing = Challenge.query.filter(Challenge.slug == slug, Challenge.id != id).first()
@@ -206,7 +239,7 @@ def edit_challenge(id):
     if "course_id" in data: c.course_id = data["course_id"]
     if "domain" in data: c.domain = data["domain"]
     if "difficulty" in data: c.difficulty = data["difficulty"]
-    if "value" in data: c.value = int(data["value"] or 1)
+    if "value" in data: c.value = value
     if "sequence" in data: c.sequence = data["sequence"]
     if "description" in data: c.description = data["description"]
 

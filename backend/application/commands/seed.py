@@ -104,7 +104,7 @@ def seed_command():
 
                     csv_slug = row.get("slug", "").strip() or generate_kebab_slug(name)
                     difficulty = row.get("difficulty", "medium").capitalize()
-                    value = int(float(row.get("value", 1)))
+                    value = float(row.get("value") or 1)
                     description = row.get("description", "No description provided.")
                     course_id = row.get("course_id")
 

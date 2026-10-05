@@ -28,6 +28,7 @@ from application.config import (
     TestingConfig,
 )
 from application.extensions import db, limiter, rate_limit_key, scheduler, socketio
+from application.models.challenge import Challenge
 from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.course import Course
@@ -578,6 +579,44 @@ def test_seed_command_skips_orphan_course_instances(test_app):
         assert instances["inst_no_course"].course_id is None
         assert instances["inst_ok"].course_id == "course_1"
         db.session.rollback()
+
+
+_LEVEL_CSV_HEADER = "name,slug,domain,course_id,description,difficulty,value\n"
+
+
+def _run_seed(test_app, challenges_csv, instances_csv="id,classroom_id,course_id\n"):
+    """Run `flask seed` with the two seed files replaced by the given CSV text."""
+    from io import StringIO
+
+    def mock_open(path, mode="r", encoding=None):
+        if "course_instances_seed.csv" in str(path):
+            return StringIO(instances_csv)
+        if "level_seed_data.csv" in str(path):
+            return StringIO(challenges_csv)
+        return open(path, mode, encoding=encoding)
+
+    with patch("os.path.exists", return_value=True), patch("builtins.open", side_effect=mock_open):
+        result = test_app.test_cli_runner().invoke(seed_command)
+    assert result.exit_code == 0
+    return result.output
+
+
+def test_seed_command_keeps_fractional_challenge_values(test_app):
+    challenges_csv = (
+        _LEVEL_CSV_HEADER
+        + "Half Step,half-step,www.ozaria.com,course_1,desc,Medium,1.5\n"
+        + "Whole Step,whole-step,www.ozaria.com,course_1,desc,Medium,2\n"
+        + "No Value,no-value,www.ozaria.com,course_1,desc,Medium,\n"
+    )
+
+    # The second run takes the update path, which must not round the value either
+    for expected in ("inserted 3 and updated 0", "inserted 0 and updated 3"):
+        assert f"Successfully {expected} challenges." in _run_seed(test_app, challenges_csv)
+
+        with test_app.app_context():
+            values = {c.slug: c.value for c in Challenge.query.filter_by(course_id="course_1")}
+            assert values == {"half-step": 1.5, "whole-step": 2, "no-value": 1}
+            db.session.rollback()
 
 
 def test_seed_command_csv_exception(test_app):

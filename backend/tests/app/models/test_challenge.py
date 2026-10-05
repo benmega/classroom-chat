@@ -76,6 +76,29 @@ def test_scale_value_with_custom_multiplier(
     assert sample_challenge.scale_value(difficulty_multiplier=multiplier) == expected_value
 
 
+@pytest.mark.parametrize(
+    "value, difficulty, expected_value",
+    [
+        (1.5, "medium", 1.5),
+        (0.5, "Medium", 0.5),  # seeded difficulties are capitalised: no scaling
+        (1.5, "easy", 0.75),
+        (2.5, "hard", 5.0),
+    ],
+)
+def test_scale_value_keeps_fractions(init_db, value, difficulty, expected_value):
+    challenge = ChallengeFactory(value=value, difficulty=difficulty)
+
+    assert challenge.scale_value() == pytest.approx(expected_value)
+
+
+def test_fractional_value_survives_a_round_trip(init_db):
+    challenge = ChallengeFactory(value=1.5)
+    db.session.commit()
+    db.session.expire_all()
+
+    assert db.session.get(Challenge, challenge.id).value == 1.5
+
+
 def test_challenge_repr(init_db):
     challenge = ChallengeFactory(
         name="Dungeons of Kithgard",

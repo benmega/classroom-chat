@@ -147,6 +147,89 @@ def test_bulk_add_challenges(client, sample_admin):
 
 
 
+def test_bulk_add_challenges_keeps_fractional_values(client, sample_admin):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/challenges/bulk_add",
+        json={
+            "course_id": "CS1",
+            "domain": "domain",
+            "challenges": [
+                {"name": "Half", "slug": "bulk-half", "value": 1.5},
+                {"name": "Text", "slug": "bulk-text", "value": "2.5"},
+                {"name": "Default", "slug": "bulk-default"},
+                {"name": "Words", "slug": "bulk-words", "value": "lots"},
+                {"name": "Endless", "slug": "bulk-endless", "value": "inf"},
+            ],
+        },
+    )
+
+    assert resp.status_code == 200
+    data = resp.json["data"]
+    assert data["added"] == 3
+    assert data["skipped"] == 2
+    assert data["errors"] == [
+        "Invalid value for challenge: Words",
+        "Invalid value for challenge: Endless",
+    ]
+    values = {
+        c.slug: c.value
+        for c in Challenge.query.filter(Challenge.slug.like("bulk-%")).all()
+    }
+    assert values == {"bulk-half": 1.5, "bulk-text": 2.5, "bulk-default": 1}
+
+
+def test_add_and_edit_challenge_keep_fractional_values(client, sample_admin):
+    login_as_admin(client, sample_admin)
+
+    resp = client.post(
+        "/api/admin/challenges/add",
+        json={"name": "Fraction", "slug": "fraction", "course_id": "CS1", "value": 1.5},
+    )
+    assert resp.status_code == 200
+    challenge_id = resp.json["data"]["id"]
+    assert db.session.get(Challenge, challenge_id).value == 1.5
+
+    resp = client.put(f"/api/admin/challenges/edit/{challenge_id}", json={"value": "0.5"})
+    assert resp.status_code == 200
+    db.session.expire_all()
+    assert db.session.get(Challenge, challenge_id).value == 0.5
+
+    # An empty value still means the default of 1
+    resp = client.put(f"/api/admin/challenges/edit/{challenge_id}", json={"value": ""})
+    assert resp.status_code == 200
+    db.session.expire_all()
+    assert db.session.get(Challenge, challenge_id).value == 1
+
+
+@pytest.mark.parametrize("value", ["lots", "nan", "inf", [1], {"a": 1}])
+def test_add_and_edit_challenge_reject_a_value_that_is_not_a_number(
+    client, sample_admin, value
+):
+    login_as_admin(client, sample_admin)
+    existing = Challenge(name="Kept", slug="kept", domain="domain", value=2)
+    db.session.add(existing)
+    db.session.commit()
+
+    resp = client.post(
+        "/api/admin/challenges/add",
+        json={"name": "Bad", "slug": "bad", "course_id": "CS1", "value": value},
+    )
+    assert resp.status_code == 400
+    assert resp.json["error"] == "value must be a number"
+    assert Challenge.query.filter_by(slug="bad").first() is None
+
+    resp = client.put(
+        f"/api/admin/challenges/edit/{existing.id}",
+        json={"name": "Renamed", "value": value},
+    )
+    assert resp.status_code == 400
+    db.session.expire_all()
+    kept = db.session.get(Challenge, existing.id)
+    assert (kept.name, kept.value) == ("Kept", 2)
+
+
 def _add_messages(user, count, **kwargs):
     messages = [Message(user_id=user.id, content=f"m{i}", **kwargs) for i in range(count)]
     db.session.add_all(messages)
