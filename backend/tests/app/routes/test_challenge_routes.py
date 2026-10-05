@@ -64,7 +64,7 @@ def test_submit_challenge_no_url(client, init_db):
 
     response = client.post(
         "/challenge/submit",
-        data={"url": "", "notes": "Some notes"},
+        data={"url": ""},
         follow_redirects=True,
     )
 
@@ -96,7 +96,6 @@ def test_submit_challenge_success(client, init_db):
         data={
             "url": "https://codecombat.com/play/level/dungeons-of-kithgard?course=123&course-instance=456",
             "helpers": "",
-            "notes": "Completed the challenge!",
         },
         follow_redirects=True,
     )
@@ -174,7 +173,6 @@ def test_submit_challenge_with_helper(client, init_db):
         data={
             "url": "https://codecombat.com/play/level/dungeons-of-kithgard?course=123&course-instance=456",
             "helpers": "friend_user",
-            "notes": "",
         },
         follow_redirects=True,
     )
@@ -186,10 +184,10 @@ def test_submit_challenge_with_helper(client, init_db):
     assert log.helper == "friend_user"
 
 
-def test_submit_challenge_notes_are_accepted_and_ignored(client, init_db):
-    """Notes are accepted with a submission but not stored anywhere.
-
-    ChallengeLog has no notes column, so the claim is logged exactly as without notes.
+@pytest.mark.parametrize("notes", ["This challenge was really fun!", 5, ["note"], None])
+def test_submit_challenge_ignores_legacy_notes_field(client, init_db, notes):
+    """The endpoint has no notes parameter: a client that still sends one (of any
+    type) gets the same claim as without it, and nothing is stored from it.
     """
     sample_user = UserFactory()
     ConfigurationFactory()
@@ -210,11 +208,10 @@ def test_submit_challenge_notes_are_accepted_and_ignored(client, init_db):
 
     response = client.post(
         "/challenge/submit",
-        data={
+        json={
             "url": "https://codecombat.com/play/level/dungeons-of-kithgard?course=123&course-instance=456",
-            "notes": "This challenge was really fun!",
+            "notes": notes,
         },
-        follow_redirects=True,
     )
 
     assert response.status_code == 200
@@ -654,7 +651,6 @@ def test_submit_challenge_switch_track(client, init_db):
         json={
             "url": url,
             "helpers": "",
-            "notes": "Off-track complete",
         },
     )
 
@@ -1112,18 +1108,6 @@ def test_submit_challenge_json_non_string_helpers_is_400(client, init_db, helper
     assert _claim_rows(user) == (0, 0)
 
 
-@pytest.mark.parametrize("notes", [5, ["note"], {"a": 1}])
-def test_submit_challenge_json_non_string_notes_is_400(client, init_db, notes):
-    user, _, _, _, url = _seed_claim()
-    _login(client, user)
-
-    response = client.post("/challenge/submit", json={"url": url, "notes": notes})
-
-    assert response.status_code == 400
-    assert response.get_json()["success"] is False
-    assert _claim_rows(user) == (0, 0)
-
-
 @pytest.mark.parametrize("helpers", [None, 0, [], ""])
 def test_submit_challenge_json_empty_helpers_still_works(client, init_db, helpers):
     """null/empty helpers keep meaning 'no helper'."""
@@ -1131,7 +1115,7 @@ def test_submit_challenge_json_empty_helpers_still_works(client, init_db, helper
     _login(client, user)
 
     response = client.post(
-        "/challenge/submit", json={"url": url, "helpers": helpers, "notes": None}
+        "/challenge/submit", json={"url": url, "helpers": helpers}
     )
 
     assert response.status_code == 200

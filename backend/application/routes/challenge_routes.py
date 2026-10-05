@@ -108,9 +108,7 @@ def submit_challenge():
         if url:
             is_get_submission = True
             helper = request.args.get("helpers", "") or ""
-            notes = request.args.get("notes", "") or ""
             helper = helper.strip()
-            notes = notes.strip()
         else:
             if request.is_json or request.accept_mimetypes.accept_json:
                 return jsonify({"status": "ready"})
@@ -122,16 +120,13 @@ def submit_challenge():
                 return jsonify({"success": False, "message": "Invalid JSON body"}), 400
             url = data.get("url")
             helper = data.get("helpers") or ""
-            notes = data.get("notes") or ""
-            if not isinstance(helper, str) or not isinstance(notes, str):
-                msg = "helpers and notes must be text"
+            if not isinstance(helper, str):
+                msg = "helpers must be text"
                 return jsonify({"success": False, "message": msg}), 400
             helper = helper.strip()
-            notes = notes.strip()
         else:
             url = request.form.get("url")
             helper = (request.form.get("helpers") or "").strip()
-            notes = (request.form.get("notes") or "").strip()
 
     if not url or not isinstance(url, str):
         msg = "Challenge URL is required"
