@@ -177,6 +177,20 @@ describe('admin stylesheets', () => {
     )
   })
 
+  it('keeps admin media queries on the three shared breakpoints', () => {
+    // Phones, tablets (where the rail becomes a drawer) and narrow desktops. A min-width is the next pixel up, so
+    // no width falls in both a max-width and a min-width block.
+    const maxWidths = [640, 800, 1024]
+    const minWidths = maxWidths.map((px) => px + 1)
+    const offenders = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const [, kind, px] of sheet(path).matchAll(/\((max|min)-width:\s*(\d+)px\)/g)) {
+        if (!(kind === 'max' ? maxWidths : minWidths).includes(Number(px))) offenders.push(`${path.replace('/src/', '')}: (${kind}-width: ${px}px)`)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
   it('keeps the create-classroom modal rules in Classes.css, not in the class dashboard sheet', () => {
     // The dashboard never renders .modal-overlay/.modal-card, but unscoped rules for them restyled the Classes modal
     // (a translucent card, and a dark one on dark-OS devices under that modal's dark heading text).

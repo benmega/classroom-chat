@@ -124,7 +124,7 @@
     width: 100%;
 }
 
-@media (min-width: 700px) {
+@media (min-width: 641px) {
     .standard-project-form-row {
         flex-direction: row;
         gap: 1.5rem;

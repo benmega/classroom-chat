@@ -86,13 +86,13 @@
 }
 
 /* Responsive Grid columns */
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .admin-advanced-panel .advanced-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     .admin-advanced-panel .advanced-grid {
         grid-template-columns: 1fr;
     }

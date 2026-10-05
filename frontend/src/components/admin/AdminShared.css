@@ -3,7 +3,11 @@
    used by non-admin pages; generic classes are scoped to the admin layout body
    (zero specificity via :where so page rules can still override them).
    The shared Modal renders through a portal outside .admin-body, so classes that
-   are also used inside modals are scoped to .admin-modal-overlay as well. */
+   are also used inside modals are scoped to .admin-modal-overlay as well.
+
+   Admin media queries use three widths: 640px (phones), 800px (tablets, where the rail
+   becomes a drawer) and 1024px (narrow desktops). A custom property cannot be used inside
+   @media, so they are written out; adminStyles.test.js fails on any other width. */
 
 @keyframes admin-fadeIn {
     from { opacity: 0; }

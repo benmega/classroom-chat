@@ -322,7 +322,7 @@
     }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 640px) {
     .submissions-list {
         grid-template-columns: 1fr;
     }

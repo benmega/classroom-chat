@@ -327,7 +327,7 @@
     }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 640px) {
     .transactions-table-container .pagination-controls {
         width: 100%;
         flex-direction: column;

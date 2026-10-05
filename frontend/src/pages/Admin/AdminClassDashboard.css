@@ -1043,7 +1043,7 @@
     }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 640px) {
     .class-hud-row {
         grid-template-columns: 1fr;
     }
@@ -1223,7 +1223,7 @@
     color: var(--primary-accessible, #4f46e5);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     .admin-sandbox-toolbar {
         flex-direction: column;
         align-items: stretch;
