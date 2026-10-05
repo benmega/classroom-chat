@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { Toaster, ToastBar } from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import useAuthStore from './store/useAuthStore';
@@ -139,6 +139,24 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
   return children;
 };
 
+// Layout routes: the guard and the page chrome are declared once for a group of routes, and each
+// route renders only its page into <Outlet />. The guard stays outside the layout, so the chrome
+// is never drawn for a visitor who is being sent to /login.
+const ProtectedLayout = ({ parentOnly = false }) => (
+  <ProtectedRoute parentOnly={parentOnly}>
+    <Layout>
+      <Outlet />
+    </Layout>
+  </ProtectedRoute>
+);
+
+// Pages that open without signing in but still sit in the page chrome
+const PublicLayout = () => (
+  <Layout>
+    <Outlet />
+  </Layout>
+);
+
 const TOAST_POSITION = 'bottom-right';
 
 // react-hot-toast announces every toast politely (role="status"). Errors should interrupt the screen
@@ -245,109 +263,25 @@ function App() {
 
         <Route path="/" element={<Landing />} />
 
-        <Route path="/chat" element={
-          <ProtectedRoute>
-            <Layout>
-              <Chat />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/profile" element={
-          <ProtectedRoute>
-            <Layout>
-              <Profile />
-            </Layout>
-          </ProtectedRoute>
-        } />
+        <Route element={<ProtectedLayout />}>
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/course-progress/:slug" element={<CourseProgressTree />} />
+          <Route path="/course-progress/:slug/breakdown" element={<CourseLevelBreakdown />} />
+          <Route path="/project-info/:projectId" element={<ProjectInfo />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/bit-shift" element={<BitShift />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/activity" element={<Activity />} />
+          <Route path="/settings" element={<EditProfile />} />
+          <Route path="/project/new" element={<ManageProject />} />
+          <Route path="/project/edit/:projectId" element={<ManageProject />} />
+        </Route>
 
-        <Route path="/profile/:slug" element={
-          <Layout>
-            <Profile />
-          </Layout>
-        } />
-
-        <Route path="/course-progress/:slug" element={
-          <ProtectedRoute>
-            <Layout>
-              <CourseProgressTree />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/course-progress/:slug/breakdown" element={
-          <ProtectedRoute>
-            <Layout>
-              <CourseLevelBreakdown />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/project-info/:projectId" element={
-          <ProtectedRoute>
-            <Layout>
-              <ProjectInfo />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/achievements" element={
-          <ProtectedRoute>
-            <Layout>
-              <Achievements />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/bit-shift" element={
-          <ProtectedRoute>
-            <Layout>
-              <BitShift />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/shop" element={
-          <ProtectedRoute>
-            <Layout>
-              <Shop />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-
-
-        <Route path="/activity" element={
-          <ProtectedRoute>
-            <Layout>
-              <Activity />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <Layout>
-              <EditProfile />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/project/new" element={
-          <ProtectedRoute>
-            <Layout>
-              <ManageProject />
-            </Layout>
-          </ProtectedRoute>
-        } />
-
-        <Route path="/project/edit/:projectId" element={
-          <ProtectedRoute>
-            <Layout>
-              <ManageProject />
-            </Layout>
-          </ProtectedRoute>
-        } />
+        <Route element={<PublicLayout />}>
+          <Route path="/profile/:slug" element={<Profile />} />
+          <Route path="/parent/connect" element={<ConnectChild />} />
+        </Route>
 
         <Route path="/admin/classes/:classId/kiosk" element={
           <ProtectedRoute adminOnly={true}>
@@ -399,40 +333,13 @@ function App() {
           </ProtectedRoute>
         } />
 
-        <Route path="/parent/dashboard" element={
-          <ProtectedRoute parentOnly={true}>
-            <Layout>
-              <ParentDashboard />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/parent/report/:studentId" element={
-          <ProtectedRoute parentOnly={true}>
-            <Layout>
-              <ParentReportCard />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/parent/connect" element={
-          <Layout>
-            <ConnectChild />
-          </Layout>
-        } />
+        <Route element={<ProtectedLayout parentOnly />}>
+          <Route path="/parent/dashboard" element={<ParentDashboard />} />
+          <Route path="/parent/report/:studentId" element={<ParentReportCard />} />
+          <Route path="/parent/course-progress/:slug" element={<CourseProgressTree />} />
+          <Route path="/parent/course-progress/:slug/breakdown" element={<CourseLevelBreakdown />} />
+        </Route>
         <Route path="/join-class" element={<JoinClassroomLink />} />
-        <Route path="/parent/course-progress/:slug" element={
-          <ProtectedRoute parentOnly={true}>
-            <Layout>
-              <CourseProgressTree />
-            </Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/parent/course-progress/:slug/breakdown" element={
-          <ProtectedRoute parentOnly={true}>
-            <Layout>
-              <CourseLevelBreakdown />
-            </Layout>
-          </ProtectedRoute>
-        } />
 
         <Route path="/user/profile/:slug" element={<LegacyProfileRedirect />} />
 
