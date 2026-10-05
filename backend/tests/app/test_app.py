@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 
 import application.config as config_module
 import pytest
+import sqlalchemy as sa
 from application import (
     _configure_logging,
     _should_start_scheduler,
@@ -616,6 +617,102 @@ def test_seed_command_keeps_fractional_challenge_values(test_app):
         with test_app.app_context():
             values = {c.slug: c.value for c in Challenge.query.filter_by(course_id="course_1")}
             assert values == {"half-step": 1.5, "whole-step": 2, "no-value": 1}
+            db.session.rollback()
+
+
+_SAME_NAME_LEVELS_CSV = (
+    _LEVEL_CSV_HEADER
+    + "Salazar,salazar-part-1,www.ozaria.com,course_1,first,Medium,2\n"
+    + "Salazar - In Progress,salazar-part-2,www.ozaria.com,course_1,second,Medium,2\n"
+    + "Salazar,salazar-part-3,www.ozaria.com,course_1,third,Hard,3\n"
+    + "Crossing,crossing,www.ozaria.com,course_1,alone,Easy,1\n"
+)
+
+
+def test_seed_command_keeps_levels_that_share_a_name_apart(test_app):
+    """The slug identifies a level. Three levels called Salazar are three rows, and
+    seeding again must not fold them into one or move a slug from one to another."""
+    assert "Successfully inserted 4 and updated 0 challenges." in _run_seed(
+        test_app, _SAME_NAME_LEVELS_CSV
+    )
+
+    with test_app.app_context():
+        first_run = {
+            c.slug: (c.id, c.name, c.description, c.value)
+            for c in Challenge.query.filter_by(course_id="course_1")
+        }
+        db.session.rollback()
+    assert {slug: row[1:] for slug, row in first_run.items()} == {
+        "salazar-part-1": ("Salazar", "first", 2),
+        "salazar-part-2": ("Salazar", "second", 2),
+        "salazar-part-3": ("Salazar", "third", 3),
+        "crossing": ("Crossing", "alone", 1),
+    }
+
+    assert "Successfully inserted 0 and updated 4 challenges." in _run_seed(
+        test_app, _SAME_NAME_LEVELS_CSV
+    )
+
+    with test_app.app_context():
+        second_run = {
+            c.slug: (c.id, c.name, c.description, c.value)
+            for c in Challenge.query.filter_by(course_id="course_1")
+        }
+        db.session.rollback()
+    assert second_run == first_run
+
+
+def test_seed_command_does_not_take_over_a_row_with_the_same_name(test_app):
+    with test_app.app_context():
+        db.session.add(
+            Challenge(
+                name="Salazar",
+                slug="made-by-hand",
+                domain="www.ozaria.com",
+                course_id="course_1",
+                description="kept",
+                difficulty="Easy",
+                value=0.5,
+            )
+        )
+        db.session.commit()
+
+    assert "Successfully inserted 4 and updated 0 challenges." in _run_seed(
+        test_app, _SAME_NAME_LEVELS_CSV
+    )
+
+    with test_app.app_context():
+        kept = Challenge.query.filter_by(slug="made-by-hand").one()
+        assert (kept.name, kept.description, kept.difficulty, kept.value) == (
+            "Salazar",
+            "kept",
+            "Easy",
+            0.5,
+        )
+        assert Challenge.query.filter_by(name="Salazar").count() == 4
+        db.session.rollback()
+
+
+def test_seed_command_skips_only_the_rows_the_database_rejects(test_app):
+    """A database that has not been migrated yet still refuses a second level with
+    the same name. Those rows are skipped and reported; the rest are seeded."""
+    with test_app.app_context():
+        db.session.execute(
+            sa.text("CREATE UNIQUE INDEX uq_test_name_domain ON challenges (name, domain)")
+        )
+        db.session.commit()
+
+    for expected in ("inserted 2 and updated 0", "inserted 0 and updated 2"):
+        output = _run_seed(test_app, _SAME_NAME_LEVELS_CSV)
+
+        assert f"Successfully {expected} challenges. Skipped 2 rows" in output
+        assert "run `flask db upgrade` and seed again" in output
+        assert "Skipping challenge 'salazar-part-2': UNIQUE constraint failed" in output
+        assert "Skipping challenge 'salazar-part-3': UNIQUE constraint failed" in output
+        assert "Error seeding challenges" not in output
+        with test_app.app_context():
+            slugs = {c.slug for c in Challenge.query.filter_by(course_id="course_1")}
+            assert slugs == {"salazar-part-1", "crossing"}
             db.session.rollback()
 
 

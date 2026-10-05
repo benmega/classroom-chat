@@ -28,6 +28,7 @@ def seed_command():
     from application.models.course import Course
     from application.models.course_instance import CourseInstance
     from flask import current_app
+    from sqlalchemy.exc import IntegrityError
 
     base_dir = os.path.join(
         current_app.config["BASE_DIR"], "backend", "instance", "migration"
@@ -91,6 +92,7 @@ def seed_command():
         click.echo(f"Seeding challenges from {challenges_csv}...")
         inserted_challenges = 0
         updated_challenges = 0
+        skipped_challenges = 0
         try:
             with open(challenges_csv, mode="r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
@@ -108,39 +110,53 @@ def seed_command():
                     description = row.get("description", "No description provided.")
                     course_id = row.get("course_id")
 
-                    # Check existence by slug OR (name and domain)
-                    challenge = Challenge.query.filter(
-                        (Challenge.slug == csv_slug)
-                        | ((Challenge.name == name) & (Challenge.domain == domain))
-                    ).first()
+                    # The slug alone identifies a challenge: levels may share a
+                    # name, even inside one domain. Each row gets a savepoint, so
+                    # a row the database rejects (a schema that still enforces
+                    # unique names) is skipped instead of failing the whole file.
+                    try:
+                        with db.session.begin_nested():
+                            challenge = Challenge.query.filter_by(slug=csv_slug).first()
+                            if challenge:
+                                challenge.name = name
+                                challenge.domain = domain
+                                challenge.difficulty = difficulty
+                                challenge.value = value
+                                challenge.description = description
+                                challenge.course_id = course_id
+                            else:
+                                db.session.add(
+                                    Challenge(
+                                        name=name,
+                                        slug=csv_slug,
+                                        domain=domain,
+                                        course_id=course_id,
+                                        description=description,
+                                        difficulty=difficulty,
+                                        value=value,
+                                        is_active=True,
+                                    )
+                                )
+                    except IntegrityError as e:
+                        click.echo(f"Skipping challenge '{csv_slug}': {e.orig}")
+                        skipped_challenges += 1
+                        continue
 
                     if challenge:
-                        challenge.name = name
-                        challenge.domain = domain
-                        challenge.slug = csv_slug
-                        challenge.difficulty = difficulty
-                        challenge.value = value
-                        challenge.description = description
-                        challenge.course_id = course_id
                         updated_challenges += 1
                     else:
-                        new_challenge = Challenge(
-                            name=name,
-                            slug=csv_slug,
-                            domain=domain,
-                            course_id=course_id,
-                            description=description,
-                            difficulty=difficulty,
-                            value=value,
-                            is_active=True,
-                        )
-                        db.session.add(new_challenge)
                         inserted_challenges += 1
 
             db.session.commit()
-            click.echo(
+            summary = (
                 f"Successfully inserted {inserted_challenges} and updated {updated_challenges} challenges."
             )
+            if skipped_challenges:
+                summary += (
+                    f" Skipped {skipped_challenges} rows the database rejected;"
+                    " run `flask db upgrade` and seed again."
+                )
+            click.echo(summary)
         except Exception as e:
             db.session.rollback()
             click.echo(f"Error seeding challenges: {e}")
