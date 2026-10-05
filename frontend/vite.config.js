@@ -63,8 +63,6 @@ const proxy = {
   '/challenge': API,
   '/duck_trade': API,
   '/notes': API,
-  // No direct frontend caller, but the backend returns stored-file URLs under /upload/uploads/.
-  '/upload': API,
   '/static': { target: API, changeOrigin: true, bypass: servePublicFirst },
   '/socket.io': {
     target: API,

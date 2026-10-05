@@ -87,7 +87,6 @@ describe('vite dev/preview proxy', () => {
       '/notes',
       '/socket.io',
       '/static',
-      '/upload',
       '/user',
     ])
   })
