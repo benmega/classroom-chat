@@ -31,8 +31,6 @@ git_log.txt
 classroom_cards.pdf
 backend/instance/migration/certificate_log.csv
 backend/instance/migration/master_challenge_log.csv
-instance/migration/certificate_log.csv
-instance/migration/master_challenge_log.csv
 
 # Dependencies and build output
 node_modules/
