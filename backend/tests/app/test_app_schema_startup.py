@@ -76,6 +76,7 @@ def test_production_start_fills_in_the_defaults_once_the_schema_exists(start_app
     with app.app_context():
         assert Configuration.query.count() == 1
         assert db.session.get(Classroom, GLOBAL_CLASSROOM_ID) is not None
+        assert db.session.get(Classroom, "archive") is not None
     assert app.test_client().get("/server/health").status_code == 200
 
 

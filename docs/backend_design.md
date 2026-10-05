@@ -117,7 +117,7 @@ backend/
 │   └── extensions.py  # Shared Flask extension instances
 ├── instance/           # SQLite DB files, logs (gitignored)
 ├── migrations/          # Alembic migrations (Flask-Migrate)
-├── tools/              # Maintenance helpers (migrate_classroom runs on every deploy; the rest are manual)
+├── tools/              # Manual maintenance helpers (none run on deploy)
 ├── tests/               # Pytest suite
 ├── main.py             # Entry point for the Flask application
 ├── requirements.txt       # Runtime dependencies (the only file deploy.sh installs)
