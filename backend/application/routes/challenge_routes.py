@@ -3,7 +3,7 @@
 import logging
 import os
 import re
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, urlparse
 
 from application import Configuration
 from application.config import (
@@ -34,9 +34,12 @@ _ALREADY_CLAIMED_MESSAGE = (
 )
 _CLAIM_FAILED_MESSAGE = "Could not log your challenge right now. Please try again."
 
+# Hosts a claim may come from: the same sites the bookmarklet runs on
+_CLAIM_HOSTS = "|".join(re.escape(urlparse(o).hostname) for o in BOOKMARKLET_ORIGINS)
+
 # Base pattern for CodeCombat and Ozaria URLs
 BASE_PATTERN = (
-    r"https://(?P<domain>[\w\.-]+)"
+    rf"https://(?P<domain>(?i:{_CLAIM_HOSTS}))"
     r"(?:"
     r"/play/(?:(?:ozaria|junior)/)?level/(?P<challenge_slug>[\w-]+)"
     r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+)"
@@ -348,7 +351,7 @@ def _extract_challenge_details(message):
     if not match:
         return None
 
-    domain = match.group("domain")
+    domain = match.group("domain").lower()
     challenge_slug = match.group("challenge_slug") or match.group("slug")
     params_str = match.group("params") or ""
 

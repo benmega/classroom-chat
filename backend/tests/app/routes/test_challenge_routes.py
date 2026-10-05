@@ -598,6 +598,62 @@ def test_extract_challenge_details_domains():
     assert junior_res["challenge_slug"] == "step-change"
 
 
+@pytest.mark.parametrize(
+    "host", ["codecombat.com", "www.codecombat.com", "ozaria.com", "www.ozaria.com"]
+)
+def test_extract_challenge_details_accepts_only_the_bookmarklet_hosts(host):
+    from application.routes.challenge_routes import _extract_challenge_details
+
+    result = _extract_challenge_details(f"https://{host}/play/level/step-change")
+    assert result["domain"] == host
+    assert result["challenge_slug"] == "step-change"
+
+    shared = _extract_challenge_details(f"https://{host}/s/cs1/lessons/3/levels/4")
+    assert shared["domain"] == host
+    assert shared["challenge_slug"] == "cs1"
+
+
+def test_extract_challenge_details_domain_is_stored_lowercase():
+    from application.routes.challenge_routes import _extract_challenge_details
+
+    result = _extract_challenge_details("https://CodeCombat.COM/play/level/step-change")
+
+    assert result["domain"] == "codecombat.com"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://evil.example/play/level/step-change",
+        "https://codecombat.com.evil.example/play/level/step-change",
+        "https://notcodecombat.com/play/level/step-change",
+        "https://codecombat.com@evil.example/play/level/step-change",
+        "https://staging.codecombat.com/play/level/step-change",
+        "https://evil.example/s/cs1/lessons/3/levels/4",
+        "http://codecombat.com/play/level/step-change",
+    ],
+)
+def test_extract_challenge_details_rejects_other_hosts(url):
+    from application.routes.challenge_routes import _extract_challenge_details
+
+    assert _extract_challenge_details(url) is None
+
+
+def test_submit_challenge_other_host_is_not_recognised(client, init_db):
+    user, _, _, _, url = _seed_claim()
+    _login(client, user)
+
+    response = client.post(
+        "/challenge/submit",
+        json={"url": url.replace("https://codecombat.com", "https://evil.example")},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["success"] is False
+    assert "does not recognize this challenge" in response.get_json()["message"]
+    assert _claim_rows(user) == (0, 0)
+
+
 def test_detect_and_handle_ozaria_domain(init_db):
     """Test full flow for an Ozaria domain challenge."""
     from application.routes.challenge_routes import detect_and_handle_challenge_url
