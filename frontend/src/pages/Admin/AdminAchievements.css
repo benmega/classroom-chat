@@ -161,6 +161,11 @@
     transform-origin: center;
 }
 
+/* Stands in for a badge that has no cell in the sprite; the card header's own colour is for light-on-blue headers. */
+:where(.admin-achievements-page) .achievement-fallback-icon {
+    color: var(--text-muted);
+}
+
 :where(.admin-achievements-page) .reward-tag {
     background: var(--amber-50);
     color: var(--warning-color);

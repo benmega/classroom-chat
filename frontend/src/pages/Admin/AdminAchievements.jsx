@@ -6,6 +6,7 @@ import { getErrorMessage } from '../../utils/apiError';
 import '../../components/admin/AdminShared.css';
 import './AdminAchievements.css';
 import '../../assets/css/sprite.css';
+import { hasBadgeSprite } from './badgeSprite';
 
 // Mirrors SLUG_RE in backend/application/routes/achievement_routes.py (the slug names the badge file).
 // The hyphen is escaped so the pattern also compiles under the browser's unicode-sets (v) flag.
@@ -175,7 +176,9 @@ const AdminAchievements = () => {
                                     >
                                         <div className="project-card-header" style={{ backgroundColor: 'var(--bg-color)' }}>
                                             {/* The build ships the badge art as one sprite (sprite.css), not as a file per badge */}
-                                            <div className={`badge badge-${a.slug}`} aria-hidden="true" />
+                                            {hasBadgeSprite(a.slug)
+                                                ? <div className={`badge badge-${a.slug}`} aria-hidden="true" />
+                                                : <Award size={48} className="achievement-fallback-icon" aria-hidden="true" />}
                                         </div>
                                         <div className="project-card-body">
                                             <div className="project-card-title" title={a.name}>
@@ -349,7 +352,7 @@ const AdminAchievements = () => {
                                 </div>
                             ) : (
                                 <div className={`preview-badge type-${formData.type}`}>
-                                    {formData.slug
+                                    {hasBadgeSprite(formData.slug)
                                         ? <div className={`badge badge-${formData.slug}`} aria-hidden="true" />
                                         : <Award size={32} />}
                                 </div>
