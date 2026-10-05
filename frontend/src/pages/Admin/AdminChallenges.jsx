@@ -9,7 +9,7 @@ import Papa from 'papaparse';
 import Modal from '../../components/common/Modal';
 import { getCourseHeaderImage } from '../../constants/courseImages';
 
-// A challenge can be worth a fractional number of ducks (1.5 is in use); a blank or unreadable cell means the default of 1.
+// A challenge can be worth a fractional number of ducks (such as 1.5); a blank or unreadable cell means the default of 1.
 const parseChallengeValue = (raw) => {
     const value = parseFloat(raw);
     return Number.isFinite(value) ? value : 1;
