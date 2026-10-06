@@ -7,9 +7,6 @@
 # Prerequisites (one-time server setup):
 #   - venv at ~/classroom-chat/venv  (pip install -r backend/requirements.txt)
 #   - backend/.env with FLASK_ENV, SECRET_KEY, ADMIN_PASSWORD, DATABASE_URL
-#   - Swap file (sudo fallocate -l 1G /swapfile && sudo chmod 600 /swapfile &&
-#                sudo mkswap /swapfile && sudo swapon /swapfile)
-#   - nodejs/npm installed via NodeSource LTS
 #   - nginx configured (see docs/infrastructure_and_devops.md)
 #   - gunicorn service WorkingDirectory set to ~/classroom-chat/backend
 
@@ -80,12 +77,6 @@ if [[ ! -f "$APP_DIR/backend/.env" ]]; then
     exit 1
 fi
 
-# Warn if swap is not active (npm build will OOM-kill on low-RAM instances)
-if ! swapon --show | grep -q .; then
-    echo "WARNING: No swap space is active. npm build may be OOM-killed on small instances."
-    echo "Fix: sudo fallocate -l 1G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile"
-fi
-
 echo "Starting deploy..."
 
 # -------------------------
@@ -126,26 +117,8 @@ else
     echo "WARNING: Nginx API configuration not found in repository at $APP_DIR/infrastructure/nginx/api-blossom.benmega.com.conf"
 fi
 
-# Frontend SPA config (blossom.benmega.com)
-# This serves frontend/dist/ and enables SPA fallback (try_files → index.html)
-# so direct navigation to React Router paths like /admin/submissions works.
-if [[ -f "$APP_DIR/infrastructure/nginx/blossom.benmega.com.conf" ]]; then
-    run sudo cp "$APP_DIR/infrastructure/nginx/blossom.benmega.com.conf" "/etc/nginx/sites-available/blossom-frontend"
-    # Ensure the symlink is enabled
-    if [[ ! -L "/etc/nginx/sites-enabled/blossom-frontend" ]]; then
-        run sudo ln -s "/etc/nginx/sites-available/blossom-frontend" "/etc/nginx/sites-enabled/blossom-frontend"
-    fi
-else
-    echo "WARNING: Nginx frontend configuration not found in repository at $APP_DIR/infrastructure/nginx/blossom.benmega.com.conf"
-fi
-
-echo "Building frontend..."
-(
-    cd "$APP_DIR/frontend"
-    run npm ci
-    run npm run build
-)
-
+# The React frontend (blossom.benmega.com) is not served from this host: the
+# deploy-frontend.yml workflow builds it and publishes it to S3 + CloudFront.
 run sudo systemctl reload nginx
 
 # -------------------------
@@ -198,6 +171,11 @@ echo "Initializing/updating database..."
 (
     cd "$APP_DIR/backend"
     # Ensure we run in production mode so it hits prod_users.db
+
+    # The processes below load the whole app, which would otherwise start the
+    # session cleanup scheduler. It belongs to gunicorn only; this export stays
+    # inside this subshell, so the service restart below is unaffected.
+    export SCHEDULER_ENABLED=0
 
     # Heal invalid integer values in last_daily_duck column before starting flask context
     echo "Healing any invalid/integer last_daily_duck values in SQLite database..."

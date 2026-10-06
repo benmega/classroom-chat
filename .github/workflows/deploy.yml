@@ -38,7 +38,14 @@ jobs:
 
             cd $APP_DIR
 
-            # Inject production environment variables
+            # Inject production environment variables. The file holds secrets and
+            # is only read by the account that runs gunicorn (User=ubuntu in the
+            # unit, the account this job logs in as), so restrict it to its owner
+            # before any secret is written: a new file would get the default
+            # umask and an existing one keeps its old mode.
+            ENV_FILE="$APP_DIR/backend/.env"
+            touch "$ENV_FILE"
+            chmod 600 "$ENV_FILE"
             {
               printf 'FLASK_ENV=production\n'
               printf 'SECRET_KEY=%s\n' '${{ secrets.SECRET_KEY }}'
@@ -59,7 +66,7 @@ jobs:
               printf 'AWS_SES_REGION=%s\n' '${{ secrets.AWS_SES_REGION }}'
               printf 'SES_SENDER_EMAIL=%s\n' '${{ secrets.SES_SENDER_EMAIL }}'
               printf 'ADMIN_EMAIL_ADDRESS=%s\n' '${{ secrets.ADMIN_EMAIL_ADDRESS }}'
-            } > "$APP_DIR/backend/.env"
+            } > "$ENV_FILE"
 
             # Execute the deployment script
             chmod +x "$APP_DIR/deploy.sh"

@@ -1,0 +1,3 @@
+# Packages the AI workflow scripts (.github/scripts/*.py) import. Installed by ai-coder.yml and tests.yml;
+# the Flask app does not use them.
+openai~=2.30

@@ -2,15 +2,22 @@ import csv
 import os
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
 # 1. CONFIGURATION
-YOUR_COOKIE = """__stripe_mid=1ebd10bd-7567-4df5-816f-79a9b780842852846f; _fbp=fb.1.1699689886954.171100771; cf_clearance=_RJjbBs.CVgd42U1MO1ZKjKuTD.GNdDOVgzwpbDpooA-1746367538-1.2.1.1-9jqn.40lzWGvjocpB2ne1Z7IAWofVjqtuHrd4LYso32hZrN5Ri4ZJqE8nJFCsyZJGvzRmWB9t2WgydqSbzPQXINuNBt96YNSCAs6LIxbRXQnfqDBxaFLdIyQQgDorw_ckX1lgMQ0u8fZm82pMQTZGEdokVgLMMtyZkUrHHvI18M3RlTPA_Vda.NVdh5Ow_Zd477nSREgoYYn2LeePfSBPiK78Z8zx9bxvesYdaoE36RN1_hlWxuD_sPev4R3SS.MWaHLIMIVpOKsW9Ybsp4XL3uE7DmvRJOn2vEdlYdw0NbcOkzcIBb3OJ8YBmSMrHJQeXHZwuKp.qqlyiJZJASLtd76vgcO4Qgh1FVSf4lnRHlNSmftqVLs0STLWgdTy262; _ga_CLTH4TL5L8=deleted; _gid=GA1.2.590278429.1765512323; shaTagVal=production-2025-12-11-09-35-36; g_state={"i_l":0,"i_ll":1765612960132}; _ga=GA1.1.1923261573.1699063009; fs_lua=1.1765613059660; fs_uid=#RQW5S#ee6f16b5-763c-410a-9ab0-03a5dde36753:59948c97-fcdd-42df-a99b-5540ff238a79:1765612957311::3#8d074e9c#/1790492809; _gat=1; codecombat.sess=eyJwYXNzcG9ydCI6eyJ1c2VyIjp7ImlkIjoiNjJkMjNkOTc1ZGFmZDYwMDI1ZjhjNTIwIiwiY3JlYXRlZCI6IjIwMjUtMTItMTNUMDg6MDQ6NTgrMDA6MDAiLCJleHBpcmVzIjoiMjAyNi0wMS0xM1QwODowNDo1OCswMDowMCJ9fX0=; codecombat.sess.sig=0jr8Ykuo2KAq3Dj8b4NsyQcWeXI; _ga_CLTH4TL5L8=GS2.1.s1765611399$o401$g1$t1765613112$j6$l0$h0"""
+# Teacher session cookies, one per site, read from the environment so no session is ever stored
+# in the repository. Copy the Cookie header from a logged-in browser tab and export it before
+# running, e.g. CODECOMBAT_COOKIE='...' and OZARIA_COOKIE='...'. Requests to a site whose
+# variable is unset are sent without a cookie and the API answers 401.
+COOKIE_ENV_VARS = {
+    "codecombat.com": "CODECOMBAT_COOKIE",
+    "ozaria.com": "OZARIA_COOKIE",
+}
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Cookie": YOUR_COOKIE.replace("\n", ""),
     "Accept": "application/json",
 }
 
@@ -35,10 +42,22 @@ REQUEST_TIMEOUT = 30
 
 
 # 2. HELPER FUNCTIONS
+def request_headers(url):
+    """HEADERS plus the session cookie of the site that url points at, if one is set."""
+    headers = dict(HEADERS)
+    host = urlparse(url).hostname or ""
+    for site, env_var in COOKIE_ENV_VARS.items():
+        if host == site or host.endswith("." + site):
+            cookie = os.environ.get(env_var, "").replace("\n", "").strip()
+            if cookie:
+                headers["Cookie"] = cookie
+    return headers
+
+
 def fetch_json(url, description):
     print(f"Fetching {description}...")
     try:
-        response = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+        response = requests.get(url, headers=request_headers(url), timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:

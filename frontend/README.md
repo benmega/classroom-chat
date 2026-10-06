@@ -24,9 +24,9 @@ npm run preview    # serve the production build locally
 npm run lint       # ESLint
 ```
 
-Production builds are made by the deploy pipeline on pushes to the `deploy` branch: `.github/workflows/deploy.yml`
-runs `deploy.sh`, which builds on the EC2 host, and `deploy-frontend.yml` builds in GitHub Actions and syncs to
-S3 + CloudFront.
+The production build is made by the deploy pipeline on pushes to the `deploy` branch: `.github/workflows/deploy-frontend.yml`
+builds in GitHub Actions and syncs to S3 + CloudFront. `.github/workflows/deploy.yml` deploys the backend only (it
+runs `deploy.sh` on the EC2 host, which does not build the frontend).
 
 ## Environment variables
 
