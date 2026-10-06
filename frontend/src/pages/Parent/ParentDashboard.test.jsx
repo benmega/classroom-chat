@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import ParentDashboard from './ParentDashboard';
 import client from '../../api/client';
@@ -95,6 +95,32 @@ describe('ParentDashboard Component', () => {
 
         const disconnectBtns = screen.getAllByText(/Remove Child/i);
         expect(disconnectBtns[0]).toBeInTheDocument();
+    });
+
+    describe('activity feed times', () => {
+        afterEach(() => vi.useRealTimers());
+
+        it('reads an offset-less event timestamp as UTC', async () => {
+            vi.useFakeTimers({ toFake: ['Date'], now: new Date('2024-05-01T12:00:00Z') });
+            client.get.mockImplementation((url) => {
+                if (url.includes('/api/parents/children')) return Promise.resolve({ data: { children: mockChildren } });
+                if (url.includes('/report')) return Promise.resolve({ data: { data: mockReport } });
+                if (url.includes('/history')) {
+                    return Promise.resolve({
+                        data: { data: { ...mockHistory, recent_events: [{ type: 'challenge', label: 'Completed level 1', timestamp: '2024-05-01T10:00:00', icon: 'zap' }] } },
+                    });
+                }
+                return Promise.reject(new Error('Not found'));
+            });
+
+            render(
+                <MemoryRouter>
+                    <ParentDashboard />
+                </MemoryRouter>
+            );
+
+            expect(await screen.findByText('2h ago')).toBeInTheDocument();
+        });
     });
 
     it('prompts confirm and disconnects student on confirm', async () => {

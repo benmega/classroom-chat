@@ -41,21 +41,37 @@ export const cssUrl = (url) => {
     return `url("${encoded}")`;
 };
 
+// An ISO date with a time part (the API's 'T' or SQL's space separator) and, at the end, a
+// zone: 'Z' or an offset such as +00:00 or -0500.
+const ISO_WITH_TIME = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/;
+const HAS_ZONE = /(?:Z|[+-]\d{2}:?\d{2})$/i;
+
+// The Date for a timestamp the API sent. Its timestamps are UTC: current responses end in 'Z',
+// older ones were offset-less, which new Date() would read as local time, so those are taken as
+// UTC too. A zone that is present is honoured, a date-only string is UTC midnight (as the Date
+// spec has it), and a Date or epoch number passes through. Anything unusable gives an invalid Date.
+export const parseServerDate = (value) => {
+    if (value instanceof Date || typeof value === 'number') return new Date(value);
+    if (typeof value !== 'string') return new Date(NaN);
+    const text = value.trim();
+    if (!ISO_WITH_TIME.test(text)) return new Date(text);
+    const iso = text.replace(' ', 'T');
+    return new Date(HAS_ZONE.test(iso) ? iso : `${iso}Z`);
+};
+
 // Locale date for a timestamp, or '' when it is missing or not a valid date
 // (instead of "Invalid Date", or 1970 for null).
 export const safeDate = (value, options) => {
     if (!value) return '';
-    const date = new Date(value);
+    const date = parseServerDate(value);
     if (isNaN(date.getTime())) return '';
     return date.toLocaleDateString(undefined, options);
 };
 
 export const formatRelativeTime = (dateStr) => {
     if (!dateStr) return 'Never';
-    
-    // Append 'Z' if not present to force UTC parsing
-    const normalized = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : `${dateStr}Z`;
-    const date = new Date(normalized);
+
+    const date = parseServerDate(dateStr);
     if (isNaN(date.getTime())) return 'Never';
     
     const now = new Date();
