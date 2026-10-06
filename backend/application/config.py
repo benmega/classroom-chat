@@ -25,6 +25,10 @@ DEFAULT_PROD_CORS_ORIGINS = [
     "https://blossom.benmega.com",
     "https://d2pa3ix3n5behv.cloudfront.net",
 ]
+# Public address of the React app, used for links to its pages in emails and API
+# responses (the API host serves no pages). FRONTEND_URL overrides both.
+DEFAULT_DEV_FRONTEND_URL = "http://localhost:5173"
+DEFAULT_PROD_FRONTEND_URL = "https://blossom.benmega.com"
 # Sites the CodeCombat/Ozaria bookmarklet posts from (/challenge/submit only).
 BOOKMARKLET_ORIGINS = [
     "https://codecombat.com",
@@ -42,6 +46,11 @@ def split_csv(value):
 def cors_origins_from_env(default):
     """Origins from the CORS_ORIGINS env var, or a copy of ``default`` when it is unset or blank."""
     return split_csv(os.getenv("CORS_ORIGINS", "")) or list(default)
+
+
+def frontend_url_from_env(default):
+    """The FRONTEND_URL env var without a trailing slash, or ``default`` when it is unset or blank."""
+    return os.getenv("FRONTEND_URL", "").strip().rstrip("/") or default
 
 
 # Values that must never be used as a real secret in production: the .env.example
@@ -150,6 +159,8 @@ class Config:
     # to gevent-monkey-patch, so the two always agree.
     SOCKETIO_ASYNC_MODE = os.getenv("SOCKETIO_ASYNC_MODE") or "gevent"
 
+    FRONTEND_URL = frontend_url_from_env(DEFAULT_DEV_FRONTEND_URL)
+
     # Rate limiter storage. The in-memory default is per process, which is only
     # correct while a single worker serves the app (see docs/infrastructure_and_devops.md).
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
@@ -196,6 +207,7 @@ class ProductionConfig(Config):
     )
     # nginx is the one proxy in front of gunicorn.
     TRUSTED_PROXY_COUNT = int(os.getenv("TRUSTED_PROXY_COUNT", 1))
+    FRONTEND_URL = frontend_url_from_env(DEFAULT_PROD_FRONTEND_URL)
 
     SESSION_COOKIE_DOMAIN = ".benmega.com"
     SESSION_COOKIE_SAMESITE = "Lax"

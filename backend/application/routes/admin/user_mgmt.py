@@ -808,13 +808,13 @@ def get_classroom_details(classroom_id):
 def get_classroom_join_code(classroom_id):
     """Returns the classroom's join code, generating one if it doesn't exist yet."""
     from application.models.classroom import Classroom
+    from application.utilities.spa import frontend_url
 
     classroom = db.session.get(Classroom, classroom_id)
     if not classroom:
         return "Classroom not found.", 404
     code = classroom.get_join_code()
-    base_url = request.host_url.rstrip("/")
-    return {"join_code": code, "join_url": f"{base_url}/join-class?code={code}"}
+    return {"join_code": code, "join_url": frontend_url(f"join-class?code={code}")}
 
 
 @admin_bp.route("/classrooms/<classroom_id>/join-code/regenerate", methods=["POST"])
@@ -823,16 +823,16 @@ def get_classroom_join_code(classroom_id):
 def regenerate_classroom_join_code(classroom_id):
     """Generates a new join code for the classroom, invalidating the old one."""
     from application.models.classroom import Classroom
+    from application.utilities.spa import frontend_url
 
     classroom = db.session.get(Classroom, classroom_id)
     if not classroom:
         return "Classroom not found.", 404
     classroom.join_code = classroom.generate_join_code()
     db.session.commit()
-    base_url = request.host_url.rstrip("/")
     return {
         "join_code": classroom.join_code,
-        "join_url": f"{base_url}/join-class?code={classroom.join_code}",
+        "join_url": frontend_url(f"join-class?code={classroom.join_code}"),
     }
 
 

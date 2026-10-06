@@ -518,6 +518,44 @@ describe('AdminClassDashboard', () => {
         });
     });
 
+    it('shows the invite link the API returns in the invite modal', async () => {
+        const joinUrl = 'https://app.example.test/join-class?code=ABC123';
+        client.get.mockImplementation((url) => {
+            if (url.includes('/join-code')) {
+                return Promise.resolve({
+                    data: { status: 'success', data: { join_code: 'ABC123', join_url: joinUrl } }
+                });
+            }
+            if (url.includes('/api/admin/classrooms/')) {
+                return Promise.resolve({
+                    data: {
+                        classroom: {
+                            id: 'cls123',
+                            name: 'Python Level 1',
+                            students: [],
+                            course_assignments: []
+                        }
+                    }
+                });
+            }
+            if (url.includes('/api/admin/users')) {
+                return Promise.resolve({ data: { users: [] } });
+            }
+            return Promise.resolve({ data: {} });
+        });
+
+        renderWithRouter(<AdminClassDashboard />);
+
+        await waitFor(() => {
+            expect(screen.getByText('Python Level 1')).toBeInTheDocument();
+        });
+
+        fireEvent.click(screen.getByRole('tab', { name: 'People' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Enroll Student' }));
+
+        expect(screen.getByText(joinUrl)).toBeInTheDocument();
+    });
+
     it('displays Enable Sandbox button when sandbox_active is false and toggles it on', async () => {
         mockClassroomApi({
             id: 'cls123',

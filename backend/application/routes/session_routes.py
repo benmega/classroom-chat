@@ -4,6 +4,7 @@ Type: py
 Summary: Flask routes for session routes functionality.
 """
 
+import threading
 from datetime import timedelta
 
 import boto3
@@ -21,6 +22,8 @@ session = Blueprint("session", __name__)
 HEARTBEAT_WRITE_INTERVAL = timedelta(seconds=60)
 
 _ec2_metadata_cache = None
+_cloudwatch_client = None
+_cloudwatch_client_lock = threading.Lock()
 
 
 def get_ec2_metadata():
@@ -47,8 +50,20 @@ def get_ec2_metadata():
 
 
 def get_cloudwatch_client():
-    _, region = get_ec2_metadata()
-    return boto3.client("cloudwatch", region_name=region)
+    """The process-wide CloudWatch client, created on the first heartbeat.
+
+    A boto3 client can be shared between threads and greenlets, but building one
+    (credential lookup, endpoint resolution) is slow and is not thread-safe, so it
+    happens once, under a lock. A failed attempt is not remembered: the next
+    heartbeat tries again.
+    """
+    global _cloudwatch_client
+    if _cloudwatch_client is None:
+        with _cloudwatch_client_lock:
+            if _cloudwatch_client is None:
+                _, region = get_ec2_metadata()
+                _cloudwatch_client = boto3.client("cloudwatch", region_name=region)
+    return _cloudwatch_client
 
 
 @session.route("/heartbeat", methods=["POST"])

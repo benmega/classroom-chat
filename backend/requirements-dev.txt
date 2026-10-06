@@ -8,3 +8,5 @@ ruff
 mypy
 sqlalchemy2-stubs
 factory_boy==3.3.3
+# conftest.py wires a LoginManager into the test app; the app itself does not use Flask-Login.
+Flask-Login~=0.6.3

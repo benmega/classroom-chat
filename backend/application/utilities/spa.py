@@ -4,10 +4,21 @@ Type: py
 Summary: Hand-off to the React single-page app for browser (non-API) navigation.
 """
 
-from flask import jsonify, render_template
+from flask import current_app, jsonify, render_template
 from jinja2 import TemplateNotFound
 
 VITE_DEV_URL = "http://localhost:5173"
+
+
+def frontend_url(path=""):
+    """
+    Absolute URL of a React page, for links in emails and API responses.
+
+    Built from the FRONTEND_URL setting, not from the request: the API host
+    serves no pages, so request.host_url would give a link that does not open.
+    """
+    base = current_app.config["FRONTEND_URL"].rstrip("/")
+    return f"{base}/{path.lstrip('/')}"
 
 
 def serve_spa_index(**context):

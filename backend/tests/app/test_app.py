@@ -33,6 +33,7 @@ from application.models.configuration import Configuration
 from application.models.course import Course
 from application.models.course_instance import CourseInstance
 from application.models.project_template import ProjectTemplate
+from application.utilities.spa import frontend_url
 from flask import Flask, request, session
 from flask_limiter import Limiter, RateLimitExceeded
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -52,6 +53,17 @@ def test_create_app_configs():
         with patch.dict(os.environ, {"FLASK_ENV": "development"}):
             app_dev = create_app(DevelopmentConfig)
             assert app_dev is not None
+
+
+@pytest.mark.parametrize("config_class", [DevelopmentConfig, ProductionConfig])
+def test_apps_built_from_dev_and_prod_configs_use_an_in_memory_database(config_class):
+    """create_all and seeding must never run against instance/dev_users.db or prod_users.db."""
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
+        app = create_app(config_class)
+
+    assert app.config["SQLALCHEMY_DATABASE_URI"] == "sqlite:///:memory:"
+    with app.app_context():
+        assert db.engine.url.database == ":memory:"
 
 
 APP_HANDLER_NAMES = ("app_console", "app_file")
@@ -700,6 +712,7 @@ def test_create_app_survives_and_logs_a_scheduler_start_failure(caplog):
 # --- Configuration from the environment (T1, T2b, T4b, T7) ----------------------
 
 _CONFIG_ENV = (
+    "FRONTEND_URL",
     "RATELIMIT_STORAGE_URI",
     "SCHEDULER_ENABLED",
     "SESSION_STALE_TIMEOUT_MINUTES",
@@ -745,6 +758,32 @@ def test_config_reads_overrides_from_the_environment():
     assert cfg.ProductionConfig.SESSION_STALE_TIMEOUT_MINUTES == 25
     assert cfg.ProductionConfig.TRUSTED_PROXY_COUNT == 2
     assert _load_config(TRUSTED_PROXY_COUNT="0").ProductionConfig.TRUSTED_PROXY_COUNT == 0
+
+
+def test_config_frontend_url_defaults_to_the_site_in_production_and_vite_elsewhere():
+    cfg = _load_config()
+
+    assert cfg.ProductionConfig.FRONTEND_URL == "https://blossom.benmega.com"
+    assert cfg.DevelopmentConfig.FRONTEND_URL == "http://localhost:5173"
+    assert cfg.TestingConfig.FRONTEND_URL == "http://localhost:5173"
+
+
+def test_config_frontend_url_can_be_set_from_the_environment():
+    cfg = _load_config(FRONTEND_URL=" https://app.example.test/ ")
+
+    # Whitespace and the trailing slash are dropped
+    assert cfg.ProductionConfig.FRONTEND_URL == "https://app.example.test"
+    assert cfg.DevelopmentConfig.FRONTEND_URL == "https://app.example.test"
+    # A blank value counts as unset
+    assert _load_config(FRONTEND_URL="  ").ProductionConfig.FRONTEND_URL == "https://blossom.benmega.com"
+
+
+def test_frontend_url_joins_the_setting_and_a_page_path(test_app):
+    with patch.dict(test_app.config, {"FRONTEND_URL": "https://spa.example.test/"}):
+        with test_app.app_context():
+            assert frontend_url("profile/jane") == "https://spa.example.test/profile/jane"
+            assert frontend_url("/join-class?code=AB3C9") == "https://spa.example.test/join-class?code=AB3C9"
+            assert frontend_url() == "https://spa.example.test/"
 
 
 @pytest.mark.parametrize(
