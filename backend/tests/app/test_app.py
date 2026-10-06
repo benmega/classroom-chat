@@ -1,16 +1,19 @@
 
+import csv
 import importlib.util
 import logging
 import os
 import subprocess
 import sys
 from contextlib import contextmanager
+from pathlib import Path
 from types import SimpleNamespace
 from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import application.config as config_module
 import pytest
+import sqlalchemy as sa
 from application import (
     _configure_logging,
     _should_start_scheduler,
@@ -28,6 +31,8 @@ from application.config import (
     TestingConfig,
 )
 from application.extensions import db, limiter, rate_limit_key, scheduler, socketio
+from application.models.achievements import Achievement
+from application.models.challenge import Challenge
 from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.course import Course
@@ -493,9 +498,47 @@ def test_seed_command_missing_files(test_app):
         assert "File not found" in result.output
 
 
-def test_seed_command_success(test_app):
-    runner = test_app.test_cli_runner()
+_LEVEL_CSV_HEADER = "name,slug,domain,course_id,description,difficulty,value\n"
+_INSTANCE_CSV_HEADER = "id,classroom_id,course_id\n"
+_COURSE_CSV_HEADER = "id,name,domain,description,default_challenge_value\n"
+_ACHIEVEMENT_CSV_HEADER = "slug,name,description,type,requirement_value,reward,source\n"
 
+
+def _run_seed(
+    test_app,
+    challenges_csv=_LEVEL_CSV_HEADER,
+    instances_csv=_INSTANCE_CSV_HEADER,
+    courses_csv=_COURSE_CSV_HEADER,
+    achievements_csv=_ACHIEVEMENT_CSV_HEADER,
+):
+    """Run `flask seed` with its seed files replaced by the given CSV text.
+
+    The default for each file is a header with no rows. A file given as None is
+    read from the repository as it is.
+    """
+    from io import StringIO
+
+    replaced = {
+        "level_seed_data.csv": challenges_csv,
+        "course_instances_seed.csv": instances_csv,
+        "courses_seed.csv": courses_csv,
+        "achievements_seed.csv": achievements_csv,
+    }
+    real_open = open
+
+    def mock_open(path, *args, **kwargs):
+        text = replaced.get(os.path.basename(str(path)))
+        if text is None:
+            return real_open(path, *args, **kwargs)
+        return StringIO(text)
+
+    with patch("os.path.exists", return_value=True), patch("builtins.open", side_effect=mock_open):
+        result = test_app.test_cli_runner().invoke(seed_command)
+    assert result.exit_code == 0
+    return result.output
+
+
+def test_seed_command_success(test_app):
     with test_app.app_context():
         db.session.add(Classroom(id="class_1", name="Class 1", language="python"))
         db.session.add(Course(id="course_1", name="Course 1", domain="codecombat.com"))
@@ -516,36 +559,24 @@ def test_seed_command_success(test_app):
         ",codecombat.com,invalid-no-name,easy,5,desc,course_1\n"
     )
 
-    from io import StringIO
+    # Run first time (inserts)
+    out1 = _run_seed(test_app, challenges_csv_content, instances_csv_content)
+    assert "Successfully inserted 2 and updated 0 challenges." in out1
+    assert "Successfully inserted 2 new course instances (skipped 0 orphan rows)" in out1
 
-    def mock_open(path, mode="r", encoding=None):
-        if "course_instances_seed.csv" in str(path):
-            return StringIO(instances_csv_content)
-        if "level_seed_data.csv" in str(path):
-            return StringIO(challenges_csv_content)
-        return open(path, mode, encoding=encoding)
-
-    with patch("os.path.exists", return_value=True), patch("builtins.open", side_effect=mock_open):
-        # Run first time (inserts)
-        res1 = runner.invoke(seed_command)
-        assert res1.exit_code == 0
-        assert "Successfully inserted" in res1.output
-        assert "Successfully inserted 2 new course instances (skipped 0 orphan rows)" in res1.output
-
-        # Run second time (updates existing challenges)
-        res2 = runner.invoke(seed_command)
-        assert res2.exit_code == 0
-        assert "updated" in res2.output
-        assert "Successfully inserted 0 new course instances (skipped 0 orphan rows)" in res2.output
+    # Run second time (updates existing challenges)
+    out2 = _run_seed(test_app, challenges_csv_content, instances_csv_content)
+    assert "Successfully inserted 0 and updated 2 challenges." in out2
+    assert "Successfully inserted 0 new course instances (skipped 0 orphan rows)" in out2
 
     with test_app.app_context():
         assert {i.id for i in CourseInstance.query.all()} == {"inst_test_1", "inst_test_2"}
+        slugs = {c.slug: c.name for c in Challenge.query.filter(Challenge.course_id.like("course_%"))}
+        assert slugs == {"test-challenge": "Test Challenge", "new-challenge": "New Challenge"}
         db.session.rollback()
 
 
 def test_seed_command_skips_orphan_course_instances(test_app):
-    runner = test_app.test_cli_runner()
-
     with test_app.app_context():
         db.session.add(Classroom(id="class_1", name="Class 1", language="python"))
         db.session.add(Course(id="course_1", name="Course 1", domain="codecombat.com"))
@@ -561,27 +592,15 @@ def test_seed_command_skips_orphan_course_instances(test_app):
         "inst_bad_course,class_1,course_missing\n"
         "inst_existing,class_missing,course_missing\n"
     )
-    challenges_csv_content = "name,domain,slug,difficulty,value,description,course_id\n"
 
-    from io import StringIO
+    output = _run_seed(test_app, instances_csv=instances_csv_content)
 
-    def mock_open(path, mode="r", encoding=None):
-        if "course_instances_seed.csv" in str(path):
-            return StringIO(instances_csv_content)
-        if "level_seed_data.csv" in str(path):
-            return StringIO(challenges_csv_content)
-        return open(path, mode, encoding=encoding)
-
-    with patch("os.path.exists", return_value=True), patch("builtins.open", side_effect=mock_open):
-        result = runner.invoke(seed_command)
-
-    assert result.exit_code == 0
-    assert "Successfully inserted 2 new course instances (skipped 3 orphan rows)" in result.output
-    assert "Skipping orphan course instance inst_bad_classroom: unknown classroom 'class_missing'." in result.output
-    assert "Skipping orphan course instance inst_empty_classroom: unknown classroom ''." in result.output
-    assert "Skipping orphan course instance inst_bad_course: unknown course 'course_missing'." in result.output
+    assert "Successfully inserted 2 new course instances (skipped 3 orphan rows)" in output
+    assert "Skipping orphan course instance inst_bad_classroom: unknown classroom 'class_missing'." in output
+    assert "Skipping orphan course instance inst_empty_classroom: unknown classroom ''." in output
+    assert "Skipping orphan course instance inst_bad_course: unknown course 'course_missing'." in output
     # An instance that already exists is left alone, not reported as an orphan.
-    assert "inst_existing" not in result.output
+    assert "inst_existing" not in output
 
     with test_app.app_context():
         instances = {i.id: i for i in CourseInstance.query.all()}
@@ -590,6 +609,329 @@ def test_seed_command_skips_orphan_course_instances(test_app):
         assert instances["inst_no_course"].course_id is None
         assert instances["inst_ok"].course_id == "course_1"
         db.session.rollback()
+
+
+def test_seed_command_keeps_fractional_challenge_values(test_app):
+    challenges_csv = (
+        _LEVEL_CSV_HEADER
+        + "Half Step,half-step,www.ozaria.com,course_1,desc,Medium,1.5\n"
+        + "Whole Step,whole-step,www.ozaria.com,course_1,desc,Medium,2\n"
+        + "No Value,no-value,www.ozaria.com,course_1,desc,Medium,\n"
+    )
+
+    # The second run takes the update path, which must not round the value either
+    for expected in ("inserted 3 and updated 0", "inserted 0 and updated 3"):
+        assert f"Successfully {expected} challenges." in _run_seed(test_app, challenges_csv)
+
+        with test_app.app_context():
+            values = {c.slug: c.value for c in Challenge.query.filter_by(course_id="course_1")}
+            assert values == {"half-step": 1.5, "whole-step": 2, "no-value": 1}
+            db.session.rollback()
+
+
+_SAME_NAME_LEVELS_CSV = (
+    _LEVEL_CSV_HEADER
+    + "Salazar,salazar-part-1,www.ozaria.com,course_1,first,Medium,2\n"
+    + "Salazar - In Progress,salazar-part-2,www.ozaria.com,course_1,second,Medium,2\n"
+    + "Salazar,salazar-part-3,www.ozaria.com,course_1,third,Hard,3\n"
+    + "Crossing,crossing,www.ozaria.com,course_1,alone,Easy,1\n"
+)
+
+
+def test_seed_command_keeps_levels_that_share_a_name_apart(test_app):
+    """The slug identifies a level. Three levels called Salazar are three rows, and
+    seeding again must not fold them into one or move a slug from one to another."""
+    assert "Successfully inserted 4 and updated 0 challenges." in _run_seed(
+        test_app, _SAME_NAME_LEVELS_CSV
+    )
+
+    with test_app.app_context():
+        first_run = {
+            c.slug: (c.id, c.name, c.description, c.value)
+            for c in Challenge.query.filter_by(course_id="course_1")
+        }
+        db.session.rollback()
+    assert {slug: row[1:] for slug, row in first_run.items()} == {
+        "salazar-part-1": ("Salazar", "first", 2),
+        "salazar-part-2": ("Salazar", "second", 2),
+        "salazar-part-3": ("Salazar", "third", 3),
+        "crossing": ("Crossing", "alone", 1),
+    }
+
+    assert "Successfully inserted 0 and updated 4 challenges." in _run_seed(
+        test_app, _SAME_NAME_LEVELS_CSV
+    )
+
+    with test_app.app_context():
+        second_run = {
+            c.slug: (c.id, c.name, c.description, c.value)
+            for c in Challenge.query.filter_by(course_id="course_1")
+        }
+        db.session.rollback()
+    assert second_run == first_run
+
+
+def test_seed_command_does_not_take_over_a_row_with_the_same_name(test_app):
+    with test_app.app_context():
+        db.session.add(
+            Challenge(
+                name="Salazar",
+                slug="made-by-hand",
+                domain="www.ozaria.com",
+                course_id="course_1",
+                description="kept",
+                difficulty="Easy",
+                value=0.5,
+            )
+        )
+        db.session.commit()
+
+    assert "Successfully inserted 4 and updated 0 challenges." in _run_seed(
+        test_app, _SAME_NAME_LEVELS_CSV
+    )
+
+    with test_app.app_context():
+        kept = Challenge.query.filter_by(slug="made-by-hand").one()
+        assert (kept.name, kept.description, kept.difficulty, kept.value) == (
+            "Salazar",
+            "kept",
+            "Easy",
+            0.5,
+        )
+        assert Challenge.query.filter_by(name="Salazar").count() == 4
+        db.session.rollback()
+
+
+def test_seed_command_skips_only_the_rows_the_database_rejects(test_app):
+    """A database that has not been migrated yet still refuses a second level with
+    the same name. Those rows are skipped and reported; the rest are seeded."""
+    with test_app.app_context():
+        db.session.execute(
+            sa.text("CREATE UNIQUE INDEX uq_test_name_domain ON challenges (name, domain)")
+        )
+        db.session.commit()
+
+    for expected in ("inserted 2 and updated 0", "inserted 0 and updated 2"):
+        output = _run_seed(test_app, _SAME_NAME_LEVELS_CSV)
+
+        assert f"Successfully {expected} challenges. Skipped 2 rows" in output
+        assert "its schema is older than the models" in output
+        # `flask db upgrade` alone is wrong for a database create_all built
+        assert "`flask db upgrade`, or for a development database" in output
+        assert "delete it or stamp it and then upgrade" in output
+        assert "Skipping challenge 'salazar-part-2': UNIQUE constraint failed" in output
+        assert "Skipping challenge 'salazar-part-3': UNIQUE constraint failed" in output
+        assert "Error seeding challenges" not in output
+        with test_app.app_context():
+            slugs = {c.slug for c in Challenge.query.filter_by(course_id="course_1")}
+            assert slugs == {"salazar-part-1", "crossing"}
+            db.session.rollback()
+
+
+def _seed_file_rows(filename):
+    """The rows of a seed file as it is in the repository."""
+    path = Path(__file__).resolve().parents[2] / "instance" / "migration" / filename
+    with open(path, encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def test_seed_command_gives_a_new_database_its_courses_and_achievements(test_app):
+    courses = _seed_file_rows("courses_seed.csv")
+    achievements = _seed_file_rows("achievements_seed.csv")
+    assert courses and achievements
+
+    output = _run_seed(test_app, courses_csv=None, achievements_csv=None)
+
+    assert f"Successfully inserted {len(courses)} new courses" in output
+    assert f"Successfully inserted {len(achievements)} new achievements" in output
+    with test_app.app_context():
+        stored_courses = {c.id: c for c in Course.query.all()}
+        for row in courses:
+            course = stored_courses[row["id"]]
+            assert (course.name, course.domain, course.description) == (
+                row["name"],
+                row["domain"],
+                row["description"],
+            )
+            assert course.default_challenge_value == float(row["default_challenge_value"])
+            assert course.is_active is True
+
+        # Same order as the file, so a new database numbers them the same way
+        stored = Achievement.query.order_by(Achievement.id).all()
+        assert [a.slug for a in stored] == [row["slug"] for row in achievements]
+        for achievement, row in zip(stored, achievements, strict=True):
+            assert achievement.to_dict() == {
+                "id": achievement.id,
+                "slug": row["slug"],
+                "name": row["name"],
+                "type": row["type"],
+                "reward": int(row["reward"]),
+                "description": row["description"] or None,
+                "requirement_value": row["requirement_value"] or None,
+                "source": row["source"] or None,
+            }
+        db.session.rollback()
+
+    # Seeding again adds nothing
+    output = _run_seed(test_app, courses_csv=None, achievements_csv=None)
+
+    assert "Successfully inserted 0 new courses" in output
+    assert "Successfully inserted 0 new achievements" in output
+    with test_app.app_context():
+        assert Achievement.query.count() == len(achievements)
+        db.session.rollback()
+
+
+def test_seed_command_never_changes_an_existing_course_or_achievement(test_app):
+    with test_app.app_context():
+        db.session.add(
+            Course(
+                id="course_1",
+                name="Renamed by an admin",
+                domain="codecombat.com",
+                description="Edited",
+                is_active=False,
+                default_challenge_value=3,
+            )
+        )
+        db.session.add(
+            Achievement(
+                slug="first-duck",
+                name="Renamed by an admin",
+                type="ducks",
+                reward=7,
+                description="Edited",
+                requirement_value="2",
+                source="edited",
+            )
+        )
+        db.session.commit()
+
+    output = _run_seed(
+        test_app,
+        courses_csv=_COURSE_CSV_HEADER
+        + "course_1,CS1,codecombat.com,No description provided.,0\n"
+        + "course_2,Chapter3,www.ozaria.com,,1.5\n",
+        achievements_csv=_ACHIEVEMENT_CSV_HEADER
+        + "first-duck,First Duck,Earn your first duck,ducks,1,1,\n"
+        + "duckling,Duckling,Earn 10 ducks,ducks,10,5,\n",
+    )
+
+    assert "Successfully inserted 1 new courses (existing ones are left as they are)." in output
+    assert "Successfully inserted 1 new achievements (existing ones are left as they are)." in output
+    with test_app.app_context():
+        edited = db.session.get(Course, "course_1")
+        assert (
+            edited.name,
+            edited.description,
+            edited.is_active,
+            edited.default_challenge_value,
+        ) == ("Renamed by an admin", "Edited", False, 3)
+        added = db.session.get(Course, "course_2")
+        # A blank description falls back to the default of the model
+        assert (added.name, added.description, added.default_challenge_value) == (
+            "Chapter3",
+            "No description provided.",
+            1.5,
+        )
+
+        kept = Achievement.query.filter_by(slug="first-duck").one()
+        assert (kept.name, kept.reward, kept.description, kept.requirement_value, kept.source) == (
+            "Renamed by an admin",
+            7,
+            "Edited",
+            "2",
+            "edited",
+        )
+        new = Achievement.query.filter_by(slug="duckling").one()
+        assert (new.name, new.type, new.reward, new.requirement_value, new.source) == (
+            "Duckling",
+            "ducks",
+            5,
+            "10",
+            None,
+        )
+        db.session.rollback()
+
+
+def test_seed_command_skips_blank_and_repeated_definition_rows(test_app):
+    output = _run_seed(
+        test_app,
+        courses_csv=_COURSE_CSV_HEADER
+        + ",No Id,codecombat.com,,\n"
+        + "course_1,First,codecombat.com,,\n"
+        + "course_1,Again,codecombat.com,,\n",
+        achievements_csv=_ACHIEVEMENT_CSV_HEADER
+        + ",No Slug,,ducks,1,1,\n"
+        + "twice,First,,ducks,1,,\n"
+        + "twice,Again,,ducks,1,9,\n",
+    )
+
+    assert "Successfully inserted 1 new courses" in output
+    assert "Successfully inserted 1 new achievements" in output
+    with test_app.app_context():
+        assert db.session.get(Course, "course_1").name == "First"
+        only = Achievement.query.filter_by(slug="twice").one()
+        # A blank reward means the default of 1
+        assert (only.name, only.reward) == ("First", 1)
+        db.session.rollback()
+
+
+def test_a_definition_file_that_cannot_be_used_does_not_stop_the_rest(test_app):
+    output = _run_seed(
+        test_app,
+        challenges_csv=_LEVEL_CSV_HEADER + "Level,level,www.ozaria.com,course_1,desc,Easy,1\n",
+        courses_csv=_COURSE_CSV_HEADER + "course_1,First,codecombat.com,,\n",
+        achievements_csv=_ACHIEVEMENT_CSV_HEADER
+        + "fine,Fine,,ducks,1,1,\n"
+        + "broken,Broken,,ducks,1,many,\n",
+    )
+
+    assert "Successfully inserted 1 new courses" in output
+    assert "Error seeding achievements: invalid literal for int()" in output
+    assert "Successfully inserted 1 and updated 0 challenges." in output
+    with test_app.app_context():
+        # Nothing from the file that failed is kept
+        assert Achievement.query.count() == 0
+        db.session.rollback()
+
+
+def test_the_seed_files_in_the_repository_fit_together():
+    courses = _seed_file_rows("courses_seed.csv")
+    achievements = _seed_file_rows("achievements_seed.csv")
+    levels = _seed_file_rows("level_seed_data.csv")
+
+    course_ids = [row["id"] for row in courses]
+    slugs = [row["slug"] for row in achievements]
+    assert len(set(course_ids)) == len(course_ids)
+    assert len(set(slugs)) == len(slugs)
+    assert all(row["id"] and row["name"] and row["domain"] for row in courses)
+
+    # Every seeded level belongs to a seeded course
+    assert {row["course_id"] for row in levels} <= set(course_ids)
+
+    # The types the achievement engine knows how to check
+    known_types = {
+        "ducks",
+        "project",
+        "progress",
+        "chat",
+        "consistency",
+        "community",
+        "session",
+        "trade",
+        "certificate",
+    }
+    domains = {row["domain"] for row in courses}
+    for row in achievements:
+        assert row["name"] and row["type"] in known_types, row["slug"]
+        assert int(row["reward"]) >= 0, row["slug"]
+        assert int(row["requirement_value"]) >= 1, row["slug"]
+        if row["type"] == "certificate":
+            # A certificate is found through the course it is for
+            assert row["slug"] in course_ids, row["slug"]
+        if row["type"] == "progress":
+            assert row["source"] in domains, row["slug"]
 
 
 def test_seed_command_csv_exception(test_app):

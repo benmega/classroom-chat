@@ -362,6 +362,39 @@ def test_pass_chapter_for_3d_course(client, sample_admin, sample_user, seeded):
     assert ChallengeLog.query.filter_by(user_id=user.id).count() == 6
 
 
+def test_pass_chapter_awards_fractional_rewards(client, sample_admin, sample_user, init_db):
+    login_as_admin(client, sample_admin)
+    for n, value in enumerate([0.1, 0.2, 1.5]):
+        db.session.add(
+            Challenge(
+                name=f"Fraction {n}",
+                slug=f"fraction-{n}",
+                domain="codecombat.com",
+                difficulty="Medium",
+                value=value,
+                course_id="fractions",
+            )
+        )
+    db.session.commit()
+    ducks_before = sample_user.duck_balance
+
+    resp = client.post(
+        f"/api/admin/user/{sample_user.id}/pass_chapter_preview",
+        json={"course_id": "fractions"},
+    )
+    assert resp.status_code == 200
+    # 0.1 + 0.2 + 1.5 is 1.8000000000000003 in binary floating point
+    assert resp.get_json()["data"]["preview"]["ducks_to_award"] == 1.8
+
+    resp = client.post(
+        f"/api/admin/user/{sample_user.id}/pass_chapter", json={"course_id": "fractions"}
+    )
+    assert resp.status_code == 200
+    assert "Awarded 1.8 ducks and completed 3 challenges" in resp.get_json()["data"]["message"]
+    db.session.expire_all()
+    assert db.session.get(User, sample_user.id).duck_balance == pytest.approx(ducks_before + 1.8)
+
+
 # ------------------------------------------------------------ track resolution
 
 
@@ -494,3 +527,29 @@ def test_grant_challenge_completion_is_idempotent(seeded, sample_user):
     assert sample_user.duck_balance == before + 1
     assert sample_user.active_track == "3d"
     assert len(THREE_D_COURSES) == 2 and len(THREE_D_CHALLENGES) == 9
+
+
+@pytest.mark.parametrize(
+    "value, multiplier, expected",
+    [(1.5, 1, 1.5), (0.5, 1, 0.5), (1.5, 2, 3.0), (0.3, 1.5, 0.45)],
+)
+def test_grant_challenge_completion_awards_fractional_rewards(
+    init_db, sample_user, value, multiplier, expected
+):
+    from application.services.challenge_completion import grant_challenge_completion
+
+    ch = Challenge(
+        name="Fraction", slug="fraction", domain="codecombat.com", difficulty="Medium", value=value
+    )
+    db.session.add(ch)
+    db.session.commit()
+    before = sample_user.duck_balance
+
+    assert grant_challenge_completion(
+        sample_user, ch, duck_multiplier=multiplier, evaluate=False
+    ) is True
+
+    db.session.refresh(sample_user)
+    assert sample_user.duck_balance == pytest.approx(before + expected)
+    transaction = DuckTransaction.query.filter_by(user_id=sample_user.id).one()
+    assert transaction.amount == pytest.approx(expected)

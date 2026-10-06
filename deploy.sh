@@ -269,11 +269,6 @@ PYEOF
     echo "Applying migrations..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db upgrade
 
-    # Run the data-seeding script (inserts reserved rows, backfills enrolments, etc.).
-    # This is intentionally separate from Alembic — it handles data, not schema.
-    echo "Running data seeding script..."
-    run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m tools.migrate_classroom
-
     echo "Running standard data seeds (projects, challenges, instances)..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask seed
 

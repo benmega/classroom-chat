@@ -4,8 +4,12 @@ Type: py
 Summary: Unit tests for the Configuration model.
 """
 
+import pytest
 from application import db
 from application.models.configuration import Configuration
+from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
+from tests.factories import ConfigurationFactory
 
 
 def test_configuration_to_dict_has_no_ai_teacher_flag(init_db):
@@ -44,15 +48,59 @@ def test_get_or_create_creates_the_defaults_once(init_db):
     assert Configuration.query.count() == 1
 
 
-def test_configuration_lookups_pick_the_oldest_row_when_duplicates_exist(init_db):
-    Configuration.query.delete()
-    older = Configuration(duck_multiplier=2.0)
-    newer = Configuration(duck_multiplier=3.0)
-    db.session.add(older)
-    db.session.commit()
-    db.session.add(newer)
+def test_a_second_configuration_row_is_refused_by_the_database(init_db):
+    db.session.add(Configuration(duck_multiplier=2.0))
     db.session.commit()
 
-    assert Configuration.get_current().id == older.id
-    assert Configuration.get_or_create().id == older.id
-    assert Configuration.query.count() == 2
+    for second in (Configuration(duck_multiplier=3.0), Configuration(id=2)):
+        db.session.add(second)
+        with pytest.raises(IntegrityError):
+            db.session.commit()
+        db.session.rollback()
+
+    # Not through SQL that bypasses the model either
+    with pytest.raises(IntegrityError):
+        db.session.execute(
+            text("INSERT INTO configuration (id, duck_multiplier) VALUES (2, 3.0)")
+        )
+    db.session.rollback()
+    with pytest.raises(IntegrityError):
+        db.session.execute(text("UPDATE configuration SET id = 2"))
+    db.session.rollback()
+
+    assert Configuration.query.count() == 1
+    assert Configuration.get_current().duck_multiplier == 2.0
+    assert Configuration.get_or_create().duck_multiplier == 2.0
+
+
+def test_the_configuration_row_always_has_id_one(init_db):
+    first = Configuration.get_or_create()
+    db.session.commit()
+    assert first.id == Configuration.SINGLETON_ID == 1
+
+    # Deleted and created again, it is still row 1
+    db.session.delete(first)
+    db.session.commit()
+    assert Configuration.get_current() is None
+
+    again = Configuration.get_or_create()
+    db.session.commit()
+    assert again.id == 1
+    assert Configuration.query.count() == 1
+
+
+def test_configuration_factory_sets_values_on_the_existing_row(init_db):
+    created = ConfigurationFactory(duck_multiplier=2.0)
+    assert (created.id, created.message_sending_enabled, created.duck_multiplier) == (
+        1,
+        True,
+        2.0,
+    )
+
+    same = ConfigurationFactory(message_sending_enabled=False, duck_multiplier=3.0)
+
+    assert same.id == created.id
+    db.session.expire_all()
+    current = Configuration.get_current()
+    assert (current.message_sending_enabled, current.duck_multiplier) == (False, 3.0)
+    assert Configuration.query.count() == 1

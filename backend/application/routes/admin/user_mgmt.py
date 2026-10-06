@@ -956,7 +956,8 @@ def pass_chapter_preview(user_id):
 
     missing_challenges = [c for c in challenges if c.slug not in existing_slugs]
 
-    total_ducks = sum(c.scale_value() for c in missing_challenges)
+    # Rounded so a sum of fractional rewards does not show binary noise
+    total_ducks = round(sum(c.scale_value() for c in missing_challenges), 2)
 
     # Check if there are any certificates related to this course
     # Assuming certificate achievement source is course_id
@@ -1032,7 +1033,7 @@ def pass_chapter(user_id):
 
     # Ducks are optional: the admin may grant the credit without the reward.
     award_ducks = data.get("award_ducks", True) is not False
-    awarded_ducks = total_ducks if award_ducks else 0
+    awarded_ducks = round(total_ducks, 2) if award_ducks else 0
 
     # Manually bypass duck caps for this admin override
     if awarded_ducks > 0:
@@ -1068,7 +1069,7 @@ def pass_chapter(user_id):
 
     return {
         "success": True,
-        "message": f"Successfully passed {course_id} for user. Awarded {awarded_ducks} ducks and completed {len(missing_challenges)} challenges.",
+        "message": f"Successfully passed {course_id} for user. Awarded {awarded_ducks:g} ducks and completed {len(missing_challenges)} challenges.",
     }
 
 @admin_bp.route("/user/<int:user_id>/generate_certificate", methods=["POST"])

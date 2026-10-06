@@ -39,7 +39,10 @@ class UserAchievement(db.Model):  # type: ignore[name-defined,misc]
     __tablename__ = "user_achievement"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     achievement_id = db.Column(
         db.Integer, db.ForeignKey("achievement.id"), nullable=False, index=True

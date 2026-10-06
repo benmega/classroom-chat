@@ -8,9 +8,9 @@ The project uses SQLite (in both local development and production) managed throu
 - **Development / testing**: SQLite (`DEV_DATABASE_URI`, default `backend/instance/dev_users.db`).
 - **Production**: `DATABASE_URL`, set by `deploy.yml` to the SQLite file `backend/instance/prod_users.db`.
 - **Schema management**: production schema changes go through Alembic (`backend/migrations/`,
-  applied by `deploy.sh` with `flask db upgrade`, followed by `python -m tools.migrate_classroom`
-  and `flask seed`; a brand-new database is first created with `db.create_all()` and stamped to
-  head). `db.create_all()` is otherwise only run outside production (`application/__init__.py`).
+  applied by `deploy.sh` with `flask db upgrade`, followed by `flask seed`; a brand-new database
+  is first created with `db.create_all()` and stamped to head). `db.create_all()` is otherwise
+  only run outside production (`application/__init__.py`).
   The full ordered list and the rules for schema and data changes are in the "Database upgrade
   path" section of [infrastructure_and_devops.md](infrastructure_and_devops.md#8-database-migrations).
 
@@ -113,4 +113,9 @@ The central entity for authentication and student tracking.
 
 ## 4. Integrity & Hooks
 - **Slugging**: `before_insert` event on the `User` model automatically generates unique URL-friendly slugs from nicknames.
-- **Cascading Deletes**: Relationships like `achievements` and `notes` are configured with `cascade="all, delete-orphan"` to ensure cleanup when a user is removed.
+- **Cascading Deletes**: Deleting a user deletes every row that belongs to it (projects, skills, notes, achievements, certificates, messages, duck transactions and trades, challenge logs, submissions, course instance requests, session logs, a parent's messages to the teacher, ...) through `cascade="all, delete-orphan"` relationships on the models. A parent message whose resolving admin is deleted stays and only loses `resolved_by_id`. Every foreign key to `users.id` declares the same rule (`ON DELETE CASCADE`, `SET NULL` for `resolved_by_id`); the relationships do the work, so a delete does not depend on SQLite enforcing foreign keys. Deleting a classroom deletes its course instances and clears `classroom_id` on the challenges and submissions that referred to it. `backend/tests/app/models/test_user_deletion.py` and `test_classroom_deletion.py` fail when a foreign key to `users.id` or `classrooms.id` is added without a row for it in those tests.
+- **Submission files**: A deleted `submissions` row takes its uploaded file with it, whether the row is deleted on its own or with its user (listeners in `backend/application/models/submission.py`). The file under `UPLOAD_FOLDER` is removed once the delete is committed; a rollback keeps the row and the file. The listeners see deletes made through the ORM (`db.session.delete` and relationship cascades), not a bulk `query.delete()`. The stored files of notes and project images are not covered: only their own delete routes remove them.
+- **Rules held by the database** (declared on the models and added to existing databases by migrations):
+    - `challenge_logs`: one row per `(user_id, challenge_slug, course_instance)` (unique index `uq_challenge_logs_user_slug_instance`), and one row per `(user_id, challenge_slug)` among the rows without a course instance (partial unique index `uq_challenge_logs_user_slug_no_instance`).
+    - `session_logs`: one open session (`end_time IS NULL`) per user (partial unique index `uq_session_logs_one_open_per_user`).
+    - `configuration`: a single row, with `id = 1` (CHECK constraint `ck_configuration_singleton`).

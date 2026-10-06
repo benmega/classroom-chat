@@ -12,7 +12,9 @@ class CourseInstanceRequest(db.Model):
     __tablename__ = "course_instance_requests"
 
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    student_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
 
     course_instance_id = db.Column(db.String(64), nullable=False)
     requested_course_id = db.Column(db.String(64), nullable=True)

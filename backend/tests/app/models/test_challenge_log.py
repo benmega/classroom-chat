@@ -91,3 +91,43 @@ def test_challenge_log_with_optional_fields(init_db):
 
     assert challenge_log.course_id is None
     assert challenge_log.course_instance is None
+
+
+def _log(user_id, slug, instance):
+    return ChallengeLog(
+        user_id=user_id,
+        domain="codecombat.com",
+        challenge_slug=slug,
+        course_instance=instance,
+    )
+
+
+@pytest.mark.parametrize("instance", ["spring2025", None])
+def test_challenge_log_is_unique_per_user_challenge_and_instance(init_db, instance):
+    """The database refuses a second log, with or without a course instance."""
+    db.session.add(_log(1, "level-one", instance))
+    db.session.commit()
+
+    db.session.add(_log(1, "level-one", instance))
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+
+    assert ChallengeLog.query.count() == 1
+
+
+def test_challenge_log_may_repeat_for_another_instance_challenge_or_user(init_db):
+    db.session.add_all(
+        [
+            _log(1, "level-one", "spring2025"),
+            _log(1, "level-one", "winter2025"),
+            _log(1, "level-one", None),
+            _log(1, "level-two", "spring2025"),
+            _log(1, "level-two", None),
+            _log(2, "level-one", "spring2025"),
+            _log(2, "level-one", None),
+        ]
+    )
+    db.session.commit()
+
+    assert ChallengeLog.query.count() == 7

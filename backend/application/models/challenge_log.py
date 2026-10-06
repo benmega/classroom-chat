@@ -6,7 +6,10 @@ class ChallengeLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     domain = db.Column(db.String(100), nullable=False)
     challenge_slug = db.Column(db.String(255), nullable=False)
@@ -18,13 +21,26 @@ class ChallengeLog(db.Model):
     helper = db.Column(db.String(100), nullable=True)
 
     __table_args__ = (
-        # Composite index: speeds up filter_by(user_id=..., challenge_slug=..., course_instance=...)
-        # on every challenge submission (uniqueness check on the critical path).
+        # One log per user, challenge and course instance. The same index serves the
+        # filter_by(user_id=..., challenge_slug=..., course_instance=...) lookup that
+        # every challenge submission makes.
         db.Index(
-            "ix_challenge_log_user_slug_instance",
+            "uq_challenge_logs_user_slug_instance",
             "user_id",
             "challenge_slug",
             "course_instance",
+            unique=True,
+        ),
+        # NULLs never collide in the index above, so a log without a course instance
+        # (a completion that was granted, not submitted) gets its own rule: one per
+        # user and challenge.
+        db.Index(
+            "uq_challenge_logs_user_slug_no_instance",
+            "user_id",
+            "challenge_slug",
+            unique=True,
+            sqlite_where=db.text("course_instance IS NULL"),
+            postgresql_where=db.text("course_instance IS NULL"),
         ),
     )
 

@@ -17,7 +17,7 @@ still served by the EC2 Flask backend (`api-blossom.benmega.com`, the `VITE_API_
 │   ├── application/             # Flask app factory + routes
 │   ├── requirements.txt
 │   ├── migrations/              # Alembic migrations (run by deploy.sh)
-│   ├── tools/                   # tools/migrate_classroom.py (run by deploy.sh)
+│   ├── tools/                   # Manual maintenance scripts (deploy.sh runs none of them)
 │   ├── .env                     # NOT committed — injected by deploy.yml
 │   └── instance/
 │       ├── prod_users.db        # Production SQLite database
@@ -184,7 +184,7 @@ It covers:
 ## 6. CI/CD Pipeline (GitHub Actions)
 
 - **`deploy-frontend.yml`**: Triggers on push to `deploy`. Builds the React SPA and uploads the static assets directly to the AWS S3 bucket. Runs are serialised (`concurrency` group); a newer push queues behind an in-flight run instead of cancelling it.
-- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, online SQLite DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)). Runs are serialised (`concurrency` group) so two deploys never run `deploy.sh` at the same time.
+- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, online SQLite DB backup, `flask db upgrade`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)). Runs are serialised (`concurrency` group) so two deploys never run `deploy.sh` at the same time.
 - **`lint.yml`**: Ruff (Python) + ESLint (React) on every PR and on pushes to `main`/`master`/`working`. Also the lint gate for both deploy workflows.
 - **`tests.yml`**: On pushes and PRs to `main`/`master`: a backend job (mypy, Alembic single-head check, Pytest) and a frontend job (Vitest with coverage, Playwright E2E against a locally started backend). Also the test gate for both deploy workflows.
 - **`ai-coder.yml`**: the single AI workflow; runs when an issue or pull request receives the `ai-plan` label
@@ -232,17 +232,19 @@ does not match the code.
 4. **Dangling-stamp purge**: if `flask db current` fails because `alembic_version` points at a
    revision that no longer exists, `flask db stamp base --purge` clears the stamp.
 5. **`flask db upgrade`**: applies the pending migrations (a no-op on a fresh install).
-6. **`python -m tools.migrate_classroom`**: idempotent *data* steps only (the reserved `global` and
-   `archive` classrooms, enrolment backfills, archiving orphaned conversations, admin roles). It
-   contains no DDL and is safe to re-run.
-7. **`flask seed`**: seed data that is backed by files in the repo: course instances
-   (`backend/instance/migration/course_instances_seed.csv`; rows whose classroom or course does
-   not exist are skipped with a warning), challenges (`level_seed_data.csv`) and the standard
-   project templates (`application/commands/projects_data.py`).
-8. **Admin role**: `sqlite3 ... UPDATE users SET role='admin' WHERE LOWER(username)='ben'`.
+6. **`flask seed`**: seed data that is backed by files in the repo: courses and achievements
+   (`backend/instance/migration/courses_seed.csv` and `achievements_seed.csv`; insert-only, a
+   row that already exists is never changed), course instances
+   (`course_instances_seed.csv`; rows whose classroom or course does
+   not exist are skipped with a warning), challenges (`level_seed_data.csv`, keyed on the slug)
+   and the standard project templates (`application/commands/projects_data.py`).
+7. **Admin role**: `sqlite3 ... UPDATE users SET role='admin' WHERE LOWER(username)='ben'`.
 
 After that the service restarts and the health check runs; if it fails, the code is reset to the
 previous commit and the step 1 backup is restored.
+
+The reserved `global` and `archive` classrooms are not a deploy step: `seed_global_data()` in
+`application/__init__.py` creates them whenever the app starts, which includes `flask seed`.
 
 The bootstrap in step 3 exists because the root revision (`3a10e78a7fd0`) is an empty placeholder:
 the history upgrades an existing schema and cannot build one from nothing (`flask db upgrade` on a
@@ -254,18 +256,49 @@ blank database fails with `NoSuchTableError: users`).
   review the generated file and commit it with the model change. Run `flask db heads` before
   pushing; there must be exactly one head. `backend/scripts/lint_migrations.py` (run by
   `scripts/preflight.ps1`) lints migrations for idempotency.
+- `backend/tests/test_schema.py` fails when a model changes without a migration. It upgrades the
+  schema of a long-lived database (`backend/tests/schemas/legacy_b2fd06ed54ab.sql`, no rows) to
+  head and compares the result with the models, checks that a database built from the models and
+  stamped needs no migration, and that there is one head. The comparison includes CHECK
+  constraints and the `WHERE` clause of partial indexes, which Alembic's own autogenerate skips.
 - No raw-SQL or one-off database scripts (ad hoc `sqlite3` files, `ALTER TABLE` snippets, helper
-  scripts kept under `backend/instance/`). Steps 2 and 8 above are the only raw SQL left in
+  scripts kept under `backend/instance/`). Steps 2 and 7 above are the only raw SQL left in
   `deploy.sh`; do not add more.
-- A data fix is either an Alembic data migration (runs once) or an idempotent step in
-  `tools/migrate_classroom.py` (runs on every deploy). Never put DDL in `tools/migrate_classroom.py`.
+- A data fix is an Alembic data migration (runs once). Data that every install needs is an
+  idempotent upsert in `flask seed` (runs on every deploy). `tools/migrate_classroom.py`, which
+  used to run data steps on every deploy, is retired: it does nothing, `deploy.sh` no longer runs
+  it, and it must not gain new steps. The file is deleted once a deploy has run without it.
 - `db.create_all()` does not ALTER existing tables, so never rely on it for schema changes. The
   app factory only calls it outside production; `deploy.sh` uses it once to bootstrap a brand-new
-  database before stamping it to head.
+  database before stamping it to head. A new model table therefore needs a `create_table`
+  migration like any other change. In development the factory also compares the database with the
+  models at startup and logs a schema-drift report (`application/utilities/schema_check.py`).
 
-Create a new migration on a development machine (from `backend/`, with `FLASK_APP=main.py`):
+### Development databases
+
+A development database is normally built by `create_all`, so Alembic has no revision for it, and
+`create_all` never alters a table that already exists. After a pull that changes the models the
+next start therefore logs the schema-drift report. What to do depends on the database (commands
+from `backend/`, with `FLASK_APP=main.py`):
+
+- **Built by `create_all` (no Alembic revision)**: delete the database file and the next start
+  builds a new one. To keep its data instead, stamp it with the revision that was head when it was
+  built and upgrade from there: `flask db stamp <revision>`, then `flask db upgrade`. `flask db
+  heads` at the commit the database was built from prints that revision; for a database built
+  just before the constraint migrations of October 2026 it is `5c02b3fd911f`. Do not run
+  `flask db upgrade` without the stamp (it replays the whole history against a schema that already
+  has most of it and fails part-way), and do not run `flask db migrate` (it refuses a database
+  that is not at head, and the migrations for a pulled change already exist).
+- **Stamped** (it was upgraded with `flask db upgrade` before): run `flask db upgrade`.
+
+Only a model change of your own needs a new migration. The database has to be at head first, as
+above (`flask db stamp head` for a database that `create_all` built from the code you started
+from). Then:
 
 ```bash
 flask db migrate -m "describe the change"
 flask db upgrade
 ```
+
+`flask seed` reports rows that the database rejected when its schema is older than the models;
+the same steps apply before seeding again.

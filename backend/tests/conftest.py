@@ -28,7 +28,7 @@ from application.models.user import User
 from application.services import moderation_service
 from flask_login import LoginManager
 from PIL import Image
-from sqlalchemy import event
+from sqlalchemy import event, text
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -83,6 +83,9 @@ def test_app(_isolated_upload_folder):
             return db.session.get(User, int(user_id))
 
     with app.app_context():
+        # create_app() has added its start-up rows (the default configuration).
+        # The first test starts as every later one does: with empty tables.
+        db.drop_all()
         db.create_all()
         yield app
         db.session.remove()
@@ -215,6 +218,17 @@ def init_db(test_app):
         yield db
         db.session.rollback()
         db.drop_all()
+
+
+@pytest.fixture
+def several_open_sessions_allowed(init_db):
+    """Turn the test database into one from before the one-open-session index.
+
+    Only such a database can hold several open sessions of one user. The code
+    that closes or skips the older ones is tested against it.
+    """
+    db.session.execute(text("DROP INDEX uq_session_logs_one_open_per_user"))
+    db.session.commit()
 
 
 def generate_random_slug(length=10):

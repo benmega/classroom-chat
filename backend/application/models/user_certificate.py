@@ -7,7 +7,9 @@ from ..utilities.helper_functions import utcnow_naive
 class UserCertificate(db.Model):
     __tablename__ = "user_certificate"
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
     achievement_id = db.Column(
         db.Integer, db.ForeignKey("achievement.id"), nullable=False
     )

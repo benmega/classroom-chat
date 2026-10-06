@@ -1,17 +1,23 @@
 """
 File: test_schema.py
 Type: py
-Summary: The database built by the Alembic migrations must match the models.
+Summary: The database the migrations produce must match the models.
 
-The shared test app builds its tables with db.create_all(), and so does create_app(),
-so comparing that database with the models can never fail. These tests build the
-schema the way production does, by running the migrations into a fresh SQLite file
-on a separate Flask app, and only then compare it with the models.
+The shared test app builds its tables with db.create_all(), and so does create_app()
+outside production, so comparing that database with the models can never fail. These
+tests build the schema the two ways a real database gets one, each time in a fresh
+SQLite file on a separate Flask app, and only then compare it with the models.
 
-Running the migrations from an empty database does not work today (the first
-migrations assume tables that already exist), so the two migration tests are marked
-xfail until GitHub issue #60 is resolved. The drift check itself is exercised by the
-other tests, against schemas built from the models.
+A new database: the migrations cannot build a schema from nothing (the root revision
+is an empty placeholder and the next ones alter tables that must already exist), so
+the supported path is db.create_all() followed by a stamp to head. deploy.sh does
+that when it finds no alembic_version table.
+
+An existing database: schemas/legacy_b2fd06ed54ab.sql is the schema of a long-lived
+database. `flask db upgrade` runs every later revision on it and the result must
+match the models. This is the test that fails when a model gains a table, column,
+index or constraint without a migration, or when a new migration cannot cope with
+DDL that differs from what the models generate.
 """
 
 import logging
@@ -26,18 +32,17 @@ import pytest
 import sqlalchemy as sa
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
-from alembic.util.exc import CommandError
+from alembic.script import ScriptDirectory
 from application.extensions import db
 from application.models import setup_models
 from flask import Flask
 from flask_migrate import Migrate
-from sqlalchemy.exc import SQLAlchemyError
 
 MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "migrations"
 
-# What xfail may swallow: the migrations failing on the database (or Alembic refusing
-# to run them), never a typo in the test itself.
-MIGRATION_ERRORS = (SQLAlchemyError, CommandError)
+# Schema only, no rows. The revision is the one that database was stamped with.
+LEGACY_SCHEMA = Path(__file__).resolve().parent / "schemas" / "legacy_b2fd06ed54ab.sql"
+LEGACY_REVISION = "b2fd06ed54ab"
 
 
 @pytest.fixture
@@ -141,9 +146,64 @@ def _without_sqlite_noise(diff):
     ]
 
 
+def _sql_text(clause):
+    """A CHECK or WHERE expression in one spelling, or None when there is none."""
+    return None if clause is None else " ".join(str(clause).lower().split())
+
+
+def _checks_and_partial_indexes(connection, metadata):
+    """The drift Alembic does not look for: CHECK constraints, and the WHERE clause
+    that makes an index a partial one.
+
+    Only tables and indexes that exist on both sides are compared here. A missing
+    table or index is already reported by Alembic.
+    """
+    inspector = sa.inspect(connection)
+    preparer = connection.dialect.identifier_preparer
+    existing_tables = set(inspector.get_table_names())
+    drift = []
+
+    for table in metadata.sorted_tables:
+        if table.name not in existing_tables:
+            continue
+
+        wanted = {
+            # format_constraint applies the naming convention of the metadata
+            preparer.format_constraint(check): _sql_text(check.sqltext)
+            for check in table.constraints
+            if isinstance(check, sa.CheckConstraint) and check.name is not None
+        }
+        found = {
+            check["name"]: _sql_text(check["sqltext"])
+            for check in inspector.get_check_constraints(table.name)
+        }
+        for name in sorted(set(wanted) - set(found)):
+            drift.append(("add_check", table.name, name))
+        for name in sorted(set(found) - set(wanted), key=str):
+            drift.append(("remove_check", table.name, name))
+        for name in sorted(set(wanted) & set(found)):
+            if wanted[name] != found[name]:
+                drift.append(("modify_check", table.name, name))
+
+        reflected = {ix["name"]: ix for ix in inspector.get_indexes(table.name)}
+        for index in sorted(table.indexes, key=lambda ix: ix.name):
+            if index.name not in reflected:
+                continue
+            wanted_where = _sql_text(index.dialect_options["sqlite"]["where"])
+            found_where = _sql_text(
+                reflected[index.name].get("dialect_options", {}).get("sqlite_where")
+            )
+            if wanted_where != found_where:
+                drift.append(("modify_index_where", table.name, index.name))
+
+    return drift
+
+
 def _schema_drift(engine, metadata):
     """What an Alembic autogenerate against `engine` would still want to change so the
-    database matches `metadata`. An empty list means no migration is missing.
+    database matches `metadata`, plus the differences in CHECK constraints and
+    partial indexes that Alembic does not compare. An empty list means no migration
+    is missing.
 
     Column types and server defaults are not compared: SQLite only keeps a type
     affinity and the text of a default, so they never reflect back faithfully.
@@ -154,41 +214,77 @@ def _schema_drift(engine, metadata):
             connection,
             opts={"compare_type": False, "compare_server_default": False},
         )
-        return _without_sqlite_noise(compare_metadata(context, metadata))
+        return _without_sqlite_noise(
+            compare_metadata(context, metadata)
+        ) + _checks_and_partial_indexes(connection, metadata)
     finally:
         connection.close()
 
 
-@pytest.mark.xfail(
-    strict=False,
-    raises=MIGRATION_ERRORS,
-    reason="flask db upgrade fails on an empty database: the first migrations assume "
-    "existing tables. Tracked in GitHub issue #60",
-)
-def test_migrations_run_on_an_empty_database(migration_app):
-    """`flask db upgrade` must build the whole schema from nothing."""
+def _head_revisions():
+    return set(ScriptDirectory(str(MIGRATIONS_DIR)).get_heads())
+
+
+def _stamped_revisions(engine):
+    with engine.connect() as connection:
+        return set(MigrationContext.configure(connection).get_current_heads())
+
+
+def _schema_sql(engine):
+    """Every table and index with the SQL that defines it, except Alembic's own table."""
+    with engine.connect() as connection:
+        rows = connection.execute(
+            sa.text("SELECT name, sql FROM sqlite_master WHERE name != 'alembic_version'")
+        )
+        return {name: sql for name, sql in rows}
+
+
+def _load_schema(engine, path):
+    connection = engine.raw_connection()
+    try:
+        connection.driver_connection.executescript(path.read_text(encoding="utf-8"))
+    finally:
+        connection.close()
+
+
+def test_the_migrations_have_exactly_one_head():
+    heads = _head_revisions()
+
+    assert len(heads) == 1, (
+        f"The migration history has {len(heads)} heads: {sorted(heads)}. A new "
+        "revision's down_revision must be the current head (`flask db heads`)."
+    )
+
+
+def test_a_new_database_is_built_from_the_models_and_stamped_to_head(migration_app):
+    """The supported way to create a database. Once it is stamped, the migrations
+    have nothing left to run on it and must leave it alone."""
+    db.create_all()
+    flask_migrate.stamp(directory=str(MIGRATIONS_DIR), revision="head")
+    schema_before = _schema_sql(db.engine)
+
     flask_migrate.upgrade(directory=str(MIGRATIONS_DIR))
 
-    tables = sa.inspect(db.engine).get_table_names()
-    assert "users" in tables
-    assert "alembic_version" in tables
+    assert _stamped_revisions(db.engine) == _head_revisions()
+    assert _schema_sql(db.engine) == schema_before
+    assert _schema_drift(db.engine, db.metadata) == []
 
 
-@pytest.mark.xfail(
-    strict=False,
-    raises=(*MIGRATION_ERRORS, AssertionError),
-    reason="needs a database the migrations can build, and any drift it reveals still "
-    "has to be triaged. Tracked in GitHub issue #60",
-)
-def test_migrated_schema_matches_models(migration_app):
+def test_upgrading_a_legacy_database_gives_the_schema_of_the_models(migration_app):
     """The schema the migrations build must match the models.
 
-    This catches a developer who adds a column to a model but forgets the migration.
+    This catches a developer who changes a model but forgets the migration, and a
+    migration that only works on a schema built from the models.
     """
+    _load_schema(db.engine, LEGACY_SCHEMA)
+    flask_migrate.stamp(directory=str(MIGRATIONS_DIR), revision=LEGACY_REVISION)
+    # The legacy schema is behind the models, or the comparison below proves nothing
+    assert _schema_drift(db.engine, db.metadata)
+
     flask_migrate.upgrade(directory=str(MIGRATIONS_DIR))
 
+    assert _stamped_revisions(db.engine) == _head_revisions()
     drift = _schema_drift(db.engine, db.metadata)
-
     assert not drift, (
         "Database schema built by the migrations does not match the models. "
         "Missing migrations?\nDifferences detected:\n"
@@ -196,8 +292,8 @@ def test_migrated_schema_matches_models(migration_app):
     )
 
 
-# The drift check itself. These run against schemas that exist today, so a broken
-# check shows up now and not on the day the migrations can be run from scratch.
+# The drift check itself, against schemas built from the models and by hand: a check
+# that reports nothing would make the two tests above pass whatever the migrations do.
 
 
 def test_drift_check_is_clean_for_a_schema_built_from_the_models(migration_app):
@@ -213,7 +309,11 @@ def test_drift_check_reports_a_missing_table(migration_app):
 
     drift = _schema_drift(db.engine, db.metadata)
 
-    assert [(kind, table.name) for kind, table in drift] == [("add_table", "skills")]
+    # The table is reported together with the index on it
+    assert [(kind, missing.name) for kind, missing in drift] == [
+        ("add_table", "skills"),
+        ("add_index", "ix_skills_user_id"),
+    ]
 
 
 def test_drift_check_reports_a_missing_column(migration_app):
@@ -311,6 +411,89 @@ def test_a_missing_unique_rule_is_still_drift():
     drift = _schema_drift(engine, _items_with_unique_name())
 
     assert [entry[0] for entry in drift] == ["add_constraint"]
+
+
+def _sessions_with_rules():
+    """One table with a named CHECK constraint and a partial unique index."""
+    metadata = sa.MetaData(naming_convention={"ck": "ck_%(table_name)s_%(constraint_name)s"})
+    sa.Table(
+        "sessions",
+        metadata,
+        sa.Column("id", sa.Integer, primary_key=True),
+        sa.Column("user_id", sa.Integer, nullable=False),
+        sa.Column("ended", sa.DateTime),
+        sa.CheckConstraint("id > 0", name="positive_id"),
+        sa.Index("uq_sessions_open", "user_id", unique=True, sqlite_where=sa.text("ended IS NULL")),
+    )
+    return metadata
+
+
+_SESSIONS = (
+    "CREATE TABLE sessions (id INTEGER NOT NULL PRIMARY KEY, user_id INTEGER NOT NULL,"
+    " ended DATETIME{check})"
+)
+_SESSIONS_CHECK = ", CONSTRAINT ck_sessions_positive_id CHECK (id > 0)"
+_SESSIONS_INDEX = "CREATE UNIQUE INDEX uq_sessions_open ON sessions (user_id){where}"
+_SESSIONS_WHERE = " WHERE ended IS NULL"
+
+
+def test_checks_and_partial_indexes_that_match_are_not_drift():
+    metadata = _sessions_with_rules()
+    engine = sa.create_engine("sqlite://", poolclass=sa.pool.StaticPool)
+    metadata.create_all(engine)
+
+    assert _schema_drift(engine, metadata) == []
+
+    # The same rules written by hand, in another spelling
+    engine = _engine_with(
+        [
+            _SESSIONS.format(check=", CONSTRAINT ck_sessions_positive_id CHECK (id  >  0)"),
+            _SESSIONS_INDEX.format(where=" where ended is null"),
+        ]
+    )
+    assert _schema_drift(engine, metadata) == []
+
+
+@pytest.mark.parametrize(
+    "check, expected",
+    [
+        ("", [("add_check", "sessions", "ck_sessions_positive_id")]),
+        (
+            ", CONSTRAINT ck_sessions_positive_id CHECK (id > 1)",
+            [("modify_check", "sessions", "ck_sessions_positive_id")],
+        ),
+        (
+            _SESSIONS_CHECK + ", CONSTRAINT ck_sessions_other CHECK (user_id > 0)",
+            [("remove_check", "sessions", "ck_sessions_other")],
+        ),
+    ],
+    ids=["missing", "different", "unknown to the models"],
+)
+def test_a_check_constraint_that_differs_is_drift(check, expected):
+    engine = _engine_with(
+        [
+            _SESSIONS.format(check=check),
+            _SESSIONS_INDEX.format(where=_SESSIONS_WHERE),
+        ]
+    )
+
+    assert _schema_drift(engine, _sessions_with_rules()) == expected
+
+
+@pytest.mark.parametrize(
+    "where", ["", " WHERE ended IS NOT NULL"], ids=["not partial", "another WHERE"]
+)
+def test_a_partial_index_with_another_where_clause_is_drift(where):
+    engine = _engine_with(
+        [
+            _SESSIONS.format(check=_SESSIONS_CHECK),
+            _SESSIONS_INDEX.format(where=where),
+        ]
+    )
+
+    assert _schema_drift(engine, _sessions_with_rules()) == [
+        ("modify_index_where", "sessions", "uq_sessions_open")
+    ]
 
 
 def test_running_the_migrations_leaves_logging_as_it_was():

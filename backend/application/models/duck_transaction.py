@@ -6,7 +6,10 @@ class DuckTransaction(db.Model):
     __tablename__ = "duck_transactions"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     amount = db.Column(db.Float, nullable=False)
     reason = db.Column(db.String(200), nullable=True)

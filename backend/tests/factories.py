@@ -137,11 +137,24 @@ class SkillFactory(BaseFactory):
     user_id = factory.LazyAttribute(lambda _: UserFactory().id)
 
 class ConfigurationFactory(BaseFactory):
+    """The configuration is a single row: the factory creates it, or sets its
+    values on the row that is already there."""
+
     class Meta:
         model = Configuration
 
     message_sending_enabled = True
     duck_multiplier = 1
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        config = model_class.get_current()
+        if config is None:
+            return super()._create(model_class, *args, **kwargs)
+        for name, value in kwargs.items():
+            setattr(config, name, value)
+        cls._meta.sqlalchemy_session.commit()
+        return config
 
 class BannedWordsFactory(BaseFactory):
     class Meta:

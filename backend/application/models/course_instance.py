@@ -15,9 +15,11 @@ class CourseInstance(db.Model):
     id = db.Column(db.String(64), primary_key=True)
 
     classroom_id = db.Column(
-        db.String(64), db.ForeignKey("classrooms.id"), nullable=False
+        db.String(64), db.ForeignKey("classrooms.id"), nullable=False, index=True
     )
-    course_id = db.Column(db.String(64), db.ForeignKey("courses.id"), nullable=True)
+    course_id = db.Column(
+        db.String(64), db.ForeignKey("courses.id"), nullable=True, index=True
+    )
     course = db.relationship("Course", backref="instances")
 
     created_at = db.Column(db.DateTime, default=utcnow_naive)
