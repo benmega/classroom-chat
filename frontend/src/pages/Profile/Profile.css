@@ -48,7 +48,7 @@
     z-index: 2;
 }
 
-.avatar-wrapper {
+:where(.profile-page, .report-card-page) .avatar-wrapper {
     position: relative;
     flex-shrink: 0;
     cursor: pointer;
@@ -60,11 +60,11 @@
     box-shadow: var(--shadow-md);
 }
 
-.avatar-wrapper:hover .upload-overlay {
+:where(.profile-page, .report-card-page) .avatar-wrapper:hover .upload-overlay {
     opacity: 1;
 }
 
-.upload-overlay {
+:where(.profile-page, .report-card-page) .upload-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -92,7 +92,7 @@
     transition: var(--transition-smooth);
 }
 
-.avatar-wrapper:hover .avatar-img {
+:where(.profile-page, .report-card-page) .avatar-wrapper:hover .avatar-img {
     transform: scale(1.02);
 }
 
@@ -115,7 +115,7 @@
     border-radius: var(--radius-md);
 }
 
-.modal-footer {
+.profile-modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
@@ -125,7 +125,7 @@
 }
 
 /* Specific adjustment for crop modal buttons area */
-.crop-modal-content .modal-footer {
+.crop-modal-content .profile-modal-footer {
     padding-bottom: 30px; /* Extra padding at bottom as requested */
 }
 
@@ -255,7 +255,7 @@
 /* =================================================================
    3. DASHBOARD GRID & PANELS
    ================================================================= */
-.dashboard-grid {
+:where(.profile-page, .report-card-page) .dashboard-grid {
     display: grid;
     grid-template-columns: 320px 1fr; /* Fixed width sidebar, flexible main area */
     gap: 30px;
@@ -269,7 +269,7 @@
     min-width: 0;
 }
 
-.dashboard-panel {
+:where(.profile-page, .report-card-page) .dashboard-panel {
     background: var(--bg-primary);
 
     border-radius: var(--radius-md);
@@ -358,7 +358,7 @@
     margin-left: auto;
 }
 
-.gap-sm {
+:where(.profile-page, .report-card-page) .gap-sm {
     gap: 8px;
 }
 
@@ -472,20 +472,20 @@
 }
 
 /* Proficiency borders matching levels: bronze / silver / gold are deliberate constants, not theme colours */
-.tech-skill-card.proficiency-1 { border-bottom: 3px solid #cd7f32; }
-.tech-skill-card.proficiency-2 { border-bottom: 3px solid #b0c4de; }
-.tech-skill-card.proficiency-3 { border-bottom: 3px solid #ffd700; }
+.tech-skill-card.proficiency-1 { border-bottom: 3px solid var(--bronze); }
+.tech-skill-card.proficiency-2 { border-bottom: 3px solid var(--silver); }
+.tech-skill-card.proficiency-3 { border-bottom: 3px solid var(--gold); }
 
 /* =================================================================
    6. PROJECTS PORTFOLIO
    ================================================================= */
-.projects-grid {
+:where(.profile-page, .report-card-page) .projects-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
 }
 
-.project-card {
+:where(.profile-page, .report-card-page) .project-card {
     background: var(--bg-primary);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
@@ -497,13 +497,13 @@
     overflow: hidden;
 }
 
-.project-card:hover {
+:where(.profile-page, .report-card-page) .project-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-md);
     border-color: var(--primary-color);
 }
 
-.project-card::before {
+:where(.profile-page, .report-card-page) .project-card::before {
     content: '';
     position: absolute;
     top: 0;
@@ -886,7 +886,7 @@ a.cert-item:hover {
     gap: 8px;
 }
 
-.btn-icon {
+:where(.profile-page, .report-card-page) .btn-icon {
     padding: 6px;
     border-radius: 4px;
     background: var(--bg-tertiary);
@@ -897,7 +897,7 @@ a.cert-item:hover {
     justify-content: center;
 }
 
-.btn-icon:hover {
+:where(.profile-page, .report-card-page) .btn-icon:hover {
     color: var(--primary-accessible);
     border-color: var(--primary-color);
 }
@@ -987,7 +987,7 @@ a.cert-item:hover {
 /* =================================================================
    MODALS
    ================================================================= */
-.modal-overlay, .slideshow-overlay {
+.profile-modal-overlay, .slideshow-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -1068,7 +1068,7 @@ a.cert-item:hover {
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    background: #000;
+    background: var(--video-backdrop);
     border-radius: var(--radius-md);
     overflow: hidden;
     margin-bottom: 2rem;
@@ -1118,13 +1118,13 @@ a.cert-item:hover {
    11. RESPONSIVE
    ================================================================= */
 @media (max-width: 1024px) {
-    .dashboard-grid {
+    :where(.profile-page, .report-card-page) .dashboard-grid {
         grid-template-columns: 1fr;
         padding: 0 15px;
     }
     
     .profile-header-card,
-    .dashboard-grid {
+    :where(.profile-page, .report-card-page) .dashboard-grid {
         max-width: 100%;
         margin-left: 15px;
         margin-right: 15px;
@@ -1134,12 +1134,12 @@ a.cert-item:hover {
 /* Extra wide screens optimization */
 @media (min-width: 1600px) {
     .profile-header-card,
-    .dashboard-grid {
+    :where(.profile-page, .report-card-page) .dashboard-grid {
         max-width: 1560px;
         gap: 40px;
     }
     
-    .dashboard-grid {
+    :where(.profile-page, .report-card-page) .dashboard-grid {
         grid-template-columns: 360px 1fr;
     }
     
@@ -1170,7 +1170,7 @@ a.cert-item:hover {
         padding: 0 15px 15px;
     }
 
-    .avatar-wrapper {
+    :where(.profile-page, .report-card-page) .avatar-wrapper {
         width: 120px;
         height: 120px;
         margin-top: -60px;
@@ -1198,13 +1198,13 @@ a.cert-item:hover {
         margin: 0 5px;
     }
 
-    .dashboard-panel {
+    :where(.profile-page, .report-card-page) .dashboard-panel {
         padding: 15px;
         margin-bottom: 20px;
     }
 
     /* Mobile horizontal scrolling for lists */
-    .projects-grid,
+    :where(.profile-page, .report-card-page) .projects-grid,
     .cert-list,
     .note-grid {
         display: flex;
@@ -1215,7 +1215,7 @@ a.cert-item:hover {
         -webkit-overflow-scrolling: touch;
     }
 
-    .project-card,
+    :where(.profile-page, .report-card-page) .project-card,
     .cert-item,
     .note-item {
         flex: 0 0 280px;
@@ -1230,7 +1230,7 @@ a.cert-item:hover {
     }
 }
 
-.modal-actions {
+.profile-modal-actions {
     display: flex;
     gap: 10px;
     margin-right: 40px; /* distance from close button */
@@ -1392,53 +1392,6 @@ a.cert-item:hover {
 
 .label-menu {
     color: var(--text-secondary);
-}
-
-/* Custom premium styling for the input range slider */
-.morph-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 8px;
-    border-radius: 9999px;
-    background: var(--border-subtle);
-    outline: none;
-    transition: background 150ms ease;
-    margin: 8px 0;
-}
-
-.morph-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid var(--bg-primary);
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-}
-
-.morph-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 3px 12px rgba(14, 178, 187, 0.6);
-}
-
-.morph-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid var(--bg-primary);
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-}
-
-.morph-slider::-moz-range-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 3px 12px rgba(14, 178, 187, 0.6);
 }
 
 .morph-slider-status {

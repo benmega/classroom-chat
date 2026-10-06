@@ -48,7 +48,6 @@ describe('useProjectManagement', () => {
         client.post.mockReset();
         mockNavigate.mockReset();
         mockUser = { id: 1, role: 'admin' };
-        vi.spyOn(window, 'confirm').mockReturnValue(true);
         window.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');
         window.URL.revokeObjectURL = vi.fn();
     });

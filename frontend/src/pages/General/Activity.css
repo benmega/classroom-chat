@@ -144,7 +144,7 @@
     color: var(--success-color);
 }
 
-.status-pill {
+:where(.activity-page) .status-pill {
     flex-shrink: 0;
     font-size: 0.68rem;
     font-weight: 800;
@@ -235,7 +235,7 @@
         flex-wrap: wrap;
     }
 
-    .status-pill {
+    :where(.activity-page) .status-pill {
         order: -1;
     }
 }

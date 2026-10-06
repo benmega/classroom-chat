@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import ScreenRecorder from './ScreenRecorder';
 
 const renderRecorder = () => render(
@@ -44,5 +44,40 @@ describe('ScreenRecorder setup controls', () => {
         fireEvent.keyDown(mic, { key: ' ' });
 
         expect(mic).toHaveAttribute('aria-checked', 'false');
+    });
+});
+
+describe('ScreenRecorder page scroll lock', () => {
+    afterEach(() => {
+        document.body.style.overflow = '';
+    });
+
+    // Inside the signed-in shell a stylesheet rule already computes body to hidden. Restoring that computed
+    // value as an inline style would leave every later page (sign-in, landing) unable to scroll.
+    it('leaves no inline overflow behind when a stylesheet already hides the body', () => {
+        const sheet = document.createElement('style');
+        sheet.textContent = 'body { overflow: hidden; }';
+        document.head.appendChild(sheet);
+        try {
+            expect(window.getComputedStyle(document.body).overflow).toBe('hidden');
+            const { unmount } = renderRecorder();
+            expect(document.body.style.overflow).toBe('hidden');
+
+            unmount();
+
+            expect(document.body.style.overflow).toBe('');
+        } finally {
+            sheet.remove();
+        }
+    });
+
+    it('restores an inline overflow that was set before it opened', () => {
+        document.body.style.overflow = 'auto';
+        const { unmount } = renderRecorder();
+        expect(document.body.style.overflow).toBe('hidden');
+
+        unmount();
+
+        expect(document.body.style.overflow).toBe('auto');
     });
 });

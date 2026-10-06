@@ -116,7 +116,7 @@
 .multiselect-option .checkbox.checked {
   background: var(--primary-color);
   border-color: var(--primary-color);
-  color: white;
+  color: var(--text-on-primary);
 }
 
 .multiselect-divider {

@@ -503,12 +503,12 @@
 
 .event-item--achievement .event-icon {
     background: rgba(250, 204, 21, 0.15);
-    color: #facc15;
+    color: var(--accent-color);
 }
 
 .event-item--challenge .event-icon {
     background: rgba(16, 185, 129, 0.15);
-    color: #10b981;
+    color: var(--success-color);
 }
 
 .event-body {

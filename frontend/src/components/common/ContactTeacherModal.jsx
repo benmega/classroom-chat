@@ -1,17 +1,17 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events */
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { X, Send, MessageSquare } from "lucide-react";
 import client from "../../api/client";
 import { getErrorMessage } from "../../utils/apiError";
 import toast from "react-hot-toast";
+import useModalA11y from "../../hooks/useModalA11y";
 
 const ContactTeacherModal = ({ isOpen, onClose }) => {
     const [subject, setSubject] = useState("");
     const [body, setBody] = useState("");
     const [isSending, setIsSending] = useState(false);
     const [sent, setSent] = useState(false);
-
-    if (!isOpen) return null;
+    const dialogRef = useRef(null);
 
     const handleClose = () => {
         setSubject("");
@@ -19,6 +19,11 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
         setSent(false);
         onClose();
     };
+
+    // Escape closes (and clears the draft like the buttons do), Tab stays inside, and focus goes back to the opener.
+    useModalA11y({ isOpen, onClose: handleClose, containerRef: dialogRef });
+
+    if (!isOpen) return null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,6 +42,8 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
 
     return (
         <div
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-label="Contact Teacher"
@@ -103,6 +110,7 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
                             </label>
                             <input
                                 id="ct-subject"
+                                data-autofocus
                                 type="text"
                                 value={subject}
                                 onChange={(e) => setSubject(e.target.value)}
@@ -115,7 +123,6 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
                                     background: "var(--bg-secondary)",
                                     color: "var(--text-primary)",
                                     fontSize: "0.875rem",
-                                    outline: "none",
                                     width: "100%",
                                     boxSizing: "border-box",
                                 }}
@@ -145,7 +152,6 @@ const ContactTeacherModal = ({ isOpen, onClose }) => {
                                     color: "var(--text-primary)",
                                     fontSize: "0.875rem",
                                     resize: "vertical",
-                                    outline: "none",
                                     width: "100%",
                                     boxSizing: "border-box",
                                     fontFamily: "inherit",

@@ -63,6 +63,8 @@ E2E tests are located in the `tests-e2e/` directory. They simulate real user int
 - **Run tests:** `npm run test:e2e`
 - **UI Mode:** `npm run test:e2e:ui`
 
+Specs that import `test` from `tests-e2e/support/mockBackend.js` need no backend: they fake the session and answer every backend call with a mock, and a call no mock answers fails the test. Other specs sign in through `/api/dev-login` against a running, seeded backend, or mock only some of the calls. Write new specs on the mock fixture.
+
 To install browsers (first time only):
 ```bash
 npx playwright install

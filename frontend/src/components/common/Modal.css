@@ -144,17 +144,17 @@
 
 .admin-form .btn-primary {
     background: var(--gradient-primary);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .admin-form .btn-warning {
     background: var(--gradient-warning);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .admin-form .btn-danger {
     background: var(--gradient-error);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .admin-form button[type="submit"]:hover:not(:disabled) {
