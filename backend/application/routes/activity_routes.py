@@ -60,7 +60,7 @@ def _get_challenge_activity(user_id):
     for log in logs:
         challenge = _find_challenge(challenge_lookup, log.challenge_slug)
         title = challenge.name if challenge else f"Challenge ({log.domain})"
-        timestamp = to_utc_iso(log.timestamp)
+        timestamp = log.timestamp
         # Note: this is the challenge's CURRENT value, not necessarily the
         # historical awarded amount -- a duck multiplier/double-duck perk
         # can change over time and isn't stored per-log.
@@ -105,8 +105,8 @@ def _get_certificate_activity(user_id):
                 "kind": "certificate",
                 "title": title,
                 "status": cert.status,
-                "submitted_at": to_utc_iso(cert.submitted_at),
-                "resolved_at": to_utc_iso(cert.reviewed_at),
+                "submitted_at": cert.submitted_at,
+                "resolved_at": cert.reviewed_at,
                 "detail": cert.review_note if cert.review_note else None,
                 "reward": reward,
             }
@@ -131,7 +131,7 @@ def _get_file_activity(user_id):
                 "kind": "file",
                 "title": submission.original_filename,
                 "status": submission.status,
-                "submitted_at": to_utc_iso(submission.timestamp),
+                "submitted_at": submission.timestamp,
                 # No resolved/reviewed timestamp column exists on Submission
                 # today -- documented gap, see final report.
                 "resolved_at": None,
@@ -166,7 +166,7 @@ def _get_course_request_activity(user_id):
                 "kind": "course_request",
                 "title": title,
                 "status": req.status,
-                "submitted_at": to_utc_iso(req.created_at),
+                "submitted_at": req.created_at,
                 # No resolved-timestamp column exists on CourseInstanceRequest
                 # today -- documented gap, see final report.
                 "resolved_at": None,
@@ -175,6 +175,13 @@ def _get_course_request_activity(user_id):
             }
         )
     return items
+
+
+def _newest_first_key(item):
+    # None sorts oldest (shouldn't occur since every source always has a
+    # submitted-at-equivalent timestamp); the flag keeps the datetimes comparable.
+    stamp = item["submitted_at"]
+    return (stamp is not None, stamp or 0)
 
 
 def _parse_pagination_args():
@@ -213,15 +220,19 @@ def get_activity():
         + _get_course_request_activity(user_id)
     )
 
-    # Sort by submitted_at descending; treat None as oldest (shouldn't occur
-    # since every source always has a submitted-at-equivalent timestamp).
-    merged.sort(key=lambda item: item["submitted_at"] or "", reverse=True)
+    # Sort by submitted_at descending on the datetimes, then serialise: strings
+    # with and without fractional seconds would not order the same way once
+    # they end in the UTC mark.
+    merged.sort(key=_newest_first_key, reverse=True)
 
     page, per_page = _parse_pagination_args()
     total = len(merged)
     start = (page - 1) * per_page
     end = start + per_page
     page_items = merged[start:end]
+    for item in page_items:
+        item["submitted_at"] = to_utc_iso(item["submitted_at"])
+        item["resolved_at"] = to_utc_iso(item["resolved_at"])
 
     return {
         "items": page_items,
