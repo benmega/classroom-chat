@@ -261,6 +261,59 @@ describe('useAuthStore', () => {
     expect(warn).toHaveBeenCalled();
   });
 
+  it('logout falls back to the deprecated GET when the server does not accept POST yet', async () => {
+    const methods = [];
+    server.use(
+      http.post('*/user/logout', ({ request }) => {
+        methods.push(request.method);
+        return new HttpResponse(null, { status: 405 });
+      }),
+      http.get('*/user/logout', ({ request }) => {
+        methods.push(request.method);
+        return HttpResponse.json({ status: 'success', message: 'Logged out' });
+      })
+    );
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await useAuthStore.getState().logout();
+
+    expect(methods).toEqual(['POST', 'GET']);
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  it('logout warns when neither POST nor the deprecated GET ends the session', async () => {
+    server.use(
+      http.post('*/user/logout', () => new HttpResponse(null, { status: 405 })),
+      http.get('*/user/logout', () => new HttpResponse(null, { status: 500 }))
+    );
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await expect(useAuthStore.getState().logout()).resolves.toBeUndefined();
+
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('still be signed in'));
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it('logout does not retry with GET on an error other than 405', async () => {
+    const methods = [];
+    server.use(
+      http.post('*/user/logout', () => new HttpResponse(null, { status: 500 })),
+      http.get('*/user/logout', ({ request }) => {
+        methods.push(request.method);
+        return HttpResponse.json({ status: 'success' });
+      })
+    );
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await useAuthStore.getState().logout();
+
+    expect(methods).toEqual([]);
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('still be signed in'));
+  });
+
   it('logout stays quiet when the request succeeds', async () => {
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
 
