@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy import inspect as sa_inspect
 
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 # ---------------------------------------------------------------------------
 # Join table — many-to-many between users and classrooms.
@@ -154,7 +154,5 @@ class Classroom(db.Model):
             "language": self.language,
             "student_count": student_count,
             "sandbox_active": bool(self.sandbox_active),
-            "sandbox_activated_at": self.sandbox_activated_at.isoformat()
-            if self.sandbox_activated_at
-            else None,
+            "sandbox_activated_at": to_utc_iso(self.sandbox_activated_at),
         }

@@ -8,7 +8,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..extensions import db
-from ..utilities.helper_functions import utc_today, utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utc_today, utcnow_naive
 
 # Models are imported locally within methods to prevent circular dependencies
 
@@ -210,9 +210,7 @@ class User(db.Model):
             "has_auto_claimer": self.has_auto_claimer,
             "has_double_duck": self.has_double_duck,
             "current_activity": self.current_activity,
-            "last_activity_time": self.last_activity_time.isoformat()
-            if self.last_activity_time
-            else None,
+            "last_activity_time": to_utc_iso(self.last_activity_time),
             "has_activity": self.has_activity,
             "achievement_count": len(self.achievements),
             "can_chat": self.can_chat if self.can_chat is not None else True,
@@ -387,9 +385,7 @@ class User(db.Model):
             "has_auto_claimer": self.has_auto_claimer,
             "has_double_duck": self.has_double_duck,
             "current_activity": self.current_activity,
-            "last_activity_time": self.last_activity_time.isoformat()
-            if self.last_activity_time
-            else None,
+            "last_activity_time": to_utc_iso(self.last_activity_time),
             "has_activity": (
                 self.id in activity_user_ids
                 if activity_user_ids is not None
@@ -581,11 +577,7 @@ class User(db.Model):
                             "levels_completed": completed_count,
                             "levels_total": len(levels),
                             "levels": levels,
-                            "last_completed_at": (
-                                course_last_completed.isoformat()
-                                if course_last_completed
-                                else None
-                            ),
+                            "last_completed_at": to_utc_iso(course_last_completed),
                         }
                     )
 
@@ -625,7 +617,7 @@ class User(db.Model):
                         "levels_total": len(levels),
                         "levels": levels,
                         "last_completed_at": (
-                            max(legacy_times).isoformat() if legacy_times else None
+                            to_utc_iso(max(legacy_times)) if legacy_times else None
                         ),
                     }
                 )

@@ -1,7 +1,7 @@
 
 
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 class UserCertificate(db.Model):
@@ -51,13 +51,11 @@ class UserCertificate(db.Model):
             ),
             "achievement": self.achievement.to_dict() if self.achievement else None,
             "url": self.url,
-            "submitted_at": (
-                self.submitted_at.isoformat() if self.submitted_at else None
-            ),
+            "submitted_at": to_utc_iso(self.submitted_at),
             "file_path": self.stored_filename,
             "status": self.status,
             "review_note": self.review_note,
-            "reviewed_at": self.reviewed_at.isoformat() if self.reviewed_at else None,
+            "reviewed_at": to_utc_iso(self.reviewed_at),
             "is_auto_recommended": self.is_auto_recommended,
             "recommendation_reason": self.recommendation_reason,
         }

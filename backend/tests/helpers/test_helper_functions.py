@@ -10,6 +10,7 @@ from application.utilities.helper_functions import (
     format_number,
     get_s3_client,
     safe_parse_datetime,
+    to_utc_iso,
     utc_today,
     utcnow_naive,
 )
@@ -50,6 +51,26 @@ def test_safe_parse_datetime():
     assert parsed is not None
     assert parsed.year == 2026
     assert safe_parse_datetime("not-a-date") is None
+
+
+def test_to_utc_iso_marks_a_stored_naive_value_as_utc():
+    assert to_utc_iso(datetime(2026, 1, 2, 3, 4, 5)) == "2026-01-02T03:04:05Z"
+    assert to_utc_iso(datetime(2026, 1, 2, 3, 4, 5, 123456)) == "2026-01-02T03:04:05.123456Z"
+
+
+def test_to_utc_iso_converts_an_aware_value_to_utc():
+    plus_two = timezone(timedelta(hours=2))
+    assert to_utc_iso(datetime(2026, 1, 2, 5, 4, 5, tzinfo=plus_two)) == "2026-01-02T03:04:05Z"
+    assert to_utc_iso(datetime(2026, 1, 2, 3, 4, 5, tzinfo=timezone.utc)) == "2026-01-02T03:04:05Z"
+
+
+def test_to_utc_iso_round_trips_through_safe_parse_datetime():
+    stamp = datetime(2026, 1, 2, 3, 4, 5)
+    assert safe_parse_datetime(to_utc_iso(stamp)) == stamp.replace(tzinfo=timezone.utc)
+
+
+def test_to_utc_iso_keeps_none():
+    assert to_utc_iso(None) is None
 
 
 def test_get_s3_client_region_defaults_to_config(monkeypatch):

@@ -12,7 +12,7 @@ from application.utilities.db_helpers import (
     other_admin_exists,
     user_removal_refusal,
 )
-from application.utilities.helper_functions import utcnow_naive
+from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
@@ -53,9 +53,7 @@ def student_activity():
                 "slug": u.slug,
                 "is_online": u.is_online,
                 "current_activity": u.current_activity,
-                "last_activity_time": u.last_activity_time.isoformat()
-                if u.last_activity_time
-                else None,
+                "last_activity_time": to_utc_iso(u.last_activity_time),
             }
             for u in students
         ]
@@ -772,9 +770,7 @@ def get_classroom_details(classroom_id):
             "id": assignment.id,
             "course_id": assignment.course_id,
             "course_name": assignment.course.name if assignment.course else None,
-            "created_at": assignment.created_at.isoformat()
-            if assignment.created_at
-            else None,
+            "created_at": to_utc_iso(assignment.created_at),
         }
         for assignment in classroom.course_assignments
     ]
@@ -788,15 +784,11 @@ def get_classroom_details(classroom_id):
                 "id": classroom.id,
                 "name": classroom.name,
                 "language": classroom.language,
-                "created_at": classroom.created_at.isoformat()
-                if classroom.created_at
-                else None,
+                "created_at": to_utc_iso(classroom.created_at),
                 "students": students,
                 "course_assignments": course_assignments,
                 "sandbox_active": bool(classroom.sandbox_active),
-                "sandbox_activated_at": classroom.sandbox_activated_at.isoformat()
-                if classroom.sandbox_activated_at
-                else None,
+                "sandbox_activated_at": to_utc_iso(classroom.sandbox_activated_at),
             }
         }
     )

@@ -8,7 +8,7 @@ from flask import current_app, has_app_context
 
 from ..config import Config
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 def _s3_setting(name):
@@ -65,5 +65,5 @@ class Note(db.Model):
             "id": self.id,
             "filename": self.filename,
             "url": self.url,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": to_utc_iso(self.created_at),
         }

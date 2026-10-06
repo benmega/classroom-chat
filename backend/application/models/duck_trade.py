@@ -7,6 +7,7 @@ Summary: SQLAlchemy model for duck trade logs and statuses.
 from sqlalchemy import update
 
 from ..extensions import db
+from ..utilities.helper_functions import to_utc_iso
 
 
 class DuckTradeLog(db.Model):
@@ -69,5 +70,5 @@ class DuckTradeLog(db.Model):
             "bit_ducks": self.bit_ducks,
             "byte_ducks": self.byte_ducks,
             "status": self.status,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "timestamp": to_utc_iso(self.timestamp),
         }

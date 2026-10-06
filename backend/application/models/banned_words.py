@@ -5,6 +5,7 @@ Summary: SQLAlchemy model for banned words used in moderation.
 """
 
 from ..extensions import db
+from ..utilities.helper_functions import to_utc_iso
 
 
 class BannedWords(db.Model):
@@ -21,7 +22,7 @@ class BannedWords(db.Model):
         return {
             "id": self.id,
             "word": self.word,
-            "added_on": self.added_on.isoformat() if self.added_on else None,
+            "added_on": to_utc_iso(self.added_on),
             "reason": self.reason,
             "active": self.active,
         }

@@ -5,6 +5,7 @@ Summary: SQLAlchemy model for user projects and portfolio items.
 """
 
 from ..extensions import db
+from ..utilities.helper_functions import to_utc_iso
 
 
 class Project(db.Model):
@@ -73,5 +74,5 @@ class Project(db.Model):
             "user_nickname": self.user.nickname if self.user else "Unknown Student",
             "user_slug": self.user.slug if self.user else None,
             "user_username": self.user.username if self.user else None,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": to_utc_iso(self.created_at),
         }

@@ -501,8 +501,8 @@ def test_course_progress_breakdown_reports_last_completed_at(seeded, sample_user
     data = sample_user.get_course_progress_data()["3d-modeling"]
     by_course = {b["course_id"]: b for b in data["breakdown"]}
     # Latest completion within each course wins.
-    assert by_course["3d-1"]["last_completed_at"] == "2026-01-05T09:00:00"
-    assert by_course["3d-2"]["last_completed_at"] == "2026-02-01T09:00:00"
+    assert by_course["3d-1"]["last_completed_at"] == "2026-01-05T09:00:00Z"
+    assert by_course["3d-2"]["last_completed_at"] == "2026-02-01T09:00:00Z"
 
 
 def test_course_progress_breakdown_last_completed_at_none_without_progress(

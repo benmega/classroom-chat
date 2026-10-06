@@ -11,7 +11,7 @@ import boto3
 import requests
 from application.extensions import db
 from application.models.session_log import SessionLog
-from application.utilities.helper_functions import utcnow_naive
+from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import Blueprint, jsonify
 from flask import session as flask_session
 
@@ -117,4 +117,4 @@ def heartbeat():
         # heartbeat means they are back, so show them online again
         User.set_online(user_id, True)
 
-    return jsonify(success=True, timestamp=utcnow_naive().isoformat())
+    return jsonify(success=True, timestamp=to_utc_iso(utcnow_naive()))

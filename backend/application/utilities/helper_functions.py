@@ -30,6 +30,23 @@ def utc_today():
     return datetime.now(timezone.utc).date()
 
 
+def to_utc_iso(value):
+    """Serialise a stored datetime for the API as ISO 8601 with an explicit UTC mark.
+
+    The DateTime columns hold UTC without a timezone, so a bare isoformat() of a
+    stored value carries no offset and a browser reads it as local time. The
+    result ends in 'Z' (an aware value is converted to UTC first); None stays
+    None. 'Z' rather than '+00:00' because the frontend's older date handling
+    appends a 'Z' to any string not already ending in one, and '+00:00Z' does
+    not parse.
+    """
+    if value is None:
+        return None
+    if value.tzinfo is not None:
+        value = value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value.isoformat() + "Z"
+
+
 def allowed_file(filename, allowed_extensions=None):
     if allowed_extensions is None:
         allowed_extensions = Config.ALLOWED_EXTENSIONS

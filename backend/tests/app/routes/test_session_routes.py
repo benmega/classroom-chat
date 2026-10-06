@@ -1,6 +1,6 @@
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -160,14 +160,17 @@ def test_heartbeat_without_open_session_succeeds_quietly(
 
 
 @patch("application.routes.session_routes.get_cloudwatch_client")
-def test_heartbeat_timestamp_is_naive_utc(mock_cw_client, logged_in_client_with_session):
+def test_heartbeat_timestamp_is_utc_with_an_explicit_designator(mock_cw_client, logged_in_client_with_session):
     before = utcnow_naive()
 
     resp = logged_in_client_with_session.post("/api/session/heartbeat")
 
-    stamp = datetime.fromisoformat(resp.json["timestamp"])
-    assert stamp.tzinfo is None
-    assert before <= stamp <= utcnow_naive()
+    raw = resp.json["timestamp"]
+    assert raw.endswith("Z")
+    # Python 3.10's fromisoformat does not take a trailing Z
+    stamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    assert stamp.tzinfo == timezone.utc
+    assert before <= stamp.replace(tzinfo=None) <= utcnow_naive()
 
 
 @patch("application.routes.session_routes.get_cloudwatch_client")

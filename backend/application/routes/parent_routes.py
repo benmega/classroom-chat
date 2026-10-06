@@ -6,7 +6,7 @@ from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.connection_attempt import ConnectionAttempt
 from application.models.user import User
-from application.utilities.helper_functions import utcnow_naive
+from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import Blueprint, request, session
 
 parent = Blueprint("parent", __name__)
@@ -35,9 +35,7 @@ def get_children():
             ),
             "slug": child.slug,
             "current_activity": child.current_activity,
-            "last_activity_time": child.last_activity_time.isoformat()
-            if child.last_activity_time
-            else None,
+            "last_activity_time": to_utc_iso(child.last_activity_time),
         }
         for child in user_obj.children
     ]
@@ -77,7 +75,7 @@ def get_student_report(student_id):
                     "name": achievement.name,
                     "type": achievement.type,
                     "description": achievement.description,
-                    "earned_at": ua.earned_at.isoformat() if ua.earned_at else None,
+                    "earned_at": to_utc_iso(ua.earned_at),
                 }
             )
 
@@ -105,9 +103,7 @@ def get_student_report(student_id):
         ],
         "course_progress": student.get_course_progress_data(),
         "current_activity": student.current_activity,
-        "last_activity_time": student.last_activity_time.isoformat()
-        if student.last_activity_time
-        else None,
+        "last_activity_time": to_utc_iso(student.last_activity_time),
     }
 
     return report
@@ -282,7 +278,7 @@ def get_student_history(student_id):
                 {
                     "type": "achievement",
                     "label": f'Earned "{ach.name if ach else "an achievement"}"',
-                    "timestamp": ua.earned_at.isoformat(),
+                    "timestamp": ua.earned_at,
                     "icon": "award",
                     "priority": 2,  # Higher priority than challenge
                 }
@@ -306,7 +302,7 @@ def get_student_history(student_id):
             {
                 "type": "challenge",
                 "label": f"Completed level: {display_name}",
-                "timestamp": log.timestamp.isoformat(),
+                "timestamp": log.timestamp,
                 "icon": "zap",
                 "priority": 1,  # Lower priority
             }
@@ -319,7 +315,7 @@ def get_student_history(student_id):
                 {
                     "type": "project",
                     "label": f'Created project: "{project.name}"',
-                    "timestamp": project.created_at.isoformat(),
+                    "timestamp": project.created_at,
                     "icon": "folder",
                     "priority": 4,  # Highest priority
                 }
@@ -332,14 +328,18 @@ def get_student_history(student_id):
                 {
                     "type": "note",
                     "label": "Uploaded a new coding note / screenshot",
-                    "timestamp": note.created_at.isoformat(),
+                    "timestamp": note.created_at,
                     "icon": "book-open",
                     "priority": 3,  # High priority
                 }
             )
 
-    # Sort: first by date (newest first), and secondarily by priority desc (projects > notes > achievements > challenges)
+    # Sort: first by date (newest first), and secondarily by priority desc (projects > notes > achievements > challenges).
+    # Sorted on the datetimes, then serialised: the strings would not order the same way
+    # once some carry fractional seconds and all end in the UTC mark.
     events.sort(key=lambda e: (e["timestamp"], e["priority"]), reverse=True)
+    for event in events:
+        event["timestamp"] = to_utc_iso(event["timestamp"])
 
     return {
         "duck_history": {

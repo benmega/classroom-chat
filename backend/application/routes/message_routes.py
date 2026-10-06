@@ -4,7 +4,7 @@ from application.decorators.login_required import require_login
 from application.extensions import db
 from application.models.message import Message
 from application.models.user import User
-from application.utilities.helper_functions import utcnow_naive
+from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import Blueprint, g, jsonify, request
 from sqlalchemy.orm import selectinload
 
@@ -114,7 +114,7 @@ def get_feed():
                 "user_profile_pic": msg.user.profile_picture if msg.user else None,
                 "content": msg.content,
                 "message_type": msg.message_type,
-                "created_at": msg.created_at.isoformat() if msg.created_at else None,
+                "created_at": to_utc_iso(msg.created_at),
                 "is_global": msg.is_global,
                 "target_live": msg.target_live,
                 "target_classrooms": [c.name for c in msg.target_classrooms]

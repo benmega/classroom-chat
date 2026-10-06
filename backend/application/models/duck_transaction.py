@@ -1,5 +1,5 @@
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 class DuckTransaction(db.Model):
@@ -26,5 +26,5 @@ class DuckTransaction(db.Model):
             "user_id": self.user_id,
             "amount": self.amount,
             "reason": self.reason,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "timestamp": to_utc_iso(self.timestamp),
         }

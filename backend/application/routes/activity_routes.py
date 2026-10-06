@@ -7,6 +7,7 @@ from application.models.challenge_log import ChallengeLog
 from application.models.course_instance_request import CourseInstanceRequest
 from application.models.submission import Submission
 from application.models.user_certificate import UserCertificate
+from application.utilities.helper_functions import to_utc_iso
 from flask import Blueprint, request, session
 from sqlalchemy.orm import joinedload
 
@@ -59,7 +60,7 @@ def _get_challenge_activity(user_id):
     for log in logs:
         challenge = _find_challenge(challenge_lookup, log.challenge_slug)
         title = challenge.name if challenge else f"Challenge ({log.domain})"
-        timestamp = log.timestamp.isoformat() if log.timestamp else None
+        timestamp = to_utc_iso(log.timestamp)
         # Note: this is the challenge's CURRENT value, not necessarily the
         # historical awarded amount -- a duck multiplier/double-duck perk
         # can change over time and isn't stored per-log.
@@ -104,12 +105,8 @@ def _get_certificate_activity(user_id):
                 "kind": "certificate",
                 "title": title,
                 "status": cert.status,
-                "submitted_at": (
-                    cert.submitted_at.isoformat() if cert.submitted_at else None
-                ),
-                "resolved_at": (
-                    cert.reviewed_at.isoformat() if cert.reviewed_at else None
-                ),
+                "submitted_at": to_utc_iso(cert.submitted_at),
+                "resolved_at": to_utc_iso(cert.reviewed_at),
                 "detail": cert.review_note if cert.review_note else None,
                 "reward": reward,
             }
@@ -134,9 +131,7 @@ def _get_file_activity(user_id):
                 "kind": "file",
                 "title": submission.original_filename,
                 "status": submission.status,
-                "submitted_at": (
-                    submission.timestamp.isoformat() if submission.timestamp else None
-                ),
+                "submitted_at": to_utc_iso(submission.timestamp),
                 # No resolved/reviewed timestamp column exists on Submission
                 # today -- documented gap, see final report.
                 "resolved_at": None,
@@ -171,9 +166,7 @@ def _get_course_request_activity(user_id):
                 "kind": "course_request",
                 "title": title,
                 "status": req.status,
-                "submitted_at": (
-                    req.created_at.isoformat() if req.created_at else None
-                ),
+                "submitted_at": to_utc_iso(req.created_at),
                 # No resolved-timestamp column exists on CourseInstanceRequest
                 # today -- documented gap, see final report.
                 "resolved_at": None,

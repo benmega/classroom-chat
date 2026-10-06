@@ -6,6 +6,8 @@ A high-level catalog of the backend's blueprints and endpoints. All are register
 python -c "from application import create_app; app = create_app(); [print(r.rule, sorted(r.methods)) for r in sorted(app.url_map.iter_rules(), key=lambda r: r.rule)]"
 ```
 
+Timestamps in responses and socket payloads are ISO 8601 in UTC with a trailing `Z` (for example `2026-01-02T03:04:05Z`), produced by `to_utc_iso` in `backend/application/utilities/helper_functions.py`. The one exception is the generic CRUD API (section 2, `crud_routes.py`), which returns column values as stored. The frontend reads every timestamp through `parseServerDate` in `frontend/src/utils/formatters.js`, which also takes an offset-less string as UTC.
+
 ## 1. Authentication & Session (`/user`)
 - **`POST /user/login`**: Authenticates a user and starts a session. Returns user data and any awarded daily currency.
 - **`POST /user/signup`**: New user registration (requires admin approval by default).
