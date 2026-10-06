@@ -12,6 +12,11 @@ from ..utilities.helper_functions import utc_today, utcnow_naive
 
 # Models are imported locally within methods to prevent circular dependencies
 
+# Duck balances are floats: every change is rounded to this many decimals so
+# repeated fractional credits and debits (3 x 1.1, then -3.3) cannot leave
+# binary-float residue (4.4e-16) behind, or a balance a hair under what was earned.
+DUCK_DECIMALS = 6
+
 
 def default_nickname(context):
     return context.get_current_parameters().get("username")
@@ -642,7 +647,8 @@ class User(db.Model):
         (``col = col + amount``) rather than read-modify-write on the loaded
         instance, so concurrent credits/debits (trades, achievements, admin
         adjustments) cannot overwrite each other; the instance is refreshed
-        from the row afterwards.  The caller must commit the session.
+        from the row afterwards.  The caller must commit the session.  Both
+        balances are rounded to ``DUCK_DECIMALS`` places after every change.
         """
         if self.role == "parent":
             return False
@@ -654,8 +660,8 @@ class User(db.Model):
         earned_gain = amount if amount > 0 else 0
 
         if self.id is not None and self in db.session:
-            new_balance = User.duck_balance + amount
-            new_earned = User.earned_ducks + earned_gain
+            new_balance = func.round(User.duck_balance + amount, DUCK_DECIMALS)
+            new_earned = func.round(User.earned_ducks + earned_gain, DUCK_DECIMALS)
             update_stmt = update(User).where(User.id == self.id)
             if min_balance is not None:
                 update_stmt = update_stmt.where(new_balance >= min_balance)
@@ -676,10 +682,11 @@ class User(db.Model):
             db.session.refresh(self, ["duck_balance", "earned_ducks"])
         else:
             # Not persisted yet (no row to update): plain in-memory arithmetic.
-            if min_balance is not None and self.duck_balance + amount < min_balance:
+            new_balance = round(self.duck_balance + amount, DUCK_DECIMALS)
+            if min_balance is not None and new_balance < min_balance:
                 return False
-            self.earned_ducks += earned_gain
-            self.duck_balance += amount
+            self.earned_ducks = round(self.earned_ducks + earned_gain, DUCK_DECIMALS)
+            self.duck_balance = new_balance
             if self.earned_ducks < self.duck_balance:
                 self.earned_ducks = self.duck_balance
 

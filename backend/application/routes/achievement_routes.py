@@ -57,6 +57,7 @@ ALLOWED_EXTENSIONS = {"pdf"}
 SLUG_RE = re.compile(r"[a-z0-9-]+")
 SLUG_ERROR = "Slug may only contain lowercase letters, digits and hyphens."
 REWARD_ERROR = "Reward must be a whole number of at least 1."
+REQUIREMENT_ERROR = "Requirement must be a whole number of at least 1."
 
 # Badge uploads are normalised to <slug>.png, the only name every consumer looks for.
 # The other extensions are what older uploads may have left behind.
@@ -237,6 +238,30 @@ def _parse_reward(value):
     return reward if reward >= 1 else None
 
 
+def _parse_requirement_value(value, achievement_type):
+    """Return the requirement text to store for ``value``: a whole number of at
+    least 1 as digits, or None for a blank certificate requirement. Raises
+    ValueError for anything else.
+
+    The achievement engine reads the requirement as a whole number and never
+    unlocks an achievement whose requirement it cannot read, while a requirement
+    of 0 or less is met by every user. Both are refused here instead of being
+    saved. Certificates are the exception for a blank value: the approved
+    certificate is their condition, so the requirement may be blank.
+    """
+    if isinstance(value, float) and value.is_integer():
+        value = int(value)
+    text = "" if value is None else str(value).strip()
+    if not text:
+        if achievement_type == "certificate":
+            return None
+        raise ValueError(value)
+    number = int(text)
+    if number < 1:
+        raise ValueError(value)
+    return str(number)
+
+
 def _certificate_dir():
     """Folder the certificate PDFs are written to."""
     return current_app.config.get(
@@ -325,7 +350,6 @@ def add_achievement():
     description = data.get("description")
     achievement_type = data.get("type", "ducks")
     raw_reward = data.get("reward")
-    requirement_value = data.get("requirement_value") or None
     source = data.get("source")
 
     if not name or not slug:
@@ -340,6 +364,13 @@ def add_achievement():
     reward = 1 if raw_reward in (None, "") else _parse_reward(raw_reward)
     if reward is None:
         return jsonify({"status": "error", "message": REWARD_ERROR}), 400
+
+    try:
+        requirement_value = _parse_requirement_value(
+            data.get("requirement_value"), achievement_type
+        )
+    except ValueError:
+        return jsonify({"status": "error", "message": REQUIREMENT_ERROR}), 400
 
     # Check for existing slug
     existing = Achievement.query.filter_by(slug=slug).first()
@@ -416,6 +447,18 @@ def edit_achievement(id):
         new_reward = _parse_reward(reward)
         if new_reward is None:
             return jsonify({"status": "error", "message": REWARD_ERROR}), 400
+    # Check the requirement against the type the achievement will have, whichever
+    # of the two this request changes.
+    new_requirement = ach.requirement_value
+    effective_type = achievement_type or ach.type
+    if requirement_value is not None or effective_type != ach.type:
+        try:
+            new_requirement = _parse_requirement_value(
+                ach.requirement_value if requirement_value is None else requirement_value,
+                effective_type,
+            )
+        except ValueError:
+            return jsonify({"status": "error", "message": REQUIREMENT_ERROR}), 400
     if slug:
         existing = Achievement.query.filter(Achievement.slug == slug, Achievement.id != id).first()
         if existing:
@@ -442,7 +485,7 @@ def edit_achievement(id):
     if description is not None: ach.description = description
     if achievement_type: ach.type = achievement_type
     if new_reward is not None: ach.reward = new_reward
-    if requirement_value is not None: ach.requirement_value = requirement_value
+    ach.requirement_value = new_requirement
     if source is not None: ach.source = source
 
     # A renamed slug moves the badge along; a new badge replaces it. The sprite is rebuilt

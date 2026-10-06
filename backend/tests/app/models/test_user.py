@@ -388,6 +388,48 @@ def test_add_ducks_min_balance_checks_the_stored_balance_not_a_stale_copy(
     assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
 
 
+def test_add_ducks_fractional_credits_and_debits_leave_no_float_residue(
+    add_sample_user,
+):
+    user = add_sample_user("residue", "pwd")
+
+    for _ in range(3):
+        assert user.add_ducks(1.1, reason="credit") is True
+    assert user.add_ducks(-3.3, reason="debit", min_balance=0) is True
+    db.session.commit()
+
+    # Unrounded this leaves 4.4e-16 (and 3.3000000000000003 earned).
+    assert _stored_balances(user.id) == (0, 3.3)
+
+
+def test_add_ducks_can_spend_all_of_a_balance_built_from_fractions(add_sample_user):
+    """0.7 + 0.1 + 0.1 + 0.1 is 0.9999999999999999 as raw floats, which would
+    refuse a debit of the whole 1 duck."""
+    user = add_sample_user("spend_all", "pwd")
+
+    for amount in (0.7, 0.1, 0.1, 0.1):
+        assert user.add_ducks(amount, reason="credit") is True
+    db.session.commit()
+    assert _stored_balances(user.id) == (1, 1)
+
+    assert user.add_ducks(-1, reason="all of it", min_balance=0) is True
+    db.session.commit()
+
+    assert _stored_balances(user.id) == (0, 1)
+
+
+def test_add_ducks_without_a_database_row_rounds_the_same_way():
+    user = User(username="transient_frac", password_hash="x", earned_ducks=0, duck_balance=0)
+
+    for amount in (0.7, 0.1, 0.1, 0.1):
+        assert user.add_ducks(amount, reason="credit") is True
+    assert (user.duck_balance, user.earned_ducks) == (1, 1)
+
+    assert user.add_ducks(-1, reason="all of it", min_balance=0) is True
+    assert (user.duck_balance, user.earned_ducks) == (0, 1)
+    db.session.rollback()  # drop the (user-less) transaction rows staged above
+
+
 def test_add_ducks_without_a_database_row_uses_plain_arithmetic():
     user = User(username="transient", password_hash="x", earned_ducks=0, duck_balance=0)
 

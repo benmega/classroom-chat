@@ -4,6 +4,8 @@ Type: py
 Summary: Unit tests for challenge routes Flask routes.
 """
 
+import html
+import json
 import logging
 import re
 from unittest.mock import patch
@@ -64,7 +66,7 @@ def test_submit_challenge_no_url(client, init_db):
 
     response = client.post(
         "/challenge/submit",
-        data={"url": "", "notes": "Some notes"},
+        data={"url": ""},
         follow_redirects=True,
     )
 
@@ -96,7 +98,6 @@ def test_submit_challenge_success(client, init_db):
         data={
             "url": "https://codecombat.com/play/level/dungeons-of-kithgard?course=123&course-instance=456",
             "helpers": "",
-            "notes": "Completed the challenge!",
         },
         follow_redirects=True,
     )
@@ -174,7 +175,6 @@ def test_submit_challenge_with_helper(client, init_db):
         data={
             "url": "https://codecombat.com/play/level/dungeons-of-kithgard?course=123&course-instance=456",
             "helpers": "friend_user",
-            "notes": "",
         },
         follow_redirects=True,
     )
@@ -186,10 +186,10 @@ def test_submit_challenge_with_helper(client, init_db):
     assert log.helper == "friend_user"
 
 
-def test_submit_challenge_notes_are_accepted_and_ignored(client, init_db):
-    """Notes are accepted with a submission but not stored anywhere.
-
-    ChallengeLog has no notes column, so the claim is logged exactly as without notes.
+@pytest.mark.parametrize("notes", ["This challenge was really fun!", 5, ["note"], None])
+def test_submit_challenge_ignores_legacy_notes_field(client, init_db, notes):
+    """The endpoint has no notes parameter: a client that still sends one (of any
+    type) gets the same claim as without it, and nothing is stored from it.
     """
     sample_user = UserFactory()
     ConfigurationFactory()
@@ -210,11 +210,10 @@ def test_submit_challenge_notes_are_accepted_and_ignored(client, init_db):
 
     response = client.post(
         "/challenge/submit",
-        data={
+        json={
             "url": "https://codecombat.com/play/level/dungeons-of-kithgard?course=123&course-instance=456",
-            "notes": "This challenge was really fun!",
+            "notes": notes,
         },
-        follow_redirects=True,
     )
 
     assert response.status_code == 200
@@ -601,6 +600,121 @@ def test_extract_challenge_details_domains():
     assert junior_res["challenge_slug"] == "step-change"
 
 
+@pytest.mark.parametrize(
+    "host", ["codecombat.com", "www.codecombat.com", "ozaria.com", "www.ozaria.com"]
+)
+def test_extract_challenge_details_accepts_only_the_bookmarklet_hosts(host):
+    from application.routes.challenge_routes import _extract_challenge_details
+
+    result = _extract_challenge_details(f"https://{host}/play/level/step-change")
+    assert result["domain"] == host
+    assert result["challenge_slug"] == "step-change"
+
+    shared = _extract_challenge_details(f"https://{host}/s/cs1/lessons/3/levels/4")
+    assert shared["domain"] == host
+    assert shared["challenge_slug"] == "cs1"
+
+
+def test_extract_challenge_details_domain_is_stored_lowercase():
+    from application.routes.challenge_routes import _extract_challenge_details
+
+    result = _extract_challenge_details("https://CodeCombat.COM/play/level/step-change")
+
+    assert result["domain"] == "codecombat.com"
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://evil.example/play/level/step-change",
+        "https://codecombat.com.evil.example/play/level/step-change",
+        "https://notcodecombat.com/play/level/step-change",
+        "https://codecombat.com@evil.example/play/level/step-change",
+        "https://staging.codecombat.com/play/level/step-change",
+        "https://evil.example/s/cs1/lessons/3/levels/4",
+        "http://codecombat.com/play/level/step-change",
+    ],
+)
+def test_extract_challenge_details_rejects_other_hosts(url):
+    from application.routes.challenge_routes import _extract_challenge_details
+
+    assert _extract_challenge_details(url) is None
+
+
+def test_submit_challenge_other_host_is_not_recognised(client, init_db):
+    user, _, _, _, url = _seed_claim()
+    _login(client, user)
+
+    response = client.post(
+        "/challenge/submit",
+        json={"url": url.replace("https://codecombat.com", "https://evil.example")},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["success"] is False
+    assert "does not recognize this challenge" in response.get_json()["message"]
+    assert _claim_rows(user) == (0, 0)
+
+
+def _popup_alert_text(body):
+    """The string the popup page's alert() will show, decoded as a browser would."""
+    match = re.search(r"alert\((.*)\); window\.close\(\);</script>", body)
+    assert match, body
+    return json.loads(match.group(1))
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "A Bug's Life",
+        "I'll be Back",
+        'Say "hi"',
+        "Back\\slash",
+        "Two" + chr(10) + "lines",
+        "</script><img src=x onerror=alert(1)>",
+        "Tom & Jerry <3",
+    ],
+)
+def test_submit_challenge_get_success_page_escapes_the_challenge_name(
+    client, init_db, name
+):
+    """The bookmarklet opens this GET; the name must reach the alert and the page
+    as text, whatever characters it holds."""
+    user, _, _, challenge, url = _seed_claim()
+    challenge.name = name
+    db.session.commit()
+    _login(client, user)
+
+    response = client.get("/challenge/submit", query_string={"url": url})
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    alert_text = _popup_alert_text(body)
+    assert alert_text.startswith(f"Congratulations on completing {name}! You earned ")
+    assert body.count("<script>") == 1
+    assert body.count("</script>") == 1
+    assert body.endswith(f"{html.escape(alert_text)}</body></html>")
+
+
+def test_submit_challenge_get_failure_page_keeps_the_message_intact(client, init_db):
+    user, _, instance, _, _ = _seed_claim()
+    _login(client, user)
+    url = (
+        "https://codecombat.com/play/level/no-such-level"
+        f"?course={instance.course_id}&course-instance={instance.id}"
+    )
+
+    response = client.get("/challenge/submit", query_string={"url": url})
+
+    assert response.status_code == 400
+    body = response.get_data(as_text=True)
+    assert _popup_alert_text(body) == (
+        "Failed: Couldn't identify challenge 'no-such-level'. "
+        "Check the link and try again."
+    )
+    assert "Couldn&#x27;t identify challenge &#x27;no-such-level&#x27;" in body
+
+
 def test_detect_and_handle_ozaria_domain(init_db):
     """Test full flow for an Ozaria domain challenge."""
     from application.routes.challenge_routes import detect_and_handle_challenge_url
@@ -654,7 +768,6 @@ def test_submit_challenge_switch_track(client, init_db):
         json={
             "url": url,
             "helpers": "",
-            "notes": "Off-track complete",
         },
     )
 
@@ -1112,18 +1225,6 @@ def test_submit_challenge_json_non_string_helpers_is_400(client, init_db, helper
     assert _claim_rows(user) == (0, 0)
 
 
-@pytest.mark.parametrize("notes", [5, ["note"], {"a": 1}])
-def test_submit_challenge_json_non_string_notes_is_400(client, init_db, notes):
-    user, _, _, _, url = _seed_claim()
-    _login(client, user)
-
-    response = client.post("/challenge/submit", json={"url": url, "notes": notes})
-
-    assert response.status_code == 400
-    assert response.get_json()["success"] is False
-    assert _claim_rows(user) == (0, 0)
-
-
 @pytest.mark.parametrize("helpers", [None, 0, [], ""])
 def test_submit_challenge_json_empty_helpers_still_works(client, init_db, helpers):
     """null/empty helpers keep meaning 'no helper'."""
@@ -1131,7 +1232,7 @@ def test_submit_challenge_json_empty_helpers_still_works(client, init_db, helper
     _login(client, user)
 
     response = client.post(
-        "/challenge/submit", json={"url": url, "helpers": helpers, "notes": None}
+        "/challenge/submit", json={"url": url, "helpers": helpers}
     )
 
     assert response.status_code == 200
