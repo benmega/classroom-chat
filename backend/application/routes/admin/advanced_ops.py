@@ -1,12 +1,9 @@
-import os
-
 from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.message import Message, message_classrooms, message_users
-from sqlalchemy import func, select
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 
 @admin_bp.route("/advanced/purge-history", methods=["POST"])

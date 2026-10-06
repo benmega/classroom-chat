@@ -265,3 +265,23 @@ def test_purge_history_is_refused_to_non_admins_and_deletes_nothing(
     assert Message.query.count() == 2
 
 
+def test_every_admin_module_registers_on_the_one_admin_blueprint(test_app):
+    import importlib
+    import pkgutil
+
+    import application.routes.admin as admin_package
+    from application.routes.admin.blueprint import admin_bp
+    from application.routes.admin_routes import admin_bp as exported_bp
+
+    assert exported_bp is admin_bp
+    assert test_app.blueprints["admin"] is admin_bp
+
+    modules = [
+        importlib.import_module(f"{admin_package.__name__}.{info.name}")
+        for info in pkgutil.iter_modules(admin_package.__path__)
+        if info.name not in {"blueprint", "crud_routes"}
+    ]
+    assert modules
+    assert all(module.admin_bp is admin_bp for module in modules)
+
+

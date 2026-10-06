@@ -19,6 +19,7 @@ from application.models.project import Project
 from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
 from application.models.user import User
+from application.utilities.db_helpers import RESERVED_USERNAMES
 from PIL import Image
 from tests.factories import AdminFactory, UserFactory
 from tests.image_helpers import animated_gif_bytes, jpeg_bytes, png_bytes, png_header_only
@@ -826,6 +827,47 @@ def test_signup_username_collision_ignores_case_and_padding(client, init_db, sub
     assert response.status_code == 409
     assert User.query.count() == users_before
     assert User.query.filter_by(username="collide_me").one().id == original.id
+
+
+def _reserved_variants():
+    """Every reserved name as stored, upper-cased, and title-cased with padding."""
+    return [
+        variant
+        for name in sorted(RESERVED_USERNAMES)
+        for variant in (name, name.upper(), f"  {name.title()}  ")
+    ]
+
+
+@pytest.mark.parametrize("submitted", _reserved_variants())
+def test_signup_refuses_a_reserved_username(client, init_db, submitted):
+    users_before = User.query.count()
+
+    response = client.post("/user/signup", json={"username": submitted, "password": "password123"})
+
+    assert response.status_code == 409
+    assert b"Username already exists" in response.data
+    assert User.query.count() == users_before
+
+
+def test_signup_answers_a_reserved_name_exactly_like_a_taken_one(client, init_db):
+    name = sorted(RESERVED_USERNAMES)[0]
+    body = {"username": name, "password": "password123"}
+
+    unclaimed = client.post("/user/signup", json=body)
+    UserFactory(username=name)
+    taken = client.post("/user/signup", json=body)
+
+    assert (unclaimed.status_code, unclaimed.data) == (taken.status_code, taken.data)
+
+
+@pytest.mark.parametrize("pattern", ["{}1", "my_{}", "{}_x"])
+def test_signup_accepts_a_name_that_only_contains_a_reserved_one(client, init_db, pattern):
+    submitted = pattern.format(sorted(RESERVED_USERNAMES)[0])
+
+    response = client.post("/user/signup", json={"username": submitted, "password": "password123"})
+
+    assert response.status_code == 201
+    assert User.query.filter_by(username=submitted).one().is_approved is False
 
 
 @pytest.mark.parametrize(

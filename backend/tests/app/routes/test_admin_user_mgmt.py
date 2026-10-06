@@ -828,3 +828,105 @@ def test_update_user_details_errors_are_plain_strings(client, sample_admin, samp
     assert invalid.status_code == 400
     assert isinstance(invalid.get_json()["error"], str)
     assert "3-30 chars" in invalid.get_json()["error"]
+
+
+def test_reject_user_refuses_to_remove_an_admin(client, sample_admin):
+    login_as_admin(client, sample_admin)
+    other_admin = UserFactory(role="admin")
+
+    resp = client.post(f"/api/admin/reject_user/{other_admin.id}")
+
+    assert resp.status_code == 403
+    assert resp.get_json()["error"] == "Cannot remove another admin"
+    assert db.session.get(User, other_admin.id) is not None
+
+
+def test_reject_user_refuses_to_remove_the_logged_in_admin(client, sample_admin):
+    login_as_admin(client, sample_admin)
+    admin_id = sample_admin.id
+
+    resp = client.post(f"/api/admin/reject_user/{admin_id}")
+
+    assert resp.status_code == 403
+    assert db.session.get(User, admin_id) is not None
+    assert User.query.filter_by(role="admin").count() == 1
+
+
+def test_reject_user_logs_the_removal(client, sample_admin, sample_user, caplog):
+    login_as_admin(client, sample_admin)
+    user_id, username = sample_user.id, sample_user.username
+
+    with caplog.at_level("INFO"):
+        resp = client.post(f"/api/admin/reject_user/{user_id}")
+
+    assert resp.status_code == 200
+    assert (
+        f"User removed via reject_user: user_id={user_id} username={username} "
+        f"role=student by admin_id={sample_admin.id}"
+    ) in caplog.text
+
+
+def test_remove_user_logs_the_removal_and_a_refusal_logs_nothing(
+    client, sample_admin, sample_user, caplog
+):
+    login_as_admin(client, sample_admin)
+    user_id, username = sample_user.id, sample_user.username
+
+    with caplog.at_level("INFO"):
+        refused = client.post(
+            "/api/admin/remove_user", data={"username": sample_admin.username}
+        )
+        assert refused.status_code == 403
+        assert "User removed" not in caplog.text
+
+        resp = client.post("/api/admin/remove_user", data={"username": username})
+
+    assert resp.status_code == 200
+    assert (
+        f"User removed via remove_user: user_id={user_id} username={username} "
+        f"role=student by admin_id={sample_admin.id}"
+    ) in caplog.text
+
+
+@pytest.mark.parametrize(
+    "change", [{"role": "student"}, {"is_admin": False}, {"is_admin": "false"}]
+)
+def test_update_user_details_keeps_the_last_admin(client, sample_admin, change):
+    login_as_admin(client, sample_admin)
+
+    resp = client.put(
+        f"/api/admin/user/{sample_admin.id}", json={"bio": "not saved", **change}
+    )
+
+    assert resp.status_code == 409
+    assert resp.get_json()["error"] == "Cannot remove the role from the last admin"
+    stored = db.session.get(User, sample_admin.id)
+    assert stored.role == "admin"
+    assert stored.bio != "not saved"  # the whole edit is refused
+
+
+def test_update_user_details_edits_the_last_admin_without_demoting_it(
+    client, sample_admin
+):
+    login_as_admin(client, sample_admin)
+
+    resp = client.put(
+        f"/api/admin/user/{sample_admin.id}", json={"bio": "saved", "is_admin": True}
+    )
+
+    assert resp.status_code == 200
+    stored = db.session.get(User, sample_admin.id)
+    assert (stored.role, stored.bio) == ("admin", "saved")
+
+
+def test_update_user_details_demotes_an_admin_while_another_remains(
+    client, sample_admin
+):
+    login_as_admin(client, sample_admin)
+    other_admin = UserFactory(role="admin")
+
+    resp = client.put(f"/api/admin/user/{other_admin.id}", json={"is_admin": False})
+
+    assert resp.status_code == 200
+    assert db.session.get(User, other_admin.id).role == "student"
+    assert db.session.get(User, sample_admin.id).role == "admin"

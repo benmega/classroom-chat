@@ -4,7 +4,7 @@ from application.extensions import db
 from application.models.challenge import Challenge
 from flask import request
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 
 @admin_bp.route("/challenges/bulk_add", methods=["POST"])

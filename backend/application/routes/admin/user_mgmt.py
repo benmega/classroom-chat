@@ -6,13 +6,18 @@ from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User, save_new_user
-from application.utilities.db_helpers import get_canonical_course_slug
+from application.utilities.db_helpers import (
+    get_canonical_course_slug,
+    log_user_removal,
+    other_admin_exists,
+    user_removal_refusal,
+)
 from application.utilities.helper_functions import utcnow_naive
 from flask import current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 # Per-request ceilings on admin-entered amounts. They guard against typos and
 # NaN/inf input (which would poison a stored balance), not against large balances.
@@ -86,9 +91,14 @@ def approve_user(user_id):
 @api_response
 def reject_user(user_id):
     user_obj = db.get_or_404(User, user_id)
+    refusal = user_removal_refusal(user_obj)
+    if refusal:
+        return {"error": refusal}, 403
     username = user_obj.username
+    role = user_obj.role
     db.session.delete(user_obj)
     db.session.commit()
+    log_user_removal("reject_user", user_id, username, role)
     return {"message": f"User {username} rejected and removed."}
 
 
@@ -311,12 +321,15 @@ def remove_user():
     if not user:
         return jsonify(success=False, message="User not found"), 404
 
-    if user.role == 'admin':
-        return jsonify(success=False, message="Cannot remove another admin"), 403
+    refusal = user_removal_refusal(user)
+    if refusal:
+        return jsonify(success=False, message=refusal), 403
 
     try:
+        user_id, role = user.id, user.role
         db.session.delete(user)
         db.session.commit()
+        log_user_removal("remove_user", user_id, username, role)
         return jsonify(success=True, message=f"User '{username}' removed successfully")
     except IntegrityError:
         db.session.rollback()
@@ -659,6 +672,14 @@ def update_user_details(user_id):
                 setattr(user_obj, perk, str(val) if val is not None else None)
 
     import sqlalchemy.exc
+
+    if (
+        previous_role == "admin"
+        and user_obj.role != "admin"
+        and not other_admin_exists(user_obj.id)
+    ):
+        db.session.rollback()
+        return {"error": "Cannot remove the role from the last admin"}, 409
 
     try:
         db.session.commit()
