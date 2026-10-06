@@ -13,8 +13,9 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-from application import db
-from application.config import Config
+from application import create_app, db
+from application.config import Config, TestingConfig
+from application.extensions import scheduler, socketio
 from application.models.project import Project
 from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
@@ -112,7 +113,7 @@ def test_logout(client, init_db):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    response = client.get("/user/logout")
+    response = client.post("/user/logout")
 
     assert response.status_code == 302
 
@@ -125,6 +126,19 @@ def test_logout(client, init_db):
 
     db.session.refresh(sample_user)
     assert sample_user.is_online is False
+
+
+def test_logout_get_is_still_accepted_for_one_release(client, init_db):
+    """A frontend bundle from before the switch to POST still signs out (deprecated path)."""
+    sample_user = UserFactory()
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    response = client.get("/user/logout")
+
+    assert response.status_code == 302
+    with client.session_transaction() as sess:
+        assert "user" not in sess
 
 
 def test_signup_get(client, init_db):
@@ -745,9 +759,83 @@ def test_logout_json_response(client, init_db):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    resp = client.get("/user/logout", headers={"Accept": "application/json"})
+    resp = client.post("/user/logout", headers={"Accept": "application/json"})
     assert resp.status_code == 200
     assert resp.json["status"] == "success"
+
+
+# ---- Logout with CSRF protection on (as in production) -----------------------
+
+
+@pytest.fixture(scope="module")
+def csrf_client():
+    class CsrfConfig(TestingConfig):
+        WTF_CSRF_ENABLED = True
+
+    from application import tasks
+
+    previous_app = tasks._app_instance
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
+        app = create_app(CsrfConfig)
+    tasks.set_app_instance(previous_app)
+    return app.test_client()
+
+
+def _sign_in(csrf_client, user_id=1):
+    with csrf_client.session_transaction() as sess:
+        sess["user"] = user_id
+
+
+def _session_user(csrf_client):
+    with csrf_client.session_transaction() as sess:
+        return sess.get("user")
+
+
+def test_logout_post_needs_a_csrf_token_while_signed_in(csrf_client):
+    _sign_in(csrf_client)
+
+    resp = csrf_client.post("/user/logout", headers={"Accept": "application/json"})
+
+    assert resp.status_code == 400
+    assert _session_user(csrf_client) == 1
+
+
+def test_logout_post_with_the_csrf_token_signs_out(csrf_client):
+    _sign_in(csrf_client)
+    # Any response sets the cookie the frontend reads the token from
+    csrf_client.get("/user/api/auth/status")
+    token = csrf_client.get_cookie("csrf_token_v2").value
+
+    resp = csrf_client.post(
+        "/user/logout",
+        headers={"Accept": "application/json", "X-CSRFToken": token},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json["status"] == "success"
+    assert _session_user(csrf_client) is None
+
+
+def test_logout_post_of_an_expired_session_is_answered_as_signed_out(csrf_client):
+    """No session means no token to check and nothing to end: not a 400 for the client to handle."""
+    with csrf_client.session_transaction() as sess:
+        sess.clear()
+
+    resp = csrf_client.post("/user/logout", headers={"Accept": "application/json"})
+
+    assert resp.status_code == 200
+    assert resp.json["status"] == "success"
+    assert _session_user(csrf_client) is None
+
+
+def test_logout_get_skips_the_csrf_check(csrf_client):
+    """The deprecated GET carries no token, as a bundle from before the switch sends none."""
+    _sign_in(csrf_client)
+
+    resp = csrf_client.get("/user/logout")
+
+    assert resp.status_code == 302
+    assert _session_user(csrf_client) is None
 
 
 def test_signup_validations(client, init_db):

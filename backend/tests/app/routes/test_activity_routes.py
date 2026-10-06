@@ -132,6 +132,40 @@ def test_activity_returns_all_four_source_types_sorted(client, init_db, sample_u
     assert course_item["reward"] is None
 
 
+def test_activity_same_second_items_are_utc_marked_and_newest_first(client, init_db, sample_user):
+    """Two items in the same second, the later one with fractional seconds, come back
+    newest first: the merge sorts on the datetimes, not on the serialised strings."""
+    earlier = datetime(2026, 10, 6, 10, 26, 52)
+    later = earlier.replace(microsecond=500000)
+
+    submission = Submission(
+        user_id=sample_user.id,
+        classroom_id=None,
+        original_filename="earlier.txt",
+        stored_path="submissions/earlier.txt",
+        file_size=10,
+        status="pending",
+        timestamp=earlier,
+    )
+    achievement = _make_achievement(reward=10)
+    cert = UserCertificate(
+        user_id=sample_user.id,
+        achievement_id=achievement.id,
+        url="http://example.com/later",
+        submitted_at=later,
+        status="pending",
+    )
+    db.session.add_all([submission, cert])
+    db.session.commit()
+
+    _login(client, sample_user)
+    items = client.get("/api/me/activity").get_json()["data"]["items"]
+
+    assert [item["kind"] for item in items] == ["certificate", "file"]
+    assert items[0]["submitted_at"] == "2026-10-06T10:26:52.500000Z"
+    assert items[1]["submitted_at"] == "2026-10-06T10:26:52Z"
+
+
 def test_certificate_approved_has_reward_pending_has_none(client, init_db, sample_user):
     """An approved certificate includes the achievement reward; pending has None."""
     achievement = _make_achievement(reward=50)

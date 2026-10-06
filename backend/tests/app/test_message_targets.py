@@ -232,7 +232,7 @@ def test_classroom_message_payload_and_audience(connect, init_db, sample_admin):
         "user_profile_pic": sample_admin.profile_picture,
         "content": "lab at noon",
         "message_type": "text",
-        "created_at": saved.created_at.isoformat(),
+        "created_at": saved.created_at.isoformat() + "Z",
         "is_global": False,
         "target_live": False,
         "target_classrooms": ["Chemistry"],

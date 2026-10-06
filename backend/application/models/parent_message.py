@@ -5,7 +5,7 @@ Summary: Model for storing messages/inquiries sent from parents to teachers/admi
 """
 
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 class ParentMessage(db.Model):
@@ -79,8 +79,8 @@ class ParentMessage(db.Model):
             "subject": self.subject,
             "body": self.body,
             "status": self.status,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
-            "resolved_at": self.resolved_at.isoformat() if self.resolved_at else None,
+            "created_at": to_utc_iso(self.created_at),
+            "resolved_at": to_utc_iso(self.resolved_at),
             "resolved_by": (
                 self.resolved_by.nickname or self.resolved_by.username
                 if self.resolved_by

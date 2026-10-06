@@ -98,6 +98,32 @@ describe('ParentReportCard Component', () => {
         });
     });
 
+    it('shows the day an achievement was earned from a UTC timestamp, with or without the UTC mark', async () => {
+        const report = {
+            ...mockReport,
+            unlocked_achievements: [
+                { id: 1, name: 'Marked', slug: 'marked', earned_at: '2024-05-01T23:30:00Z' },
+                { id: 2, name: 'Bare', slug: 'bare', earned_at: '2024-05-01T23:30:00' },
+            ],
+        };
+        client.get.mockImplementation((url) => {
+            if (url.includes('/report')) return Promise.resolve({ data: { data: report } });
+            if (url.includes('/history')) return Promise.resolve({ data: { data: mockHistory } });
+            return Promise.reject(new Error('Not found'));
+        });
+
+        render(
+            <MemoryRouter initialEntries={['/parent/report/1']}>
+                <Routes>
+                    <Route path="/parent/report/:studentId" element={<ParentReportCard />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        const expected = `Earned ${new Date('2024-05-01T23:30:00Z').toLocaleDateString()}`;
+        expect(await screen.findAllByText(expected)).toHaveLength(2);
+    });
+
     it('does not show the empty state for a 3D-only student', async () => {
         const threeDReport = {
             ...mockReport,

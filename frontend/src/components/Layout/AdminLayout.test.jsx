@@ -10,7 +10,10 @@ import { SidebarProvider } from '../../context/SidebarContext';
 import AdminPageHeader from '../admin/AdminPageHeader';
 
 vi.mock('../../api/client', () => ({
-    default: { get: vi.fn().mockResolvedValue({ data: { status: 'error' } }) },
+    default: {
+        get: vi.fn().mockResolvedValue({ data: { status: 'error' } }),
+        post: vi.fn().mockResolvedValue({ data: { status: 'success' } }),
+    },
 }));
 
 const renderLayout = (children) => render(
@@ -157,13 +160,13 @@ describe('AdminLayout logout', () => {
 
         await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/'));
         expect(useAuthStore.getState().isAuthenticated).toBe(false);
-        expect(client.get).toHaveBeenCalledWith('/user/logout');
+        expect(client.post).toHaveBeenCalledWith('/user/logout');
     });
 
     it('still leaves the admin area when the logout request fails', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         renderWithLocation();
-        client.get.mockRejectedValueOnce(new Error('Network Error'));
+        client.post.mockRejectedValueOnce(new Error('Network Error'));
 
         await userEvent.click(screen.getByRole('button', { name: 'Logout' }));
 

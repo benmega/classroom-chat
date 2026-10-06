@@ -3,6 +3,7 @@ import { Inbox, Trophy, Award, Paperclip, Link2, Clock, Loader2 } from 'lucide-r
 import client from '../../api/client';
 import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/apiError';
+import { parseServerDate } from '../../utils/formatters';
 import Skeleton from '../../components/common/Skeleton';
 import useAuthStore from '../../store/useAuthStore';
 import './Activity.css';
@@ -39,7 +40,7 @@ const statusClass = (status) => {
 
 const formatDate = (isoString) => {
     if (!isoString) return null;
-    const date = new Date(isoString);
+    const date = parseServerDate(isoString);
     if (isNaN(date.getTime())) return null;
     return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
 };

@@ -6,10 +6,12 @@ A high-level catalog of the backend's blueprints and endpoints. All are register
 python -c "from application import create_app; app = create_app(); [print(r.rule, sorted(r.methods)) for r in sorted(app.url_map.iter_rules(), key=lambda r: r.rule)]"
 ```
 
+Timestamps in responses and socket payloads are ISO 8601 in UTC with a trailing `Z` (for example `2026-01-02T03:04:05Z`), produced by `to_utc_iso` in `backend/application/utilities/helper_functions.py`. The one exception is the generic CRUD API (section 2, `crud_routes.py`), which returns column values as stored. The frontend reads every timestamp through `parseServerDate` in `frontend/src/utils/formatters.js`, which also takes an offset-less string as UTC.
+
 ## 1. Authentication & Session (`/user`)
 - **`POST /user/login`**: Authenticates a user and starts a session. Returns user data and any awarded daily currency.
 - **`POST /user/signup`**: New user registration (requires admin approval by default).
-- **`GET /user/logout`**: Terminates the current session and disconnects the user's open sockets (a client of the same user on another device simply reconnects).
+- **`POST /user/logout`**: Terminates the current session and disconnects the user's open sockets (a client of the same user on another device simply reconnects). CSRF-protected like every other POST, except that a session that has already expired is answered as signed out rather than with a 400. `GET /user/logout` is deprecated: it is kept for one release so a frontend bundle built before the switch can still sign out, and should be removed after that. The current bundle sends POST and falls back to GET only when the backend answers it with 405 (a backend from before the switch); that fallback in `useAuthStore.js` goes away with the GET route.
 - **`GET /user/api/auth/status`**: Returns the current authenticated user's profile and roles.
 - **`POST /user/api/auth/tutorial/complete`**: Marks the onboarding tutorial as complete for the current user.
 - **`POST /api/session/heartbeat`**: Keeps the session/presence alive (used for online-status tracking). Returns `401` when there is no logged-in session (or the account no longer exists).

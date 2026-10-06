@@ -6,6 +6,7 @@ from sqlalchemy.orm import object_session
 
 from ..config import Config
 from ..extensions import db
+from ..utilities.helper_functions import to_utc_iso
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class Submission(db.Model):
             "note": self.note,
             "teacher_note": self.teacher_note,
             "status": self.status,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "timestamp": to_utc_iso(self.timestamp),
         }
 
 

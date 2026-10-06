@@ -18,7 +18,7 @@ from application.services.level_game_service import (
     get_student_sandbox_games,
     ingest_games_csv,
 )
-from application.utilities.helper_functions import utcnow_naive
+from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import Blueprint, Response, g, jsonify, request, session
 
 logger = logging.getLogger(__name__)
@@ -152,11 +152,7 @@ def toggle_classroom_sandbox(class_id):
             "user_profile_pic": admin_user.profile_picture if admin_user else None,
             "content": new_message.content,
             "message_type": "text",
-            "created_at": (
-                new_message.created_at.isoformat()
-                if new_message.created_at
-                else utcnow_naive().isoformat()
-            ),
+            "created_at": to_utc_iso(new_message.created_at or utcnow_naive()),
             "is_global": False,
             "target_live": False,
             "target_classrooms": [classroom.name],
@@ -173,11 +169,7 @@ def toggle_classroom_sandbox(class_id):
 
     db.session.commit()
 
-    activated_at_iso = (
-        classroom.sandbox_activated_at.isoformat()
-        if classroom.sandbox_activated_at
-        else None
-    )
+    activated_at_iso = to_utc_iso(classroom.sandbox_activated_at)
 
     status_payload = {
         "classroom_id": class_id,
@@ -207,11 +199,7 @@ def get_classroom_sandbox_status(class_id):
 
     return jsonify({
         "sandbox_active": bool(classroom.sandbox_active),
-        "activated_at": (
-            classroom.sandbox_activated_at.isoformat()
-            if classroom.sandbox_activated_at
-            else None
-        ),
+        "activated_at": to_utc_iso(classroom.sandbox_activated_at),
     }), 200
 
 

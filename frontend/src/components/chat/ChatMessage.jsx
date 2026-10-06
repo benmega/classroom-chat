@@ -4,6 +4,7 @@ import { User as UserIcon, Trash2, Globe, Radio, Users, UserPlus } from 'lucide-
 import SmartImage from '../common/SmartImage';
 import Linkify from '../common/Linkify';
 import { getApiUrl } from '../../utils/apiUrl';
+import { parseServerDate } from '../../utils/formatters';
 
 const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
     const borderSpeed = '1.5s';
@@ -89,7 +90,7 @@ const ChatMessage = React.memo(({ msg, user, onDelete, isConsecutive }) => {
                             </div>
 
                             <span className="chat-message-timestamp">
-                                {msg.created_at ? new Date(typeof msg.created_at === 'string' && !msg.created_at.endsWith('Z') ? msg.created_at + 'Z' : msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
+                                {msg.created_at ? parseServerDate(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                             </span>
                         </div>
                     )}

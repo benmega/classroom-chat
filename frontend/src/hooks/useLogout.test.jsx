@@ -43,7 +43,7 @@ describe('useLogout', () => {
         ['the network is down', () => HttpResponse.error()],
         ['the server fails', () => new HttpResponse(null, { status: 500 })],
     ])('still leaves for the landing page when %s', async (_name, respond) => {
-        server.use(http.get('*/user/logout', respond));
+        server.use(http.post('*/user/logout', respond));
         const { result } = renderLogout();
 
         await act(async () => {
@@ -57,7 +57,7 @@ describe('useLogout', () => {
     it('marks the sign-out as deliberate only while it is running', async () => {
         let release;
         const gate = new Promise((resolve) => { release = resolve; });
-        server.use(http.get('*/user/logout', async () => {
+        server.use(http.post('*/user/logout', async () => {
             await gate;
             return HttpResponse.json({ success: true });
         }));
@@ -74,7 +74,7 @@ describe('useLogout', () => {
     });
 
     it('stops marking the sign-out as deliberate when the request fails', async () => {
-        server.use(http.get('*/user/logout', () => HttpResponse.error()));
+        server.use(http.post('*/user/logout', () => HttpResponse.error()));
         const { result } = renderLogout();
 
         await act(async () => {

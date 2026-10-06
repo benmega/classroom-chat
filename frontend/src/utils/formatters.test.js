@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatLargeNumber, formatStaticUrl, cssUrl, formatRelativeTime, safeDate } from './formatters';
+import { formatLargeNumber, formatStaticUrl, cssUrl, formatRelativeTime, safeDate, parseServerDate } from './formatters';
 
 describe('formatters', () => {
     describe('formatLargeNumber', () => {
@@ -66,11 +66,56 @@ describe('formatters', () => {
         });
     });
 
+    describe('parseServerDate', () => {
+        const instant = Date.UTC(2024, 4, 1, 10, 30, 15);
+
+        it('reads an offset-less timestamp as UTC, not local time', () => {
+            expect(parseServerDate('2024-05-01T10:30:15').getTime()).toBe(instant);
+            expect(parseServerDate('2024-05-01T10:30:15.250000').getTime()).toBe(instant + 250);
+        });
+
+        it('reads a timestamp with a UTC mark the same way', () => {
+            expect(parseServerDate('2024-05-01T10:30:15Z').getTime()).toBe(instant);
+            expect(parseServerDate('2024-05-01T10:30:15+00:00').getTime()).toBe(instant);
+            expect(parseServerDate('2024-05-01T10:30:15.250000Z').getTime()).toBe(instant + 250);
+        });
+
+        it('honours an offset that is present', () => {
+            expect(parseServerDate('2024-05-01T12:30:15+02:00').getTime()).toBe(instant);
+            expect(parseServerDate('2024-05-01T05:30:15-0500').getTime()).toBe(instant);
+        });
+
+        it('accepts a space between date and time', () => {
+            expect(parseServerDate('2024-05-01 10:30:15').getTime()).toBe(instant);
+        });
+
+        it('reads a date-only string as UTC midnight', () => {
+            expect(parseServerDate('2024-05-01').getTime()).toBe(Date.UTC(2024, 4, 1));
+        });
+
+        it('passes a Date or an epoch number through', () => {
+            expect(parseServerDate(new Date(instant)).getTime()).toBe(instant);
+            expect(parseServerDate(instant).getTime()).toBe(instant);
+        });
+
+        it('gives an invalid Date for anything unusable', () => {
+            for (const value of [null, undefined, '', 'not a date', {}, '2024-13-45T99:99:99']) {
+                expect(isNaN(parseServerDate(value).getTime()), String(value)).toBe(true);
+            }
+        });
+    });
+
     describe('formatRelativeTime', () => {
         it('returns Never for empty or invalid dates', () => {
             expect(formatRelativeTime('')).toBe('Never');
             expect(formatRelativeTime(null)).toBe('Never');
             expect(formatRelativeTime('invalid-date')).toBe('Never');
+        });
+
+        it('treats an offset-less timestamp as UTC', () => {
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+            expect(formatRelativeTime(fiveMinutesAgo.replace('Z', ''))).toBe('5m ago');
+            expect(formatRelativeTime(fiveMinutesAgo.replace('Z', '+00:00'))).toBe('5m ago');
         });
 
         it('formats relative times correctly', () => {
@@ -109,6 +154,11 @@ describe('formatters', () => {
             const iso = '2023-06-15T12:00:00Z';
             const options = { month: 'short', year: 'numeric' };
             expect(safeDate(iso, options)).toBe(new Date(iso).toLocaleDateString(undefined, options));
+        });
+
+        it('treats an offset-less timestamp as UTC', () => {
+            // Late enough in the UTC day that a local reading could land on another date
+            expect(safeDate('2023-06-15T23:30:00')).toBe(new Date('2023-06-15T23:30:00Z').toLocaleDateString());
         });
 
         it('returns an empty string for missing or invalid values', () => {

@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from application.extensions import db
 from application.models.user import User
+from application.utilities.helper_functions import utcnow_naive
 from tests.factories import AchievementFactory, ProjectFactory, UserAchievementFactory, UserFactory
 
 
@@ -308,6 +311,32 @@ def test_get_student_history(client, app):
 
     res_non_parent = client.get(f"/api/parents/student/{c_id}/history")
     assert res_non_parent.status_code == 403
+
+
+def test_get_student_history_events_are_utc_marked_and_newest_first(client, app):
+    from application.models.note import Note
+
+    with app.app_context():
+        parent = UserFactory(role="parent")
+        child = UserFactory(role="student")
+        parent.children.append(child)
+        db.session.commit()
+        # Same second, the later one with fractional seconds: ordered by time, not by priority
+        earlier = utcnow_naive().replace(microsecond=0) - timedelta(minutes=1)
+        later = earlier.replace(microsecond=500000)
+        ProjectFactory(user_id=child.id, name="Earlier", created_at=earlier)
+        db.session.add(Note(user_id=child.id, filename="later.png", created_at=later))
+        db.session.commit()
+        p_id, c_id = parent.id, child.id
+
+    with client.session_transaction() as sess:
+        sess["user"] = p_id
+
+    events = client.get(f"/api/parents/student/{c_id}/history").get_json()["data"]["recent_events"]
+
+    assert [e["type"] for e in events] == ["note", "project"]
+    assert events[0]["timestamp"] == later.isoformat() + "Z"
+    assert events[1]["timestamp"] == earlier.isoformat() + "Z"
 
 
 def test_get_student_history_fmt_date_fallback(client, app):

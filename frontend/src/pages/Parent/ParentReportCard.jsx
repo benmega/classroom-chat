@@ -4,6 +4,7 @@ import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, Chevr
 import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
 import { getApiUrl } from '../../utils/apiUrl';
+import { parseServerDate } from '../../utils/formatters';
 import ContributionGraph from '../../components/profile/ContributionGraph';
 import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
 import DigitalNotebook from '../../components/profile/DigitalNotebook';
@@ -45,7 +46,7 @@ ChartJS.register(
 function timeAgo(isoString) {
     if (!isoString) return '';
     const now = new Date();
-    const then = new Date(isoString);
+    const then = parseServerDate(isoString);
     const diffMs = now - then;
     const diffSecs = Math.floor(diffMs / 1000);
     if (diffSecs < 60) return 'just now';
@@ -280,7 +281,7 @@ const ParentReportCard = () => {
                                                     )}
                                                     {ua.earned_at && (
                                                         <span className="ach-date">
-                                                            Earned {new Date(ua.earned_at).toLocaleDateString()}
+                                                            Earned {parseServerDate(ua.earned_at).toLocaleDateString()}
                                                         </span>
                                                     )}
                                                 </div>

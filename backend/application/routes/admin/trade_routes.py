@@ -3,6 +3,7 @@ from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.duck_trade import DuckTradeLog
 from application.models.user import User
+from application.utilities.helper_functions import to_utc_iso
 from flask import jsonify, request
 
 from .blueprint import admin_bp
@@ -27,7 +28,7 @@ def pending_trades():
             "digital_ducks": t[0].digital_ducks,
             "bit_ducks": t[0].bit_ducks,
             "byte_ducks": t[0].byte_ducks,
-            "timestamp": t[0].timestamp.isoformat() if t[0].timestamp else None,
+            "timestamp": to_utc_iso(t[0].timestamp),
         }
         for t in pend_trades
     ]
