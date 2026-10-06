@@ -3,14 +3,14 @@
     width: 100%;
 }
 
-.projects-grid {
+:where(.admin-body) .projects-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1.5rem;
 }
 
-.project-card {
-    background: white;
+:where(.admin-body) .project-card {
+    background: var(--bg-primary);
     border-radius: 12px;
     border: 1px solid var(--border-subtle, var(--border-subtle));
     overflow: hidden;
@@ -22,7 +22,7 @@
     position: relative;
 }
 
-.project-card:hover {
+:where(.admin-body) .project-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
@@ -63,7 +63,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--text-on-primary);
 }
 
 .project-card-body {
@@ -113,7 +113,7 @@
 
 .project-remove-btn:hover {
     background: var(--error-color);
-    color: white;
+    color: var(--text-on-primary);
 }
 
 /* Edit/Add Standard Project modal: two-column rows on desktop to cut vertical scrolling */
@@ -124,7 +124,7 @@
     width: 100%;
 }
 
-@media (min-width: 700px) {
+@media (min-width: 641px) {
     .standard-project-form-row {
         flex-direction: row;
         gap: 1.5rem;
@@ -166,8 +166,9 @@
 }
 
 .admin-input-subtle:focus {
-    outline: none;
-    border-color: var(--primary-color, #3b82f6);
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
     background: var(--bg-primary, #ffffff);
+    box-shadow: var(--focus-ring);
 }
 

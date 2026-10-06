@@ -154,6 +154,40 @@ describe('AdminChallenges', () => {
         });
     });
 
+    describe('fractional values', () => {
+        it('accepts a fractional value in the challenge form and sends it on', async () => {
+            client.post.mockResolvedValueOnce({ data: { message: 'Challenge added.' } });
+            await openCourse();
+
+            fireEvent.click(screen.getByRole('button', { name: /Add Challenge/ }));
+            fireEvent.change(screen.getByLabelText(/Challenge Name/), { target: { value: 'Half Way' } });
+            fireEvent.change(screen.getByLabelText(/Slug/), { target: { value: 'half-way' } });
+            const value = screen.getByLabelText('Value');
+            fireEvent.change(value, { target: { value: '1.5' } });
+
+            expect(value).toHaveAttribute('step', 'any');
+            expect(value).toBeValid();
+            fireEvent.submit(screen.getByRole('button', { name: 'Save Challenge' }).closest('form'));
+
+            await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Challenge added.'));
+            expect(client.post).toHaveBeenCalledWith('/api/admin/challenges/add', expect.objectContaining({ slug: 'half-way', value: '1.5' }));
+        });
+
+        it('keeps the fractional part of values in an imported CSV', async () => {
+            client.post.mockResolvedValueOnce({ data: { message: 'Challenges imported.' } });
+            await openCourse();
+            fireEvent.click(screen.getByRole('button', { name: /Bulk Import/ }));
+            const csv = 'name,slug,course_id,value\nHalf Way,half-way,cs1,1.5\nWhole,whole,cs1,2\nBlank,blank,cs1,\nWords,words,cs1,lots\n';
+
+            fireEvent.change(document.getElementById('csv-upload'), { target: { files: [new File([csv], 'levels.csv', { type: 'text/csv' })] } });
+            fireEvent.click(await screen.findByRole('button', { name: 'Import 4 Challenges' }));
+
+            await waitFor(() => expect(client.post).toHaveBeenCalledWith('/api/admin/challenges/bulk_add', expect.anything()));
+            const { challenges } = client.post.mock.calls[0][1];
+            expect(challenges.map((c) => [c.slug, c.value])).toEqual([['half-way', 1.5], ['whole', 2], ['blank', 1], ['words', 1]]);
+        });
+    });
+
     describe('keyboard', () => {
         it('names each delete button after its challenge', async () => {
             await openCourse();

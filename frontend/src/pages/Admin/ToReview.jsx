@@ -37,8 +37,56 @@ import Modal from '../../components/common/Modal';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 
-// submitted_at is nullable on certificates; new Date(null/undefined) would show a bogus date.
+// A timestamp can be missing (submitted_at is nullable on certificates); new Date(null/undefined) would show a bogus date.
 const formatSubmittedAt = (value) => (value ? new Date(value).toLocaleString() : 'Unknown date');
+
+// The certificate PDF is served by the API host, whose X-Frame-Options forbid framing it from the frontend's
+// host, so the PDF is fetched (the API client sends the session cookie) and framed from a blob: URL instead.
+const CertificatePreview = ({ certId }) => {
+    const [pdfUrl, setPdfUrl] = useState(null);
+    const [failed, setFailed] = useState(false);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        let objectUrl = null;
+        let cancelled = false;
+        client.get(`/api/achievements/view_certificate/${certId}`, { responseType: 'blob', signal: controller.signal })
+            .then((response) => {
+                if (cancelled) return;
+                objectUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+                setPdfUrl(objectUrl);
+            })
+            .catch(() => {
+                if (!cancelled) setFailed(true);
+            });
+        return () => {
+            cancelled = true;
+            controller.abort();
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [certId]);
+
+    if (failed) {
+        return (
+            <div className="cert-preview-placeholder">
+                <AlertCircle size={20} aria-hidden="true" />
+                <span>Preview unavailable</span>
+            </div>
+        );
+    }
+    if (!pdfUrl) {
+        return <div className="cert-preview-placeholder" role="status" aria-label="Loading certificate preview" />;
+    }
+    return (
+        <iframe
+            src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+            title="Certificate Preview"
+            frameBorder="0"
+            scrolling="no"
+            tabIndex="-1"
+        ></iframe>
+    );
+};
 
 const ToReview = () => {
     const cachedReview = adminCache.get('admin_to_review');
@@ -471,7 +519,7 @@ const ToReview = () => {
         certificates.forEach(c => unified.push({ ...c, type: 'certificate', key: `cert-${c.id}`, timestamp: c.submitted_at || new Date().toISOString() }));
         pendingUsers.forEach(u => unified.push({ ...u, type: 'user', key: `user-${u.id}`, timestamp: new Date().toISOString() })); // default fallback
         trades.forEach(t => unified.push({ ...t, type: 'trade', key: `trade-${t.id}`, timestamp: t.timestamp || new Date().toISOString() }));
-        courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
+        courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.created_at || new Date().toISOString() }));
         parentMessages.forEach(m => unified.push({ ...m, type: 'parent_message', key: `parent-msg-${m.id}`, timestamp: m.created_at || new Date().toISOString() }));
 
         return unified.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -699,13 +747,7 @@ const ToReview = () => {
                         className="cert-preview-thumbnail"
                         title="Click to view full certificate"
                     >
-                        <iframe 
-                            src={getApiUrl(`/api/achievements/view_certificate/${c.id}#toolbar=0&navpanes=0&scrollbar=0`)} 
-                            title="Certificate Preview" 
-                            frameBorder="0" 
-                            scrolling="no"
-                            tabIndex="-1"
-                        ></iframe>
+                        <CertificatePreview certId={c.id} />
                         <div className="preview-overlay">
                             <Eye size={20} />
                         </div>
@@ -931,7 +973,7 @@ const ToReview = () => {
                         <CalendarCheck size={14} /> Course Request
                     </div>
                     <span className="card-time">
-                        <Clock size={12} /> {new Date(c.requested_at).toLocaleString()}
+                        <Clock size={12} /> {formatSubmittedAt(c.created_at)}
                     </span>
                 </div>
 

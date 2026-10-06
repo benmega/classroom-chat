@@ -1,7 +1,7 @@
 import adminCache from '../../utils/adminCache';
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import toast from 'react-hot-toast';
 import ToReview from './ToReview';
 import client from '../../api/client';
@@ -42,6 +42,19 @@ beforeEach(() => {
     get src() { return ''; }
     set src(val) {}
   });
+});
+
+// The certificate previews frame an object URL, and happy-dom cannot load blob: URLs (it logs an error
+// per iframe). An about: URL stands in for it: happy-dom opens those without a request.
+const realCreateObjectURL = URL.createObjectURL;
+const realRevokeObjectURL = URL.revokeObjectURL;
+beforeEach(() => {
+  URL.createObjectURL = vi.fn(() => 'about:blank');
+  URL.revokeObjectURL = vi.fn();
+});
+afterEach(() => {
+  URL.createObjectURL = realCreateObjectURL;
+  URL.revokeObjectURL = realRevokeObjectURL;
 });
 
 describe('ToReview Component', () => {
@@ -192,6 +205,71 @@ describe('ToReview Component', () => {
     });
   });
 
+  describe('certificate preview', () => {
+    const cert = { id: 7, achievement: { name: 'Python Basics' }, user: { username: 'bob' }, submitted_at: '2023-01-01T10:00:00' };
+    const objectUrl = 'about:blank?cert=7';
+
+    const mockApi = (certificatePdf) => {
+      client.get.mockImplementation((url) => {
+        if (url.includes('/api/achievements/admin/certificates')) {
+          return Promise.resolve({ data: { status: 'success', data: { certificates: [cert] } } });
+        }
+        if (url.includes('/api/achievements/view_certificate/')) return certificatePdf();
+        return Promise.resolve({ data: { data: [] } });
+      });
+    };
+
+    beforeEach(() => {
+      URL.createObjectURL.mockReturnValue(objectUrl);
+    });
+
+    it('frames an object URL of the PDF fetched through the API client, not the API URL itself', async () => {
+      const pdf = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+      mockApi(() => Promise.resolve({ data: pdf }));
+
+      render(<ToReview />);
+
+      const frame = await screen.findByTitle('Certificate Preview');
+      expect(frame).toHaveAttribute('src', `${objectUrl}#toolbar=0&navpanes=0&scrollbar=0`);
+      expect(client.get).toHaveBeenCalledWith(
+        '/api/achievements/view_certificate/7',
+        expect.objectContaining({ responseType: 'blob' })
+      );
+      expect(URL.createObjectURL.mock.calls[0][0].type).toBe('application/pdf');
+    });
+
+    it('shows a loading placeholder until the PDF arrives', async () => {
+      mockApi(() => new Promise(() => {}));
+
+      render(<ToReview />);
+
+      expect(await screen.findByRole('status', { name: 'Loading certificate preview' })).toBeInTheDocument();
+      expect(screen.queryByTitle('Certificate Preview')).not.toBeInTheDocument();
+    });
+
+    it('says the preview is unavailable when the PDF cannot be fetched, leaving the card usable', async () => {
+      mockApi(() => Promise.reject({ response: { status: 404 } }));
+
+      render(<ToReview />);
+
+      expect(await screen.findByText('Preview unavailable')).toBeInTheDocument();
+      expect(screen.queryByTitle('Certificate Preview')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
+    });
+
+    it('releases the object URL when the card leaves the list', async () => {
+      mockApi(() => Promise.resolve({ data: new Blob(['%PDF-1.4'], { type: 'application/pdf' }) }));
+      render(<ToReview />);
+      await screen.findByTitle('Certificate Preview');
+
+      const projectsTab = screen.getAllByRole('button').find((b) => b.classList.contains('review-tab-item') && b.textContent.includes('Projects'));
+      fireEvent.click(projectsTab);
+
+      await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith(objectUrl));
+      expect(screen.queryByTitle('Certificate Preview')).not.toBeInTheDocument();
+    });
+  });
+
   describe('certificates', () => {
     const mockCertificates = (certificates) => {
       client.get.mockImplementation((url) => {
@@ -270,7 +348,7 @@ describe('ToReview Component', () => {
       { id: 42, username: 'eli', nickname: 'Eli', timestamp: '2023-01-02T10:00:00', bit_ducks: [1], byte_ducks: [] },
     ];
     const courseRequests = [
-      { id: 51, student_username: 'fay', requested_course_id: 'co1', course_instance_id: 'inst-1', url: 'https://example.com/c', requested_at: '2023-01-03T10:00:00' },
+      { id: 51, student_username: 'fay', requested_course_id: 'co1', course_instance_id: 'inst-1', url: 'https://example.com/c', created_at: '2023-01-03T10:00:00' },
     ];
 
     const loadItems = async (items = {}, tabLabel = null) => {
@@ -736,6 +814,30 @@ describe('ToReview Component', () => {
     });
 
     describe('course requests', () => {
+      it('shows when the request was made, from the created_at the API sends', async () => {
+        await loadItems({ courseRequests }, 'Course Requests');
+
+        expect(screen.getByText(new Date('2023-01-03T10:00:00').toLocaleString())).toBeInTheDocument();
+        expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
+      });
+
+      it('shows a placeholder instead of Invalid Date when a request has no date', async () => {
+        await loadItems({ courseRequests: [{ ...courseRequests[0], created_at: null }] }, 'Course Requests');
+
+        expect(screen.getByText('Unknown date')).toBeInTheDocument();
+        expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
+      });
+
+      it('sorts a request among the other items by when it was made', async () => {
+        await loadItems({
+          projects,
+          courseRequests: [{ ...courseRequests[0], created_at: '2022-12-31T10:00:00' }],
+        });
+
+        const cards = [...document.querySelectorAll('.review-card')];
+        expect(cards.map((c) => c.className.includes('course-review-card'))).toEqual([false, true]);
+      });
+
       it('shows the server reason when a request cannot be approved', async () => {
         await loadItems({ courseRequests }, 'Course Requests');
         client.post.mockRejectedValueOnce(rejectionFor({ success: false, message: 'Course already mapped' }, 409));

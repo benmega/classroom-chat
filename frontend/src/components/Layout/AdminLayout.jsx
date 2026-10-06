@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import {
     Home,
@@ -22,6 +22,7 @@ import useSidebar from '../../hooks/useSidebar';
 import useLogout from '../../hooks/useLogout';
 import client from '../../api/client';
 import ContentLoader from '../common/ContentLoader';
+import '../admin/AdminShared.css';
 import './AdminLayout.css';
 
 const AdminLayout = ({ children }) => {
@@ -60,15 +61,19 @@ const AdminLayout = ({ children }) => {
         }
     }, [isAuthenticated, userRole]);
 
-    // Close mobile menu on route change
+    // Close mobile menu on route change. Only a changed path closes it: the sidebar context hands out a
+    // new setSidebarOpen on every render, so closing on each run would shut the menu as soon as it opened.
+    const lastPathname = useRef(location.pathname);
     useEffect(() => {
+        if (lastPathname.current === location.pathname) return;
+        lastPathname.current = location.pathname;
         setSidebarOpen(false);
     }, [location.pathname, setSidebarOpen]);
 
     if (!isAuthenticated || user?.role !== 'admin') {
         return (
-            <div className="access-denied-container">
-                <div className="access-denied-card">
+            <div className="admin-access-denied-container">
+                <div className="admin-access-denied-card">
                     <Shield size={64} color="var(--error-color)" />
                     <h1>Access Denied</h1>
                     <p>You do not have administrative permission to view this page. Restricted area.</p>
@@ -198,9 +203,11 @@ const AdminLayout = ({ children }) => {
             {/* Mobile Hamburger Button */}
             <div className="admin-mobile-top-bar mobile-only">
                 <button
+                    type="button"
                     className="admin-hamburger"
                     onClick={() => setSidebarOpen(true)}
                     aria-label="Open Sidebar"
+                    aria-expanded={Boolean(isSidebarOpen)}
                 >
                     <Menu size={24} />
                 </button>

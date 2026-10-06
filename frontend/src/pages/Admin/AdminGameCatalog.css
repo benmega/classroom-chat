@@ -8,7 +8,7 @@
 .admin-game-catalog .primary-btn {
   padding: 10px 18px;
   background: var(--primary-color, #0eb2bb);
-  color: white;
+  color: var(--text-on-primary);
   border: none;
   border-radius: 10px;
   font-weight: 700;
@@ -33,7 +33,7 @@
 
 .admin-game-catalog .secondary-btn {
   padding: 10px 16px;
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid var(--border-subtle, #e2e8f0);
   border-radius: 10px;
   font-weight: 700;
@@ -62,7 +62,7 @@
   padding: 24px;
 }
 
-.table-responsive {
+:where(.admin-game-catalog) .table-responsive {
   width: 100%;
   overflow-x: auto;
 }

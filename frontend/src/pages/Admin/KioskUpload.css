@@ -1,14 +1,24 @@
 .kiosk-container {
+    /* The kiosk is a dark screen of its own, so its colours are local tokens rather than app palette steps */
+    --kiosk-bg-from: #1e1e2f;
+    --kiosk-bg-to: #151522;
+    --kiosk-accent: #4a90e2;
+    --kiosk-heading-end: #b8c1ec;
+    --kiosk-text-muted: #a0a0b8;
+    --kiosk-text-faint: #8b8b9d;
+    --kiosk-danger: #ff453a;
+    --kiosk-avatar-bg: #2a2a35;
+
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(135deg, #1e1e2f 0%, #151522 100%);
-    color: #fff;
+    background: linear-gradient(135deg, var(--kiosk-bg-from) 0%, var(--kiosk-bg-to) 100%);
+    color: var(--text-on-primary);
     display: flex;
     flex-direction: column;
-    z-index: 9999;
+    z-index: var(--z-modal);
     overflow: hidden;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -22,7 +32,7 @@
 .kiosk-spinner {
     animation: kiosk-spin 1s linear infinite;
     margin-bottom: 1rem;
-    color: #4a90e2;
+    color: var(--kiosk-accent);
 }
 
 @keyframes kiosk-spin {
@@ -44,14 +54,14 @@
     margin: 0 0 0.25rem 0;
     font-size: 1.75rem;
     font-weight: 700;
-    background: linear-gradient(90deg, #fff, #b8c1ec);
+    background: linear-gradient(90deg, var(--text-on-primary), var(--kiosk-heading-end));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .kiosk-header-info p {
     margin: 0;
-    color: #a0a0b8;
+    color: var(--kiosk-text-muted);
     font-size: 1rem;
 }
 
@@ -60,7 +70,7 @@
     align-items: center;
     gap: 0.5rem;
     background: rgba(255, 69, 58, 0.15);
-    color: #ff453a;
+    color: var(--kiosk-danger);
     border: 1px solid rgba(255, 69, 58, 0.3);
     padding: 0.75rem 1.25rem;
     border-radius: 8px;
@@ -126,20 +136,20 @@
     object-fit: cover;
     margin-bottom: 1rem;
     border: 3px solid rgba(255, 255, 255, 0.1);
-    background-color: #2a2a35;
+    background-color: var(--kiosk-avatar-bg);
 }
 
 .kiosk-name {
     margin: 0 0 0.25rem 0;
     font-size: 1.25rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--text-on-primary);
 }
 
 .kiosk-handle {
     margin: 0;
     font-size: 0.9rem;
-    color: #8b8b9d;
+    color: var(--kiosk-text-faint);
 }
 
 .kiosk-upload-overlay {
@@ -160,7 +170,7 @@
     justify-content: center;
     align-items: center;
     height: 100%;
-    color: #a0a0b8;
+    color: var(--kiosk-text-muted);
     font-size: 1.2rem;
 }
 
@@ -182,7 +192,7 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 800px) {
     .kiosk-header {
         flex-direction: column;
         gap: 1rem;

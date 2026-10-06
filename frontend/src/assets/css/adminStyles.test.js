@@ -4,8 +4,8 @@ import { readFileSync, readdirSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// Guards for the admin stylesheets (issue #76): custom properties must resolve, the admin
-// layers keep their order on the shared z-index scale, and the dark log console stays readable.
+// Guards for the admin stylesheets (issues #76 and #78): custom properties must resolve, colours come from tokens,
+// the admin layers keep their order on the shared z-index scale, and the dark log console stays readable.
 // Read from disk: vitest swaps imported CSS (even ?raw) for an empty string.
 const srcDir = fileURLToPath(new URL('../../', import.meta.url))
 const cssPaths = (dir) =>
@@ -57,6 +57,49 @@ const usesWithoutFallback = (text) => {
     if (!hasFallback) found.push(m[1])
   }
   return found
+}
+
+// Every `selector { declarations }` pair, including the ones inside @media/@supports blocks.
+const rulesOf = (text) => [...text.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body]) => ({ selector: selector.trim(), body }))
+const declarationsOf = (body) =>
+  body
+    .replace(/url\((['"]?)[^)]*\1\)/g, 'url()')
+    .split(';')
+    .map((d) => d.trim())
+    .filter((d) => d.includes(':'))
+    .map((d) => [d.slice(0, d.indexOf(':')).trim(), d.slice(d.indexOf(':') + 1).trim()])
+
+// A selector list split at its top-level commas (a comma inside :where(a, b) or :not(...) does not count).
+const splitSelectors = (list) => {
+  const parts = []
+  let depth = 0
+  let start = 0
+  for (let i = 0; i < list.length; i++) {
+    if (list[i] === '(') depth++
+    else if (list[i] === ')') depth--
+    else if (list[i] === ',' && depth === 0) {
+      parts.push(list.slice(start, i))
+      start = i + 1
+    }
+  }
+  parts.push(list.slice(start))
+  return parts.map((p) => p.trim()).filter(Boolean)
+}
+// The classes of a selector's first compound, after any zero-specificity :where(...) scope in front of it.
+const firstCompound = (selector) => {
+  let rest = selector.trim()
+  const scoped = rest.startsWith(':where(')
+  while (rest.startsWith(':where(')) {
+    let depth = 0
+    let i = 0
+    for (; i < rest.length; i++) {
+      if (rest[i] === '(') depth++
+      else if (rest[i] === ')' && --depth === 0) break
+    }
+    rest = rest.slice(i + 1).trim()
+  }
+  const classes = [...rest.split(/[\s>+~]/)[0].matchAll(/\.([A-Za-z_][\w-]*)/g)].map((m) => m[1])
+  return { scoped, classes }
 }
 
 const ruleBody = (text, selector) => {
@@ -114,6 +157,169 @@ describe('admin stylesheets', () => {
     expect(overlay).toBeLessThan(rail)
     expect(rail).toBeLessThan(modal)
     expect(modal).toBeGreaterThan(Number(tokens['--z-modal']))
+  })
+
+  it('puts every admin z-index on the shared scale, or on a small local layer inside a component', () => {
+    const offenders = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const { selector, body } of rulesOf(sheet(path))) {
+        for (const [prop, value] of declarationsOf(body)) {
+          if (prop !== 'z-index') continue
+          const token = value.match(/^var\((--z-[\w-]+)\)$/)?.[1]
+          const isLocalLayer = /^[0-9]$/.test(value)
+          if (!(token && token in tokens) && !isLocalLayer) offenders.push(`${path.replace('/src/', '')}: ${selector} { z-index: ${value} }`)
+        }
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  it('stacks in-page menus below the rail, and the Classes modal and the kiosk below the toasts', () => {
+    const z = (path, selector) => Number(resolveToken(declaration(ruleBody(sheet(path), selector), 'z-index')))
+    const rail = z('/src/components/Layout/AdminLayout.css', '.admin-sidebar')
+    const toast = Number(tokens['--z-toast'])
+
+    // Menus open over their own page but never over the drawer, its overlay or a dialog
+    expect(z('/src/pages/Admin/Users.css', '.kebab-dropdown')).toBeLessThan(rail)
+    expect(z('/src/components/admin/ColumnFilterDropdown.css', '.column-filter-dropdown')).toBeLessThan(rail)
+    expect(z('/src/pages/Admin/AdminAssignProject.css', '.aap-dropdown')).toBeLessThan(rail)
+
+    // The Classes modal covers the rail, and the kiosk page lets toasts (its upload progress) show above it
+    expect(z('/src/pages/Admin/Classes.css', '.modal-overlay')).toBeGreaterThan(rail)
+    expect(z('/src/pages/Admin/Classes.css', '.modal-overlay')).toBeLessThan(toast)
+    expect(z('/src/pages/Admin/KioskUpload.css', '.kiosk-container')).toBeLessThan(toast)
+  })
+
+  it('draws keyboard focus with the shared ring and never drops the outline without drawing one elsewhere', () => {
+    const weakFocusRules = []
+    const droppedOutlines = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const { selector, body } of rulesOf(sheet(path))) {
+        const decls = Object.fromEntries(declarationsOf(body))
+        const label = `${path.replace('/src/', '')}: ${selector.replace(/\s+/g, ' ')}`
+        // A :focus rule (not :focus-visible/:focus-within) must use the ring, as the global input:focus rule does
+        if (/:focus(?![-\w])/.test(selector) && decls['box-shadow'] !== 'var(--focus-ring)') weakFocusRules.push(label)
+        if (/^(none|0)$/.test(decls.outline ?? '')) droppedOutlines.push(label)
+      }
+    }
+    expect(weakFocusRules).toEqual([])
+    // The one exception: the library card button hands its ring to the card around it (checked next)
+    expect(droppedOutlines).toEqual(['pages/Admin/AdminStandardProjects.css: .project-card-open:focus-visible'])
+    expect(sheet('/src/pages/Admin/AdminStandardProjects.css')).toMatch(
+      /\.project-card:has\(\.project-card-open:focus-visible\)\s*\{[^}]*outline:\s*2px solid/,
+    )
+  })
+
+  it('scopes admin rules for class names that other stylesheets also style', () => {
+    // CSS is global once a page's chunk has loaded, so an unscoped `.form-group` or `.section-title` in an admin sheet
+    // restyles every page that uses the name (and the other way round). Admin rules for a shared name sit behind a
+    // zero-specificity scope, :where(.admin-body) or the page's own root, which leaves their specificity unchanged.
+    const sheetsByClass = {}
+    for (const path of Object.keys(css)) {
+      for (const { selector } of rulesOf(sheet(path))) {
+        for (const one of splitSelectors(selector)) {
+          const [lead] = firstCompound(one).classes
+          if (lead) (sheetsByClass[lead] ||= new Set()).add(path)
+        }
+      }
+    }
+    const isShared = (name) => sheetsByClass[name]?.size > 1
+
+    const offenders = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const { selector } of rulesOf(sheet(path))) {
+        for (const one of splitSelectors(selector)) {
+          const { scoped, classes } = firstCompound(one)
+          // `.modal-body.advanced-modal-body` is already specific to its page through the second class
+          if (!scoped && classes.length && classes.every(isShared)) offenders.push(`${path.replace('/src/', '')}: ${one.replace(/\s+/g, ' ')}`)
+        }
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  it('keeps admin media queries on the three shared breakpoints', () => {
+    // Phones, tablets (where the rail becomes a drawer) and narrow desktops. A min-width is the next pixel up, so
+    // no width falls in both a max-width and a min-width block.
+    const maxWidths = [640, 800, 1024]
+    const minWidths = maxWidths.map((px) => px + 1)
+    const offenders = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const [, kind, px] of sheet(path).matchAll(/\((max|min)-width:\s*(\d+)px\)/g)) {
+        if (!(kind === 'max' ? maxWidths : minWidths).includes(Number(px))) offenders.push(`${path.replace('/src/', '')}: (${kind}-width: ${px}px)`)
+      }
+    }
+    expect(offenders).toEqual([])
+  })
+
+  it('keeps the class dashboard banner and the library tab strip usable on a phone', () => {
+    // At 360px the banner's join code and print button were clipped, and the library's four tabs were squeezed
+    // into each other because they could shrink instead of scrolling the strip.
+    const phoneBannerRule = (selector) => {
+      const blocks = [...sheet('/src/pages/Admin/AdminClassDashboard.css').matchAll(/@media\s*\(max-width:\s*640px\)\s*\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g)]
+      for (const [, inner] of blocks) {
+        for (const { selector: sel, body } of rulesOf(inner)) if (sel === selector) return body
+      }
+      throw new Error(`no phone rule for ${selector}`)
+    }
+    expect(declaration(phoneBannerRule('.classroom-banner'), 'flex-direction')).toBe('column')
+    expect(declaration(phoneBannerRule(':where(.admin-class-dashboard) .banner-actions'), 'flex-wrap')).toBe('wrap')
+
+    const libraryTab = ruleBody(sheet('/src/pages/Admin/AdminLibrary.css'), '.library-tab')
+    expect(declaration(libraryTab, 'flex-shrink')).toBe('0')
+  })
+
+  it('keeps the create-classroom modal rules in Classes.css, not in the class dashboard sheet', () => {
+    // The dashboard never renders .modal-overlay/.modal-card, but unscoped rules for them restyled the Classes modal
+    // (a translucent card, and a dark one on dark-OS devices under that modal's dark heading text).
+    expect(sheet('/src/pages/Admin/AdminClassDashboard.css')).not.toMatch(/\.modal-(overlay|card)\b/)
+    expect(sheet('/src/pages/Admin/Classes.css')).toMatch(/\.modal-overlay\s*\{/)
+    expect(sheet('/src/pages/Admin/Classes.css')).toMatch(/\.modal-card\s*\{/)
+  })
+
+  it('has no prefers-color-scheme overrides, since the app has no dark theme', () => {
+    const withDarkRules = Object.keys(css).filter((path) => isAdminSheet(path) && /prefers-color-scheme/.test(sheet(path)))
+    expect(withDarkRules).toEqual([])
+  })
+
+  it('draws the parent-message badge and avatar from shared tokens with AA contrast', () => {
+    const review = sheet('/src/pages/Admin/ToReview.css')
+    const badge = ruleBody(review, '.badge-parent-message')
+    expect(declaration(badge, 'color')).toMatch(/^var\(--/)
+    expect(declaration(badge, 'background')).toMatch(/^var\(--/)
+    expect(
+      contrast(resolveToken(declaration(badge, 'color')), resolveToken(declaration(badge, 'background'))),
+    ).toBeGreaterThanOrEqual(4.5)
+
+    // The avatar glyph is white on a two-stop gradient: both stops need the contrast
+    const avatar = ruleBody(review, '.avatar-placeholder.parent-avatar')
+    const stops = declaration(avatar, 'background').match(/var\(--[\w-]+\)/g)
+    expect(stops).toHaveLength(2)
+    for (const stop of stops) {
+      expect(contrast(resolveToken(declaration(avatar, 'color')), resolveToken(stop)), stop).toBeGreaterThanOrEqual(4.5)
+    }
+  })
+
+  it('writes colours as tokens, not raw hex or white/black literals', () => {
+    // A var() fallback is ignored when its token is defined, so only one on an undefined token counts as a literal.
+    const withoutDeadFallbacks = (value) =>
+      value.replace(/var\(\s*(--[\w-]+)\s*,[^()]*(?:\([^()]*\)[^()]*)*\)/g, (whole, name) =>
+        name in definitions ? `var(${name})` : whole,
+      )
+    const literal = /#[0-9a-f]{3,8}\b|\b(?:white|black)\b/i
+
+    const offenders = []
+    for (const path of Object.keys(css).filter(isAdminSheet)) {
+      for (const { selector, body } of rulesOf(sheet(path))) {
+        for (const [prop, value] of declarationsOf(body)) {
+          // `--name: #hex` is the token definition itself
+          if (!prop.startsWith('--') && literal.test(withoutDeadFallbacks(value))) {
+            offenders.push(`${path.replace('/src/', '')}: ${selector} { ${prop}: ${value} }`)
+          }
+        }
+      }
+    }
+    expect(offenders).toEqual([])
   })
 
   it('draws the log console text and its sub-text with AA contrast', () => {

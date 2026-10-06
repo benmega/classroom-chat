@@ -7,6 +7,7 @@ import AdminLayout from './AdminLayout';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import { SidebarProvider } from '../../context/SidebarContext';
+import AdminPageHeader from '../admin/AdminPageHeader';
 
 vi.mock('../../api/client', () => ({
     default: { get: vi.fn().mockResolvedValue({ data: { status: 'error' } }) },
@@ -65,6 +66,67 @@ describe('AdminLayout Component', () => {
         expect(screen.getByText('Lazy Admin Page')).toBeInTheDocument();
         expect(screen.queryByRole('status', { name: 'Loading page' })).not.toBeInTheDocument();
         expect(screen.getByRole('link', { name: 'Admin HQ Home' })).toBeInTheDocument();
+    });
+});
+
+describe('AdminLayout mobile menu', () => {
+    beforeEach(() => {
+        useAuthStore.setState({
+            isAuthenticated: true,
+            user: { role: 'admin', username: 'admin1' },
+        });
+    });
+
+    it('has a menu button that is not a submit button and starts collapsed', () => {
+        renderLayout(<div>Admin Page Content</div>);
+
+        const menu = screen.getByRole('button', { name: 'Open Sidebar' });
+        expect(menu).toHaveAttribute('type', 'button');
+        expect(menu).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('opens the sidebar from the keyboard and reports it with aria-expanded', async () => {
+        const user = userEvent.setup();
+        const { container } = renderLayout(<div>Admin Page Content</div>);
+        const menu = screen.getByRole('button', { name: 'Open Sidebar' });
+        expect(container.querySelector('.admin-app-container')).not.toHaveClass('mobile-open');
+
+        menu.focus();
+        await user.keyboard('{Enter}');
+
+        expect(container.querySelector('.admin-app-container')).toHaveClass('mobile-open');
+        expect(menu).toHaveAttribute('aria-expanded', 'true');
+
+        await user.click(screen.getByRole('button', { name: 'Close sidebar' }));
+
+        expect(container.querySelector('.admin-app-container')).not.toHaveClass('mobile-open');
+        expect(menu).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('closes the open menu when the route changes', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <MemoryRouter initialEntries={['/admin']}>
+                <SidebarProvider>
+                    <AdminLayout><div>Admin Page Content</div></AdminLayout>
+                </SidebarProvider>
+            </MemoryRouter>
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Open Sidebar' }));
+        expect(container.querySelector('.admin-app-container')).toHaveClass('mobile-open');
+
+        await user.click(screen.getByRole('link', { name: 'User Management' }));
+
+        expect(container.querySelector('.admin-app-container')).not.toHaveClass('mobile-open');
+    });
+
+    it('is the only menu button on a page that has a page header', () => {
+        renderLayout(<AdminPageHeader title="User Directory" />);
+
+        expect(screen.getByRole('heading', { level: 1, name: 'User Directory' })).toBeInTheDocument();
+        expect(screen.getAllByRole('button', { name: /menu|sidebar/i }).map((b) => b.getAttribute('aria-label')))
+            .toEqual(['Close sidebar', 'Open Sidebar']);
     });
 });
 
