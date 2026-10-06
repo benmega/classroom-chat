@@ -128,7 +128,7 @@ def get_user(identifier):
 
 
 # Usernames only staff accounts may hold. Self-service account creation never
-# hands them out. Keep in step with the role step of tools/migrate_classroom.py.
+# hands them out.
 RESERVED_USERNAMES = frozenset({"ben", "benmega", "admin", "administrator"})
 
 

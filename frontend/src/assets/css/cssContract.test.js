@@ -255,9 +255,7 @@ describe('colour tokens (T3a)', () => {
             .filter((f) => f !== 'assets/css/variables.css' && f !== 'components/Layout/AdminLayout.css')
             .filter((f) => !/^(pages\/Admin|components\/admin)\//.test(f));
         const found = files.flatMap((rel) => rawColours(rel).map((literal) => `${rel}: ${literal}`));
-        // Layout.css still holds the rule of the removed locker drawer; nothing renders .stat-badge.drawer
-        const leftovers = ['components/Layout/Layout.css: color: #6366f1'];
-        expect(found.filter((literal) => !leftovers.includes(literal))).toEqual([]);
+        expect(found).toEqual([]);
     });
 });
 
