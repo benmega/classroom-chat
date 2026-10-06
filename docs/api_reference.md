@@ -11,7 +11,7 @@ Timestamps in responses and socket payloads are ISO 8601 in UTC with a trailing 
 ## 1. Authentication & Session (`/user`)
 - **`POST /user/login`**: Authenticates a user and starts a session. Returns user data and any awarded daily currency.
 - **`POST /user/signup`**: New user registration (requires admin approval by default).
-- **`GET /user/logout`**: Terminates the current session and disconnects the user's open sockets (a client of the same user on another device simply reconnects).
+- **`POST /user/logout`**: Terminates the current session and disconnects the user's open sockets (a client of the same user on another device simply reconnects). CSRF-protected like every other POST, except that a session that has already expired is answered as signed out rather than with a 400. `GET /user/logout` is deprecated: it is kept for one release so a frontend bundle built before the switch can still sign out, and should be removed after that.
 - **`GET /user/api/auth/status`**: Returns the current authenticated user's profile and roles.
 - **`POST /user/api/auth/tutorial/complete`**: Marks the onboarding tutorial as complete for the current user.
 - **`POST /api/session/heartbeat`**: Keeps the session/presence alive (used for online-status tracking). Returns `401` when there is no logged-in session (or the account no longer exists).

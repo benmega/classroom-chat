@@ -122,7 +122,7 @@ const useAuthStore = create((set, get) => ({
 
   logout: async () => {
     try {
-      await client.get('/user/logout');
+      await client.post('/user/logout');
     } catch (error) {
       // Sign out locally regardless: callers navigate away afterwards, so they must not get a rejection.
       // The server may still hold the session though, which a reload would pick up again.

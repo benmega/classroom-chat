@@ -14,7 +14,7 @@ def test_login_status_authenticated(logged_in_client, sample_user):
 
 
 def test_logout(logged_in_client):
-    response = logged_in_client.get("/user/logout")
+    response = logged_in_client.post("/user/logout")
     # Should redirect or return success
     assert response.status_code in [200, 302]
 

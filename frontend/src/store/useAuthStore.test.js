@@ -229,7 +229,7 @@ describe('useAuthStore', () => {
   });
 
   it('logout discards the chat socket and clears state even when the request fails', async () => {
-    server.use(http.get('*/user/logout', () => HttpResponse.error()));
+    server.use(http.post('*/user/logout', () => HttpResponse.error()));
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
 
     await expect(useAuthStore.getState().logout()).resolves.toBeUndefined();
@@ -240,7 +240,7 @@ describe('useAuthStore', () => {
   });
 
   it('logout does not reject on a server error, so callers still navigate away', async () => {
-    server.use(http.get('*/user/logout', () => new HttpResponse(null, { status: 500 })));
+    server.use(http.post('*/user/logout', () => new HttpResponse(null, { status: 500 })));
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 }, hamburgerProgress: 0.4 });
 
     await expect(useAuthStore.getState().logout()).resolves.toBeUndefined();
@@ -252,7 +252,7 @@ describe('useAuthStore', () => {
   });
 
   it('logout warns that the server may still hold the session when the request fails', async () => {
-    server.use(http.get('*/user/logout', () => HttpResponse.error()));
+    server.use(http.post('*/user/logout', () => HttpResponse.error()));
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
 
     await useAuthStore.getState().logout();

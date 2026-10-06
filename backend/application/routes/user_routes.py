@@ -159,9 +159,17 @@ def tutorial_complete():
         return {"error": "Internal server error"}, 500
 
 
-@user.route("/logout")
+@csrf.exempt
+@user.route("/logout", methods=["GET", "POST"])
 def logout():
     user_id = session.get("user")
+    # Signing out is a POST, checked for a CSRF token here rather than by the
+    # automatic hook: a session that has already expired has no token left to
+    # validate and nothing to end, so it is answered as signed out instead of
+    # with a 400. GET is deprecated and stays accepted for one release, for a
+    # frontend bundle built before the switch.
+    if request.method == "POST" and user_id and current_app.config["WTF_CSRF_ENABLED"]:
+        csrf.protect()
     if user_id:
         # An open socket keeps the rooms and session it had at handshake time,
         # so it must not outlive this login (a different user may sign in next)
