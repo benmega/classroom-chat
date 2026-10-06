@@ -226,6 +226,38 @@ describe('Shop', () => {
     });
   });
 
+  describe('wallpaper preview avatar', () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    const previewAvatar = async (profilePictureUrl) => {
+      useAuthStore.setState({
+        user: { id: 1, username: 'testuser', role: 'student', packets: 100, profile_picture_url: profilePictureUrl },
+      });
+      renderWithProviders(<Shop />);
+      await screen.findByText(/Upload Wallpaper/i);
+      return document.querySelector('.wallpaper-preview .mini-avatar img').getAttribute('src');
+    };
+
+    it('keeps the bundled default avatar on the frontend host when the API is on another origin', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+      expect(await previewAvatar('/static/images/Default_pfp.jpg')).toBe('/static/images/Default_pfp.jpg');
+    });
+
+    it('loads an uploaded avatar from the API origin', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+      expect(await previewAvatar('/user/profile_pictures/me.png')).toBe('https://api.example.com/user/profile_pictures/me.png');
+    });
+
+    it('leaves an absolute avatar URL alone', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+      expect(await previewAvatar('https://cdn.example.com/me.png')).toBe('https://cdn.example.com/me.png');
+    });
+
+    it('falls back to a generated avatar when the user has no picture URL', async () => {
+      expect(await previewAvatar(undefined)).toContain('ui-avatars.com/api/?name=testuser');
+    });
+  });
+
   describe('wallpaper cropping', () => {
     const chooseWallpaper = async () => {
       renderWithProviders(<Shop />);

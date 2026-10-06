@@ -36,6 +36,50 @@ describe('DevLogin', () => {
         expect(screen.getByText('Authentication Failed')).toBeInTheDocument();
     });
 
+    it('displays the message field of an error that has no error field', async () => {
+        server.use(
+            http.post('*/api/dev-login', () => HttpResponse.json({ message: 'Dev login is disabled' }, { status: 403 }))
+        );
+
+        render(
+            <MemoryRouter initialEntries={['/dev-login']}>
+                <DevLogin />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Dev login is disabled')).toBeInTheDocument();
+    });
+
+    it('displays the error of a response that answers without success', async () => {
+        server.use(
+            http.post('*/api/dev-login', () => HttpResponse.json({ success: false, error: 'No such role' }))
+        );
+
+        render(
+            <MemoryRouter initialEntries={['/dev-login']}>
+                <DevLogin />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('No such role')).toBeInTheDocument();
+    });
+
+    it('displays the fallback instead of a proxy error page', async () => {
+        server.use(
+            http.post('*/api/dev-login', () =>
+                new HttpResponse('<html><body>502 Bad Gateway</body></html>', { status: 502, headers: { 'Content-Type': 'text/html' } })
+            )
+        );
+
+        render(
+            <MemoryRouter initialEntries={['/dev-login']}>
+                <DevLogin />
+            </MemoryRouter>
+        );
+
+        expect(await screen.findByText('Dev login request failed.')).toBeInTheDocument();
+    });
+
     it('displays fallback error message if request fails completely', async () => {
         server.use(
             http.post('*/api/dev-login', () => {

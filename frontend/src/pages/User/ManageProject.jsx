@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, CheckCircle, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
 import AccessDenied from '../Error/AccessDenied';
 import NotFound from '../Error/NotFound';
 import useAuthStore from '../../store/useAuthStore';
@@ -8,6 +8,7 @@ import SmartImage from '../../components/common/SmartImage';
 import ScreenRecorder from '../../components/common/ScreenRecorder';
 import Skeleton from '../../components/common/Skeleton';
 import { formatStaticUrl } from '../../utils/formatters';
+import { getFeedbackStyle } from '../../utils/projectFeedback';
 
 import { useProjectManagement } from '../../hooks/useProjectManagement';
 
@@ -105,6 +106,8 @@ const ManageProject = () => {
 
     if (error === 'forbidden') return <AccessDenied />;
     if (error === 'not_found') return <NotFound message="The project you are looking for does not exist or you do not have permission to view it." />;
+
+    const feedback = getFeedbackStyle(projectData.status);
 
     return (
         <div className="manage-project-page">
@@ -307,8 +310,8 @@ const ManageProject = () => {
                                         </p>
                                         
                                         {projectData.teacher_comment && (
-                                            <div className={`card-teacher-feedback mt-3 ${projectData.status === 'rejected' ? 'revision-feedback' : ''}`}>
-                                                {projectData.status === 'rejected' ? <AlertCircle size={14} /> : <CheckCircle size={14} />} {projectData.status === 'rejected' ? 'Revision Note' : 'Teacher Note'}: {projectData.teacher_comment}
+                                            <div className={`card-teacher-feedback mt-3 ${feedback.className}`}>
+                                                <feedback.Icon size={14} /> {feedback.noteLabel}: {projectData.teacher_comment}
                                             </div>
                                         )}
                                     </div>

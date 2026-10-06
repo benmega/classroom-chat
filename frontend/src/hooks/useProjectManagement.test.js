@@ -93,6 +93,23 @@ describe('useProjectManagement', () => {
         expect(result.current.isLoading).toBe(false);
     });
 
+    it('keeps the review status and feedback of a rejected project', async () => {
+        serveProject({ project: { name: 'Proj 1', user_id: '2', status: 'rejected', teacher_comment: 'Add comments to the loop' } });
+
+        const { result } = await mountProject();
+
+        expect(result.current.projectData.status).toBe('rejected');
+        expect(result.current.projectData.teacher_comment).toBe('Add comments to the loop');
+    });
+
+    it('treats a project the server sent without a status as pending', async () => {
+        serveProject();
+
+        const { result } = await mountProject();
+
+        expect(result.current.projectData.status).toBe('pending');
+    });
+
     it('loads the student list for an admin', async () => {
         serveProject();
 
@@ -269,6 +286,21 @@ describe('useProjectManagement', () => {
         // An admin lands on the profile of the student the project belongs to
         expect(mockNavigate).toHaveBeenCalledWith('/profile/student2');
         expect(result.current.isSaving).toBe(false);
+    });
+
+    it('tells a student their rejected project was resubmitted for review', async () => {
+        mockUser = { id: 2, role: 'student' };
+        serveProject({ project: { name: 'Proj 1', user_id: '2', status: 'rejected', teacher_comment: 'Add comments to the loop' } });
+        client.post.mockResolvedValueOnce({ data: { status: 'success' } });
+        const { result } = await mountProject();
+
+        await act(async () => {
+            await result.current.handleSubmit({ preventDefault: vi.fn() });
+        });
+
+        expect(toast.success).toHaveBeenCalledWith('Project resubmitted for review!');
+        expect(toast.success).not.toHaveBeenCalledWith('Project updated!');
+        expect(mockNavigate).toHaveBeenCalledWith('/profile');
     });
 
     it('sends an admin to their own profile when the project owner is not in the student list', async () => {
