@@ -157,9 +157,30 @@ describe('ManageProject', () => {
             await openProject({ status: 'pending', teacher_comment: 'Add comments to the loop' });
 
             expect(document.querySelector('.revision-notice-banner')).toBeNull();
-            expect(previewNote()).toHaveTextContent('Previous Note: Add comments to the loop');
+            expect(previewNote()).toHaveTextContent('Feedback: Add comments to the loop');
             expect(previewNote()).toHaveClass('pending-feedback');
             expect(screen.queryByText(/Teacher Note/)).not.toBeInTheDocument();
+        });
+
+        it('does not call the first comment an admin types on a new project a previous note', async () => {
+            // The server keeps an admin's comment on a new project, which starts out pending
+            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
+            server.use(
+                http.get('*/user/project/new', () => HttpResponse.json({ status: 'success', data: { students: [] } }))
+            );
+            render(
+                <MemoryRouter initialEntries={['/manage-project']}>
+                    <ManageProject />
+                </MemoryRouter>
+            );
+            await screen.findByText('Core Information');
+            fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
+
+            fireEvent.change(await screen.findByLabelText('Teacher Comment'), { target: { value: 'Great start, keep going' } });
+
+            expect(previewNote()).toHaveTextContent('Feedback: Great start, keep going');
+            expect(previewNote()).not.toHaveTextContent(/Previous/);
+            expect(previewNote()).toHaveClass('pending-feedback');
         });
     });
 

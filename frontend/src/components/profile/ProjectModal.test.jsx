@@ -104,8 +104,9 @@ describe('ProjectModal Component', () => {
       expect(screen.queryByText(/Instructor Review/)).not.toBeInTheDocument();
     });
 
-    it('does not present the old revision note of a resubmitted project as an instructor review', () => {
-      // A rejected project that was edited goes back to pending but keeps its comment
+    it('does not present the note of a pending project as an instructor review or as a previous note', () => {
+      // A pending project's note is either the old revision note of a resubmitted project or a
+      // fresh note an admin wrote when adding it, so it must not claim to be either
       render(
         <ProjectModal
           project={{ ...noVideoProject, status: 'pending', teacher_comment: 'Add comments to the loop' }}
@@ -113,7 +114,8 @@ describe('ProjectModal Component', () => {
         />
       );
 
-      expect(feedback()).toHaveTextContent('Previous Feedback');
+      expect(feedback()).toHaveTextContent('Teacher Feedback');
+      expect(feedback()).not.toHaveTextContent(/Previous/);
       expect(feedback()).toHaveTextContent('"Add comments to the loop"');
       expect(feedback()).toHaveClass('pending-feedback');
       expect(feedback()).not.toHaveClass('revision-feedback');
