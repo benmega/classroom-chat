@@ -116,6 +116,10 @@ export default defineConfig({
           if (/node_modules\/(chart\.js|react-chartjs-2|@kurkle)\//.test(id)) return 'vendor-charts'
           if (/node_modules\/(react-admin|ra-[a-z0-9-]+)\//.test(id)) return 'vendor-react-admin'
           if (/node_modules\/emoji-picker-react\//.test(id)) return 'vendor-emoji'
+          // Both are loaded with dynamic imports by the project viewers (3D models, source
+          // files) and must never land in the eagerly loaded chunks.
+          if (/node_modules\/three\//.test(id)) return 'vendor-three'
+          if (/node_modules\/highlight\.js\//.test(id)) return 'vendor-hljs'
         },
       },
     },
