@@ -3,7 +3,9 @@ Request body limits: a low global MAX_CONTENT_LENGTH, raised only for the
 project video upload endpoints.
 
 Upload endpoints and the body size each one legitimately needs:
-  - user.new_project / user.edit_project   project video, up to 500 MB (raised limit)
+  - user.new_project / user.edit_project   project video, up to 500 MB (raised limit),
+                                           and the project's files (3D models, source
+                                           files, assets), up to 150 MB per project
   - submission.submit_work                 20 MB file (Config.SUBMISSION_MAX_BYTES)
   - user profile picture / project image / wallpaper, project template image:
                                            5-10 MB images
@@ -51,6 +53,16 @@ def test_ordinary_upload_caps_fit_under_the_global_limit():
         10 * 1024 * 1024 + 4096,  # largest image upload
     ):
         assert needed < Config.MAX_CONTENT_LENGTH
+
+
+def test_a_projects_files_fit_in_one_project_form_request():
+    """Project files come with the project form, on the endpoints with the raised limit."""
+    per_part_overhead = 4096
+    whole_set = Config.PROJECT_FILES_MAX_TOTAL_BYTES + Config.PROJECT_FILES_MAX_COUNT * per_part_overhead
+
+    assert whole_set < Config.LARGE_UPLOAD_MAX_CONTENT_LENGTH
+    for cap in (Config.PROJECT_MODEL_MAX_BYTES, Config.PROJECT_SOURCE_MAX_BYTES, Config.PROJECT_ASSET_MAX_BYTES):
+        assert cap <= Config.PROJECT_FILES_MAX_TOTAL_BYTES
 
 
 def test_limit_is_raised_before_the_csrf_check(test_app):

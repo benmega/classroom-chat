@@ -28,6 +28,7 @@ def setup_models():
     from .parent_message import ParentMessage
     from .parent_student import parent_students
     from .project import Project
+    from .project_file import ProjectFile
     from .project_template import ProjectTemplate
     from .session_log import SessionLog
     from .skill import Skill

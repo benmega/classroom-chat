@@ -122,6 +122,30 @@ class Config:
     MAX_IMAGE_PIXELS = 25_000_000  # width * height
     IMAGE_MAX_FRAMES = 100  # animated GIF / WebP / APNG
 
+    # Project files (application/utilities/project_files.py): a project's 3D models,
+    # source files and assets. They come with the project form, whose endpoints are in
+    # LARGE_UPLOAD_ENDPOINTS, so a project's whole set fits in one request. The
+    # frontend mirrors these lists and caps (frontend/src/utils/projectFiles.js).
+    PROJECT_MODEL_EXTENSIONS: ClassVar[frozenset[str]] = frozenset(
+        {"stl", "obj", "glb", "gltf", "3mf", "ply"}
+    )
+    # Shown as text and always served as text/plain, so script and page types are
+    # safe here; binaries (exe, msi, dll, ...) are never accepted.
+    PROJECT_SOURCE_EXTENSIONS: ClassVar[frozenset[str]] = frozenset({
+        "py", "js", "jsx", "ts", "tsx", "mjs", "cjs", "html", "htm", "css", "scss",
+        "json", "md", "txt", "java", "c", "h", "cpp", "hpp", "cs", "go", "rs", "rb",
+        "php", "lua", "sql", "xml", "yml", "yaml", "toml", "ini", "csv", "gd", "kt",
+        "swift", "sh", "bat", "ps1", "r", "m",
+    })
+    PROJECT_ASSET_EXTENSIONS: ClassVar[frozenset[str]] = frozenset(
+        {"png", "jpg", "jpeg", "gif", "webp", "mp3", "wav", "ogg", "m4a", "pdf"}
+    )
+    PROJECT_MODEL_MAX_BYTES = 50 * 1024 * 1024
+    PROJECT_SOURCE_MAX_BYTES = 1024 * 1024
+    PROJECT_ASSET_MAX_BYTES = 10 * 1024 * 1024
+    PROJECT_FILES_MAX_COUNT = 40  # per project
+    PROJECT_FILES_MAX_TOTAL_BYTES = 150 * 1024 * 1024  # per project
+
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
