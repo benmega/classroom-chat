@@ -24,7 +24,8 @@ const AdminAssignProject = () => {
         github_link: '',
         video_url: '',
         code_snippet: '',
-        image_url: ''
+        image_url: '',
+        project_type: 'code'
     });
 
 
@@ -204,7 +205,8 @@ const AdminAssignProject = () => {
                                                         github_link: sp.github_link || '',
                                                         video_url: sp.video_url || '',
                                                         code_snippet: sp.code_snippet || '',
-                                                        image_url: sp.image_url || ''
+                                                        image_url: sp.image_url || '',
+                                                        project_type: sp.project_type || 'code'
                                                     });
                                                 }
                                             }}
@@ -213,6 +215,19 @@ const AdminAssignProject = () => {
                                             {standardProjects.map(sp => (
                                                 <option key={sp.id} value={sp.id}>{sp.name}</option>
                                             ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label htmlFor="input-project-type">Project type</label>
+                                        <select id="input-project-type"
+                                            name="project_type"
+                                            className="form-control"
+                                            value={assignForm.project_type}
+                                            onChange={handleInputChange}
+                                        >
+                                            <option value="code">Code project</option>
+                                            <option value="3d">3D model</option>
                                         </select>
                                     </div>
 
