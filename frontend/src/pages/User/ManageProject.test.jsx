@@ -199,7 +199,7 @@ describe('ManageProject', () => {
         expect(screen.getByPlaceholderText(/YouTube\/Vimeo URL/i)).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
-        expect(screen.getByText('Code Showcase')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
         
         expect(screen.getByRole('button', { name: /Create Project/i })).toBeInTheDocument();
 
@@ -532,6 +532,35 @@ describe('ManageProject', () => {
             await waitFor(() => expect(select).toHaveValue('6'));
             expect(screen.getByLabelText('Teacher Comment')).toHaveValue('Needs comments');
         });
+
+        it('walks an admin on from Code & Files to the review step and back', async () => {
+            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
+            renderNewProject();
+            await screen.findByText('Core Information');
+            fireEvent.click(screen.getByRole('button', { name: '3. Code & Files' }));
+
+            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+            expect(await screen.findByText('Admin Controls')).toBeInTheDocument();
+
+            fireEvent.click(screen.getByRole('button', { name: /Back/i }));
+            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
+        });
+    });
+
+    it('goes back to the profile on Cancel without saving', async () => {
+        render(
+            <MemoryRouter initialEntries={['/manage-project']}>
+                <Routes>
+                    <Route path="/manage-project" element={<ManageProject />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                </Routes>
+            </MemoryRouter>
+        );
+        await screen.findByText('Core Information');
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+        expect(await screen.findByTestId('profile-page')).toBeInTheDocument();
     });
 
     describe('keyboard and screen reader access', () => {
@@ -549,7 +578,7 @@ describe('ManageProject', () => {
 
             const core = screen.getByRole('button', { name: '1. Core Info' });
             const media = screen.getByRole('button', { name: '2. Media' });
-            const code = screen.getByRole('button', { name: '3. Code' });
+            const code = screen.getByRole('button', { name: '3. Code & Files' });
             [core, media, code].forEach((step) => {
                 expect(step.tagName).toBe('BUTTON');
                 expect(step).toHaveAttribute('type', 'button');
@@ -567,9 +596,9 @@ describe('ManageProject', () => {
             expect(screen.getByRole('button', { name: '2. Media' })).toHaveAttribute('aria-current', 'step');
             expect(screen.getByRole('button', { name: '1. Core Info' })).not.toHaveAttribute('aria-current');
 
-            fireEvent.click(screen.getByRole('button', { name: '3. Code' }));
-            expect(screen.getByText('Code Showcase')).toBeInTheDocument();
-            expect(screen.getByRole('button', { name: '3. Code' })).toHaveAttribute('aria-current', 'step');
+            fireEvent.click(screen.getByRole('button', { name: '3. Code & Files' }));
+            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: '3. Code & Files' })).toHaveAttribute('aria-current', 'step');
 
             fireEvent.click(screen.getByRole('button', { name: '1. Core Info' }));
             expect(screen.getByText('Core Information')).toBeInTheDocument();
@@ -584,9 +613,9 @@ describe('ManageProject', () => {
             expect(await screen.findByText('Media Assets')).toBeInTheDocument();
 
             await user.tab();
-            expect(screen.getByRole('button', { name: '3. Code' })).toHaveFocus();
+            expect(screen.getByRole('button', { name: '3. Code & Files' })).toHaveFocus();
             await user.keyboard(' ');
-            expect(screen.getByText('Code Showcase')).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
         });
 
         it('names the video URL field', async () => {
@@ -599,9 +628,9 @@ describe('ManageProject', () => {
 
         it('names the code snippet field', async () => {
             await openProject();
-            fireEvent.click(screen.getByRole('button', { name: '3. Code' }));
+            fireEvent.click(screen.getByRole('button', { name: '3. Code & Files' }));
 
-            expect(await screen.findByRole('textbox', { name: 'Code snippet' })).toHaveAttribute('name', 'code_snippet');
+            expect(await screen.findByRole('textbox', { name: /Highlighted Code Snippet/ })).toHaveAttribute('name', 'code_snippet');
         });
 
         it('keeps both file inputs focusable (visually hidden, not display:none)', async () => {
@@ -617,7 +646,7 @@ describe('ManageProject', () => {
                 expect(input).not.toHaveAttribute('hidden');
             });
 
-            screen.getByRole('button', { name: '3. Code' }).focus();
+            screen.getByRole('button', { name: '3. Code & Files' }).focus();
             await user.tab();
             expect(image).toHaveFocus();
             await user.tab();

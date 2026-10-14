@@ -606,13 +606,207 @@ label.file-upload-btn:has(input:focus-visible) {
     :where(.manage-project-page) .form-group {
         margin-bottom: 1rem;
     }
+    :where(.manage-project-page) .project-type-field,
+    :where(.manage-project-page) .project-type-fixed {
+        margin-bottom: 1rem;
+    }
 }
 
 .inline-code-editor {
-    min-height: 550px;
+    min-height: 240px; /* the step also holds the source file and asset cards, which must stay in view */
     font-family: 'Fira Code', Consolas, Monaco, 'Courier New', Courier, monospace;
     font-size: 0.9rem;
     line-height: 1.5;
     resize: vertical;
+}
+
+/* Project type: two radio buttons drawn as a segmented control */
+:where(.manage-project-page) .project-type-field {
+    border: 0;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    min-width: 0;
+}
+
+:where(.manage-project-page) .project-type-field legend {
+    padding: 0;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+:where(.manage-project-page) .project-type-options {
+    display: flex;
+    gap: 10px;
+}
+
+:where(.manage-project-page) .project-type-option {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+:where(.manage-project-page) .project-type-option:hover {
+    border-color: var(--border-rich);
+}
+
+:where(.manage-project-page) .project-type-option.selected {
+    border-color: var(--primary-accessible);
+    background: var(--primary-light);
+    color: var(--primary-accessible);
+}
+
+/* The radio inside is visually hidden, so keyboard focus is shown on its label */
+:where(.manage-project-page) .project-type-option:has(input:focus-visible) {
+    outline: 2px solid var(--primary-accessible);
+    outline-offset: 2px;
+}
+
+:where(.manage-project-page) .project-type-fixed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 1.5rem 0;
+    color: var(--text-primary);
+}
+
+/* Saved and newly picked project files */
+:where(.manage-project-page) .project-file-list {
+    list-style: none;
+    margin: 1rem 0 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
+:where(.manage-project-page) .project-file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    font-size: var(--font-sm);
+}
+
+:where(.manage-project-page) .project-file-item.pending {
+    border-color: var(--primary-color);
+}
+
+:where(.manage-project-page) .project-file-icon {
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+:where(.manage-project-page) .project-file-path {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-primary);
+    font-family: 'Fira Code', Consolas, Monaco, 'Courier New', Courier, monospace;
+}
+
+:where(.manage-project-page) .project-file-size {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+:where(.manage-project-page) .project-file-badge {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    background: var(--primary-light);
+    color: var(--primary-darker);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+:where(.manage-project-page) .project-file-item.removed .project-file-path {
+    color: var(--text-muted);
+    text-decoration: line-through;
+}
+
+:where(.manage-project-page) .project-file-item.removed .project-file-badge {
+    background: var(--error-subtle);
+    color: var(--red-700);
+}
+
+:where(.manage-project-page) .project-file-action {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: var(--font-xs);
+    font-weight: 600;
+}
+
+:where(.manage-project-page) .project-file-action:hover {
+    border-color: var(--border-rich);
+    color: var(--text-primary);
+}
+
+:where(.manage-project-page) .project-file-empty {
+    margin: 1rem 0 0 0;
+    color: var(--text-muted);
+    font-size: var(--font-sm);
+    font-style: italic;
+}
+
+:where(.manage-project-page) .project-file-status {
+    margin: 0.5rem 0 0 0;
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
+/* Kept in the page while empty, so a screen reader is already listening when it first changes */
+:where(.manage-project-page) .project-file-status:empty {
+    margin: 0;
+}
+
+:where(.manage-project-page) .upload-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* The 3D preview takes the place of the cover image in the hero. Chained under the page so it outranks the
+   viewer's own sizing, whichever stylesheet loads last. */
+.manage-project-page .preview-model-viewer {
+    width: 100%;
+    height: 100%;
+}
+
+:where(.manage-project-page) .preview-file-summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 1rem 0 0 0;
+    color: var(--text-muted);
+    font-size: var(--font-sm);
+    font-weight: 600;
 }
 
