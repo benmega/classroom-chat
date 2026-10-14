@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
-    "build:strict": "cross-env NODE_OPTIONS=--max-old-space-size=512 vite build",
+    "build:strict": "cross-env NODE_OPTIONS=--max-old-space-size=768 vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",

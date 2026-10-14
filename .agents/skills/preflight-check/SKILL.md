@@ -37,7 +37,7 @@ powershell scripts/install-hooks.ps1
     - If the script outputs `ALL CHECKS PASSED! SAFE TO MERGE.`, then the workflow is complete. Report success to the user and note the test coverage percentages and the frontend bundle size.
     - If the script fails, identify the failing stage (e.g., Ruff linting, Mypy, Pytest, Frontend Vitest, Vite Build, ESLint, Database Migrations, or Playwright E2E).
 3.  **Resolve Issues**:
-    - **Build Failures (Vite Build)**: If the simulated strict build fails (e.g., OOM or JS heap limits), it indicates the app is too large for the production server to build. Investigate debloating dependencies or optimizing the build process.
+    - **Build Failures (Vite Build)**: If the simulated strict build fails (e.g., OOM or JS heap limits), the bundle's module graph has outgrown the heap the build is allowed. The frontend is built by GitHub Actions (`deploy-frontend.yml`), never on the EC2 server, so the limit is a guard against runaway growth rather than a hard production constraint: it is 768 MB since three.js (the project 3D viewer, a lazily loaded chunk) joined the bundle, which needs about 640 MB to build. Investigate debloating dependencies before raising it again.
     - **Linting/Formatting (Ruff/ESLint)**: Locate the problematic files and fix the syntax or formatting errors.
       - Ruff auto-fix: `ruff check --fix .` (from repo root)
       - ESLint auto-fix: `npm run lint -- --fix` (from `frontend/`)
