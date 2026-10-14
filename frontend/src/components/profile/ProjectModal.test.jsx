@@ -306,7 +306,8 @@ describe('ProjectModal Component', () => {
     });
 
     it('spotlights the first model when a project has several', () => {
-      const second = projectFile(20, 'model', 'robot-v2.stl', { content_type: 'model/stl' });
+      // First both in the list and by path, the order the API sends files in
+      const second = projectFile(20, 'model', 'spare-parts.stl', { content_type: 'model/stl' });
       renderProject({ files: [model, second] });
 
       expect(screen.getByRole('img', { name: '3D model of Robot Arm' })).toHaveAttribute('data-filename', 'robot.stl');
