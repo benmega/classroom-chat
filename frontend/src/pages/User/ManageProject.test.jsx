@@ -207,6 +207,26 @@ describe('ManageProject', () => {
         expect(screen.getByText(/Media Assets/i)).toBeInTheDocument();
     });
 
+    it('gives Next and the submit button separate DOM nodes, so Next cannot submit the form', async () => {
+        // A browser applies a click's default action after React has updated the DOM. Were one node to
+        // serve both buttons, the click on Next that reveals the submit button would land on a node that
+        // is a submit button by then, and the form would be sent a step early (seen in Playwright).
+        render(
+            <MemoryRouter initialEntries={['/manage-project']}>
+                <ManageProject />
+            </MemoryRouter>
+        );
+        expect(await screen.findByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+
+        const nextButton = screen.getByRole('button', { name: /Next/i });
+        fireEvent.click(nextButton);
+
+        const submitButton = screen.getByRole('button', { name: /Create Project/i });
+        expect(submitButton).not.toBe(nextButton);
+        expect(nextButton.isConnected).toBe(false);
+    });
+
     it('handles image and video file selection', async () => {
         render(
             <MemoryRouter initialEntries={['/manage-project']}>

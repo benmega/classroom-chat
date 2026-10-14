@@ -530,12 +530,15 @@ const ManageProject = () => {
                                 <ArrowLeft size={16} /> Back
                             </button>
                         )}
+                        {/* Distinct keys: without them React keeps one DOM node for both buttons, so a click on Next
+                            turns that node into the submit button before the browser applies the click's default
+                            action, and the form is submitted a step early. */}
                         {(currentUser?.role === 'admin' ? activeTab !== 'review' : activeTab !== 'code') ? (
-                            <button type="button" className="btn-primary" onClick={handleNext}>
+                            <button key="next" type="button" className="btn-primary" onClick={handleNext}>
                                 Next <ArrowRight size={16} />
                             </button>
                         ) : (
-                            <button type="submit" disabled={isSaving} className="btn-save">
+                            <button key="save" type="submit" disabled={isSaving} className="btn-save">
                                 <Save size={18} /> {isSaving ? (uploadProgress === null ? 'Saving...' : `Uploading ${uploadProgress}%`) : (projectData.status === 'rejected' ? 'Resubmit for Review' : (projectId ? 'Update Project' : 'Create Project'))}
                             </button>
                         )}
