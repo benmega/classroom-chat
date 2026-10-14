@@ -1094,9 +1094,18 @@ a.cert-item:hover {
     padding-top: 20px; /* Reduced from 40px to fix spacing issue */
 }
 
+/* Up to three links (live demo, source, model download) sit beside the name; when they do not fit they
+   wrap under it instead of squeezing it to a word per line. */
 .project-modal .modal-header {
     padding: 1rem 2.5rem;
     margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Clears the close button, which the name reaches once the links have wrapped under it. */
+.project-modal .modal-header h2 {
+    margin-right: 40px;
 }
 
 .project-modal .modal-body {
@@ -1104,6 +1113,56 @@ a.cert-item:hover {
     gap: 2.5rem;
     grid-template-columns: 1fr 340px;
     display: grid; /* Ensure grid is active */
+}
+
+/* A file tree beside its code needs more room than one pasted snippet, so a project with source files gets a
+   wider dialog and sidebar. Below 1100px the sidebar goes under the main column (see 11. RESPONSIVE). */
+.project-modal.has-source-files {
+    max-width: 1180px;
+}
+
+.project-modal.has-source-files .modal-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+}
+
+/* The media switcher above the spotlight. The selected tab is filled, so the choice does not rest on colour alone. */
+.project-modal .spotlight-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    width: fit-content;
+    max-width: 100%;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+}
+
+.project-modal .spotlight-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.project-modal .spotlight-tab:hover {
+    background: var(--primary-light);
+    color: var(--primary-accessible);
+}
+
+.project-modal .spotlight-tab[aria-selected='true'] {
+    background: var(--primary-accessible);
+    color: var(--text-on-primary);
 }
 
 .video-spotlight {
@@ -1118,10 +1177,13 @@ a.cert-item:hover {
     border: 1px solid var(--border-subtle);
 }
 
-.video-spotlight iframe,
-.video-spotlight img,
-.video-spotlight .direct-video-player,
-.video-spotlight .css-placeholder {
+/* Children only: the model viewer is another module's markup, and an image or frame inside it must not
+   be stretched over the whole spotlight. */
+.video-spotlight > iframe,
+.video-spotlight > img,
+.video-spotlight > .direct-video-player,
+.video-spotlight > .css-placeholder,
+.video-spotlight > .model-viewer {
     position: absolute;
     top: 0;
     left: 0;
@@ -1130,20 +1192,27 @@ a.cert-item:hover {
     object-fit: cover;
 }
 
-.modal-main p {
+/* The description only: the viewer and the gallery under .modal-main bring paragraphs of their own. */
+.modal-main > p {
     max-height: 300px;
     overflow-y: auto;
     padding-right: 10px;
     line-height: 1.6;
 }
 
-.modal-main p::-webkit-scrollbar {
+.modal-main > p::-webkit-scrollbar {
     width: 6px;
 }
 
-.modal-main p::-webkit-scrollbar-thumb {
+.modal-main > p::-webkit-scrollbar-thumb {
     background: var(--border-subtle);
     border-radius: 3px;
+}
+
+.project-modal .snippet-heading {
+    margin: 1.5rem 0 0.5rem;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
 }
 
 .code-snippet {
@@ -1159,6 +1228,13 @@ a.cert-item:hover {
 /* =================================================================
    11. RESPONSIVE
    ================================================================= */
+/* Beside a 440px file browser the spotlight gets too narrow below this width, so the browser goes under it. */
+@media (max-width: 1100px) {
+    .project-modal.has-source-files .modal-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 @media (max-width: 1024px) {
     :where(.profile-page, .report-card-page) .dashboard-grid {
         grid-template-columns: 1fr;
@@ -1274,8 +1350,35 @@ a.cert-item:hover {
 
 .profile-modal-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-right: 40px; /* distance from close button */
+}
+
+/* The header links are buttons, so no underline. Launch Live needs its fill here: the .btn-primary rules
+   are scoped to other pages and never reach this dialog, which is portalled to the body. */
+.profile-modal-actions a {
+    text-decoration: none;
+}
+
+.profile-modal-actions .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: var(--btn-padding-md);
+    border: 1px solid var(--primary-accessible);
+    border-radius: var(--radius-md);
+    background: var(--primary-accessible);
+    color: var(--text-on-primary);
+    font-size: var(--btn-font-md);
+    font-weight: 600;
+    transition: var(--transition-bounce);
+}
+
+.profile-modal-actions .btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
 }
 
 .section-heading {
@@ -1376,6 +1479,28 @@ a.cert-item:hover {
 
     .slide-content img {
         object-fit: contain;
+    }
+
+    /* The 2.5rem gutters left a phone a spotlight about 230px wide, too narrow for the media tabs. */
+    .project-modal .modal-header,
+    .project-modal .modal-body {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+
+    /* With the narrower gutter the 44px close button needs a wider berth. */
+    .project-modal .modal-header h2,
+    .profile-modal-actions {
+        margin-right: 48px;
+    }
+
+    /* Three media tabs fit one row on a phone only without their icons. */
+    .project-modal .spotlight-tab {
+        padding: 6px 8px;
+    }
+
+    .project-modal .spotlight-tab svg {
+        display: none;
     }
 }
 
