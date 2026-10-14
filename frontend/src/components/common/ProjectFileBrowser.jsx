@@ -52,7 +52,9 @@ const useSourceText = (file) => {
     useEffect(() => {
         if (!file || texts[id] !== undefined || failed[id] || inFlight.current.has(id)) return;
         inFlight.current.add(id);
-        client.get(projectFileUrl(file), { responseType: 'text' })
+        // projectFileUrl already gives a full URL, so the client's base URL must stay out of it: axios would
+        // glue the API origin in front of the blob: URL of a file picked in the editor and not saved yet
+        client.get(projectFileUrl(file), { responseType: 'text', baseURL: '' })
             .then(
                 (response) => setTexts((previous) => ({ ...previous, [id]: response.data })),
                 () => setFailed((previous) => ({ ...previous, [id]: true }))

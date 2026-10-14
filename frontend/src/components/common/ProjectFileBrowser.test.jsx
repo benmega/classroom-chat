@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { server } from '../../test/mocks/server';
+import client from '../../api/client';
 import ProjectFileBrowser from './ProjectFileBrowser';
 
 // CodeView has its own tests; here it only has to show which code, language and file it was given
@@ -305,6 +306,17 @@ describe('ProjectFileBrowser file text', () => {
         await waitFor(() => expect(screen.getByTestId('code-view')).toHaveTextContent('text of 2'));
         expect(requested.filter((id) => id === 2)).toHaveLength(1);
         expect(requested.filter((id) => id === 1)).toHaveLength(1);
+    });
+
+    it('reads a file picked in the editor from its blob URL, without the API origin in front of it', async () => {
+        const get = vi.spyOn(client, 'get').mockResolvedValue({ data: 'local text' });
+        const local = { id: 'local-1', kind: 'source', path: 'main.py', name: 'main.py', size: 10, url: 'blob:http://localhost/abc-123' };
+        render(<ProjectFileBrowser files={[local]} />);
+
+        expect(await shownCode()).toHaveTextContent('local text');
+        expect(get).toHaveBeenCalledWith('blob:http://localhost/abc-123', { responseType: 'text', baseURL: '' });
+        expect(screen.getByRole('link', { name: 'Download main.py' })).toHaveAttribute('href', 'blob:http://localhost/abc-123');
+        get.mockRestore();
     });
 
     it('keeps a .json file as text instead of parsing it', async () => {

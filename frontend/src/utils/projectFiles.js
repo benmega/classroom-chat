@@ -96,7 +96,8 @@ export const acceptForKind = (kind) => extensionsForKind(kind).map((extension) =
 
 // highlight.js language ids. Where no grammar exists the file is shown as plain text: GDScript (gd) is
 // not in highlight.js, and ".m" could be Objective-C or MATLAB, so guessing would colour half of the
-// files wrongly. html and xml share one grammar; toml is covered by the ini grammar.
+// files wrongly. html and xml share one grammar, toml is covered by the ini grammar, and batch files use
+// the grammar highlight.js calls dos.
 const LANGUAGES = new Map(Object.entries({
     py: 'python',
     js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
