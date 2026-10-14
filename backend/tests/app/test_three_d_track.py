@@ -2,7 +2,14 @@
 
 import pytest
 from application.commands.seed import generate_kebab_slug, seed_command, seed_three_d_track
-from application.commands.three_d_data import THREE_D_CHALLENGES, THREE_D_COURSES
+from application.commands.three_d_data import (
+    OLD_SUBMIT_BLENDER,
+    OLD_SUBMIT_TINKERCAD,
+    SUBMIT_BLENDER,
+    SUBMIT_TINKERCAD,
+    THREE_D_CHALLENGES,
+    THREE_D_COURSES,
+)
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
@@ -101,6 +108,58 @@ def test_seed_is_idempotent_and_never_deletes(seeded):
     assert donut.description == "Teacher-edited donut description."
     assert donut.goals == ["Teacher goal"]
     assert donut.challenge_slug == "the-donut"
+
+
+def test_seed_templates_are_3d_projects_that_upload_their_model(seeded):
+    for ch in THREE_D_CHALLENGES:
+        template = ProjectTemplate.query.filter_by(name=ch["name"]).one()
+        assert template.project_type == "3d"
+        submit = SUBMIT_TINKERCAD if ch["course_id"] == "3d-1" else SUBMIT_BLENDER
+        assert template.goals[-1] == submit
+        assert OLD_SUBMIT_TINKERCAD not in template.goals
+        assert OLD_SUBMIT_BLENDER not in template.goals
+    assert "Export" in SUBMIT_TINKERCAD and ".STL" in SUBMIT_TINKERCAD
+    assert "File > Export" in SUBMIT_BLENDER and "glTF" in SUBMIT_BLENDER
+    assert "optional" in SUBMIT_TINKERCAD and "optional" in SUBMIT_BLENDER
+
+
+def test_seed_swaps_an_old_submit_goal_only_where_it_is_unchanged(init_db):
+    # Templates as an earlier seed left them, one of them edited by an admin since
+    edited_goal = OLD_SUBMIT_BLENDER.replace("screenshot", "picture")
+    db.session.add_all(
+        [
+            ProjectTemplate(
+                name="Name Tag Model",
+                description="d",
+                goals=["Add a text shape.", OLD_SUBMIT_TINKERCAD],
+                project_type="code",
+            ),
+            ProjectTemplate(name="The Donut", description="d", goals=["Teacher goal", edited_goal]),
+            ProjectTemplate(name="Intro to Blender", description="d", goals=[OLD_SUBMIT_BLENDER, "Teacher goal 2"]),
+        ]
+    )
+    db.session.commit()
+
+    seed_three_d_track()
+    seed_three_d_track()  # a second deploy changes nothing more
+
+    def template(name):
+        return ProjectTemplate.query.filter_by(name=name).one()
+
+    assert template("Name Tag Model").goals == ["Add a text shape.", SUBMIT_TINKERCAD]
+    assert template("The Donut").goals == ["Teacher goal", edited_goal]
+    assert template("Intro to Blender").goals == [SUBMIT_BLENDER, "Teacher goal 2"]
+    assert {template(n).project_type for n in ("Name Tag Model", "The Donut", "Intro to Blender")} == {"3d"}
+
+
+def test_seed_leaves_the_other_templates_code(seeded):
+    from application.commands.projects_data import PROJECT_SEED_DATA
+
+    names = [name for name, _desc, _chapter in PROJECT_SEED_DATA]
+    others = ProjectTemplate.query.filter(ProjectTemplate.name.in_(names)).all()
+
+    assert others
+    assert {t.project_type for t in others} == {"code"}
 
 
 def test_seed_command_runs_the_3d_step_twice(test_app, init_db):
