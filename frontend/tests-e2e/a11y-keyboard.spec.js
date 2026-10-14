@@ -60,6 +60,7 @@ test.describe('Keyboard-only access', () => {
       await page.goto('/signup');
       const student = page.getByRole('button', { name: 'Student' });
       const parent = page.getByRole('button', { name: 'Parent' });
+      await expect(student).toBeVisible({ timeout: 15000 });
       await expect(student).toHaveAttribute('aria-pressed', 'true');
       await expect(parent).toHaveAttribute('aria-pressed', 'false');
       await expect(page.getByRole('textbox', { name: 'Username' })).toBeVisible();

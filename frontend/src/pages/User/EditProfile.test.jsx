@@ -176,8 +176,8 @@ describe('EditProfile', () => {
         expect(body).not.toHaveProperty('password');
         // The user is reloaded in the background, and with nothing left to save the buttons go away
         await waitFor(() => expect(checkAuth).toHaveBeenCalledWith(true));
-        await waitFor(() => expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument());
-        expect(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i).value).toBe('New Bio');
+        await waitFor(() => expect(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i).value).toBe('New Bio'));
+        expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument();
         expect(toast.error).not.toHaveBeenCalled();
     });
 
@@ -391,9 +391,11 @@ describe('EditProfile', () => {
             const blobUrl = screen.getByAltText('Profile Preview').getAttribute('src');
             submit();
 
-            await waitFor(() => expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument());
+            await waitFor(() => {
+                expect(screen.getByAltText('Profile Preview').getAttribute('src')).toContain('/user/profile_pictures/new-pic.png');
+            });
+            expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument();
             expect(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i).value).toBe('Saved bio');
-            expect(screen.getByAltText('Profile Preview').getAttribute('src')).toContain('/user/profile_pictures/new-pic.png');
             expect(URL.revokeObjectURL).toHaveBeenCalledWith(blobUrl);
         });
     });
@@ -467,8 +469,8 @@ describe('EditProfile', () => {
 
             pictureOk = true;
             submit();
-            await waitFor(() => expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument());
-            expect(URL.revokeObjectURL).toHaveBeenCalledWith(blobUrl);
+            await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith(blobUrl));
+            expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument();
         });
 
         it('falls back to a generic photo-failure message when the server gives no reason', async () => {
