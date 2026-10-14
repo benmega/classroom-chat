@@ -146,6 +146,8 @@ export default defineConfig({
         'src/main.jsx',
         'src/pages/Error/ServerOffline.jsx',
         'src/components/common/SmartImage.jsx',
+        // three.js needs WebGL, which happy-dom lacks; its tests run against stand-ins instead.
+        'src/components/common/modelViewerEngine.js',
         'src/pages/General/CourseLevelBreakdown.jsx',
         'src/pages/General/History.jsx',
         'src/pages/General/Landing.jsx',
