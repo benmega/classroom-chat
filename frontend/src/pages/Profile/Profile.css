@@ -545,6 +545,48 @@
     justify-content: center;
 }
 
+/* A model has nothing to play, so it gets a smaller, fainter rotate glyph where a video gets its play button. */
+:where(.profile-page, .report-card-page) .model-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-on-primary);
+    background: color-mix(in srgb, var(--video-backdrop) 35%, transparent);
+}
+
+/* What a project holds besides its picture. Bottom-left, because the review badge owns the top-right
+   corner and the play or rotate glyph the centre. */
+:where(.profile-page, .report-card-page) .project-file-chips {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+:where(.profile-page, .report-card-page) .project-file-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
 .project-content {
     flex-grow: 1;
     display: flex;
