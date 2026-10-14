@@ -22,7 +22,7 @@ Timestamps in responses and socket payloads are ISO 8601 in UTC with a trailing 
 Split across `backend/application/routes/admin/*.py` by concern:
 - **`dashboard_routes.py`**: `GET /dashboard` (aggregated stats), `GET /logs`, `GET /transactions`, `GET /export/transactions`, `GET /review_counts`.
 - **`user_mgmt.py`**: user CRUD (`GET/POST/PUT /users`, `/user/<id>`), `create_user`, `remove_user`, `approve_user/<id>`, `reject_user/<id>`, `adjust_ducks`, `adjust_packets`, `reset_password`, classroom CRUD + enrollment (`/classrooms*`), parent-student linking (`/parents/<id>/children`, `/link`, `/unlink`), chapter progress overrides.
-- **`project_routes.py`**: `GET /manage-projects`, `POST /handle-project-review/<id>`, `POST /assign-project`.
+- **`project_routes.py`**: `GET /manage-projects`, `POST /handle-project-review/<id>`, `POST /assign-project` (optional `project_type`, `code` or `3d`, else the type of the template whose name matches, else `code`; any other value is a 400).
 - **`standard_project_routes.py`**: CRUD for `/standard-projects`.
 - **`trade_routes.py`**: `GET /pending_trades`, `POST /trade_action`.
 - **`challenge_mgmt.py`**: `POST /challenges/bulk_add`.
@@ -46,12 +46,19 @@ All admin routes require `admin_only` (a session user whose `role` is `admin`).
 ## 5. Classrooms & Courses
 - **`POST /api/classroom/join`, `GET /api/classroom/mine`**: Join-code based classroom enrollment; list the current user's classrooms.
 - **`/api/course-requests/*`**: Student requests to change course track, and admin review.
-- **`/api/project-templates`**: CRUD for reusable project templates (admin).
+- **`/api/project-templates`**: CRUD for reusable project templates (admin). `POST` and `PUT` take an optional `project_type` (`code`, the default, or `3d`; any other value is a 400; a `PUT` without it keeps the template's type).
 - **`GET|POST /challenge/submit`**: Challenge claim (honor system by design; csrf-exempt, CORS for codecombat.com / ozaria.com).
 
 ## 6. User Content
 - **`GET /user/profile`, `GET /user/profile/<slug>`**: Own / public profile data.
 - **`GET|POST /user/edit_profile`, `GET|POST /user/project/new`, `GET|POST /user/project/edit/<id>`**: Profile and project editing.
+- **Project files and type** (multipart fields of `POST /user/project/new` and `POST /user/project/edit/<id>`, next to the project's other fields):
+    - `project_type`: `code` or `3d`; anything else is a 400. Without it a new project takes its template's type (`code` when it has no template), and an edit keeps the type.
+    - `model_files`, `source_files`, `asset_files`: any number of file parts each. A source or asset part's file name may carry a folder path (`src/main.py` from a folder upload), which becomes the file's `path`; a model keeps only its name. Allowed types: models `stl obj glb gltf 3mf ply`; source files `py js jsx ts tsx mjs cjs html htm css scss json md txt java c h cpp hpp cs go rs rb php lua sql xml yml yaml toml ini csv gd kt swift sh bat ps1 r m` (UTF-8 text, always served as plain text); assets `png jpg jpeg gif webp` (checked by the image pipeline), `mp3 wav ogg m4a`, `pdf`. Caps: 50 MB per model, 1 MB per source file, 10 MB per asset, 40 files and 150 MB per project (`PROJECT_*` in `config.py`).
+    - `remove_file_ids`: ids of the project's files to delete, as a repeated field and/or comma-separated. An id that is not one of the project's files is a 400.
+    - Everything is checked before anything is written, counting the project's files as they will be after the removals and additions. A file whose path the project already has replaces it under a new id. A rejected upload answers 400 (413 for a size cap) with a message that can be shown, and keeps nothing.
+    - Projects in JSON (`to_dict()`, wherever projects are returned) carry `project_type` and `files`: `[{id, kind, name, path, size, content_type, url, download_url, created_at}]`, models first, then source files, then assets, each kind by path. `url` and `download_url` start with `/` (the frontend prefixes the API base).
+- **`GET /user/project_files/<file_id>/<filename>`**: Serves a project file. Public, like the profiles that show it; limited to 100 requests a minute. `filename` must be the file's own name (404 otherwise, and for an unknown id). Source files are always `text/plain; charset=utf-8`, models `model/stl`, `model/obj`, `model/gltf-binary`, `model/gltf+json`, `model/3mf` or `application/octet-stream` (ply), assets the verified image type, `audio/*` or `application/pdf`. `?download=1` sends `Content-Disposition: attachment`, otherwise `inline`. Always `X-Content-Type-Options: nosniff` and `Cache-Control: public, max-age=86400` (a file id never changes content). Range requests are answered.
 - **`POST /user/api/profile-picture`, `/api/profile-wallpaper`**: Multipart image uploads (crop-modal driven). Project thumbnails are sent with the project form; standard-project thumbnails use `POST /api/project-templates/upload-image` (admin).
 - **`GET /user/api/users/search`**: User lookup/search.
 - **`/notes/upload`, `/notes/view/<filename>`, `/notes/delete/<id>`**: Educational/admin note attachments.

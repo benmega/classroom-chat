@@ -42,7 +42,7 @@ classroom-chat/
 ├── docs/                        # This documentation
 ├── .agents/                     # AI-agent rules and skills (see docs/agentic_workflows.md)
 ├── .github/workflows/           # CI: tests.yml, lint.yml, deploy.yml, deploy-frontend.yml, ai-*.yml
-├── userData/                    # Uploaded user assets (profile pictures, project images, certificates)
+├── userData/                    # Uploaded user assets (profile pictures, project images, project_files/, submissions, certificates)
 └── deploy.sh                    # Production deploy script (migrations, health check, rollback)
 ```
 

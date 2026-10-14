@@ -21,7 +21,7 @@
 ## Customizable Profiles & Portfolios
 - Users can edit their password and avatar.
 - Ducks, achievements, and earned certificates are displayed prominently.
-- **Projects**: Students can build and showcase programming projects on their profile.
+- **Projects**: Students can build and showcase programming projects on their profile. A project is a `code` or a `3d` project (3D modeling templates are `3d`) and holds files of three kinds: 3D models (STL, OBJ, glTF/GLB, 3MF, PLY), source files (shown as text) and assets (images, audio, PDF), uploaded with the project form and served publicly with the profile.
 - **Skills**: Students can list acquired programming skills.
 - **Project Templates & Assignments**: Teachers/admins can define standard project templates mapped to specific chapters and difficulty levels, and assign them directly to students.
 

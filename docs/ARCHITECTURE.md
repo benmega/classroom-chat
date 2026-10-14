@@ -139,7 +139,7 @@ The backend is a monolithic API built with **Flask 3.1.1**, leveraging an **Appl
 
 ## 4. Persistence Layer
 - **Relational Data (SQLite)**: The application utilizes **SQLite** (managed via SQLAlchemy ORM). The database file (`prod_users.db`) resides in the backend's `instance/` folder. This choice prioritizes simplicity and portability over distributed scaling.
-- **File System**: User uploads (profile pictures, project images) are saved directly to the EC2 file system in the `userData/` directory.
+- **File System**: User uploads (profile pictures, project images, project files) are saved directly to the EC2 file system in the `userData/` directory.
 
 ## 5. Infrastructure & Deployment
 The stack is deployed across AWS managed services and an EC2 instance.
