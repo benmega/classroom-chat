@@ -84,6 +84,24 @@
     text-overflow: ellipsis;
 }
 
+/* The title shares a row with the 3D tag; the title keeps its ellipsis and the tag never shrinks */
+.project-card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.project-type-tag {
+    flex-shrink: 0;
+    padding: 0.1rem 0.45rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-xs);
+    font-weight: 700;
+    background: var(--violet-100);
+    color: var(--violet-800);
+}
+
 .project-card-desc {
     font-size: 0.9rem;
     color: var(--slate-700, var(--text-secondary));
@@ -133,6 +151,11 @@
     .standard-project-form-row > .form-group {
         flex: 1;
         min-width: 0;
+    }
+
+    /* The name gets twice the width of the type select beside it */
+    .standard-project-name-row > .form-group:first-child {
+        flex: 2;
     }
 }
 
