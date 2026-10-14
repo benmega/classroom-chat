@@ -1,6 +1,11 @@
 from application.decorators.admin_required import admin_only
 from application.extensions import db
-from application.models.project import Project
+from application.models.project import (
+    DEFAULT_PROJECT_TYPE,
+    INVALID_PROJECT_TYPE_MESSAGE,
+    Project,
+    read_project_type,
+)
 from application.services.email_service import send_admin_email
 from flask import jsonify, request
 from sqlalchemy import case, func
@@ -224,11 +229,18 @@ def assign_project():
     from application.models.project_template import ProjectTemplate
 
     matched_template = ProjectTemplate.query.filter_by(name=name).first()
+    project_type = read_project_type(
+        data.get("project_type"),
+        matched_template.project_type if matched_template else DEFAULT_PROJECT_TYPE,
+    )
+    if project_type is None:
+        return jsonify({"status": "error", "message": INVALID_PROJECT_TYPE_MESSAGE}), 400
 
     project = Project(
         user_id=user_id,
         name=name,
         template_id=matched_template.id if matched_template else None,
+        project_type=project_type,
         description=description,
         link=link,
         github_link=github_link,
