@@ -1,4 +1,6 @@
 # mypy: ignore-errors
+import uuid
+
 import factory
 from application.extensions import db
 from application.models.achievements import Achievement, UserAchievement
@@ -12,6 +14,7 @@ from application.models.course_instance import CourseInstance
 from application.models.duck_trade import DuckTradeLog
 from application.models.message import Message
 from application.models.project import Project
+from application.models.project_file import ProjectFile
 from application.models.session_log import SessionLog
 from application.models.skill import Skill
 from application.models.user import User
@@ -128,6 +131,19 @@ class ProjectFactory(BaseFactory):
     description = 'Test Project'
     link = 'http://example.com'
     user_id = factory.LazyAttribute(lambda _: UserFactory().id)
+
+class ProjectFileFactory(BaseFactory):
+    """A row only: tests that serve or delete the file write it themselves."""
+
+    class Meta:
+        model = ProjectFile
+
+    project_id = factory.LazyAttribute(lambda _: ProjectFactory().id)
+    kind = 'source'
+    path = factory.Sequence(lambda n: f'src/file{n}.py')
+    stored_path = factory.LazyFunction(lambda: f'project_files/{uuid.uuid4().hex}.py')
+    content_type = 'text/plain; charset=utf-8'
+    file_size = 0
 
 class SkillFactory(BaseFactory):
     class Meta:

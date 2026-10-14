@@ -125,7 +125,9 @@ backend/
 └── requirements-tools.txt # Runtime + extras for the manual scripts (reportlab, qrcode, playwright)
 ```
 
-Uploaded user assets (profile pictures, project images, certificates) live in `userData/` at the repo root, not under `backend/`.
+Uploaded user assets (profile pictures, project images, project files under `project_files/`, submissions, certificates) live in `userData/` at the repo root, not under `backend/`.
+
+Project files (3D models, source files and assets of a project) go through `application/utilities/project_files.py`: every file of an upload is checked first (allowed types and size cap per kind, the project's file count and total, UTF-8 text for source files, the image pipeline without re-encoding for image assets, STL and GLB magic), then all are written as `project_files/<uuid>.<ext>` or none. The stored file follows its row's transaction (`application/utilities/stored_files.py`, shared with submissions): it is removed once a delete or replacement is committed, and removed again when the upload's transaction is not.
 
 Every image upload (profile picture and wallpaper, project and template images, notes, achievement badges) goes through `application/utilities/image_upload.py`. It enforces a byte cap (413), checks the content with Pillow (400 for anything that is not a PNG, JPEG, GIF or WebP image), caps the pixel count and animation frames, and names the stored file `<uuid>.<extension of the verified format>` rather than trusting the client's name. The caps are `IMAGE_MAX_BYTES_*`, `MAX_IMAGE_PIXELS` and `IMAGE_MAX_FRAMES` in `config.py`. Profile pictures and project images are re-encoded (EXIF orientation applied, metadata dropped, shrunk to 512 and 1600 px; animated GIF/WebP files are kept as uploaded), badges are normalised to a 256 px `<slug>.png`, and notes keep their original bytes. Replacing or deleting a profile picture, wallpaper or project removes the old file once the change is committed; a project image that a template or another project still uses is kept.
 

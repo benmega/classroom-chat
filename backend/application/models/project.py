@@ -6,6 +6,22 @@ Summary: SQLAlchemy model for user projects and portfolio items.
 
 from ..extensions import db
 from ..utilities.helper_functions import to_utc_iso
+from .project_file import FILE_LISTING_ORDER
+
+# What a project is: "3d" for a 3D model (Tinkercad, Blender), whose model file is the
+# work worth showing, and "code" for everything else.
+PROJECT_TYPES = ("code", "3d")
+DEFAULT_PROJECT_TYPE = "code"
+INVALID_PROJECT_TYPE_MESSAGE = "Invalid project type. Use 'code' or '3d'."
+
+
+def read_project_type(value, default):
+    """The project type a client sent: ``default`` when it sent none (missing or
+    blank), None when the value is not a project type."""
+    if value is None or not str(value).strip():
+        return default
+    value = str(value).strip().lower()
+    return value if value in PROJECT_TYPES else None
 
 
 class Project(db.Model):
@@ -43,6 +59,23 @@ class Project(db.Model):
         nullable=True,
         index=True,
     )
+    project_type = db.Column(
+        db.String(20),
+        nullable=False,
+        default=DEFAULT_PROJECT_TYPE,
+        server_default=DEFAULT_PROJECT_TYPE,
+    )
+
+    # Loaded together with the projects (selectin): to_dict() lists them, so every
+    # path that serialises projects, one or a page of them, costs one more query
+    # rather than one per project.
+    files = db.relationship(
+        "ProjectFile",
+        back_populates="project",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        order_by=list(FILE_LISTING_ORDER),
+    )
 
     def __init__(self, **kwargs):
         if "status" not in kwargs:
@@ -50,6 +83,8 @@ class Project(db.Model):
                 kwargs["status"] = "approved"
             else:
                 kwargs["status"] = "pending"
+        # Set now, not at the INSERT, so a project reads its type before it is saved
+        kwargs.setdefault("project_type", DEFAULT_PROJECT_TYPE)
         super().__init__(**kwargs)
 
     def __repr__(self):
@@ -71,6 +106,8 @@ class Project(db.Model):
             "image_url": self.image_url,
             "status": self.status,
             "template_id": self.template_id,
+            "project_type": self.project_type,
+            "files": [project_file.to_dict() for project_file in self.files],
             "user_nickname": self.user.nickname if self.user else "Unknown Student",
             "user_slug": self.user.slug if self.user else None,
             "user_username": self.user.username if self.user else None,

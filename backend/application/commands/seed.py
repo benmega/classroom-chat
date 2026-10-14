@@ -302,18 +302,30 @@ def _is_blank_or_placeholder(text):
     return bool(re.fullmatch(r"Project for .+\.", str(text).strip()))
 
 
+def _with_current_submit_goals(goals, replacements):
+    """``goals`` with every goal found word for word in ``replacements`` swapped for
+    its current wording. A new list: the JSON column only notices an assignment."""
+    return [
+        replacements.get(goal, goal) if isinstance(goal, str) else goal
+        for goal in goals
+    ]
+
+
 def seed_three_d_track():
     """Idempotently upsert the 3D modeling courses, challenges and templates.
 
     Never deletes anything. Structural fields (course/domain/sequence/chapter/
-    challenge link) are kept in sync with the seed data; teacher-editable
-    content (descriptions, goals, concepts, difficulty on templates) is only
-    filled in when it is blank, so admin edits survive every deploy.
+    challenge link/project type) are kept in sync with the seed data;
+    teacher-editable content (descriptions, goals, concepts, difficulty on
+    templates) is only filled in when it is blank, so admin edits survive every
+    deploy. The one exception: a submit goal the seed itself wrote before is
+    replaced by its current wording while it is still there word for word.
 
     Commits on success; the caller handles rollback on error. Returns a dict
     of insert/update counters.
     """
     from application.commands.three_d_data import (
+        SUBMIT_GOAL_REPLACEMENTS,
         THREE_D_CHALLENGES,
         THREE_D_COURSES,
         THREE_D_DOMAIN,
@@ -416,18 +428,24 @@ def seed_three_d_track():
                     concepts=list(ch["concepts"]),
                     goals=list(ch["goals"]),
                     challenge_slug=slug,
+                    project_type=ch["project_type"],
                 )
             )
             stats["templates_inserted"] += 1
         else:
             template.chapter = course_names[course_id]
             template.challenge_slug = slug
+            template.project_type = ch["project_type"]
             if _is_blank_or_placeholder(template.description):
                 template.description = ch["description"]
             if not template.concepts:
                 template.concepts = list(ch["concepts"])
             if not template.goals:
                 template.goals = list(ch["goals"])
+            elif isinstance(template.goals, list):
+                goals = _with_current_submit_goals(template.goals, SUBMIT_GOAL_REPLACEMENTS)
+                if goals != template.goals:
+                    template.goals = goals
             if not template.difficulty:
                 template.difficulty = ch["difficulty"]
             stats["templates_updated"] += 1

@@ -2,6 +2,11 @@ from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.extensions import db
+from application.models.project import (
+    DEFAULT_PROJECT_TYPE,
+    INVALID_PROJECT_TYPE_MESSAGE,
+    read_project_type,
+)
 from application.models.project_template import ProjectTemplate
 from application.routes.user_routes import handle_project_image_upload
 from application.utilities.helper_functions import allowed_file
@@ -34,6 +39,10 @@ def create_template():
     if not name or not description:
         return {"error": "Name and description are required"}, 400
 
+    project_type = read_project_type(data.get("project_type"), DEFAULT_PROJECT_TYPE)
+    if project_type is None:
+        return {"error": INVALID_PROJECT_TYPE_MESSAGE}, 400
+
     existing = ProjectTemplate.query.filter_by(name=name).first()
     if existing:
         return {"error": "A template with this name already exists"}, 400
@@ -51,6 +60,7 @@ def create_template():
         concepts=data.get("concepts", []),
         goals=data.get("goals", []),
         challenge_slug=(data.get("challenge_slug") or None),
+        project_type=project_type,
     )
     db.session.add(template)
     db.session.commit()
@@ -72,6 +82,10 @@ def update_template(template_id):
     data = request.get_json() or {}
     name = data.get("name")
     description = data.get("description")
+
+    project_type = read_project_type(data.get("project_type"), template.project_type)
+    if project_type is None:
+        return {"error": INVALID_PROJECT_TYPE_MESSAGE}, 400
 
     if name:
         existing = ProjectTemplate.query.filter(
@@ -102,6 +116,7 @@ def update_template(template_id):
         template.goals = data.get("goals")
     if "challenge_slug" in data:
         template.challenge_slug = data.get("challenge_slug") or None
+    template.project_type = project_type
 
     db.session.commit()
 
