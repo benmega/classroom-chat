@@ -180,6 +180,12 @@
     color: var(--sky-700);
 }
 
+/* Project type (3D) beside the Project badge; violet keeps it apart from the sky-blue Project badge */
+.badge-project-type {
+    background: var(--violet-100);
+    color: var(--violet-800);
+}
+
 .badge-certificate {
     background: var(--amber-100);
     color: var(--warning-color);
@@ -510,6 +516,34 @@
     font-size: var(--font-sm);
     max-height: 250px;
     overflow-y: auto;
+}
+
+/* Collapsibles that hold a viewer (3D model, source files, assets) instead of text */
+.review-section-body {
+    padding: 12px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-subtle);
+}
+
+/* The viewer fills a frame of fixed height; the doubled selector outranks the viewer's own sizing rules */
+.review-model-frame {
+    height: 320px;
+    overflow: hidden;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+.review-model-frame .review-model-viewer {
+    width: 100%;
+    height: 100%;
+}
+
+.review-model-downloads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
 }
 
 /* Action inputs: comment, range/slider */
@@ -1015,6 +1049,11 @@
     /* Review card: tighter padding on 375px phones */
     .review-card {
         padding: var(--spacing-sm);
+    }
+
+    /* 3D model frame: a 320px viewer would fill most of a phone screen */
+    .review-model-frame {
+        height: 240px;
     }
 
     /* Inbox empty state: less padding on small phones */
