@@ -1,0 +1,185 @@
+/* Source file browser: a file tree and the code of the selected file. It lays itself out by its own
+   width (a container query) rather than the window's, because the same component fills the page on a
+   phone and sits in a 340px column of the profile modal on a desktop. A browser without container
+   queries keeps the stacked layout, which works at any width. */
+.project-files {
+    container: project-files / inline-size;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    overflow: hidden;
+}
+
+.project-files-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+}
+
+/* Stacked: the tree sits above the code and stops short, so the code stays in view */
+.project-files-tree {
+    max-height: min(11rem, var(--project-files-max-height));
+    overflow: auto;
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+}
+
+@container project-files (min-width: 34rem) {
+    .project-files-layout {
+        grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+    }
+
+    .project-files-tree {
+        max-height: var(--project-files-max-height);
+        border-right: 1px solid var(--border-subtle);
+        border-bottom: 0;
+    }
+}
+
+.project-files-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.project-files-list .project-files-list {
+    padding-left: 0.9rem;
+}
+
+.project-files-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    padding: 0.3rem 0.5rem;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--font-sm);
+    text-align: left;
+    cursor: pointer;
+}
+
+.project-files-item:hover {
+    background: var(--border-subtle);
+}
+
+.project-files-item svg {
+    flex-shrink: 0;
+}
+
+/* Marks the open file by colour, weight and aria-current, so it does not rest on colour alone */
+.project-files-item.is-selected {
+    background: var(--primary-light);
+    color: var(--primary-accessible);
+    font-weight: 600;
+}
+
+.project-files-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-files-viewer {
+    min-width: 0;
+}
+
+.project-files-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    font-size: var(--font-sm);
+}
+
+.project-files-path {
+    flex: 1 1 8rem;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-files-size {
+    color: var(--text-muted);
+}
+
+.project-files-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--primary-accessible);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.project-files-download:hover {
+    text-decoration: underline;
+}
+
+.project-files-body {
+    min-width: 0;
+}
+
+/* The frame already has the rounded corners */
+.project-files .code-view {
+    border-radius: 0;
+}
+
+.project-files-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 1.25rem 1rem;
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
+.project-files-error {
+    flex-wrap: wrap;
+    color: var(--error-color);
+}
+
+.project-files-retry {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: var(--btn-padding-sm);
+    border: 1px solid var(--border-rich);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--font-sm);
+    cursor: pointer;
+}
+
+.project-files-retry:hover {
+    background: var(--bg-tertiary);
+}
+
+.project-files-spinner {
+    animation: project-files-spin 1s linear infinite;
+}
+
+@keyframes project-files-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .project-files-spinner {
+        animation: none;
+    }
+}
