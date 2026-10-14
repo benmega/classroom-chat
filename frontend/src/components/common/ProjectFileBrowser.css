@@ -15,9 +15,10 @@
     grid-template-columns: minmax(0, 1fr);
 }
 
-/* Stacked: the tree sits above the code and stops short, so the code stays in view */
+/* Stacked: the tree sits above the code and stops short, so the code stays in view. The app makes every
+   button 44px tall on a phone (index.css), so the rows are tall there and few fit. */
 .project-files-tree {
-    max-height: min(11rem, var(--project-files-max-height));
+    max-height: min(13rem, var(--project-files-max-height));
     overflow: auto;
     padding: var(--spacing-sm);
     border-bottom: 1px solid var(--border-subtle);

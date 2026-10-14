@@ -24,6 +24,7 @@
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-md);
     background: var(--bg-secondary);
+    text-decoration: none;
     transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
 }
 
