@@ -22,15 +22,12 @@ from typing import Any
 
 from application.config import Config
 from application.extensions import db
-from application.models.project_file import FILE_KINDS, ProjectFile
+from application.models.project_file import FILE_KINDS, PROJECT_FILES_DIR, ProjectFile
 from application.utilities.image_upload import ImageUploadError, process_image, write_bytes_atomic
 from application.utilities.stored_files import remove_stored_file, remove_unless_committed
 from flask import current_app, has_app_context
 
 logger = logging.getLogger(__name__)
-
-# The folder under Config.UPLOAD_FOLDER that holds every project file
-PROJECT_FILES_DIR = "project_files"
 
 # The fields of the project form that carry each kind of file, and the ids to remove
 UPLOAD_FIELDS = {"model": "model_files", "source": "source_files", "asset": "asset_files"}
@@ -362,8 +359,8 @@ def store_project_files(project, files_by_kind, remove_ids=()):
     Everything is checked before anything is written: the name, type and size cap of
     each file, the number of files and their total size as the project will have
     them, then the content of each file. When anything is rejected it raises
-    ProjectFileError (400, or 413 for a size cap) and leaves the session and the disk
-    as they were.
+    ProjectFileError (400, or 413 for a size cap; 500 when the disk refuses a write)
+    and leaves the session and the disk as they were.
 
     The rows are added to the session, not committed. The new files are removed again
     unless the transaction commits, and the files of removed and replaced rows are

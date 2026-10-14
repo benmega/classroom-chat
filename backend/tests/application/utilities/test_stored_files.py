@@ -198,3 +198,17 @@ def test_both_kinds_of_file_in_one_transaction(upload_dir):
     db.session.commit()
     assert not old_file.exists()
     assert newer_file.exists()
+
+
+def test_a_file_outside_the_given_subfolder_is_never_removed(upload_dir):
+    inside_path, inside = _file(upload_dir, "project_files")
+    outside_path, outside = _file(upload_dir, "submissions")
+    _in_a_transaction()
+
+    remove_after_commit(db.session, inside_path, subfolder="project_files")
+    remove_after_commit(db.session, outside_path, subfolder="project_files")
+    remove_after_commit(db.session, f"project_files/../{outside_path}", subfolder="project_files")
+    db.session.commit()
+
+    assert not inside.exists()
+    assert outside.exists()

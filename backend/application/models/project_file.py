@@ -12,6 +12,8 @@ from ..utilities.stored_files import remove_files_of_deleted_rows
 
 # The kinds of project file, in the order a project lists them
 FILE_KINDS = ("model", "source", "asset")
+# The folder under Config.UPLOAD_FOLDER that holds every project file
+PROJECT_FILES_DIR = "project_files"
 
 
 class ProjectFile(db.Model):
@@ -83,5 +85,6 @@ FILE_LISTING_ORDER = (
 )
 
 # A deleted file row takes its stored file with it once the delete is committed,
-# however it goes: removed or replaced on its own, or with its project or user.
-remove_files_of_deleted_rows(ProjectFile)
+# however it goes: removed or replaced on its own, or with its project or user. A
+# stored path outside the project files folder is never touched.
+remove_files_of_deleted_rows(ProjectFile, subfolder=PROJECT_FILES_DIR)

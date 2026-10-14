@@ -38,10 +38,11 @@ def stored_file_path(stored_path, subfolder=None):
     return file_path
 
 
-def remove_stored_file(stored_path):
+def remove_stored_file(stored_path, subfolder=None):
     """Remove a stored file now. Best effort: a path that does not lead into the upload
-    folder is not touched, and a file that is already gone or cannot be removed is left."""
-    file_path = stored_file_path(stored_path)
+    folder (or into ``subfolder``) is not touched, and a file that is already gone or
+    cannot be removed is left."""
+    file_path = stored_file_path(stored_path, subfolder)
     if file_path is None:
         return
     try:
@@ -57,10 +58,10 @@ def _the_session(session):
     return session() if isinstance(session, scoped_session) else session
 
 
-def remove_after_commit(session, stored_path):
+def remove_after_commit(session, stored_path, subfolder=None):
     """Remove the file once the open transaction of ``session`` commits. A rollback,
     or a session closed without a commit, keeps it: its row is then kept too."""
-    _the_session(session).info.setdefault(_REMOVE_AFTER_COMMIT, []).append(stored_path)
+    _the_session(session).info.setdefault(_REMOVE_AFTER_COMMIT, []).append((stored_path, subfolder))
 
 
 def remove_unless_committed(session, stored_path):
@@ -75,9 +76,10 @@ def remove_unless_committed(session, stored_path):
     session.info.setdefault(_REMOVE_UNLESS_COMMITTED, []).append(stored_path)
 
 
-def remove_files_of_deleted_rows(model, attribute="stored_path"):
+def remove_files_of_deleted_rows(model, attribute="stored_path", subfolder=None):
     """A deleted ``model`` row takes its stored file (``row.<attribute>``) with it, once
     the delete is committed, however the row goes: on its own or through a cascade.
+    With ``subfolder``, a stored path that leads anywhere else is left alone.
 
     Only deletes made through the ORM are seen (session.delete and relationship
     cascades), not a bulk query.delete().
@@ -87,7 +89,7 @@ def remove_files_of_deleted_rows(model, attribute="stored_path"):
     def _remember_file_of_deleted_row(mapper, connection, row):
         session = object_session(row)
         if session is not None:
-            remove_after_commit(session, getattr(row, attribute))
+            remove_after_commit(session, getattr(row, attribute), subfolder)
 
 
 # One set of session listeners serves every model whose rows own files.
@@ -99,8 +101,8 @@ def _settle_files_after_commit(session):
         return  # a savepoint was released: the outer transaction can still roll back
     # The rows the new files were written for are saved: the files stay
     session.info.pop(_REMOVE_UNLESS_COMMITTED, None)
-    for stored_path in session.info.pop(_REMOVE_AFTER_COMMIT, ()):
-        remove_stored_file(stored_path)
+    for stored_path, subfolder in session.info.pop(_REMOVE_AFTER_COMMIT, ()):
+        remove_stored_file(stored_path, subfolder)
 
 
 @event.listens_for(db.session, "after_rollback")

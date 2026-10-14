@@ -12,7 +12,7 @@ from application.models.project import (
     Project,
     read_project_type,
 )
-from application.models.project_file import ProjectFile
+from application.models.project_file import PROJECT_FILES_DIR, ProjectFile
 from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
 from application.models.user import User, save_new_user
@@ -26,7 +26,6 @@ from application.utilities.image_upload import (
     save_validated_image,
 )
 from application.utilities.project_files import (
-    PROJECT_FILES_DIR,
     ProjectFileError,
     file_ids_to_remove,
     served_content_type,

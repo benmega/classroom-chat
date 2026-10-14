@@ -229,3 +229,16 @@ def test_an_id_is_never_handed_out_twice(init_db):
     second = ProjectFileFactory(project_id=project.id, path="a.py")
 
     assert second.id > first_id
+
+
+def test_a_deleted_row_never_removes_a_file_outside_the_project_files_folder(init_db):
+    # Only a hand-edited row (the admin CRUD panel) can point anywhere else
+    submission = Path(Config.UPLOAD_FOLDER, "submissions", "homework.pdf")
+    submission.parent.mkdir(parents=True, exist_ok=True)
+    submission.write_bytes(b"homework")
+    row = ProjectFileFactory(stored_path="project_files/../submissions/homework.pdf")
+
+    db.session.delete(row)
+    db.session.commit()
+
+    assert submission.read_bytes() == b"homework"
