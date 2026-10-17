@@ -480,7 +480,7 @@ const Shop = () => {
                                         disabled={!isAffordable || purchasingId === item.id}
                                         onClick={() => handlePurchase(item.id, item.name)}
                                     >
-                                        {purchasingId === item.id ? <Loader2 className="spinner" size={16} /> : `${item.base_price.toFixed(3)} Packets`}
+                                        {purchasingId === item.id ? <Loader2 className="spinner" size={16} /> : `${Number(item.base_price.toFixed(3))} Packets`}
                                     </button>
                                 )}
                             </div>

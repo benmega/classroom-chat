@@ -94,7 +94,7 @@ describe('Shop', () => {
       expect(screen.getByText('Theme')).toBeInTheDocument();
     });
 
-    const purchaseButtons = screen.getAllByText('10.000 Packets');
+    const purchaseButtons = screen.getAllByText('10 Packets');
     expect(purchaseButtons.length).toBeGreaterThan(0);
     
     fireEvent.click(purchaseButtons[0]);
@@ -119,12 +119,33 @@ describe('Shop', () => {
       expect(screen.getByText('Error Item')).toBeInTheDocument();
     });
 
-    const purchaseButton = screen.getByText('10.000 Packets');
+    const purchaseButton = screen.getByText('10 Packets');
     fireEvent.click(purchaseButton);
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('Failed to purchase Error Item');
     });
+  });
+
+  it('lists prices without trailing zeros', async () => {
+    server.use(
+      http.get('*/api/shop/items', () => {
+        return HttpResponse.json([
+          { id: 11, name: 'Cheap Item', description: 'desc', base_price: 0.01, is_purchased: false },
+          { id: 12, name: 'Mid Item', description: 'desc', base_price: 0.05, is_purchased: false },
+          { id: 13, name: 'Odd Item', description: 'desc', base_price: 0.015, is_purchased: false },
+          { id: 14, name: 'Tiny Item', description: 'desc', base_price: 0.008, is_purchased: false },
+        ]);
+      })
+    );
+
+    renderWithProviders(<Shop />);
+
+    for (const price of ['0.01', '0.05', '0.015', '0.008']) {
+      expect(await screen.findByText(`${price} Packets`)).toBeInTheDocument();
+    }
+    expect(screen.queryByText('0.010 Packets')).not.toBeInTheDocument();
+    expect(screen.queryByText('0.050 Packets')).not.toBeInTheDocument();
   });
 
   it('handles changing chat font color', async () => {
