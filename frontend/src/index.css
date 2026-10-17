@@ -194,6 +194,43 @@ button:focus-visible,
   filter: brightness(0.96);
 }
 
+/* Shared base for modal and dialog primary actions (page stylesheets only adjust it) */
+.btn-primary,
+.btn-danger {
+  padding: var(--btn-padding-md);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--btn-font-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: var(--transition-bounce);
+  color: var(--text-on-primary);
+  border: none;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+}
+
+.btn-primary { background: var(--primary-accessible); }
+.btn-danger { background: var(--error-color, #dc2626); }
+
+.btn-primary:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.btn-primary:active:not(:disabled),
+.btn-danger:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.btn-primary:disabled,
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .btn-secondary {
   padding: var(--btn-padding-md);
   border-radius: var(--radius-md);
