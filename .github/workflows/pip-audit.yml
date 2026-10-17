@@ -9,7 +9,7 @@ on:
       - 'backend/requirements*.txt'
       - '.github/workflows/pip-audit.yml'
   push:
-    branches: [ main, master, working ]
+    branches: [ main, working ]
     paths:
       - 'backend/requirements*.txt'
       - '.github/workflows/pip-audit.yml'
