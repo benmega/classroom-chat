@@ -596,14 +596,14 @@ def test_sandbox_toggle_and_status(client, sample_admin, sample_user):
         assert len(status_calls) > 0
         assert status_calls[0][1]["room"] == f"classroom:{classroom.id}"
 
-    # Verify announcement message was created
-    msg = (
-        Message.query.filter(
-            Message.content.contains("🎉 All Tests Passed! Sandbox Mode is now active!")
-        ).first()
-    )
-    assert msg is not None
-    assert classroom in msg.target_classrooms
+        # No chat announcement is broadcast when sandbox mode turns on
+        assert not any(call[0][0] == "message_received" for call in mock_emit.call_args_list)
+
+    # ...and none is stored for the classroom either
+    announcement_count = Message.query.filter(
+        Message.target_classrooms.any(Classroom.id == classroom.id)
+    ).count()
+    assert announcement_count == 0
 
     # Check status endpoint
     resp_status = client.get(f"/api/classrooms/{classroom.id}/sandbox-status")

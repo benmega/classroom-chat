@@ -12,7 +12,6 @@ from application.decorators.admin_required import admin_only
 from application.extensions import csrf, db, socketio
 from application.models.classroom import Classroom
 from application.models.level_game import LevelGame
-from application.models.message import Message
 from application.models.user import User
 from application.services.level_game_service import (
     get_student_sandbox_games,
@@ -109,7 +108,6 @@ def toggle_classroom_sandbox(class_id):
     Accepts optional JSON {"sandbox_active": bool} or toggles current boolean.
     Updates classroom.sandbox_active and classroom.sandbox_activated_at.
     Emits Socket.IO event sandbox_status_changed to f"classroom:{class_id}".
-    When turned ON, creates an automated message in Message for that classroom.
     """
     classroom = db.session.get(Classroom, class_id)
     if not classroom:
@@ -120,52 +118,6 @@ def toggle_classroom_sandbox(class_id):
 
     classroom.sandbox_active = is_active
     classroom.sandbox_activated_at = utcnow_naive() if is_active else None
-
-    if is_active:
-        user_id = session.get("user")
-        admin_user = (
-            getattr(g, "user", None)
-            or (db.session.get(User, user_id) if user_id else None)
-            or User.query.filter_by(role="admin").first()
-        )
-        sender_id = admin_user.id if admin_user else 1
-
-        announcement_content = (
-            "🎉 All Tests Passed! Sandbox Mode is now active! Click to play your unlocked games."
-        )
-        new_message = Message(
-            user_id=sender_id,
-            content=announcement_content,
-            message_type="text",
-            is_global=False,
-            target_live=False,
-        )
-        new_message.target_classrooms.append(classroom)
-        db.session.add(new_message)
-        db.session.flush()
-
-        msg_payload = {
-            "id": new_message.id,
-            "user_id": sender_id,
-            "user_name": (admin_user.nickname or admin_user.username) if admin_user else "System",
-            "slug": admin_user.slug if admin_user else "system",
-            "user_profile_pic": admin_user.profile_picture if admin_user else None,
-            "content": new_message.content,
-            "message_type": "text",
-            "created_at": to_utc_iso(new_message.created_at or utcnow_naive()),
-            "is_global": False,
-            "target_live": False,
-            "target_classrooms": [classroom.name],
-            "target_classroom_ids": [classroom.id],
-            "target_users": [],
-            "is_struck": False,
-            "has_animated_border": False,
-            "animated_border_speed": "normal",
-            "animated_border_color": None,
-            "chat_font_color": None,
-        }
-        with contextlib.suppress(Exception):
-            socketio.emit("message_received", msg_payload, room=f"classroom:{class_id}")
 
     db.session.commit()
 
