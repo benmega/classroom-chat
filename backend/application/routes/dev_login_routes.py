@@ -92,9 +92,7 @@ def _redirect_url_for(role: str) -> str:
 
 def _render_dev_login(role: str, error=None):
     """Render the browser landing page that forwards to the Vite dev server."""
-    return render_template(
-        "dev_login.html", role=role, error=error, redirect_url=_redirect_url_for(role)
-    )
+    return render_template("dev_login.html", role=role, error=error, redirect_url=_redirect_url_for(role))
 
 
 def _perform_login(user_obj: User):
@@ -104,6 +102,7 @@ def _perform_login(user_obj: User):
     User.set_online(user_obj.id)
 
     from application.services.achievement_engine import evaluate_user
+
     evaluate_user(user_obj)
 
 
@@ -127,7 +126,11 @@ def browser_dev_login():
     if not username:
         error = f"Unknown role '{role}'. Accepted: {list(_AGENT_ROLES.keys())}"
     else:
-        user_obj = User.query.filter_by(username=username).first()
+        user_obj = (
+            User.query.filter_by(username=username).first()
+            or (User.query.filter_by(username="admin").first() if role == "admin" else None)
+            or (User.query.filter_by(role="admin").first() if role == "admin" else None)
+        )
         if not user_obj:
             error = f"Agent user '{username}' not found in DB."
         else:
@@ -159,15 +162,15 @@ def agent_dev_login():
     username = _AGENT_ROLES.get(role)
     if not username:
         return (
-            jsonify(
-                {
-                    "error": f"Unknown role '{role}'. Accepted values: {list(_AGENT_ROLES.keys())}"
-                }
-            ),
+            jsonify({"error": f"Unknown role '{role}'. Accepted values: {list(_AGENT_ROLES.keys())}"}),
             400,
         )
 
-    user_obj = User.query.filter_by(username=username).first()
+    user_obj = (
+        User.query.filter_by(username=username).first()
+        or (User.query.filter_by(username="admin").first() if role == "admin" else None)
+        or (User.query.filter_by(role="admin").first() if role == "admin" else None)
+    )
     if not user_obj:
         return (
             jsonify({"error": f"Agent user '{username}' not found in the database"}),
@@ -186,7 +189,7 @@ def agent_dev_login():
                 "success": True,
                 "user": user_obj.to_dict(),
                 "role": role,
-                "message": f"Dev-login successful as '{username}' ({role})",
+                "message": f"Dev-login successful as '{user_obj.username}' ({role})",
             }
         ),
         200,

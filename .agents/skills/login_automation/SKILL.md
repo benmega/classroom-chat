@@ -31,7 +31,7 @@ Use **only** when the task goal is to verify that the login or signup UI works c
 
 | Role | Username | Password |
 | :--- | :--- | :--- |
-| **Admin** | `ben` | `rK@76E6P7z7E` |
+| **Admin** | `admin` | `admin` |
 | **Student** | `blossomstudent01` | `Bls01` |
 
 > [!NOTE]
