@@ -62,7 +62,8 @@
     accent-color: var(--primary-accessible);
 }
 
-.admin-tests-input {
+/* Two classes: outranks the global input[type="number"] rule (full width, large padding). */
+.admin-tests-table .admin-tests-input {
     width: 5rem;
     padding: 0.35rem 0.5rem;
     background: var(--bg-primary);
@@ -73,6 +74,7 @@
 }
 
 .admin-tests-select {
+    width: auto;
     padding: 0.45rem 0.6rem;
     background: var(--bg-primary);
     color: var(--text-primary);

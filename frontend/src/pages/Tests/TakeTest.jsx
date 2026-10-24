@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { saveAttempt, startAttempt, submitAttempt } from '../../api/quizzes';
 import { getErrorMessage } from '../../utils/apiError';
 import { showConfirm } from '../../utils/confirm';
+import useAuthStore from '../../store/useAuthStore';
 import DiagramFrame from '../../components/quiz/DiagramFrame';
 import Skeleton from '../../components/common/Skeleton';
 import './TakeTest.css';
@@ -112,6 +113,8 @@ const TakeTest = () => {
     const goToResult = useCallback(
         (id) => {
             lockedRef.current = true;
+            // A first attempt pays ducks: refresh the user so the header balance shows them.
+            useAuthStore.getState().checkAuth(true);
             navigate(`/tests/results/${id}`, { replace: true });
         },
         [navigate]

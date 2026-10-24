@@ -9,6 +9,7 @@ import { renderWithProviders } from '../../test/test-utils';
 import { server } from '../../test/mocks/server';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import TakeTest from './TakeTest';
+import useAuthStore from '../../store/useAuthStore';
 
 vi.mock('react-hot-toast', () => ({
     default: { success: vi.fn(), error: vi.fn() },
@@ -676,6 +677,24 @@ describe('TakeTest', () => {
     });
 
     describe('submit', () => {
+        it('refreshes the user after submitting so the duck balance is current', async () => {
+            const checkAuth = vi.spyOn(useAuthStore.getState(), 'checkAuth').mockResolvedValue(undefined);
+            try {
+                serve();
+                renderTake();
+                await screen.findByText('Prompt 1');
+
+                await userEvent.click(screen.getByRole('button', { name: 'Submit' }));
+                const dialog = await screen.findByRole('dialog', { name: 'Submit' });
+                await userEvent.click(within(dialog).getByRole('button', { name: 'Submit' }));
+
+                await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
+                expect(checkAuth).toHaveBeenCalledWith(true);
+            } finally {
+                checkAuth.mockRestore();
+            }
+        });
+
         it('confirms with the unanswered count, then submits and opens the result', async () => {
             serve();
             renderTake();
