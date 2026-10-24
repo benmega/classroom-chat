@@ -1,12 +1,17 @@
 from application.decorators.admin_required import admin_only
 from application.extensions import db
-from application.models.project import Project
+from application.models.project import (
+    DEFAULT_PROJECT_TYPE,
+    INVALID_PROJECT_TYPE_MESSAGE,
+    Project,
+    read_project_type,
+)
 from application.services.email_service import send_admin_email
 from flask import jsonify, request
 from sqlalchemy import case, func
 from sqlalchemy.orm import joinedload
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 # Page size of the filters other than "pending" when ?limit= is not given, and the largest
 # page any filter can be asked for. The review queue ("pending") is returned whole unless
@@ -89,8 +94,11 @@ def _complete_linked_challenge(student, project):
 
         from application.models.configuration import Configuration
 
-        config = Configuration.query.first()
-        multiplier = (config.duck_multiplier if config else 1) or 1
+        config = Configuration.get_current()
+        # An unset multiplier means no scaling; a configured 0 stays 0, as on the challenge routes
+        multiplier = config.duck_multiplier if config else None
+        if multiplier is None:
+            multiplier = 1
         if student.has_double_duck:
             multiplier *= 2
 
@@ -115,7 +123,11 @@ def _complete_linked_challenge(student, project):
 def handle_project_review(project_id):
     project = Project.query.get_or_404(project_id)
 
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(
+            {"status": "error", "message": "Request body must be a JSON object."}
+        ), 400
     action = data.get("action")
     comment = data.get("teacher_comment")
 
@@ -193,7 +205,11 @@ def handle_project_review(project_id):
 @admin_bp.route("/assign-project", methods=["POST"])
 @admin_only
 def assign_project():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify(
+            {"status": "error", "message": "Request body must be a JSON object."}
+        ), 400
 
     user_id = data.get("user_id")
     name = data.get("name")
@@ -213,11 +229,18 @@ def assign_project():
     from application.models.project_template import ProjectTemplate
 
     matched_template = ProjectTemplate.query.filter_by(name=name).first()
+    project_type = read_project_type(
+        data.get("project_type"),
+        matched_template.project_type if matched_template else DEFAULT_PROJECT_TYPE,
+    )
+    if project_type is None:
+        return jsonify({"status": "error", "message": INVALID_PROJECT_TYPE_MESSAGE}), 400
 
     project = Project(
         user_id=user_id,
         name=name,
         template_id=matched_template.id if matched_template else None,
+        project_type=project_type,
         description=description,
         link=link,
         github_link=github_link,

@@ -1,0 +1,122 @@
+/* Asset files of a project: image thumbnails in a responsive grid, then sound players, then downloads */
+.asset-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.asset-gallery ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.asset-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.asset-gallery-thumb {
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    text-decoration: none;
+    transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.asset-gallery-thumb:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+}
+
+.asset-gallery-thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.asset-gallery-broken {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    height: 100%;
+    padding: 0.5rem;
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.asset-gallery-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.asset-gallery-sound {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+}
+
+.asset-gallery-sound audio {
+    flex: 1 1 14rem;
+    min-width: 0;
+    max-width: 100%;
+    height: 2.25rem;
+}
+
+.asset-gallery-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.asset-gallery-file {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--primary-accessible);
+    text-decoration: none;
+}
+
+.asset-gallery-file:hover {
+    background: var(--primary-light);
+}
+
+.asset-gallery-file svg {
+    flex-shrink: 0;
+}
+
+.asset-gallery-file .asset-gallery-name {
+    flex: 1;
+    color: inherit;
+}
+
+.asset-gallery-size {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: var(--font-xs);
+}

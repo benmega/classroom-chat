@@ -11,6 +11,7 @@ import hmac
 import boto3
 from application.extensions import db, limiter
 from application.models.user import User
+from application.utilities.db_helpers import is_reserved_username
 from botocore.exceptions import ClientError
 from flask import Blueprint, current_app, jsonify, request, session
 from flask_limiter.util import get_remote_address
@@ -44,10 +45,12 @@ def sync_cognito_user(email, cognito_sub):
         if user:
             user.cognito_sub = cognito_sub
         else:
-            base_username = email.split("@")[0]
+            # Usernames are stored lower-cased, so look names up that way too
+            base_username = email.split("@")[0].lower()
             username = base_username
             counter = 1
-            while User.query.filter_by(username=username).first():
+            # A reserved name is skipped like a taken one
+            while is_reserved_username(username) or User.query.filter_by(username=username).first():
                 username = f"{base_username}{counter}"
                 counter += 1
 

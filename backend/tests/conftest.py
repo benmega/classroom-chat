@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 from application import create_app
-from application.config import Config, TestingConfig
+from application.config import Config, DevelopmentConfig, ProductionConfig, TestingConfig
 from application.extensions import db, limiter, socketio
 from application.models.achievements import Achievement, UserAchievement
 from application.models.challenge import Challenge
@@ -28,7 +28,7 @@ from application.models.user import User
 from application.services import moderation_service
 from flask_login import LoginManager
 from PIL import Image
-from sqlalchemy import event
+from sqlalchemy import event, text
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -43,6 +43,21 @@ def _isolated_upload_folder(tmp_path_factory):
     with pytest.MonkeyPatch.context() as patch_config:
         patch_config.setattr(Config, "UPLOAD_FOLDER", str(folder))
         yield folder
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _in_memory_databases():
+    """Keep create_app(DevelopmentConfig / ProductionConfig) off the real instance databases.
+
+    Those two configs default to instance/dev_users.db and instance/prod_users.db
+    (or DEV_DATABASE_URI / DATABASE_URL from .env), and create_app() creates the
+    tables and seeds rows in whatever database it is given. Tests that need a file
+    database build their own config (see test_schema.py).
+    """
+    with pytest.MonkeyPatch.context() as patch_config:
+        for config_class in (Config, DevelopmentConfig, ProductionConfig):
+            patch_config.setattr(config_class, "SQLALCHEMY_DATABASE_URI", "sqlite:///:memory:")
+        yield
 
 
 @pytest.fixture(scope="session")
@@ -68,6 +83,9 @@ def test_app(_isolated_upload_folder):
             return db.session.get(User, int(user_id))
 
     with app.app_context():
+        # create_app() has added its start-up rows (the default configuration).
+        # The first test starts as every later one does: with empty tables.
+        db.drop_all()
         db.create_all()
         yield app
         db.session.remove()
@@ -200,6 +218,17 @@ def init_db(test_app):
         yield db
         db.session.rollback()
         db.drop_all()
+
+
+@pytest.fixture
+def several_open_sessions_allowed(init_db):
+    """Turn the test database into one from before the one-open-session index.
+
+    Only such a database can hold several open sessions of one user. The code
+    that closes or skips the older ones is tested against it.
+    """
+    db.session.execute(text("DROP INDEX uq_session_logs_one_open_per_user"))
+    db.session.commit()
 
 
 def generate_random_slug(length=10):

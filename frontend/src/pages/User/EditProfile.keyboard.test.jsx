@@ -36,7 +36,7 @@ describe('EditProfile keyboard and screen reader access', () => {
                 bio: 'This is my bio',
                 role: 'student',
                 profile_picture: 'pic.jpg',
-                drawer: 'Drawer A1'
+                
             },
             checkAuth: vi.fn(),
             isAuthenticated: true,

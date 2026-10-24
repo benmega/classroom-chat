@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import toast from 'react-hot-toast';
 import client from '../api/client';
 import { resetSocket } from '../hooks/useChatSocket';
+import { getErrorMessage } from '../utils/apiError';
 
 
 const getHamburgerOverride = (username) => {
@@ -11,6 +12,17 @@ const getHamburgerOverride = (username) => {
 
 const setHamburgerOverride = (username, progress) => {
   localStorage.setItem(`hamburger_override_${username}`, progress);
+};
+
+// Signing out is a POST. A backend from before that switch answers it with 405 and still serves
+// the deprecated GET, so fall back to that once; remove together with the GET route next release.
+const endServerSession = async () => {
+  try {
+    await client.post('/user/logout');
+  } catch (error) {
+    if (error.response?.status !== 405) throw error;
+    await client.get('/user/logout');
+  }
 };
 
 const useAuthStore = create((set, get) => ({
@@ -82,11 +94,9 @@ const useAuthStore = create((set, get) => ({
         role: user.role
       };
     } catch (error) {
-      const body = error.response?.data;
-      const serverError = typeof body === 'string' ? body : body?.error;
       return { 
         success: false, 
-        error: (typeof serverError === 'string' && serverError) || 'Login failed' 
+        error: getErrorMessage(error, 'Login failed') 
       };
     }
   },
@@ -106,7 +116,7 @@ const useAuthStore = create((set, get) => ({
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data?.error || 'Login failed' 
+        error: getErrorMessage(error, 'Login failed') 
       };
     }
   },
@@ -123,7 +133,7 @@ const useAuthStore = create((set, get) => ({
 
   logout: async () => {
     try {
-      await client.get('/user/logout');
+      await endServerSession();
     } catch (error) {
       // Sign out locally regardless: callers navigate away afterwards, so they must not get a rejection.
       // The server may still hold the session though, which a reload would pick up again.

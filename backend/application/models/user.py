@@ -8,9 +8,14 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from ..extensions import db
-from ..utilities.helper_functions import utc_today, utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utc_today, utcnow_naive
 
 # Models are imported locally within methods to prevent circular dependencies
+
+# Duck balances are floats: every change is rounded to this many decimals so
+# repeated fractional credits and debits (3 x 1.1, then -3.3) cannot leave
+# binary-float residue (4.4e-16) behind, or a balance a hair under what was earned.
+DUCK_DECIMALS = 6
 
 
 def default_nickname(context):
@@ -50,7 +55,6 @@ class User(db.Model):
     last_daily_duck = db.Column(db.Date, nullable=True)
     last_achievement_evaluation = db.Column(db.DateTime, nullable=True)
     connection_code = db.Column(db.String(10), unique=True, nullable=True)
-    drawer = db.Column(db.String(4), unique=True, nullable=True)
 
     # Shop Perks
     has_chat_font = db.Column(db.Boolean, default=False)
@@ -83,8 +87,19 @@ class User(db.Model):
         "ChallengeLog",
         primaryjoin="User.id == foreign(ChallengeLog.user_id)",
         lazy="dynamic",
-        viewonly=True,
+        cascade="all, delete-orphan",
     )
+    # Declared for the cascade: these rows belong to the user and are deleted
+    # with it. No code reads the collections.
+    duck_trades = db.relationship("DuckTradeLog", cascade="all, delete-orphan")
+    submissions = db.relationship("Submission", cascade="all, delete-orphan")
+    course_instance_requests = db.relationship(
+        "CourseInstanceRequest", cascade="all, delete-orphan"
+    )
+    quiz_attempts = db.relationship(
+        "QuizAttempt", back_populates="user", cascade="all, delete-orphan"
+    )
+    quiz_rewards = db.relationship("QuizReward", cascade="all, delete-orphan")
 
     # Many-to-many classroom enrollment via user_classrooms join table
     classrooms = db.relationship(
@@ -198,11 +213,8 @@ class User(db.Model):
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
             "has_double_duck": self.has_double_duck,
-            "drawer": self.drawer,
             "current_activity": self.current_activity,
-            "last_activity_time": self.last_activity_time.isoformat()
-            if self.last_activity_time
-            else None,
+            "last_activity_time": to_utc_iso(self.last_activity_time),
             "has_activity": self.has_activity,
             "achievement_count": len(self.achievements),
             "can_chat": self.can_chat if self.can_chat is not None else True,
@@ -376,11 +388,8 @@ class User(db.Model):
             "profile_wallpaper": self.profile_wallpaper,
             "has_auto_claimer": self.has_auto_claimer,
             "has_double_duck": self.has_double_duck,
-            "drawer": self.drawer,
             "current_activity": self.current_activity,
-            "last_activity_time": self.last_activity_time.isoformat()
-            if self.last_activity_time
-            else None,
+            "last_activity_time": to_utc_iso(self.last_activity_time),
             "has_activity": (
                 self.id in activity_user_ids
                 if activity_user_ids is not None
@@ -451,19 +460,28 @@ class User(db.Model):
         from .session_log import SessionLog
 
         # The session log and is_online change together in a single commit.
-        if online:
-            # Returns the already-open session if there is one
-            SessionLog.start_session(user.id, commit=False)
-            user.is_online = True
-        else:
-            SessionLog.end_session(user.id, commit=False)
-            user.is_online = False
+        for retry in (True, False):
+            if online:
+                # Returns the already-open session if there is one
+                SessionLog.start_session(user.id, commit=False)
+                user.is_online = True
+            else:
+                SessionLog.end_session(user.id, commit=False)
+                user.is_online = False
 
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+            try:
+                db.session.commit()
+                return
+            except IntegrityError:
+                db.session.rollback()
+                # The database allows one open session per user: another request
+                # opened this user's session after the lookup in start_session.
+                # The second pass finds that session and keeps it.
+                if not (online and retry):
+                    raise
+            except Exception:
+                db.session.rollback()
+                raise
 
     def get_progress(self, domain):
         """Calculate progress based on challenges completed for a specific domain."""
@@ -563,11 +581,7 @@ class User(db.Model):
                             "levels_completed": completed_count,
                             "levels_total": len(levels),
                             "levels": levels,
-                            "last_completed_at": (
-                                course_last_completed.isoformat()
-                                if course_last_completed
-                                else None
-                            ),
+                            "last_completed_at": to_utc_iso(course_last_completed),
                         }
                     )
 
@@ -607,7 +621,7 @@ class User(db.Model):
                         "levels_total": len(levels),
                         "levels": levels,
                         "last_completed_at": (
-                            max(legacy_times).isoformat() if legacy_times else None
+                            to_utc_iso(max(legacy_times)) if legacy_times else None
                         ),
                     }
                 )
@@ -645,7 +659,8 @@ class User(db.Model):
         (``col = col + amount``) rather than read-modify-write on the loaded
         instance, so concurrent credits/debits (trades, achievements, admin
         adjustments) cannot overwrite each other; the instance is refreshed
-        from the row afterwards.  The caller must commit the session.
+        from the row afterwards.  The caller must commit the session.  Both
+        balances are rounded to ``DUCK_DECIMALS`` places after every change.
         """
         if self.role == "parent":
             return False
@@ -657,8 +672,8 @@ class User(db.Model):
         earned_gain = amount if amount > 0 else 0
 
         if self.id is not None and self in db.session:
-            new_balance = User.duck_balance + amount
-            new_earned = User.earned_ducks + earned_gain
+            new_balance = func.round(User.duck_balance + amount, DUCK_DECIMALS)
+            new_earned = func.round(User.earned_ducks + earned_gain, DUCK_DECIMALS)
             update_stmt = update(User).where(User.id == self.id)
             if min_balance is not None:
                 update_stmt = update_stmt.where(new_balance >= min_balance)
@@ -679,10 +694,11 @@ class User(db.Model):
             db.session.refresh(self, ["duck_balance", "earned_ducks"])
         else:
             # Not persisted yet (no row to update): plain in-memory arithmetic.
-            if min_balance is not None and self.duck_balance + amount < min_balance:
+            new_balance = round(self.duck_balance + amount, DUCK_DECIMALS)
+            if min_balance is not None and new_balance < min_balance:
                 return False
-            self.earned_ducks += earned_gain
-            self.duck_balance += amount
+            self.earned_ducks = round(self.earned_ducks + earned_gain, DUCK_DECIMALS)
+            self.duck_balance = new_balance
             if self.earned_ducks < self.duck_balance:
                 self.earned_ducks = self.duck_balance
 

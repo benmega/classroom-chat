@@ -10,13 +10,13 @@
     gap: 1rem;
 }
 
-.search-bar {
+:where(.admin-users-page) .search-bar {
     position: relative;
     width: 100%;
     max-width: 320px;
 }
 
-.search-bar svg {
+:where(.admin-users-page) .search-bar svg {
     position: absolute;
     left: 12px;
     top: 50%;
@@ -24,27 +24,27 @@
     color: var(--text-muted);
 }
 
-.search-bar input {
+:where(.admin-users-page) .search-bar input {
     width: 100%;
     padding: 12px 12px 12px 42px;
     background: var(--bg-primary);
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     font-size: 0.95rem;
-    outline: none;
     transition: all 0.2s;
 }
 
-.search-bar input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+:where(.admin-users-page) .search-bar input:focus {
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
-.primary-btn {
+:where(.admin-users-page) .primary-btn {
     padding: 12px 20px;
     background: var(--primary-color);
     color: var(--text-on-primary);
-    border: none;
+    border: 1px solid transparent;
     border-radius: 12px;
     font-weight: 700;
     display: flex;
@@ -54,7 +54,7 @@
     transition: all 0.2s;
 }
 
-.primary-btn:hover {
+:where(.admin-users-page) .primary-btn:hover {
     opacity: 0.9;
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
@@ -99,7 +99,7 @@
     overflow: visible !important;
 }
 
-.table-responsive {
+:where(.admin-users-page) .table-responsive {
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -209,7 +209,7 @@
     color: var(--text-muted);
 }
 
-.status-indicator {
+:where(.admin-users-page) .status-indicator {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -217,7 +217,7 @@
     font-weight: 600;
 }
 
-.status-indicator .dot {
+:where(.admin-users-page) .status-indicator .dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
@@ -233,7 +233,7 @@
     gap: 8px;
 }
 
-.action-btn {
+:where(.admin-users-page) .action-btn {
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -247,7 +247,7 @@
     transition: all 0.2s;
 }
 
-.action-btn:hover {
+:where(.admin-users-page) .action-btn:hover {
     background: var(--bg-secondary);
     border-color: var(--border-subtle);
     color: var(--slate-800);
@@ -257,7 +257,7 @@
 .action-btn.pass:hover { background: var(--secondary-light); border-color: var(--indigo-200); color: var(--indigo-700); }
 .action-btn.delete:hover { background: var(--error-subtle); border-color: var(--error-light); color: var(--error-color); }
 
-.empty-row {
+:where(.admin-users-page) .empty-row {
     text-align: center;
     padding: 20px !important;
     color: var(--text-muted);
@@ -266,7 +266,7 @@
 
 /* Modal Enhancements */
 
-.form-group input.readonly {
+:where(.admin-modal-overlay) .form-group input.readonly {
     background: var(--bg-tertiary);
     opacity: 0.8;
 }
@@ -282,17 +282,6 @@
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.drawer-info-text {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
-
-.drawer-code {
-    font-family: monospace;
-    font-weight: bold;
 }
 
 .action-btn-blue {
@@ -322,7 +311,7 @@
     transform: rotate(180deg);
 }
 
-.user-badge-display {
+:where(.admin-modal-overlay) .user-badge-display {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -332,7 +321,7 @@
     border-radius: 12px;
 }
 
-.user-badge-display .avatar-small {
+:where(.admin-modal-overlay) .user-badge-display .avatar-small {
     width: 32px !important;
     height: 32px !important;
     border-radius: 8px;
@@ -340,24 +329,20 @@
     flex-shrink: 0;
 }
 
-.user-info-text {
+:where(.admin-modal-overlay) .user-info-text {
     display: flex;
     flex-direction: column;
 }
 
-.user-nickname {
+:where(.admin-modal-overlay) .user-nickname {
     font-weight: 700;
     color: var(--slate-800);
     font-size: 0.95rem;
 }
 
-.user-handle {
+:where(.admin-modal-overlay) .user-handle {
     font-size: 0.8rem;
     color: var(--text-muted);
-}
-
-.admin-select {
-    cursor: pointer;
 }
 
 /* @media handled by AdminPageHeader.css */
@@ -449,16 +434,16 @@
     display: flex;
     flex-direction: row;
     gap: 8px;
-    margin-bottom: 1rem;
+    margin: 0; /* Remove bottom margin to align nicely in header */
 }
 
 .role-tab {
-    padding: 8px 20px;
-    border-radius: 999px;
+    padding: 12px 20px;
+    border-radius: 12px;
     border: 1px solid var(--border-subtle);
     background: var(--bg-primary);
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.95rem; /* Matches the search bar font size */
     font-weight: 600;
     cursor: pointer;
     transition: all 0.18s;
@@ -547,7 +532,7 @@
     border-radius: 12px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     min-width: 180px;
-    z-index: 9999;
+    z-index: var(--z-dropdown);
     overflow: hidden;
     padding: 4px;
     animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
@@ -596,7 +581,7 @@
         gap: 0.75rem;
     }
 
-    .search-bar {
+    :where(.admin-users-page) .search-bar {
         max-width: 100%;
     }
 
@@ -626,17 +611,12 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* Table: allow horizontal scroll and force min-width */
-    .table-responsive {
+    :where(.admin-users-page) .table-responsive {
         border-radius: 0;
     }
 
-    .users-table {
-        min-width: 600px;
-    }
-
     /* Ensure action buttons are large enough for touch */
-    .action-btn {
+    :where(.admin-users-page) .action-btn {
         min-width: 36px;
         min-height: 36px;
     }
@@ -648,14 +628,129 @@
     }
 }
 
-@media (max-width: 500px) {
-    /* Stats row: single column on very small phones */
-    .users-stats-row {
-        grid-template-columns: 1fr 1fr;
+/* Phones: one card per user. Five columns do not fit in 360px, and a scroll wrapper would clip the
+   absolutely positioned kebab and column-filter menus, so the rows reflow instead. The header row
+   stays as a strip of sort and filter controls. */
+@media (max-width: 640px) {
+    .users-table,
+    .users-table thead,
+    .users-table tbody {
+        display: block;
+    }
+
+    .users-table thead tr {
+        position: relative; /* the filter menus open across the whole strip */
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0 16px;
+        padding: 6px 12px;
+        background: var(--bg-secondary);
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .users-table thead th {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0;
+        background: none;
+        border-bottom: none;
+        white-space: nowrap;
+    }
+
+    .users-table thead th.col-actions {
+        display: none;
+    }
+
+    .users-table thead .column-filter-container {
+        position: static;
+    }
+
+    .users-table thead .column-filter-dropdown {
+        left: 12px;
+        right: 12px;
+        min-width: 0;
+    }
+
+    .users-table tbody tr {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0 12px;
+        padding: 12px;
+        border-bottom: 1px solid var(--bg-tertiary);
+    }
+
+    .users-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    /* Line break: the profile and its menu share the first line, the details wrap below it */
+    .users-table tbody tr::after {
+        content: '';
+        order: 2;
+        flex-basis: 100%;
+    }
+
+    .users-table tbody td {
+        display: block;
+        order: 3;
+        margin-top: 8px;
+        padding: 0;
+        border-bottom: none;
+    }
+
+    .users-table tbody td.col-profile {
+        order: 1;
+        flex: 1 1 0;
+        min-width: 0;
+        margin-top: 0;
+    }
+
+    .users-table tbody td.col-actions {
+        order: 1;
+        margin-top: 0;
+    }
+
+    .users-table tbody td:has(> .economy-empty) {
+        display: none;
+    }
+
+    .users-table .economy-info {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 2px 12px;
+    }
+
+    .users-table tbody td.empty-row {
+        flex: 1 1 100%;
+        margin-top: 0;
+    }
+
+    .users-table tbody tr.expanded-children-row {
+        display: block;
+        padding: 0;
+    }
+
+    .users-table tbody tr.expanded-children-row::after {
+        display: none;
+    }
+
+    .users-table tbody tr.expanded-children-row td {
+        margin-top: 0;
+    }
+
+    .children-list-container {
+        padding: 12px;
+    }
+
+    .child-item {
+        max-width: none;
     }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 640px) {
     .pagination-controls {
         width: 100%;
         flex-direction: column;

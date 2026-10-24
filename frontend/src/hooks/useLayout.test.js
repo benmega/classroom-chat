@@ -68,11 +68,13 @@ describe('useLayout - Quack sound for earning ducks', () => {
 
     // Spy on Audio
     playMock = vi.fn().mockResolvedValue(undefined);
-    audioConstructorSpy = vi.fn().mockImplementation((src) => ({
-      src,
-      volume: 1.0,
-      play: playMock,
-    }));
+    audioConstructorSpy = vi.fn().mockImplementation(function (src) {
+      return {
+        src,
+        volume: 1.0,
+        play: playMock,
+      };
+    });
     window.Audio = audioConstructorSpy;
   });
 

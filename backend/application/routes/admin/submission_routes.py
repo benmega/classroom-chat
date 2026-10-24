@@ -14,7 +14,7 @@ from application.models.submission import Submission
 from application.models.user import User
 from flask import jsonify, request, send_file
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 
 @admin_bp.route("/submissions", methods=["GET"])

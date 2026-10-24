@@ -1,0 +1,187 @@
+.admin-tests-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.admin-tests-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.admin-tests-scroll {
+    overflow-x: auto;
+}
+
+.admin-tests-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+}
+
+.admin-tests-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.admin-tests-table th {
+    padding: 0.75rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+}
+
+.admin-tests-table td {
+    padding: 0.6rem 1rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+}
+
+.admin-tests-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-tests-empty {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.admin-tests-check {
+    width: 1.1rem;
+    height: 1.1rem;
+    cursor: pointer;
+    accent-color: var(--primary-accessible);
+}
+
+/* Two classes: outranks the global input[type="number"] rule (full width, large padding). */
+.admin-tests-table .admin-tests-input {
+    width: 5rem;
+    padding: 0.35rem 0.5rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    font: inherit;
+}
+
+.admin-tests-select {
+    width: auto;
+    padding: 0.45rem 0.6rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    font: inherit;
+    cursor: pointer;
+}
+
+.admin-tests-input:focus-visible,
+.admin-tests-select:focus-visible {
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
+}
+
+.admin-tests-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.admin-tests-heading {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.admin-tests-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.admin-tests-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.8rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.admin-tests-btn:hover:not(:disabled) {
+    border-color: var(--primary-color);
+    color: var(--primary-accessible);
+}
+
+.admin-tests-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-tests-btn:focus-visible,
+.admin-tests-icon-btn:focus-visible,
+.admin-tests-check:focus-visible {
+    outline: 2px solid var(--primary-color);
+}
+
+.admin-tests-link {
+    color: var(--primary-accessible);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.admin-tests-link:hover {
+    text-decoration: underline;
+}
+
+.admin-tests-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.admin-tests-icon-btn {
+    display: inline-flex;
+    padding: 0.4rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.admin-tests-icon-btn:hover:not(:disabled) {
+    color: var(--error-color);
+    border-color: var(--error-color);
+}
+
+.admin-tests-icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.admin-tests-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}

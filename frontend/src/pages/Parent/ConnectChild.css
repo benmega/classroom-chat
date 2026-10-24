@@ -35,27 +35,27 @@
     opacity: 0.7;
 }
 
-.spinner {
+:where(.connect-child-page) .spinner {
     color: var(--primary-accessible);
     animation: spin 1s linear infinite;
     margin: 0 auto;
 }
 
-.icon-success {
+:where(.connect-child-page) .icon-success {
     color: var(--success-color, var(--success-color));
     margin: 0 auto;
 }
 
-.icon-error {
+:where(.connect-child-page) .icon-error {
     color: var(--error-color);
     margin: 0 auto;
 }
 
-.btn-primary {
+:where(.connect-child-page) .btn-primary {
     display: inline-block;
     padding: 0.8rem 1.5rem;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 8px;
     font-weight: 600;
@@ -63,7 +63,7 @@
     transition: all 0.2s;
 }
 
-.btn-primary:hover {
+:where(.connect-child-page) .btn-primary:hover {
     background: var(--primary-color-hover, var(--blue-600));
     transform: translateY(-1px);
 }

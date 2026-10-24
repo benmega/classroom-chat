@@ -123,7 +123,7 @@ describe('Users Page', () => {
       ...defaultMockState,
       users: [
         { id: 1, username: 'admin1', nickname: 'Admin', role: 'student', is_admin: true, duck_balance: 10, packets: 5, is_online: true },
-        { id: 2, username: 'student1', nickname: 'Student', role: 'student', is_admin: false, duck_balance: 5, packets: 2, is_online: false, drawer: '1A' },
+        { id: 2, username: 'student1', nickname: 'Student', role: 'student', is_admin: false, duck_balance: 5, packets: 2, is_online: false },
         { id: 3, username: 'parent1', nickname: 'Parent', role: 'parent', is_admin: false, duck_balance: 0, packets: 0, is_online: false }
       ],
       totalUsers: 3
@@ -134,7 +134,6 @@ describe('Users Page', () => {
     expect(screen.getByText('@admin1')).toBeInTheDocument();
     expect(screen.getByText('@student1')).toBeInTheDocument();
     expect(screen.getByText('@parent1')).toBeInTheDocument();
-    expect(screen.getByText('Drawer:')).toBeInTheDocument();
   });
 
   it('handles search input', () => {
@@ -299,12 +298,51 @@ describe('Users Page', () => {
     useUsersManagement.mockReturnValue({
       ...defaultMockState,
       users: [
-        { id: 1, username: 'student1', role: 'student', duck_balance: 100, drawer: '1A' },
+        { id: 1, username: 'student1', role: 'student', duck_balance: 100 },
       ],
       totalUsers: 1,
     });
     renderWithProviders(<Users />, { route: '/admin/users?role=student' });
     expect(screen.getByText('🦆 100')).toBeInTheDocument();
+  });
+
+  describe('phone card layout', () => {
+    // Users.css turns each row into a card on phones: the profile and actions cells carry the classes it
+    // targets, and the economy placeholder of a non-student is hidden there.
+    const roles = [
+      ['all users', '/admin/users', 5],
+      ['students', '/admin/users?role=student', 4],
+      ['parents', '/admin/users?role=parent', 4],
+    ];
+
+    it.each(roles)('marks the profile and actions cells of every row on the %s tab', (_name, route, columns) => {
+      useUsersManagement.mockReturnValue({
+        ...defaultMockState,
+        users: [{ id: 2, username: 'student1', role: route.includes('parent') ? 'parent' : 'student', duck_balance: 3 }],
+        totalUsers: 1,
+      });
+
+      renderWithProviders(<Users />, { route });
+
+      const row = screen.getByText('@student1').closest('tr');
+      const cells = [...row.children];
+      expect(cells).toHaveLength(columns);
+      expect(cells[0]).toHaveClass('col-profile');
+      expect(cells[cells.length - 1]).toHaveClass('col-actions');
+      expect(document.querySelector('thead th:last-child')).toHaveClass('col-actions');
+    });
+
+    it('marks the economy placeholder shown for an administrator', () => {
+      useUsersManagement.mockReturnValue({
+        ...defaultMockState,
+        users: [{ id: 1, username: 'boss', role: 'admin' }],
+        totalUsers: 1,
+      });
+
+      renderComponent();
+
+      expect(screen.getByText('@boss').closest('tr').querySelector('.economy-empty')).toHaveTextContent('—');
+    });
   });
 
   it('selects multiple users and performs bulk action', () => {

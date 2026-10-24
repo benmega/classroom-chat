@@ -14,11 +14,19 @@
     box-shadow: none;
 }
 
-.search-input-wrapper-common.active,
-.search-input-wrapper-common:focus-within {
+.search-input-wrapper-common.active {
     background: var(--bg-primary);
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* The input inside draws nothing of its own, so the whole field carries the focus ring. */
+.search-input-wrapper-common:focus-within {
+    background: var(--bg-primary);
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
+    outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
+    outline-offset: 2px;
 }
 
 .search-icon-common {
@@ -48,7 +56,7 @@
     font-weight: 500;
 }
 
-.status-indicator {
+:where(.user-search-common-container) .status-indicator {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -135,7 +143,7 @@
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    border: 1px solid white;
+    border: 1px solid var(--bg-primary);
 }
 
 .result-info-common {

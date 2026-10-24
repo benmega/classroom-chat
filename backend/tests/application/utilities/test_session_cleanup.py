@@ -163,7 +163,9 @@ def test_close_stale_sessions_mixed_users(test_app, init_db):
         assert db.session.get(SessionLog, fresh_log_id).end_time is None
 
 
-def test_close_stale_sessions_keeps_user_with_fresh_session_online(test_app, sample_user):
+def test_close_stale_sessions_keeps_user_with_fresh_session_online(
+    test_app, sample_user, several_open_sessions_allowed
+):
     with test_app.app_context():
         user = db.session.get(User, sample_user.id)
         user.is_online = True
@@ -339,7 +341,7 @@ def test_close_stale_sessions_ghost_pass_spares_user_with_open_socket(
 
 
 def test_close_stale_sessions_still_closes_orphans_of_a_connected_user(
-    test_app, sample_user, monkeypatch
+    test_app, sample_user, monkeypatch, several_open_sessions_allowed
 ):
     # Only the newest open session is the live one; an older one stopped getting
     # heartbeats long ago and must end at its own last_seen, not at now

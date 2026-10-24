@@ -8,10 +8,18 @@ from ..extensions import db
 
 
 class Configuration(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    # Deprecated: the AI teacher feature was removed. Column kept until it can be
-    # dropped via migration once a prod DB copy is available.
-    ai_teacher_enabled = db.Column(db.Boolean, default=False)
+    # The configuration is a single row. Its id is fixed and the CHECK constraint
+    # makes the database refuse any other id, so a second row cannot exist.
+    SINGLETON_ID = 1
+
+    __table_args__ = (
+        # The naming convention makes this ck_configuration_singleton
+        db.CheckConstraint(f"id = {SINGLETON_ID}", name="singleton"),
+    )
+
+    id = db.Column(
+        db.Integer, primary_key=True, autoincrement=False, default=SINGLETON_ID
+    )
     message_sending_enabled = db.Column(db.Boolean, default=True)
     duck_multiplier = db.Column(db.Float, default=1)
 
@@ -19,8 +27,9 @@ class Configuration(db.Model):
     def get_current(cls):
         """Return the global configuration row, or None if it does not exist.
 
-        The oldest row wins, so every caller agrees on the same row even if
-        duplicate rows ever exist (there is no database-level singleton guard).
+        The database allows only one row. The oldest row is asked for all the
+        same, so every caller agrees on the row even in a database from before
+        that constraint.
         """
         return cls.query.order_by(cls.id).first()
 
@@ -34,7 +43,6 @@ class Configuration(db.Model):
         config = cls.get_current()
         if config is None:
             config = cls(
-                ai_teacher_enabled=False,
                 message_sending_enabled=True,
                 duck_multiplier=1.0,
             )

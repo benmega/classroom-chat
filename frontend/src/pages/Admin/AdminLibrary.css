@@ -40,6 +40,7 @@
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    flex-shrink: 0; /* scroll the strip on a phone instead of squeezing the labels into each other */
 }
 
 .library-tab:hover {
@@ -49,7 +50,7 @@
 
 .library-tab.active {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     box-shadow: 0 4px 8px var(--primary-alpha);
 }
 

@@ -127,7 +127,7 @@ class TestErrorBodies:
 
     def test_extra_keys_move_to_the_top_level(self, test_app):
         def view():
-            return {"conflict": True, "message": "Drawer taken.", "current_owner": "ada"}, 409
+            return {"conflict": True, "message": "Item taken.", "current_owner": "ada"}, 409
 
         status, response = _call(test_app, view)
         body = response.get_json()
@@ -135,9 +135,9 @@ class TestErrorBodies:
         assert body == {
             "status": "error",
             "data": None,
-            "error": "Drawer taken.",
+            "error": "Item taken.",
             "conflict": True,
-            "message": "Drawer taken.",
+            "message": "Item taken.",
             "current_owner": "ada",
         }
 

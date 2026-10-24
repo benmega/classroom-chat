@@ -32,8 +32,8 @@ describe('getErrorMessage', () => {
     });
 
     it('reads @api_response envelopes that carry extra top-level fields', () => {
-        const body = { status: 'error', data: null, error: 'Drawer taken.', conflict: true, message: 'Drawer taken.' };
-        expect(getErrorMessage(errorWith(body), 'Fallback')).toBe('Drawer taken.');
+        const body = { status: 'error', data: null, error: 'Item taken.', conflict: true, message: 'Item taken.' };
+        expect(getErrorMessage(errorWith(body), 'Fallback')).toBe('Item taken.');
     });
 
     it('uses the fallback for non-string details', () => {

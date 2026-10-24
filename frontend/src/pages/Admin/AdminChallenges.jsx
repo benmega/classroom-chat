@@ -9,6 +9,12 @@ import Papa from 'papaparse';
 import Modal from '../../components/common/Modal';
 import { getCourseHeaderImage } from '../../constants/courseImages';
 
+// A challenge can be worth a fractional number of ducks (such as 1.5); a blank or unreadable cell means the default of 1.
+const parseChallengeValue = (raw) => {
+    const value = parseFloat(raw);
+    return Number.isFinite(value) ? value : 1;
+};
+
 const AdminChallenges = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [courses, setCourses] = useState([]);
@@ -141,7 +147,7 @@ const AdminChallenges = () => {
                             course_id: courseKey ? row[courseKey] : '',
                             domain: domainKey ? row[domainKey] : 'codecombat.com',
                             difficulty: diffKey ? row[diffKey] : 'medium',
-                            value: valueKey ? parseInt(row[valueKey], 10) : 1,
+                            value: valueKey ? parseChallengeValue(row[valueKey]) : 1,
                         };
                     }).filter(c => c.name && c.slug && c.course_id);
                     
@@ -489,7 +495,7 @@ const AdminChallenges = () => {
                         </div>
                         <div className="flex-1">
                             <label htmlFor="modal-value">Value</label>
-                            <input id="modal-value" type="number" required min="1" value={modalForm.value} onChange={e => setModalForm({...modalForm, value: e.target.value})} />
+                            <input id="modal-value" type="number" required min="1" step="any" value={modalForm.value} onChange={e => setModalForm({...modalForm, value: e.target.value})} />
                         </div>
                         <div className="flex-1">
                             <label htmlFor="modal-sequence">Sequence</label>

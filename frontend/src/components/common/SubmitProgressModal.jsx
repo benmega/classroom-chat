@@ -225,7 +225,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                         onChange={setHelpers}
                         onSelect={(u) => { setHelpers(u.username); setShowHelperModal(false); }}
                         placeholder="Search by username or nickname..."
-                        className="form-control"
+                        className="submit-progress-control"
                         showIcon={true}
                     />
                     {helpers && (
@@ -249,7 +249,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                                         placeholder="Paste link here..." 
                                         required 
                                         autoComplete="off"
-                                        className="form-control main-url-input"
+                                        className="submit-progress-control main-url-input"
                                         style={{ fontSize: '1.1rem', padding: '1rem', borderRadius: 'var(--radius-md)' }}
                                     />
                                 </div>
@@ -266,7 +266,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                                             accept=".pdf"
                                             required
                                             onChange={(e) => setFile(e.target.files[0])}
-                                            className="form-control"
+                                            className="submit-progress-control"
                                             style={{ fontSize: '1rem', padding: '0.75rem', borderRadius: 'var(--radius-md)' }}
                                         />
                                     </div>

@@ -5,7 +5,8 @@ import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/apiError';
 import '../../components/admin/AdminShared.css';
 import './AdminAchievements.css';
-import { formatStaticUrl } from '../../utils/formatters';
+import '../../assets/css/sprite.css';
+import { hasBadgeSprite } from './badgeSprite';
 
 // Mirrors SLUG_RE in backend/application/routes/achievement_routes.py (the slug names the badge file).
 // The hyphen is escaped so the pattern also compiles under the browser's unicode-sets (v) flag.
@@ -159,7 +160,6 @@ const AdminAchievements = () => {
                     <div className="card" style={{ padding: '24px' }}>
                         <div className="projects-grid">
                             {achievements.map(a => {
-                                const badgeUrl = `images/achievement_badges/${a.slug}.png`;
                                 return (
                                     <div
                                         key={a.id}
@@ -174,17 +174,11 @@ const AdminAchievements = () => {
                                         role="button"
                                         tabIndex={0}
                                     >
-                                        <div 
-                                            className="project-card-header" 
-                                            style={{ 
-                                                backgroundImage: `url(${formatStaticUrl(badgeUrl)})`,
-                                                backgroundColor: 'var(--bg-color)',
-                                                backgroundSize: 'contain',
-                                                backgroundRepeat: 'no-repeat',
-                                                backgroundPosition: 'center'
-                                            }}
-                                        >
-                                            {/* Fallback icon if image fails to load via CSS, but let's just let it load */}
+                                        <div className="project-card-header" style={{ backgroundColor: 'var(--bg-color)' }}>
+                                            {/* The build ships the badge art as one sprite (sprite.css), not as a file per badge */}
+                                            {hasBadgeSprite(a.slug)
+                                                ? <div className={`badge badge-${a.slug}`} aria-hidden="true" />
+                                                : <Award size={48} className="achievement-fallback-icon" aria-hidden="true" />}
                                         </div>
                                         <div className="project-card-body">
                                             <div className="project-card-title" title={a.name}>
@@ -358,8 +352,9 @@ const AdminAchievements = () => {
                                 </div>
                             ) : (
                                 <div className={`preview-badge type-${formData.type}`}>
-                                    {formData.slug ? <img src={formatStaticUrl(`images/achievement_badges/${formData.slug}.png`)} alt="Badge" onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='block'; }} style={{width: '100%', height: '100%', objectFit: 'contain'}} /> : null}
-                                    <Award size={32} style={{ display: formData.slug ? 'none' : 'block' }} />
+                                    {hasBadgeSprite(formData.slug)
+                                        ? <div className={`badge badge-${formData.slug}`} aria-hidden="true" />
+                                        : <Award size={32} />}
                                 </div>
                             )}
                             <span className="reward-tag">+{formData.reward} 🦆</span>

@@ -12,6 +12,7 @@ classroom-chat/
 │   │   ├── routes/            # Flask blueprints (see below)
 │   │   │   └── admin/         # Admin blueprint split into focused modules
 │   │   ├── services/          # Business logic (messages, achievements, moderation, ...)
+│   │   ├── templates/         # Only remaining Jinja template: dev_login.html (dev login page)
 │   │   ├── utilities/         # Shared helpers (db helpers, schema-drift checks, ...)
 │   │   ├── extensions.py      # Shared Flask extension instances (db, socketio, limiter, ...)
 │   │   ├── socket_events.py   # Socket.IO event handlers
@@ -20,7 +21,7 @@ classroom-chat/
 │   ├── instance/               # SQLite DB files, logs (gitignored)
 │   ├── migrations/             # Alembic migrations (Flask-Migrate)
 │   ├── tests/                  # Pytest suite (unit, route, service, socket tests)
-│   ├── tools/                  # Maintenance helpers: migrate_classroom (data steps, run by deploy.sh) + manual scrape/asset scripts
+│   ├── tools/                  # Manual maintenance helpers: scrape/asset scripts (none run by deploy.sh)
 │   ├── main.py                  # WSGI entrypoint (`gunicorn -w 1 main:app`)
 │   ├── requirements.txt        # Runtime dependencies (what deploy.sh installs)
 │   ├── requirements-dev.txt    # Runtime + test/lint tooling (pytest, ruff, mypy)
@@ -34,7 +35,6 @@ classroom-chat/
 │   │   ├── api/                  # Axios client
 │   │   └── test/                 # Vitest setup + MSW mocks
 │   ├── tests-e2e/               # Playwright end-to-end tests
-│   ├── templates/dev_login.html # Only remaining Jinja template (dev login page)
 │   ├── static/                  # Images (the legacy Jinja-era CSS/JS was removed)
 │   ├── public/                  # Copied as-is into dist/ by Vite for the SPA; public/static/images is the SPA's copy of the default avatar/placeholder, static/images the backend's (keep both small)
 │   └── package.json
@@ -42,7 +42,7 @@ classroom-chat/
 ├── docs/                        # This documentation
 ├── .agents/                     # AI-agent rules and skills (see docs/agentic_workflows.md)
 ├── .github/workflows/           # CI: tests.yml, lint.yml, deploy.yml, deploy-frontend.yml, ai-*.yml
-├── userData/                    # Uploaded user assets (profile pictures, project images, certificates)
+├── userData/                    # Uploaded user assets (profile pictures, project images, project_files/, submissions, certificates)
 └── deploy.sh                    # Production deploy script (migrations, health check, rollback)
 ```
 
@@ -68,7 +68,7 @@ classroom-chat/
 - Global auth/session state via `zustand` (`src/store/useAuthStore.js`).
 - Data fetching via `axios` (`src/api/client.js`) and `@tanstack/react-query` in places; real-time chat via `socket.io-client` (`src/hooks/useChatSocket.js`).
 - Admin has two surfaces: a hand-built admin UI (`src/pages/Admin/*`, `src/admin/AdminPanel.css`) and a generic `react-admin`-powered CRUD/debug panel (`src/admin/AdminPanel.jsx`, mounted at `/admin/advanced-crud`) backed by `routes/admin/crud_routes.py`.
-- The legacy Jinja2 templates, JS and CSS from before the React migration were removed; `frontend/templates/dev_login.html` is the only Jinja template left. Where Flask hands a browser navigation over to the SPA it goes through `application/utilities/spa.py` (`serve_spa_index`): in production that serves the built React `index.html` from `frontend/dist`; in development it returns a JSON 404 pointing at the Vite server on port 5173. New UI work should always go in `frontend/src/`.
+- The legacy Jinja2 templates, JS and CSS from before the React migration were removed; `backend/application/templates/dev_login.html` is the only Jinja template left (the app factory adds that folder to the template search path next to `frontend/dist`). Where Flask hands a browser navigation over to the SPA it goes through `application/utilities/spa.py` (`serve_spa_index`): it renders `index.html` from `frontend/dist` when a build exists there (the deployed SPA is built and hosted by `deploy-frontend.yml` on S3 + CloudFront, and `deploy.sh` does not build it); otherwise, as in development, it returns a JSON 404 pointing at the Vite server on port 5173. New UI work should always go in `frontend/src/`.
 
 ---
 

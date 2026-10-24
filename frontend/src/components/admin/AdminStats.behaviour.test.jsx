@@ -15,7 +15,7 @@ const renderStats = (stats = baseStats, handlers = {}) => {
     onEarnedWeekClick: vi.fn(),
     onTotalDucksClick: vi.fn(),
     onOnlineUsersClick: vi.fn(),
-    onTotalResidentsClick: vi.fn(),
+    onTotalUsersClick: vi.fn(),
     ...handlers,
   };
   render(<AdminStats stats={stats} {...props} />);
@@ -31,34 +31,34 @@ describe('AdminStats', () => {
 
     expect(card('Ducks In Circulation')).toHaveTextContent('12,345');
     expect(card('Earned This Week')).toHaveTextContent('678');
-    expect(card('Total Residents')).toHaveTextContent('10');
+    expect(card('Total Users')).toHaveTextContent('10');
     expect(card('Online Users')).toHaveTextContent('4');
   });
 
-  it('averages the ducks over all residents', () => {
+  it('averages the ducks over all users', () => {
     renderStats({ ...baseStats, total_ducks: 25, total_users_count: 10 });
 
     expect(card('Avg. Balance')).toHaveTextContent('2.5');
   });
 
-  it('shows a zero average instead of dividing by no residents', () => {
+  it('shows a zero average instead of dividing by no users', () => {
     renderStats({ ...baseStats, total_users_count: 0 });
 
     expect(card('Avg. Balance')).toHaveTextContent('0.0');
-    expect(card('Total Residents')).toHaveTextContent('0');
+    expect(card('Total Users')).toHaveTextContent('0');
   });
 
-  it('treats a missing resident count as none', () => {
+  it('treats a missing user count as none', () => {
     renderStats({ total_ducks: 5, ducks_earned_this_week: 0, active_users_count: 0 });
 
     expect(card('Avg. Balance')).toHaveTextContent('0.0');
-    expect(card('Total Residents')).toHaveTextContent('0');
+    expect(card('Total Users')).toHaveTextContent('0');
   });
 
   it.each([
     ['Ducks In Circulation', 'onTotalDucksClick'],
     ['Earned This Week', 'onEarnedWeekClick'],
-    ['Total Residents', 'onTotalResidentsClick'],
+    ['Total Users', 'onTotalUsersClick'],
     ['Online Users', 'onOnlineUsersClick'],
   ])('calls the %s handler, and only that one, when the card is clicked', (label, handlerName) => {
     const handlers = renderStats();

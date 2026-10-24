@@ -6,13 +6,18 @@ from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.challenge_log import ChallengeLog
 from application.models.user import User, save_new_user
-from application.utilities.db_helpers import get_canonical_course_slug
-from application.utilities.helper_functions import utcnow_naive
+from application.utilities.db_helpers import (
+    get_canonical_course_slug,
+    log_user_removal,
+    other_admin_exists,
+    user_removal_refusal,
+)
+from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import current_app, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 # Per-request ceilings on admin-entered amounts. They guard against typos and
 # NaN/inf input (which would poison a stored balance), not against large balances.
@@ -48,9 +53,7 @@ def student_activity():
                 "slug": u.slug,
                 "is_online": u.is_online,
                 "current_activity": u.current_activity,
-                "last_activity_time": u.last_activity_time.isoformat()
-                if u.last_activity_time
-                else None,
+                "last_activity_time": to_utc_iso(u.last_activity_time),
             }
             for u in students
         ]
@@ -86,9 +89,14 @@ def approve_user(user_id):
 @api_response
 def reject_user(user_id):
     user_obj = db.get_or_404(User, user_id)
+    refusal = user_removal_refusal(user_obj)
+    if refusal:
+        return {"error": refusal}, 403
     username = user_obj.username
+    role = user_obj.role
     db.session.delete(user_obj)
     db.session.commit()
+    log_user_removal("reject_user", user_id, username, role)
     return {"message": f"User {username} rejected and removed."}
 
 
@@ -311,12 +319,15 @@ def remove_user():
     if not user:
         return jsonify(success=False, message="User not found"), 404
 
-    if user.role == 'admin':
-        return jsonify(success=False, message="Cannot remove another admin"), 403
+    refusal = user_removal_refusal(user)
+    if refusal:
+        return jsonify(success=False, message=refusal), 403
 
     try:
+        user_id, role = user.id, user.role
         db.session.delete(user)
         db.session.commit()
+        log_user_removal("remove_user", user_id, username, role)
         return jsonify(success=True, message=f"User '{username}' removed successfully")
     except IntegrityError:
         db.session.rollback()
@@ -533,69 +544,6 @@ def get_classroom_connection_cards(classroom_id):
     return {"classroom_name": classroom_name, "cards": cards}
 
 
-@admin_bp.route("/set_drawer", methods=["POST"])
-@admin_only
-@api_response
-def set_drawer():
-    username = request.json.get("username")
-    drawer = request.json.get("drawer")
-    force = request.json.get("force", False)
-
-    if not username:
-        return "Username is required", 400
-
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return "User not found", 404
-
-    if user.role != "student":
-        return "Drawers can only be assigned to students", 403
-
-    if not drawer or str(drawer).strip() == "":
-        user.drawer = None
-    else:
-        drawer = str(drawer).strip()
-
-        # Be flexible: if they omitted 0x, we can add it (frontend does this now, but backend should too)
-        if not drawer.lower().startswith("0x"):
-            drawer = "0x" + drawer
-
-        if not re.fullmatch(r"0[xX][0-9A-Fa-f]{1,2}", drawer):
-            return "Drawer must be in hex format (e.g. 0xA6 or A6)", 400
-
-        try:
-            val = int(drawer, 16)
-            if val < 0 or val > 35:
-                return "Drawer number must be between 0 (0x00) and 35 (0x23)", 400
-        except ValueError:
-            return "Invalid hex drawer", 400
-
-        # Standardize format to 0x uppercase hex
-        drawer = f"0x{val:02X}"
-
-        existing_user = User.query.filter_by(drawer=drawer).first()
-        if existing_user and existing_user.id != user.id:
-            if not force:
-                return {
-                    "conflict": True,
-                    "message": f"Drawer {drawer} is already assigned to @{existing_user.username}.",
-                    "current_owner": existing_user.username,
-                }, 409
-            else:
-                existing_user.drawer = None
-
-        user.drawer = drawer
-
-    import sqlalchemy.exc
-
-    try:
-        db.session.commit()
-        return {"message": f"Drawer updated for {username}"}
-    except sqlalchemy.exc.IntegrityError:
-        db.session.rollback()
-        return "Drawer number is already assigned to another student", 409
-
-
 @admin_bp.route("/user/<int:user_id>", methods=["GET"])
 @admin_only
 def get_user_details(user_id):
@@ -624,6 +572,13 @@ def get_user_details(user_id):
         if most_recently_completed_challenge
         else None
     )
+
+    if most_recently_completed_challenge:
+        from application.models.challenge import Challenge
+        chal = Challenge.query.filter_by(slug=most_recently_completed_challenge.challenge_slug).first()
+        d["most_recently_completed_challenge_name"] = chal.name if chal else most_recently_completed_challenge.challenge_slug
+    else:
+        d["most_recently_completed_challenge_name"] = None
 
     return jsonify({"user": d})
 
@@ -716,6 +671,14 @@ def update_user_details(user_id):
 
     import sqlalchemy.exc
 
+    if (
+        previous_role == "admin"
+        and user_obj.role != "admin"
+        and not other_admin_exists(user_obj.id)
+    ):
+        db.session.rollback()
+        return {"error": "Cannot remove the role from the last admin"}, 409
+
     try:
         db.session.commit()
         if user_obj.role != previous_role:
@@ -807,9 +770,7 @@ def get_classroom_details(classroom_id):
             "id": assignment.id,
             "course_id": assignment.course_id,
             "course_name": assignment.course.name if assignment.course else None,
-            "created_at": assignment.created_at.isoformat()
-            if assignment.created_at
-            else None,
+            "created_at": to_utc_iso(assignment.created_at),
         }
         for assignment in classroom.course_assignments
     ]
@@ -823,15 +784,11 @@ def get_classroom_details(classroom_id):
                 "id": classroom.id,
                 "name": classroom.name,
                 "language": classroom.language,
-                "created_at": classroom.created_at.isoformat()
-                if classroom.created_at
-                else None,
+                "created_at": to_utc_iso(classroom.created_at),
                 "students": students,
                 "course_assignments": course_assignments,
                 "sandbox_active": bool(classroom.sandbox_active),
-                "sandbox_activated_at": classroom.sandbox_activated_at.isoformat()
-                if classroom.sandbox_activated_at
-                else None,
+                "sandbox_activated_at": to_utc_iso(classroom.sandbox_activated_at),
             }
         }
     )
@@ -843,13 +800,13 @@ def get_classroom_details(classroom_id):
 def get_classroom_join_code(classroom_id):
     """Returns the classroom's join code, generating one if it doesn't exist yet."""
     from application.models.classroom import Classroom
+    from application.utilities.spa import frontend_url
 
     classroom = db.session.get(Classroom, classroom_id)
     if not classroom:
         return "Classroom not found.", 404
     code = classroom.get_join_code()
-    base_url = request.host_url.rstrip("/")
-    return {"join_code": code, "join_url": f"{base_url}/join-class?code={code}"}
+    return {"join_code": code, "join_url": frontend_url(f"join-class?code={code}")}
 
 
 @admin_bp.route("/classrooms/<classroom_id>/join-code/regenerate", methods=["POST"])
@@ -858,16 +815,16 @@ def get_classroom_join_code(classroom_id):
 def regenerate_classroom_join_code(classroom_id):
     """Generates a new join code for the classroom, invalidating the old one."""
     from application.models.classroom import Classroom
+    from application.utilities.spa import frontend_url
 
     classroom = db.session.get(Classroom, classroom_id)
     if not classroom:
         return "Classroom not found.", 404
     classroom.join_code = classroom.generate_join_code()
     db.session.commit()
-    base_url = request.host_url.rstrip("/")
     return {
         "join_code": classroom.join_code,
-        "join_url": f"{base_url}/join-class?code={classroom.join_code}",
+        "join_url": frontend_url(f"join-class?code={classroom.join_code}"),
     }
 
 
@@ -991,7 +948,8 @@ def pass_chapter_preview(user_id):
 
     missing_challenges = [c for c in challenges if c.slug not in existing_slugs]
 
-    total_ducks = sum(c.scale_value() for c in missing_challenges)
+    # Rounded so a sum of fractional rewards does not show binary noise
+    total_ducks = round(sum(c.scale_value() for c in missing_challenges), 2)
 
     # Check if there are any certificates related to this course
     # Assuming certificate achievement source is course_id
@@ -1067,7 +1025,7 @@ def pass_chapter(user_id):
 
     # Ducks are optional: the admin may grant the credit without the reward.
     award_ducks = data.get("award_ducks", True) is not False
-    awarded_ducks = total_ducks if award_ducks else 0
+    awarded_ducks = round(total_ducks, 2) if award_ducks else 0
 
     # Manually bypass duck caps for this admin override
     if awarded_ducks > 0:
@@ -1103,7 +1061,7 @@ def pass_chapter(user_id):
 
     return {
         "success": True,
-        "message": f"Successfully passed {course_id} for user. Awarded {awarded_ducks} ducks and completed {len(missing_challenges)} challenges.",
+        "message": f"Successfully passed {course_id} for user. Awarded {awarded_ducks:g} ducks and completed {len(missing_challenges)} challenges.",
     }
 
 @admin_bp.route("/user/<int:user_id>/generate_certificate", methods=["POST"])

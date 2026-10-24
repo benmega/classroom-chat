@@ -183,3 +183,35 @@ def test_add_banned_word_whitespace_only_is_empty(client, sample_admin):
 
     assert resp.status_code == 400
     assert resp.json["message"] == "Word cannot be empty"
+
+
+@pytest.mark.parametrize(
+    ("first", "second"),
+    [
+        ("bad", "Bad"),
+        ("Bad", "bad"),
+        ("bad", "BAD"),
+        ("bad", "  bAd "),
+        ("straße", "STRASSE"),  # lower() leaves the sharp s alone; casefold() does not
+    ],
+)
+def test_add_banned_word_duplicate_ignoring_case_is_rejected(client, sample_admin, first, second):
+    login_as_admin(client, sample_admin)
+    assert client.post("/api/admin/add-banned-word", data={"word": first}).status_code == 200
+
+    resp = client.post("/api/admin/add-banned-word", data={"word": second})
+
+    assert resp.status_code == 400
+    assert resp.json["message"] == "Word already banned"
+    # The first spelling is kept as entered and no second row appears
+    assert [w.word for w in BannedWords.query.all()] == [first]
+
+
+def test_add_banned_word_accepts_a_different_word_with_the_same_letters_inside(client, sample_admin):
+    login_as_admin(client, sample_admin)
+    assert client.post("/api/admin/add-banned-word", data={"word": "bad"}).status_code == 200
+
+    resp = client.post("/api/admin/add-banned-word", data={"word": "Badger"})
+
+    assert resp.status_code == 200
+    assert sorted(w.word for w in BannedWords.query.all()) == ["Badger", "bad"]

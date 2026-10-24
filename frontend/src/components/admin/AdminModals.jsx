@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Eye, EyeOff, Key, Copy, RefreshCw, HelpCircle } from 'lucide-react';
+import { Eye, EyeOff, Key, Copy, RefreshCw, HelpCircle, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Modal from '../common/Modal';
 import SmartImage from '../common/SmartImage';
@@ -148,32 +148,6 @@ export const AdjustPacketsModal = ({ isOpen, onClose, onSubmit, user, users, for
     </Modal>
 );
 
-export const SetDrawerModal = ({ isOpen, onClose, onSubmit, user, loading }) => (
-    <Modal isOpen={isOpen} onClose={onClose} title="Set User Drawer">
-        <form onSubmit={onSubmit} className="admin-form">
-            <div className="form-group">
-                <label htmlFor="input-148">Target User</label>
-                <input id="input-148" type="text" value={user ? user.username : ''} readOnly className="readonly" />
-                <input type="hidden" name="username" value={user ? user.username : ''} />
-            </div>
-            <div className="form-group">
-                <label htmlFor="input-153">Drawer Number</label>
-                <input id="input-153" 
-                    type="text" 
-                    name="drawer" 
-                    defaultValue={user?.drawer || ''} 
-                    placeholder="e.g. 0xA6" 
-                    maxLength={4}
-                />
-                <small>Hex format expected, max 4 characters (e.g. 0x01, 0xA6). Leave blank to clear.</small>
-            </div>
-            <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? 'Saving...' : 'Set Drawer'}
-            </button>
-        </form>
-    </Modal>
-);
-
 export const ResetPasswordModal = ({ isOpen, onClose, onSubmit, user, formErrors, loading }) => {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -309,29 +283,23 @@ export const ConnectionCardModal = ({ isOpen, onClose, student, connectionCode }
     if (!student || !connectionCode) return null;
 
     const qrData = encodeURIComponent(`${window.location.origin}/parent/connect?code=${connectionCode}`);
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrData}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title={`Connection Card: ${student.username}`}>
+        <Modal isOpen={isOpen} onClose={onClose} title="Connection Card">
             <div className="connection-card-container text-center p-1rem">
-                <p className="mb-1-5rem text-muted">
-                    Print or show this card to the parent. They can scan the QR code or enter the code manually to connect.
-                </p>
                 <div className="connection-card-preview">
                     <h3 className="m-0 mb-xs text-slate-800">{student.nickname || student.username}</h3>
                     <div className="text-sm text-muted mb-md">@{student.username}</div>
-                    <img src={qrUrl} alt="QR Code" className="w-200px h-200px" />
-                    <div className="connection-code-container">
+                    <img src={qrUrl} alt="QR Code" className="w-150px h-150px" />
+                    <div className="connection-code-container mt-md">
                         <span className="text-sm text-muted d-block mb-4px">Connection Code</span>
                         <span className="connection-code-text">{connectionCode}</span>
                     </div>
                 </div>
-                <div className="mt-2rem d-flex gap-md justify-center">
-                    <button className="btn-secondary btn-secondary-print" onClick={() => window.print()}>
-                        Print Card
-                    </button>
-                    <button className="btn-primary" onClick={onClose}>
-                        Done
+                <div className="mt-1-5rem d-flex justify-center">
+                    <button className="btn-icon" onClick={() => window.print()} title="Print Card" aria-label="Print Card">
+                        <Printer size={24} />
                     </button>
                 </div>
             </div>
@@ -662,6 +630,7 @@ export const EnrollStudentModal = ({
     onEnroll, 
     availableStudents = [], 
     joinCode, 
+    joinUrl, 
     onRegenerateJoinCode, 
     loading 
 }) => {
@@ -699,8 +668,6 @@ export const EnrollStudentModal = ({
         }
     };
 
-    const simulatedInviteLink = joinCode ? `https://classroom-chat.com/join?c=${joinCode}` : '';
-
     return (
         <Modal isOpen={isOpen} onClose={onClose} title="Invite students">
             <div className="enroll-modal-content">
@@ -708,7 +675,7 @@ export const EnrollStudentModal = ({
                 <div className="enroll-modal-link-section">
                     <div className="enroll-modal-link-label">Invite link</div>
                     <div className="enroll-modal-link-row">
-                        <span className="enroll-modal-link-text">{simulatedInviteLink || 'No code available'}</span>
+                        <span className="enroll-modal-link-text">{joinUrl || 'No code available'}</span>
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button 
                                 type="button"
@@ -759,10 +726,11 @@ export const EnrollStudentModal = ({
                                     aria-pressed={selectedStudentId === student.id.toString()}
                                     data-testid={`user-row-${student.id}`}
                                 >
-                                    <img 
-                                        src={student.profile_pic_url || '/default-avatar.png'} 
+                                    <SmartImage 
+                                        src={student.profile_picture ? getApiUrl(`/user/profile_pictures/${student.profile_picture}`) : ''} 
                                         alt={student.username} 
                                         className="enroll-modal-user-avatar" 
+                                        fallbackType="avatar"
                                     />
                                     <div className="enroll-modal-user-info">
                                         <span className="enroll-modal-user-name">

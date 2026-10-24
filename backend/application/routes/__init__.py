@@ -23,6 +23,7 @@ from .general_routes import general
 from .message_routes import message
 from .parent_routes import parent
 from .project_template_routes import project_templates_bp
+from .quiz_routes import quiz_bp
 from .server_info_routes import server_info
 from .session_routes import session
 from .shop_routes import shop_bp
@@ -51,6 +52,7 @@ def register_blueprints(app: Flask):
     app.register_blueprint(submission_bp, url_prefix="/api/submissions")
     app.register_blueprint(course_request_bp)
     app.register_blueprint(classroom_bp, url_prefix="/api/classroom")
+    app.register_blueprint(quiz_bp, url_prefix="/api/quizzes")
 
     # ── Development-only shortcut ────────────────────────────────────────────
     # /dev-login is never registered in production; the blueprint itself also

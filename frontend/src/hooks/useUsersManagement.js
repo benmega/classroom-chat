@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import client from '../api/client';
-import { showConfirm } from '../utils/confirm';
 import { getErrorMessage } from '../utils/apiError';
 import { useAdminUserActions } from './useAdminUserActions';
 import toast from 'react-hot-toast';
@@ -14,8 +13,8 @@ export const buildUsersCacheKey = (role, page, search, status, accountTypes, sor
 
 export const USERS_PER_PAGE = 50;
 
-export const useUsersManagement = (role = '') => {
-    const initialKey = buildUsersCacheKey(role, 1, '', [], [], '', 'asc');
+export const useUsersManagement = (role = '', initialStatusFilter = []) => {
+    const initialKey = buildUsersCacheKey(role, 1, '', initialStatusFilter, [], '', 'asc');
     const initialCached = adminCache.get(initialKey);
     const initialUsers = initialCached?.users || (Array.isArray(initialCached) ? initialCached : []);
     const initialTotalUsers = initialCached?.total !== undefined ? initialCached.total : (Array.isArray(initialCached) ? initialCached.length : 0);
@@ -38,7 +37,7 @@ export const useUsersManagement = (role = '') => {
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
     // Excel-style column filters & sorting
-    const [statusFilter, setStatusFilter] = useState([]); // subset of ['active', 'offline']
+    const [statusFilter, setStatusFilter] = useState(initialStatusFilter); // subset of ['active', 'offline']
     const [accountTypeFilter, setAccountTypeFilter] = useState([]); // subset of ['admin', 'parent', 'student']
     const [sortBy, setSortBy] = useState('');
     const [sortDir, setSortDir] = useState('asc');
@@ -139,47 +138,6 @@ export const useUsersManagement = (role = '') => {
         await resetPassword(Object.fromEntries(new FormData(e.target)), closeAndRefresh);
     };
 
-    const handleSetDrawer = async (e, forceOverwrite = false) => {
-        if (e && e.preventDefault) {
-            e.preventDefault();
-        }
-        
-        // Handle form data if it's an event, or extract it if we're calling recursively with the form element
-        const formElement = e.target || e;
-        const formData = new FormData(formElement);
-        const username = formData.get('username');
-        const drawer = formData.get('drawer');
-        
-        setFormLoading(true);
-        try {
-            const payload = { username, drawer };
-            if (forceOverwrite) {
-                payload.force = true;
-            }
-            
-            const response = await client.post('/api/admin/set_drawer', payload);
-            if (response.data) {
-                adminCache.invalidate('admin_users');
-                setActiveModal(null);
-                fetchUsers(page);
-            }
-        } catch (error) {
-            // set_drawer is an @api_response route, so the conflict details sit next to `error`.
-            const conflict = error.response?.data;
-            if (conflict?.conflict && conflict?.current_owner) {
-                // Duplicate drawer assignment detected
-                const confirmed = await showConfirm(`That drawer is already assigned to @${conflict.current_owner}. Do you want to take it over and remove that student's drawer assignment to move it over to this student, or cancel?`, { title: 'Drawer Conflict', confirmText: 'Take Over', destructive: true });
-                if (confirmed) {
-                    // recursively call with force=true, passing the original target
-                    return handleSetDrawer(formElement, true);
-                }
-            } else {
-                toast.error(getErrorMessage(error, 'Failed to set drawer.'));
-            }
-        } finally {
-            setFormLoading(false);
-        }
-    };
 
     const handleRemoveUser = async (username) => {
         await removeUser(username, () => fetchUsers(page));
@@ -301,7 +259,6 @@ export const useUsersManagement = (role = '') => {
         handleAdjustDucks,
         handleAdjustPackets,
         handleResetPassword,
-        handleSetDrawer,
         handleRemoveUser,
         parentChildren,
         fetchParentChildren,

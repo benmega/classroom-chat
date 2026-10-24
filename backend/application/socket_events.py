@@ -27,7 +27,7 @@ from .models.classroom import Classroom, user_classrooms
 from .models.session_log import SessionLog
 from .models.user import User
 from .utilities.db_helpers import save_message_to_db
-from .utilities.helper_functions import utcnow_naive
+from .utilities.helper_functions import to_utc_iso, utcnow_naive
 
 logger = logging.getLogger(__name__)
 
@@ -328,9 +328,7 @@ def handle_send_message(data):
         "user_profile_pic": user.profile_picture,
         "content": msg["content"],
         "message_type": msg["message_type"],
-        "created_at": msg["created_at"].isoformat()
-        if msg["created_at"]
-        else utcnow_naive().isoformat(),
+        "created_at": to_utc_iso(msg["created_at"] or utcnow_naive()),
         "is_global": msg["is_global"],
         "target_live": msg["target_live"],
         "target_classrooms": [c["name"] for c in save_result["target_classrooms"]],

@@ -11,7 +11,10 @@ class ConnectionAttempt(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     parent_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     attempted_at = db.Column(
         db.DateTime, default=utcnow_naive, nullable=False, index=True

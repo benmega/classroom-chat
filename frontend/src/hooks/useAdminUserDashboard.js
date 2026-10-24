@@ -121,24 +121,6 @@ export const useAdminUserDashboard = (userId) => {
         });
     };
 
-    const handleSetDrawer = async (e) => {
-        e.preventDefault();
-        setFormLoading(true);
-        const formData = new FormData(e.target);
-        
-        try {
-            // set_drawer reads a JSON body, not form data.
-            const res = await client.post('/api/admin/set_drawer', { username: user.username, drawer: formData.get('drawer') });
-            if (res.status === 200) {
-                
-                fetchUser();
-            }
-        } catch (err) {
-            toast.error(getErrorMessage(err, 'Failed to update drawer'));
-        } finally {
-            setFormLoading(false);
-        }
-    };
 
     const handleResetPassword = async (e) => {
         e.preventDefault();
@@ -350,7 +332,7 @@ export const useAdminUserDashboard = (userId) => {
         templates, selectedTemplateName, setSelectedTemplateName, templatesSaving,
         passChapterLoading, selectedChapterId, setSelectedChapterId, passPreview, setPassPreview,
         fetchUser, handlePassChapterPreview, handlePassChapterConfirm, handleAdjustDucks,
-        handleAdjustPackets, handleSetDrawer, handleResetPassword, handleRemoveUser,
+        handleAdjustPackets, handleResetPassword, handleRemoveUser,
         handleApproveUser, handleRejectUser, handleToggleChildLink, handleToggleParentLink,
         handleAssignProjectSubmit, handleUpdateUser, handleGenerateManualCertificate
     };

@@ -21,19 +21,42 @@ def generate_kebab_slug(text):
 @click.command("seed")
 @with_appcontext
 def seed_command():
-    """Seed the database with challenges and course instances from CSV files."""
+    """Seed the database from the CSV files in backend/instance/migration: courses,
+    achievements, course instances and challenges."""
     from application.extensions import db
     from application.models.challenge import Challenge
     from application.models.classroom import Classroom
     from application.models.course import Course
     from application.models.course_instance import CourseInstance
     from flask import current_app
+    from sqlalchemy.exc import IntegrityError
 
     base_dir = os.path.join(
         current_app.config["BASE_DIR"], "backend", "instance", "migration"
     )
     challenges_csv = os.path.join(base_dir, "level_seed_data.csv")
     instances_csv = os.path.join(base_dir, "course_instances_seed.csv")
+
+    # Courses come first: the course instances below are checked against them.
+    for label, filename, seed_rows in (
+        ("courses", "courses_seed.csv", seed_courses),
+        ("achievements", "achievements_seed.csv", seed_achievements),
+    ):
+        definitions_csv = os.path.join(base_dir, filename)
+        if not os.path.exists(definitions_csv):
+            click.echo(f"File not found: {definitions_csv}")
+            continue
+        click.echo(f"Seeding {label} from {definitions_csv}...")
+        try:
+            inserted = seed_rows(definitions_csv)
+            db.session.commit()
+            click.echo(
+                f"Successfully inserted {inserted} new {label}"
+                " (existing ones are left as they are)."
+            )
+        except Exception as e:
+            db.session.rollback()
+            click.echo(f"Error seeding {label}: {e}")
 
     if os.path.exists(instances_csv):
         click.echo(f"Seeding course instances from {instances_csv}...")
@@ -91,6 +114,7 @@ def seed_command():
         click.echo(f"Seeding challenges from {challenges_csv}...")
         inserted_challenges = 0
         updated_challenges = 0
+        skipped_challenges = 0
         try:
             with open(challenges_csv, mode="r", encoding="utf-8") as f:
                 reader = csv.DictReader(f)
@@ -104,43 +128,60 @@ def seed_command():
 
                     csv_slug = row.get("slug", "").strip() or generate_kebab_slug(name)
                     difficulty = row.get("difficulty", "medium").capitalize()
-                    value = int(float(row.get("value", 1)))
+                    value = float(row.get("value") or 1)
                     description = row.get("description", "No description provided.")
                     course_id = row.get("course_id")
 
-                    # Check existence by slug OR (name and domain)
-                    challenge = Challenge.query.filter(
-                        (Challenge.slug == csv_slug)
-                        | ((Challenge.name == name) & (Challenge.domain == domain))
-                    ).first()
+                    # The slug alone identifies a challenge: levels may share a
+                    # name, even inside one domain. Each row gets a savepoint, so
+                    # a row the database rejects (a schema that still enforces
+                    # unique names) is skipped instead of failing the whole file.
+                    try:
+                        with db.session.begin_nested():
+                            challenge = Challenge.query.filter_by(slug=csv_slug).first()
+                            if challenge:
+                                challenge.name = name
+                                challenge.domain = domain
+                                challenge.difficulty = difficulty
+                                challenge.value = value
+                                challenge.description = description
+                                challenge.course_id = course_id
+                            else:
+                                db.session.add(
+                                    Challenge(
+                                        name=name,
+                                        slug=csv_slug,
+                                        domain=domain,
+                                        course_id=course_id,
+                                        description=description,
+                                        difficulty=difficulty,
+                                        value=value,
+                                        is_active=True,
+                                    )
+                                )
+                    except IntegrityError as e:
+                        click.echo(f"Skipping challenge '{csv_slug}': {e.orig}")
+                        skipped_challenges += 1
+                        continue
 
                     if challenge:
-                        challenge.name = name
-                        challenge.domain = domain
-                        challenge.slug = csv_slug
-                        challenge.difficulty = difficulty
-                        challenge.value = value
-                        challenge.description = description
-                        challenge.course_id = course_id
                         updated_challenges += 1
                     else:
-                        new_challenge = Challenge(
-                            name=name,
-                            slug=csv_slug,
-                            domain=domain,
-                            course_id=course_id,
-                            description=description,
-                            difficulty=difficulty,
-                            value=value,
-                            is_active=True,
-                        )
-                        db.session.add(new_challenge)
                         inserted_challenges += 1
 
             db.session.commit()
-            click.echo(
+            summary = (
                 f"Successfully inserted {inserted_challenges} and updated {updated_challenges} challenges."
             )
+            if skipped_challenges:
+                summary += (
+                    f" Skipped {skipped_challenges} rows the database rejected:"
+                    " its schema is older than the models. Update it and seed"
+                    " again: `flask db upgrade`, or for a development database"
+                    " that create_all built, delete it or stamp it and then"
+                    " upgrade (docs/infrastructure_and_devops.md, section 8)."
+                )
+            click.echo(summary)
         except Exception as e:
             db.session.rollback()
             click.echo(f"Error seeding challenges: {e}")
@@ -186,6 +227,89 @@ def seed_command():
         db.session.rollback()
         click.echo(f"Error seeding 3D modeling track: {e}")
 
+    click.echo("Seeding student tests...")
+    try:
+        from application.commands.quiz_seed import seed_quizzes
+
+        stats = seed_quizzes()
+        click.echo(
+            "Student tests: "
+            f"quizzes +{stats['quizzes_inserted']}/~{stats['quizzes_updated']}, "
+            f"questions +{stats['questions_inserted']}/~{stats['questions_updated']}"
+            + (f"/-{stats['questions_deleted']}" if stats["questions_deleted"] else "")
+            + "."
+        )
+    except Exception as e:
+        db.session.rollback()
+        click.echo(f"Error seeding student tests: {e}")
+
+
+def seed_courses(csv_path):
+    """Add the courses in ``csv_path`` that the database does not have yet.
+
+    Insert-only, keyed on the course id: a course that already exists is never
+    changed, so what an admin edited stays as it is. Does not commit; returns the
+    number of courses added.
+    """
+    from application.extensions import db
+    from application.models.course import Course
+
+    known_ids = {course_id for (course_id,) in db.session.query(Course.id)}
+    inserted = 0
+    with open(csv_path, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            course_id = (row.get("id") or "").strip()
+            if not course_id or course_id in known_ids:
+                continue
+
+            course = Course(id=course_id, name=row["name"], domain=row["domain"])
+            # A blank cell leaves the column to the model's default
+            if row.get("description"):
+                course.description = row["description"]
+            if row.get("default_challenge_value"):
+                default_value = float(row["default_challenge_value"])
+                course.default_challenge_value = (
+                    int(default_value) if default_value.is_integer() else default_value
+                )
+            db.session.add(course)
+            known_ids.add(course_id)
+            inserted += 1
+    return inserted
+
+
+def seed_achievements(csv_path):
+    """Add the achievements in ``csv_path`` that the database does not have yet.
+
+    Insert-only, keyed on the slug: an achievement that already exists is never
+    changed, so a name, reward or requirement edited by an admin stays as it is.
+    Does not commit; returns the number of achievements added.
+    """
+    from application.extensions import db
+    from application.models.achievements import Achievement
+
+    known_slugs = {slug for (slug,) in db.session.query(Achievement.slug)}
+    inserted = 0
+    with open(csv_path, mode="r", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            slug = (row.get("slug") or "").strip()
+            if not slug or slug in known_slugs:
+                continue
+
+            db.session.add(
+                Achievement(
+                    slug=slug,
+                    name=row["name"],
+                    description=row.get("description") or None,
+                    type=row["type"],
+                    requirement_value=row.get("requirement_value") or None,
+                    reward=int(row.get("reward") or 1),
+                    source=row.get("source") or None,
+                )
+            )
+            known_slugs.add(slug)
+            inserted += 1
+    return inserted
+
 
 def _is_blank_or_placeholder(text):
     """True for empty text or the placeholder left by the retired seed script."""
@@ -194,18 +318,30 @@ def _is_blank_or_placeholder(text):
     return bool(re.fullmatch(r"Project for .+\.", str(text).strip()))
 
 
+def _with_current_submit_goals(goals, replacements):
+    """``goals`` with every goal found word for word in ``replacements`` swapped for
+    its current wording. A new list: the JSON column only notices an assignment."""
+    return [
+        replacements.get(goal, goal) if isinstance(goal, str) else goal
+        for goal in goals
+    ]
+
+
 def seed_three_d_track():
     """Idempotently upsert the 3D modeling courses, challenges and templates.
 
     Never deletes anything. Structural fields (course/domain/sequence/chapter/
-    challenge link) are kept in sync with the seed data; teacher-editable
-    content (descriptions, goals, concepts, difficulty on templates) is only
-    filled in when it is blank, so admin edits survive every deploy.
+    challenge link/project type) are kept in sync with the seed data;
+    teacher-editable content (descriptions, goals, concepts, difficulty on
+    templates) is only filled in when it is blank, so admin edits survive every
+    deploy. The one exception: a submit goal the seed itself wrote before is
+    replaced by its current wording while it is still there word for word.
 
     Commits on success; the caller handles rollback on error. Returns a dict
     of insert/update counters.
     """
     from application.commands.three_d_data import (
+        SUBMIT_GOAL_REPLACEMENTS,
         THREE_D_CHALLENGES,
         THREE_D_COURSES,
         THREE_D_DOMAIN,
@@ -308,18 +444,24 @@ def seed_three_d_track():
                     concepts=list(ch["concepts"]),
                     goals=list(ch["goals"]),
                     challenge_slug=slug,
+                    project_type=ch["project_type"],
                 )
             )
             stats["templates_inserted"] += 1
         else:
             template.chapter = course_names[course_id]
             template.challenge_slug = slug
+            template.project_type = ch["project_type"]
             if _is_blank_or_placeholder(template.description):
                 template.description = ch["description"]
             if not template.concepts:
                 template.concepts = list(ch["concepts"])
             if not template.goals:
                 template.goals = list(ch["goals"])
+            elif isinstance(template.goals, list):
+                goals = _with_current_submit_goals(template.goals, SUBMIT_GOAL_REPLACEMENTS)
+                if goals != template.goals:
+                    template.goals = goals
             if not template.difficulty:
                 template.difficulty = ch["difficulty"]
             stats["templates_updated"] += 1

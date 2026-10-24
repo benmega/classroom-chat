@@ -683,6 +683,20 @@ describe('useFeedLogic', () => {
         expect(result.current.textareaRef.current.style.height).toBe('auto');
       });
 
+      it.each([
+        ['an error field', { error: 'That file type is not allowed.' }, 'That file type is not allowed.'],
+        ['a message field', { message: 'Upload limit reached.' }, 'Upload limit reached.'],
+        ['a proxy page', '<html><body>413 Request Entity Too Large</body></html>', 'Failed to submit file'],
+      ])('tells the student why the upload failed (%s)', async (_name, data, shown) => {
+        client.post.mockRejectedValueOnce({ response: { status: 400, data } });
+        const { result } = await mountFeed();
+        act(() => result.current.setFile(file));
+
+        await send(result);
+
+        expect(toast.error).toHaveBeenCalledWith(shown);
+      });
+
       it('keeps the file and the note when the upload fails', async () => {
         client.post.mockRejectedValueOnce(new Error('413'));
         const { result } = await mountFeed();

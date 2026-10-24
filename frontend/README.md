@@ -24,16 +24,17 @@ npm run preview    # serve the production build locally
 npm run lint       # ESLint
 ```
 
-Production builds are made by the deploy pipeline on pushes to the `deploy` branch: `.github/workflows/deploy.yml`
-runs `deploy.sh`, which builds on the EC2 host, and `deploy-frontend.yml` builds in GitHub Actions and syncs to
-S3 + CloudFront.
+The production build is made by the deploy pipeline on pushes to the `deploy` branch: `.github/workflows/deploy-frontend.yml`
+builds in GitHub Actions and syncs to S3 + CloudFront. `.github/workflows/deploy.yml` deploys the backend only (it
+runs `deploy.sh` on the EC2 host, which does not build the frontend).
 
 ## Environment variables
 
 Vite reads these from the shell environment or from a git-ignored `frontend/.env` (copy `.env.example`).
 
 - `VITE_API_URL` (optional): base URL of the backend API and Socket.IO server. When unset, requests use the
-  same origin (the Vite proxy in development). The S3/CloudFront build sets it to `https://api-blossom.benmega.com`.
+  same origin (the Vite proxy in development); a production build without it logs a console warning when the page
+  loads. The S3/CloudFront build sets it to `https://api-blossom.benmega.com`.
 - `VITE_WAKEUP_API_URL` (optional): endpoint the "server is sleeping" page calls to start the backend. When unset, the
   built-in production wake-up URL is used. The S3/CloudFront build sets it explicitly.
 - `VITE_DEV_API` (optional, development only): backend that the Vite dev server and `npm run preview` proxy to.
@@ -61,6 +62,8 @@ E2E tests are located in the `tests-e2e/` directory. They simulate real user int
 
 - **Run tests:** `npm run test:e2e`
 - **UI Mode:** `npm run test:e2e:ui`
+
+Specs that import `test` from `tests-e2e/support/mockBackend.js` need no backend: they fake the session and answer every backend call with a mock, and a call no mock answers fails the test. Other specs sign in through `/api/dev-login` against a running, seeded backend, or mock only some of the calls. Write new specs on the mock fixture.
 
 To install browsers (first time only):
 ```bash

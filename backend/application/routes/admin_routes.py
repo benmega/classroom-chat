@@ -1,7 +1,3 @@
-from flask import Blueprint
-
-admin_bp = Blueprint("admin", __name__)
-
 from .admin import (
     advanced_ops,
     challenge_mgmt,
@@ -13,6 +9,7 @@ from .admin import (
     trade_routes,
     user_mgmt,
 )
+from .admin.blueprint import admin_bp
 from .admin.crud_routes import crud_bp
 
 # React-Admin standalone CRUD blueprint (still nested/prefixed)

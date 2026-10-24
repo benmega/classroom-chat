@@ -6,10 +6,12 @@ on:
   pull_request:
     types: [labeled]
 
+# Read-only by default; each job asks for what it needs. The personal access token (the repository
+# setting stops GITHUB_TOKEN from opening PRs) is held only by the 'publish' and 'cleanup' jobs.
+# The 'code' job runs the agent and the tests it wrote, so it never holds that token: it hands one
+# patch to 'publish', which applies it to a fresh checkout and does the push or opens the PR.
 permissions:
-  contents: write
-  pull-requests: write
-  issues: write
+  contents: read
 
 # One AI run per issue/PR at a time: repeated 'ai-plan'/'ai-draft' label events queue instead of
 # running the agent twice. Other labels get a unique group so they never replace a pending AI run.
@@ -20,13 +22,22 @@ concurrency:
 jobs:
   analyze:
     name: Architect Plan
-    if: github.event.label.name == 'ai-plan'
+    # Only the repository owner can start an AI run (other collaborators can also apply labels).
+    if: github.event.label.name == 'ai-plan' && github.event.sender.login == github.repository_owner
     runs-on: ubuntu-latest
+    # GitHub's default is 6 hours: cap a stuck job well below that.
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
     outputs:
       plan: ${{ steps.gen_plan.outputs.plan }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -40,9 +51,9 @@ jobs:
           ISSUE_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
           ISSUE_BODY: ${{ github.event.issue.body || github.event.pull_request.body }}
           OBJ_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
-          GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          pip install openai
+          pip install -r .github/scripts/requirements.txt
           PLAN=$(python .github/scripts/analyze_issue.py)
 
           # Post plan to issue for human visibility
@@ -65,21 +76,39 @@ jobs:
     name: Agent Coder
     # Runs for a directly applied 'ai-draft' (analyze is skipped) or after 'analyze' planned an 'ai-plan'.
     # A failed analyze blocks it, and fork PRs are skipped: the agent pushes to the PR branch of this repo.
+    # Only the repository owner can start a run (other collaborators can also apply labels).
     if: >-
       ${{ !cancelled()
+      && github.event.sender.login == github.repository_owner
       && (needs.analyze.result == 'success'
       || (needs.analyze.result == 'skipped' && github.event.label.name == 'ai-draft'))
       && (github.event.pull_request == null
       || github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: ubuntu-latest
+    # The agent loop is capped at 12 model turns and each pytest run at agent_coder.TEST_TIMEOUT;
+    # this bounds the whole job.
+    timeout-minutes: 60
+    # Read-only: the agent's own token can read the issue and nothing else.
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
     needs: [analyze]
+    outputs:
+      has_patch: ${{ steps.export.outputs.has_patch }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          # No credentials are left in .git/config: the agent's test runs execute in this checkout.
+          persist-credentials: false
           # Check out the PR branch if it's a PR, otherwise default branch
           ref: ${{ github.event.pull_request.head.ref || github.event.repository.default_branch }}
+
+      - name: Record Checked-Out Commit
+        id: base
+        # The agent's test runs can commit and move HEAD: the patch is taken against this commit.
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -89,23 +118,88 @@ jobs:
           cache-dependency-path: |
             backend/requirements.txt
             backend/requirements-dev.txt
+            .github/scripts/requirements.txt
 
       - name: Install Dependencies
-        # The agent's run_tests tool runs pytest, which lives in the dev requirements.
+        # agent_coder.py imports openai (script requirements); its run_tests tool runs pytest,
+        # which lives in the dev requirements.
         run: |
           python -m pip install --upgrade pip
-          pip install -r backend/requirements-dev.txt
+          pip install -r backend/requirements-dev.txt -r .github/scripts/requirements.txt
 
       - name: Run Agent Loop
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          # The read-only job token: the personal access token is held only by the steps below.
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           ISSUE_TITLE: ${{ github.event.issue.title || github.event.pull_request.title }}
           ISSUE_BODY: ${{ github.event.issue.body || github.event.pull_request.body }}
           OBJ_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
           IS_PR: ${{ github.event.pull_request != null }}
           ISSUE_PLAN: ${{ needs.analyze.outputs.plan }}
         run: python .github/scripts/agent_coder.py
+
+      - name: Export Agent Changes
+        id: export
+        env:
+          BASE: ${{ steps.base.outputs.sha }}
+        run: |
+          # Everything the agent changed relative to the checked-out commit, as one patch. The patch
+          # is all that leaves this job: its test runs executed code the agent wrote, so nothing in
+          # this workspace (the .git directory, its config and hooks, the files on disk) is ever
+          # used by a step that holds the personal access token. .github is never exported, and
+          # the publish job refuses a patch that touches it.
+          git add -A -- . ':!.github'
+          git diff --cached --binary --no-renames "$BASE" -- . ':!.github' > "$RUNNER_TEMP/agent.patch"
+          if [ -s "$RUNNER_TEMP/agent.patch" ]; then
+            echo "has_patch=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload Agent Patch
+        if: steps.export.outputs.has_patch == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-patch
+          path: ${{ runner.temp }}/agent.patch
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    name: Publish Agent Changes
+    # Only when the agent changed something. This job never runs the agent or its tests, and the
+    # only thing it takes from the 'code' job is the patch (untrusted data, checked below).
+    needs: [code]
+    if: needs.code.outputs.has_patch == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          # A fresh clone: the personal access token is stored in it for the push and the PR, and
+          # nothing from the agent's workspace is in it.
+          token: ${{ secrets.MY_WORKFLOW_TOKEN }}
+          ref: ${{ github.event.pull_request.head.ref || github.event.repository.default_branch }}
+
+      - name: Download Agent Patch
+        uses: actions/download-artifact@v4
+        with:
+          name: agent-patch
+          path: ${{ runner.temp }}/agent-patch
+
+      - name: Apply Agent Patch
+        run: |
+          # git apply refuses paths inside .git and paths that lead through a symbolic link. The
+          # pipeline definition is refused here too, whatever the patch says (a rename out of
+          # .github is not caught by the path filter alone).
+          git apply --index --binary "$RUNNER_TEMP/agent-patch/agent.patch"
+          if ! git diff --cached --quiet -- .github; then
+            echo "::error::The agent patch changes .github, which is never published."
+            exit 1
+          fi
 
       - name: Push Changes (Iterative PR)
         if: github.event.pull_request != null
@@ -114,8 +208,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git commit -m "AI Agent: Applied fixes based on review" || exit 0
+          git commit -m "AI Agent: Applied fixes based on review"
           git push origin "HEAD:refs/heads/$HEAD_REF"
 
       - name: Create Pull Request (New Issue)
@@ -127,10 +220,20 @@ jobs:
           title: "AI Draft: ${{ github.event.issue.title }}"
           branch: "ai-draft/issue-${{ github.event.issue.number }}"
 
-      - name: Cleanup Label
-        # Only a direct 'ai-draft' leaves a label behind ('analyze' already consumed 'ai-plan')
-        if: always() && github.event.label.name == 'ai-draft'
+  cleanup:
+    name: Cleanup Label
+    # Only a direct 'ai-draft' leaves a label behind ('analyze' already consumed 'ai-plan'). It
+    # runs whatever happened to the agent, but not when the run was skipped (not the owner, fork PR).
+    needs: [code, publish]
+    if: ${{ always() && github.event.label.name == 'ai-draft' && needs.code.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Remove Label
         env:
           GH_TOKEN: ${{ secrets.MY_WORKFLOW_TOKEN }}
-        run: |
-          gh issue edit ${{ github.event.issue.number || github.event.pull_request.number }} --remove-label "ai-draft"
+          GH_REPO: ${{ github.repository }}
+          OBJ_NUMBER: ${{ github.event.issue.number || github.event.pull_request.number }}
+        run: gh issue edit "$OBJ_NUMBER" --remove-label "ai-draft"

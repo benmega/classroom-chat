@@ -12,7 +12,7 @@ const PfpCropModal = ({ isCropping, cropImgRef, cropImage, isUploadingPic, onCan
     if (!isCropping) return null;
 
     return createPortal(
-        <div className="modal-overlay crop-modal-overlay">
+        <div className="profile-modal-overlay crop-modal-overlay">
             <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="modal-content crop-modal-content">
                 <div className="modal-header">
                     <h2 id={titleId}>Adjust Profile Picture</h2>
@@ -21,7 +21,7 @@ const PfpCropModal = ({ isCropping, cropImgRef, cropImage, isUploadingPic, onCan
                 <div className="crop-area">
                     <img ref={cropImgRef} src={cropImage} alt="To crop" className="max-w-100" />
                 </div>
-                <div className="modal-footer">
+                <div className="profile-modal-footer">
                     <button className="btn-secondary" onClick={onCancel}>Cancel</button>
                     <button className="btn-primary" onClick={onSave} disabled={isUploadingPic}>
                         {isUploadingPic ? 'Saving...' : 'Save Changes'}

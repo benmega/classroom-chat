@@ -17,6 +17,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 import client from '../../api/client';
+import { getErrorMessage } from '../../utils/apiError';
 import useAuthStore from '../../store/useAuthStore';
 import './DevLogin.css';
 
@@ -46,11 +47,10 @@ const DevLogin = () => {
                         navigate('/chat');
                     }
                 } else {
-                    setError(res.data?.error || 'Dev login returned an unexpected response.');
+                    setError(getErrorMessage({ response: res }, 'Dev login returned an unexpected response.'));
                 }
             } catch (err) {
-                const msg = err.response?.data?.error || 'Dev login request failed.';
-                setError(msg);
+                setError(getErrorMessage(err, 'Dev login request failed.'));
             }
         };
 

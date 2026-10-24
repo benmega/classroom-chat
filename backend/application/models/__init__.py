@@ -10,7 +10,6 @@ def setup_models():
     # Import all models to register them with SQLAlchemy
     # These imports are needed for side effects (model registration)
     from .achievements import Achievement
-    from .ai_settings import AISettings
     from .banned_words import BannedWords
     from .challenge import Challenge
     from .challenge_log import ChallengeLog
@@ -29,7 +28,9 @@ def setup_models():
     from .parent_message import ParentMessage
     from .parent_student import parent_students
     from .project import Project
+    from .project_file import ProjectFile
     from .project_template import ProjectTemplate
+    from .quiz import Quiz, QuizAttempt, QuizQuestion, QuizReward
     from .session_log import SessionLog
     from .skill import Skill
     from .store_item import StoreItem

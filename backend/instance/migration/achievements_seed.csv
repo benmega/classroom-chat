@@ -1,0 +1,64 @@
+slug,name,description,type,requirement_value,reward,source
+first-duck,First Duck,Earn your first duck,ducks,1,1,
+duckling,Duckling,Earn 10 ducks,ducks,10,5,
+duck-collector,Duck Collector,Earn 50 ducks,ducks,50,20,
+pond-master,Pond Master,Earn 100 ducks,ducks,100,30,
+duck-hoarder,Duck Hoarder,Earn 500 ducks,ducks,500,50,
+duck-millionaire,Duck Millionaire,Earn 1000 ducks,ducks,1000,100,
+560f1a9f22961295f9427742,CS1,Submit completion certificate for CS1,certificate,1,10,
+5632661322961295f9428638,CS2,Submit completion certificate for CS2,certificate,1,20,
+56462f935afde0c6fd30fc8c,CS3,Submit completion certificate for CS3,certificate,1,40,
+56462f935afde0c6fd30fc8d,CS4,Submit completion certificate for CS4,certificate,1,60,
+569ed916efa72b0ced971447,CS5,Submit completion certificate for CS5,certificate,1,80,
+5817d673e85d1220db624ca4,CS6,Submit completion certificate for CS6,certificate,1,100,
+5789587aad86a6efb573701e,GD1,Submit completion certificate for GD1,certificate,1,20,
+57b621e7ad86a6efb5737e64,GD2,Submit completion certificate for GD2,certificate,1,40,
+5a0df02b8f2391437740f74f,GD3,Submit completion certificate for GD3,certificate,1,60,
+65f32b6c87c07dbeb5ba1936,Junior,Submit completion certificate for Junior,certificate,1,10,
+5789587aad86a6efb573701f,WD1,Submit completion certificate for WD1,certificate,1,20,
+5789587aad86a6efb5737020,WD2,Submit completion certificate for WD2,certificate,1,40,
+ozaria-first-challenge,Getting Started,Complete your first level,progress,1,1,www.ozaria.com
+ozaria-5-levels,Steady Steps,Complete 5 levels,progress,5,3,www.ozaria.com
+ozaria-10-levels,Challenge Conqueror,Complete 10 levels,progress,10,5,www.ozaria.com
+ozaria-25-levels,Learning Machine,Complete 25 levels,progress,25,10,www.ozaria.com
+ozaria-50-levels,Halfway Hero,Complete 50 levels,progress,50,20,www.ozaria.com
+ozaria-100-levels,Marathon Learner,Complete 100 levels,progress,100,40,www.ozaria.com
+ozaria-150-levels,Advanced Adventurer,Complete 150 levels,progress,150,60,www.ozaria.com
+ozaria-200-levels,Master Coder,Complete 200 levels,progress,200,80,www.ozaria.com
+ozaria-265-levels,Ultimate Ozaria Champion,Complete all 265 levels,progress,265,100,www.ozaria.com
+codecombat-first-level,Novice Coder,Complete your first level,progress,1,1,codecombat.com
+codecombat-5-levels,Apprentice Adventurer,Complete 5 levels,progress,5,2,codecombat.com
+codecombat-10-levels,Coding Recruit,Complete 10 levels,progress,10,4,codecombat.com
+codecombat-25-levels,Script Squire,Complete 25 levels,progress,25,8,codecombat.com
+codecombat-50-levels,Algorithm Adept,Complete 50 levels,progress,50,15,codecombat.com
+codecombat-100-levels,Code Knight,Complete 100 levels,progress,100,30,codecombat.com
+codecombat-200-levels,Master Programmer,Complete 200 levels,progress,200,60,codecombat.com
+codecombat-300-levels,Code Champion,Complete 300 levels,progress,300,100,codecombat.com
+codecombat-400-levels,Legendary Coder,Complete 400 levels,progress,400,140,codecombat.com
+codecombat-500-levels,Heroic Hacker,Complete 500 levels,progress,500,180,codecombat.com
+codecombat-570-levels,CodeCombat Conqueror,Complete all 570 levels,progress,570,200,codecombat.com
+first-project,First Project,Add your first project,project,1,1,
+portfolio-builder,Portfolio Builder,Add 3 projects,project,3,5,
+project-master,Project Master,Add 5 projects,project,5,10,
+dedication,Dedicated Coder,Stay online for 2 hours in a session,session,120,10,
+marathoner,Marathoner,Stay online for 3 hours in a session,session,180,20,
+you-there,You There?,Stay online for 8 hours in a session,session,480,40,
+trade-initiate,Trade Initiate,Complete your first bit shift,trade,1,1,
+experienced-trader,Experienced Trader,Complete your 10 bit shifts,trade,10,5,
+master-trader,Master Trader,Complete your 50 bit shifts,trade,50,10,
+first-streak,On the Board,Complete a challenge  2 weeks in a row,consistency,2,5,
+5-week-streak,High Five,Maintain a 5-week streak,consistency,5,15,
+10-week-streak,Decathlon Learner,Maintain a 10-week streak,consistency,10,25,
+25-week-streak,Unstoppable,Maintain a 25-week streak,consistency,25,50,
+first-message,Hello World,Send your first message in chat,chat,1,5,
+10-messages,Chatterbox,Send 10 chat messages,chat,10,10,
+50-messages,Talkative Duck,Send 50 chat messages,chat,50,20,
+first-help,Helper-in-Training,Help a classmate with a challenge,community,1,5,
+5-helps,Team Player,Help 5 classmates,community,5,5,
+20-helps,Mentor Duck,Help 20 classmates,community,20,10,
+50-helps,Classroom Hero,Help 50 classmates,community,50,20,
+100-helps,Sensai,Help 100 classmates,community,100,40,
+5d41d731a8d1836b5aa3cba1,Ch1,Completion certificate for Ozaria Ch1,certificate,1,10,
+5d8a57abe8919b28d5113af1,Ch2,Completion certificate for Ozaria Ch2,certificate,1,20,
+5e27600d1c9d440000ac3ee7,Ch3,Completion certificate for Ozaria Ch3,certificate,1,60,
+5f0cb0b7a2492bba0b3520df,Ch4,Completion certificate for Ozaria Ch4,certificate,1,100,

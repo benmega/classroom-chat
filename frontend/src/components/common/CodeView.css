@@ -1,0 +1,149 @@
+/* Source code with a line-number gutter. The panel is dark in every theme, like the profile's
+   .code-snippet it sits beside, and its colours are the app's palette variables: a stock highlight.js
+   stylesheet would bring hex literals that live outside the design tokens. Each --code-* value passes
+   4.5:1 against --code-bg. */
+.code-view {
+    --code-bg: var(--slate-800);
+    --code-fg: var(--slate-100);
+    --code-gutter-fg: var(--slate-400);
+    --code-gutter-border: var(--slate-700);
+    --code-keyword: var(--indigo-400);
+    --code-string: var(--green-500);
+    --code-comment: var(--slate-400);
+    --code-number: var(--amber-400);
+    --code-title: var(--sky-500);
+    --code-built-in: var(--yellow-300);
+    --code-attr: var(--blue-200);
+    --code-tag: var(--rose-100);
+    --code-meta: var(--slate-300);
+    --code-deletion: var(--error-light);
+
+    position: relative;
+    overflow: auto;
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: var(--radius-md);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    tab-size: 4;
+    scrollbar-width: thin;
+    scrollbar-color: var(--slate-500) var(--code-bg);
+}
+
+/* Drawn inside the box, where an overflow:hidden parent such as a modal cannot clip it, and in the vivid
+   teal because the usual dark teal ring is barely visible on this dark panel */
+.code-view:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -3px;
+    border-radius: var(--radius-md);
+}
+
+/* At least as wide as the box and as wide as its longest line, so the gutter stays put (sticky) while
+   long lines scroll under it */
+.code-view-body {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+}
+
+/* Same font metrics as the code, so every number sits on the line it names. Not selectable, so copying
+   a few lines does not drag the numbers along. */
+.code-view-gutter {
+    position: sticky;
+    left: 0;
+    flex-shrink: 0;
+    padding: 0.75rem 0.75rem 0.75rem 1rem;
+    background: var(--code-bg);
+    border-right: 1px solid var(--code-gutter-border);
+    color: var(--code-gutter-fg);
+    text-align: right;
+    white-space: pre;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.code-view-pre {
+    flex: 1 0 auto;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    font: inherit;
+    white-space: pre;
+    overflow: visible;
+}
+
+.code-view-code {
+    display: block;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    white-space: inherit;
+}
+
+/* highlight.js token classes, grouped by the colour they share */
+.code-view .hljs-keyword,
+.code-view .hljs-selector-tag,
+.code-view .hljs-literal,
+.code-view .hljs-section {
+    color: var(--code-keyword);
+}
+
+.code-view .hljs-string,
+.code-view .hljs-regexp,
+.code-view .hljs-addition {
+    color: var(--code-string);
+}
+
+.code-view .hljs-comment,
+.code-view .hljs-quote {
+    color: var(--code-comment);
+    font-style: italic;
+}
+
+.code-view .hljs-number,
+.code-view .hljs-symbol,
+.code-view .hljs-bullet {
+    color: var(--code-number);
+}
+
+.code-view .hljs-title {
+    color: var(--code-title);
+}
+
+.code-view .hljs-built_in,
+.code-view .hljs-type {
+    color: var(--code-built-in);
+}
+
+.code-view .hljs-attr,
+.code-view .hljs-attribute,
+.code-view .hljs-variable,
+.code-view .hljs-property,
+.code-view .hljs-params {
+    color: var(--code-attr);
+}
+
+.code-view .hljs-tag,
+.code-view .hljs-name,
+.code-view .hljs-selector-id,
+.code-view .hljs-selector-class {
+    color: var(--code-tag);
+}
+
+.code-view .hljs-meta,
+.code-view .hljs-doctag {
+    color: var(--code-meta);
+}
+
+.code-view .hljs-deletion {
+    color: var(--code-deletion);
+}
+
+.code-view .hljs-emphasis {
+    font-style: italic;
+}
+
+.code-view .hljs-strong {
+    font-weight: 700;
+}

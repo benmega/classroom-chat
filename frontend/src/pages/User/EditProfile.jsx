@@ -228,17 +228,6 @@ const EditProfile = () => {
                                     />
                                 </div>
                                 
-                                {user?.drawer && (
-                                    <div className="form-group drawer-form-group">
-                                        <label htmlFor="input-188">Assigned Drawer (readonly)</label>
-                                        <input id="input-188" 
-                                            type="text" 
-                                            value={user.drawer} 
-                                            disabled 
-                                            className="form-control readonly drawer-input" 
-                                        />
-                                    </div>
-                                )}
                             </div>
 
                             <div className="about-me-container-wrapper">
@@ -286,15 +275,7 @@ const EditProfile = () => {
                                     <Copy size={18} />
                                 </button>
                             </div>
-                            <div className="connection-icon-wrapper">
-                                <div className="connection-link-circles">
-                                    {/* Simple SVG representation of connected rings */}
-                                    <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
-                                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                                    </svg>
-                                </div>
-                            </div>
+
                             <button
                                 type="button"
                                 className="btn-secondary w-100 mt-1rem"

@@ -50,6 +50,7 @@ const AdminClassDashboard = () => {
     const [rosterSearchQuery, setRosterSearchQuery] = useState('');
     const [activeTab, setActiveTab] = useState('stream');
     const [joinCode, setJoinCode] = useState(null);
+    const [joinUrl, setJoinUrl] = useState(null);
 
     const [activeModal, setActiveModal] = useState(null);
     const [classroomCards, setClassroomCards] = useState([]);
@@ -107,6 +108,7 @@ const AdminClassDashboard = () => {
                 const codeRes = await client.get(`/api/admin/classrooms/${classId}/join-code`);
                 if (codeRes.data.status === 'success' || codeRes.data.success) {
                     setJoinCode(codeRes.data.data?.join_code || codeRes.data.join_code);
+                    setJoinUrl(codeRes.data.data?.join_url || codeRes.data.join_url || null);
                 }
             } catch (err) {
                 console.error("Failed to fetch join code:", err);
@@ -664,6 +666,7 @@ const AdminClassDashboard = () => {
                 onEnroll={handleEnrollStudent}
                 availableStudents={availableStudents}
                 joinCode={joinCode}
+                joinUrl={joinUrl}
                 onRegenerateJoinCode={handleRegenerateJoinCode}
                 loading={formLoading}
             />

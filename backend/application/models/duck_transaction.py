@@ -1,12 +1,15 @@
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 class DuckTransaction(db.Model):
     __tablename__ = "duck_transactions"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     amount = db.Column(db.Float, nullable=False)
     reason = db.Column(db.String(200), nullable=True)
@@ -23,5 +26,5 @@ class DuckTransaction(db.Model):
             "user_id": self.user_id,
             "amount": self.amount,
             "reason": self.reason,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "timestamp": to_utc_iso(self.timestamp),
         }

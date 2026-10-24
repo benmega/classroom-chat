@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, SetDrawerModal, ResetPasswordModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal } from './AdminModals';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { CreateUserModal, AdjustDucksModal, AdjustPacketsModal, ResetPasswordModal, ManageChildrenModal, ConnectionCardModal, BulkConnectionCardsModal, AddCourseModal, EnrollStudentModal } from './AdminModals';
 
 describe('AdminModals', () => {
   beforeEach(() => {
@@ -136,31 +136,7 @@ describe('AdminModals', () => {
     });
   });
 
-  describe('SetDrawerModal', () => {
-    it('renders and submits', async () => {
-      const user = { username: 'draweruser', drawer: '0x01' };
-      const onSubmit = vi.fn((e) => e.preventDefault());
-      
-      render(
-        <SetDrawerModal 
-          isOpen={true} 
-          onClose={vi.fn()} 
-          onSubmit={onSubmit} 
-          user={user} 
-          loading={false} 
-        />
-      );
 
-      const drawerInput = document.querySelector('input[name="drawer"]');
-      expect(drawerInput).toHaveValue('0x01');
-      
-      await userEvent.clear(drawerInput);
-      await userEvent.type(drawerInput, '0xA6');
-      
-      await userEvent.click(screen.getByRole('button', { name: 'Set Drawer' }));
-      expect(onSubmit).toHaveBeenCalled();
-    });
-  });
 
   describe('ResetPasswordModal', () => {
     it('renders and toggles passwords', async () => {
@@ -366,6 +342,36 @@ describe('AdminModals', () => {
       expect(screen.getByText('stud1')).toBeInTheDocument();
       expect(screen.getByText('XYZ-987')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Print 1 Cards' })).toBeInTheDocument();
+    });
+  });
+
+  describe('EnrollStudentModal', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
+
+    const renderEnroll = (availableStudents) => render(
+      <EnrollStudentModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onEnroll={vi.fn()}
+        availableStudents={availableStudents}
+        joinCode="ABC123"
+        onRegenerateJoinCode={vi.fn()}
+        loading={false}
+      />
+    );
+
+    it('loads each student avatar from the API host and falls back to the bundled default', () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+
+      renderEnroll([
+        { id: 1, username: 'sam', profile_picture: 'sam.png' },
+        { id: 2, username: 'kim', profile_picture: null },
+      ]);
+
+      expect(screen.getByAltText('sam')).toHaveAttribute('src', 'https://api.example.com/user/profile_pictures/sam.png');
+      expect(screen.getByAltText('kim')).toHaveAttribute('src', '/static/images/Default_pfp.jpg');
     });
   });
 

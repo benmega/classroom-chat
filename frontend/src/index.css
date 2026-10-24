@@ -10,6 +10,14 @@ html, body {
   height: 100dvh;
   margin: 0;
   padding: 0;
+}
+
+/* The signed-in shells (.app-container, .admin-app-container) fill the viewport and scroll inside themselves,
+   so the document is locked only while one is mounted. Every other page (sign-in, landing, error screens)
+   scrolls normally, which keeps content on a short window reachable. :where() keeps the specificity of the
+   old html, body rule. */
+html:has(:where(.app-container, .admin-app-container)),
+body:has(:where(.app-container, .admin-app-container)) {
   overflow: hidden;
 }
 
@@ -184,6 +192,43 @@ button:focus-visible,
 
 .btn-premium:active {
   filter: brightness(0.96);
+}
+
+/* Shared base for modal and dialog primary actions (page stylesheets only adjust it) */
+.btn-primary,
+.btn-danger {
+  padding: var(--btn-padding-md);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--btn-font-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: var(--transition-bounce);
+  color: var(--text-on-primary);
+  border: none;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+}
+
+.btn-primary { background: var(--primary-accessible); }
+.btn-danger { background: var(--error-color, #dc2626); }
+
+.btn-primary:hover:not(:disabled),
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+.btn-primary:active:not(:disabled),
+.btn-danger:active:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.btn-primary:disabled,
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
@@ -409,7 +454,6 @@ button:disabled {
 .mt-1-5rem { margin-top: 1.5rem; }
 .flex-shrink-0 { flex-shrink: 0; }
 .danger-zone-title { color: var(--error-color); }
-.danger-zone-desc { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem; }
 .utility-card-styled { display: flex; gap: 1.5rem; padding: 1.5rem; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-subtle); }
 .transaction-item-styled { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--border-subtle); }
 .trade-card-styled { padding: 1.5rem; margin-bottom: 1rem; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border-subtle); }

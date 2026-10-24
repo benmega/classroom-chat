@@ -48,7 +48,7 @@
     z-index: 2;
 }
 
-.avatar-wrapper {
+:where(.profile-page, .report-card-page) .avatar-wrapper {
     position: relative;
     flex-shrink: 0;
     cursor: pointer;
@@ -60,11 +60,11 @@
     box-shadow: var(--shadow-md);
 }
 
-.avatar-wrapper:hover .upload-overlay {
+:where(.profile-page, .report-card-page) .avatar-wrapper:hover .upload-overlay {
     opacity: 1;
 }
 
-.upload-overlay {
+:where(.profile-page, .report-card-page) .upload-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -92,7 +92,7 @@
     transition: var(--transition-smooth);
 }
 
-.avatar-wrapper:hover .avatar-img {
+:where(.profile-page, .report-card-page) .avatar-wrapper:hover .avatar-img {
     transform: scale(1.02);
 }
 
@@ -115,7 +115,7 @@
     border-radius: var(--radius-md);
 }
 
-.modal-footer {
+.profile-modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
@@ -125,7 +125,7 @@
 }
 
 /* Specific adjustment for crop modal buttons area */
-.crop-modal-content .modal-footer {
+.crop-modal-content .profile-modal-footer {
     padding-bottom: 30px; /* Extra padding at bottom as requested */
 }
 
@@ -255,7 +255,7 @@
 /* =================================================================
    3. DASHBOARD GRID & PANELS
    ================================================================= */
-.dashboard-grid {
+:where(.profile-page, .report-card-page) .dashboard-grid {
     display: grid;
     grid-template-columns: 320px 1fr; /* Fixed width sidebar, flexible main area */
     gap: 30px;
@@ -269,7 +269,7 @@
     min-width: 0;
 }
 
-.dashboard-panel {
+:where(.profile-page, .report-card-page) .dashboard-panel {
     background: var(--bg-primary);
 
     border-radius: var(--radius-md);
@@ -358,7 +358,7 @@
     margin-left: auto;
 }
 
-.gap-sm {
+:where(.profile-page, .report-card-page) .gap-sm {
     gap: 8px;
 }
 
@@ -472,20 +472,20 @@
 }
 
 /* Proficiency borders matching levels: bronze / silver / gold are deliberate constants, not theme colours */
-.tech-skill-card.proficiency-1 { border-bottom: 3px solid #cd7f32; }
-.tech-skill-card.proficiency-2 { border-bottom: 3px solid #b0c4de; }
-.tech-skill-card.proficiency-3 { border-bottom: 3px solid #ffd700; }
+.tech-skill-card.proficiency-1 { border-bottom: 3px solid var(--bronze); }
+.tech-skill-card.proficiency-2 { border-bottom: 3px solid var(--silver); }
+.tech-skill-card.proficiency-3 { border-bottom: 3px solid var(--gold); }
 
 /* =================================================================
    6. PROJECTS PORTFOLIO
    ================================================================= */
-.projects-grid {
+:where(.profile-page, .report-card-page) .projects-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
 }
 
-.project-card {
+:where(.profile-page, .report-card-page) .project-card {
     background: var(--bg-primary);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-subtle);
@@ -497,13 +497,13 @@
     overflow: hidden;
 }
 
-.project-card:hover {
+:where(.profile-page, .report-card-page) .project-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--shadow-md);
     border-color: var(--primary-color);
 }
 
-.project-card::before {
+:where(.profile-page, .report-card-page) .project-card::before {
     content: '';
     position: absolute;
     top: 0;
@@ -543,6 +543,48 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* A model has nothing to play, so it gets a smaller, fainter rotate glyph where a video gets its play button. */
+:where(.profile-page, .report-card-page) .model-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-on-primary);
+    background: color-mix(in srgb, var(--video-backdrop) 35%, transparent);
+}
+
+/* What a project holds besides its picture. Bottom-left, because the review badge owns the top-right
+   corner and the play or rotate glyph the centre. */
+:where(.profile-page, .report-card-page) .project-file-chips {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+:where(.profile-page, .report-card-page) .project-file-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
 .project-content {
@@ -612,6 +654,11 @@
 .card-teacher-feedback.revision-feedback {
     border-left: 3px solid var(--error-color, #ef4444);
     color: var(--error-color, #ef4444);
+}
+
+.card-teacher-feedback.pending-feedback {
+    border-left: 3px solid var(--border-subtle);
+    color: var(--text-secondary);
 }
 
 .card-teacher-feedback svg {
@@ -881,7 +928,7 @@ a.cert-item:hover {
     gap: 8px;
 }
 
-.btn-icon {
+:where(.profile-page, .report-card-page) .btn-icon {
     padding: 6px;
     border-radius: 4px;
     background: var(--bg-tertiary);
@@ -892,7 +939,7 @@ a.cert-item:hover {
     justify-content: center;
 }
 
-.btn-icon:hover {
+:where(.profile-page, .report-card-page) .btn-icon:hover {
     color: var(--primary-accessible);
     border-color: var(--primary-color);
 }
@@ -982,7 +1029,7 @@ a.cert-item:hover {
 /* =================================================================
    MODALS
    ================================================================= */
-.modal-overlay, .slideshow-overlay {
+.profile-modal-overlay, .slideshow-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -1047,9 +1094,18 @@ a.cert-item:hover {
     padding-top: 20px; /* Reduced from 40px to fix spacing issue */
 }
 
+/* Up to three links (live demo, source, model download) sit beside the name; when they do not fit they
+   wrap under it instead of squeezing it to a word per line. */
 .project-modal .modal-header {
     padding: 1rem 2.5rem;
     margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Clears the close button, which the name reaches once the links have wrapped under it. */
+.project-modal .modal-header h2 {
+    margin-right: 40px;
 }
 
 .project-modal .modal-body {
@@ -1059,11 +1115,61 @@ a.cert-item:hover {
     display: grid; /* Ensure grid is active */
 }
 
+/* A file tree beside its code needs more room than one pasted snippet, so a project with source files gets a
+   wider dialog and sidebar. Below 1100px the sidebar goes under the main column (see 11. RESPONSIVE). */
+.project-modal.has-source-files {
+    max-width: 1180px;
+}
+
+.project-modal.has-source-files .modal-body {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+}
+
+/* The media switcher above the spotlight. The selected tab is filled, so the choice does not rest on colour alone. */
+.project-modal .spotlight-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    width: fit-content;
+    max-width: 100%;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 0.75rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+}
+
+.project-modal .spotlight-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: none;
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.project-modal .spotlight-tab:hover {
+    background: var(--primary-light);
+    color: var(--primary-accessible);
+}
+
+.project-modal .spotlight-tab[aria-selected='true'] {
+    background: var(--primary-accessible);
+    color: var(--text-on-primary);
+}
+
 .video-spotlight {
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    background: #000;
+    background: var(--video-backdrop);
     border-radius: var(--radius-md);
     overflow: hidden;
     margin-bottom: 2rem;
@@ -1071,10 +1177,13 @@ a.cert-item:hover {
     border: 1px solid var(--border-subtle);
 }
 
-.video-spotlight iframe,
-.video-spotlight img,
-.video-spotlight .direct-video-player,
-.video-spotlight .css-placeholder {
+/* Children only: the model viewer is another module's markup, and an image or frame inside it must not
+   be stretched over the whole spotlight. */
+.video-spotlight > iframe,
+.video-spotlight > img,
+.video-spotlight > .direct-video-player,
+.video-spotlight > .css-placeholder,
+.video-spotlight > .model-viewer {
     position: absolute;
     top: 0;
     left: 0;
@@ -1083,20 +1192,27 @@ a.cert-item:hover {
     object-fit: cover;
 }
 
-.modal-main p {
+/* The description only: the viewer and the gallery under .modal-main bring paragraphs of their own. */
+.modal-main > p {
     max-height: 300px;
     overflow-y: auto;
     padding-right: 10px;
     line-height: 1.6;
 }
 
-.modal-main p::-webkit-scrollbar {
+.modal-main > p::-webkit-scrollbar {
     width: 6px;
 }
 
-.modal-main p::-webkit-scrollbar-thumb {
+.modal-main > p::-webkit-scrollbar-thumb {
     background: var(--border-subtle);
     border-radius: 3px;
+}
+
+.project-modal .snippet-heading {
+    margin: 1.5rem 0 0.5rem;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
 }
 
 .code-snippet {
@@ -1112,14 +1228,21 @@ a.cert-item:hover {
 /* =================================================================
    11. RESPONSIVE
    ================================================================= */
+/* Beside a 440px file browser the spotlight gets too narrow below this width, so the browser goes under it. */
+@media (max-width: 1100px) {
+    .project-modal.has-source-files .modal-body {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 @media (max-width: 1024px) {
-    .dashboard-grid {
+    :where(.profile-page, .report-card-page) .dashboard-grid {
         grid-template-columns: 1fr;
         padding: 0 15px;
     }
     
     .profile-header-card,
-    .dashboard-grid {
+    :where(.profile-page, .report-card-page) .dashboard-grid {
         max-width: 100%;
         margin-left: 15px;
         margin-right: 15px;
@@ -1129,12 +1252,12 @@ a.cert-item:hover {
 /* Extra wide screens optimization */
 @media (min-width: 1600px) {
     .profile-header-card,
-    .dashboard-grid {
+    :where(.profile-page, .report-card-page) .dashboard-grid {
         max-width: 1560px;
         gap: 40px;
     }
     
-    .dashboard-grid {
+    :where(.profile-page, .report-card-page) .dashboard-grid {
         grid-template-columns: 360px 1fr;
     }
     
@@ -1165,7 +1288,7 @@ a.cert-item:hover {
         padding: 0 15px 15px;
     }
 
-    .avatar-wrapper {
+    :where(.profile-page, .report-card-page) .avatar-wrapper {
         width: 120px;
         height: 120px;
         margin-top: -60px;
@@ -1193,13 +1316,13 @@ a.cert-item:hover {
         margin: 0 5px;
     }
 
-    .dashboard-panel {
+    :where(.profile-page, .report-card-page) .dashboard-panel {
         padding: 15px;
         margin-bottom: 20px;
     }
 
     /* Mobile horizontal scrolling for lists */
-    .projects-grid,
+    :where(.profile-page, .report-card-page) .projects-grid,
     .cert-list,
     .note-grid {
         display: flex;
@@ -1210,7 +1333,7 @@ a.cert-item:hover {
         -webkit-overflow-scrolling: touch;
     }
 
-    .project-card,
+    :where(.profile-page, .report-card-page) .project-card,
     .cert-item,
     .note-item {
         flex: 0 0 280px;
@@ -1225,10 +1348,37 @@ a.cert-item:hover {
     }
 }
 
-.modal-actions {
+.profile-modal-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     margin-right: 40px; /* distance from close button */
+}
+
+/* The header links are buttons, so no underline. Launch Live needs its fill here: the .btn-primary rules
+   are scoped to other pages and never reach this dialog, which is portalled to the body. */
+.profile-modal-actions a {
+    text-decoration: none;
+}
+
+.profile-modal-actions .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: var(--btn-padding-md);
+    border: 1px solid var(--primary-accessible);
+    border-radius: var(--radius-md);
+    background: var(--primary-accessible);
+    color: var(--text-on-primary);
+    font-size: var(--btn-font-md);
+    font-weight: 600;
+    transition: var(--transition-bounce);
+}
+
+.profile-modal-actions .btn-primary:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
 }
 
 .section-heading {
@@ -1259,6 +1409,12 @@ a.cert-item:hover {
 }
 .teacher-feedback.revision-feedback h4 {
     color: var(--error-color, #ef4444);
+}
+.teacher-feedback.pending-feedback {
+    border-left: 4px solid var(--border-subtle);
+}
+.teacher-feedback.pending-feedback h4 {
+    color: var(--text-secondary);
 }
 .teacher-feedback blockquote {
     margin: 0;
@@ -1324,6 +1480,28 @@ a.cert-item:hover {
     .slide-content img {
         object-fit: contain;
     }
+
+    /* The 2.5rem gutters left a phone a spotlight about 230px wide, too narrow for the media tabs. */
+    .project-modal .modal-header,
+    .project-modal .modal-body {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+
+    /* With the narrower gutter the 44px close button needs a wider berth. */
+    .project-modal .modal-header h2,
+    .profile-modal-actions {
+        margin-right: 48px;
+    }
+
+    /* Three media tabs fit one row on a phone only without their icons. */
+    .project-modal .spotlight-tab {
+        padding: 6px 8px;
+    }
+
+    .project-modal .spotlight-tab svg {
+        display: none;
+    }
 }
 
 /* =================================================================
@@ -1381,53 +1559,6 @@ a.cert-item:hover {
 
 .label-menu {
     color: var(--text-secondary);
-}
-
-/* Custom premium styling for the input range slider */
-.morph-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 8px;
-    border-radius: 9999px;
-    background: var(--border-subtle);
-    outline: none;
-    transition: background 150ms ease;
-    margin: 8px 0;
-}
-
-.morph-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid var(--bg-primary);
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-}
-
-.morph-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 3px 12px rgba(14, 178, 187, 0.6);
-}
-
-.morph-slider::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    cursor: pointer;
-    box-shadow: 0 2px 8px rgba(14, 178, 187, 0.4);
-    border: 2px solid var(--bg-primary);
-    transition: transform var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
-}
-
-.morph-slider::-moz-range-thumb:hover {
-    transform: scale(1.15);
-    box-shadow: 0 3px 12px rgba(14, 178, 187, 0.6);
 }
 
 .morph-slider-status {

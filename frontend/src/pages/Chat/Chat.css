@@ -51,7 +51,6 @@
     font-size: var(--font-md);
     color: var(--text-primary);
     resize: none;
-    outline: none;
     font-family: inherit;
 }
 
@@ -129,7 +128,6 @@
     background: var(--bg-tertiary);
     color: var(--text-secondary);
     border: 1px solid var(--border-subtle);
-    outline: none;
     cursor: pointer;
 }
 
@@ -312,13 +310,13 @@
     border-radius: 16px 16px 4px 16px;
     padding: 0.75rem 1.25rem;
     box-shadow: var(--shadow-md);
-    color: white;
+    color: var(--text-on-primary);
     max-width: 75%;
     flex: 0 1 auto;
 }
 
 .own-message .message-bubble a {
-    color: white;
+    color: var(--text-on-primary);
     text-decoration: underline;
 }
 
@@ -328,7 +326,7 @@
 
 .chat-send-btn {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     padding: 0.5rem 1rem;
     border-radius: var(--radius-sm);
@@ -507,7 +505,7 @@
     justify-content: space-between;
     padding: 0.75rem 1.25rem;
     background: var(--blue-600, #2563eb);
-    color: #ffffff;
+    color: var(--text-on-primary);
     position: sticky;
     top: 0;
     z-index: 30;
@@ -543,7 +541,7 @@
 }
 
 .sandbox-sticky-banner-btn {
-    background: #ffffff;
+    background: var(--bg-primary);
     color: var(--blue-600, #2563eb);
     font-weight: 700;
     font-size: 0.85rem;
@@ -557,7 +555,7 @@
 }
 
 .sandbox-sticky-banner-btn:hover {
-    background: #f8fafc;
+    background: var(--bg-tertiary);
     transform: scale(1.04);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }

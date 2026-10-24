@@ -84,7 +84,7 @@
     cursor: pointer;
     border: none;
     background: var(--primary-color);
-    color: #fff;
+    color: var(--text-on-primary);
     transition: opacity 0.15s ease;
     font-family: var(--font-body, inherit);
 }

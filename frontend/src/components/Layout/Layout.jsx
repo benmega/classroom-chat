@@ -1,6 +1,6 @@
 import React, { useState, Suspense } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, Package, Archive, HelpCircle, User } from 'lucide-react';
+import { Menu, Package, HelpCircle, User } from 'lucide-react';
 
 import './Layout.css';
 import UserSearch from '../common/UserSearch';
@@ -107,18 +107,6 @@ const Layout = ({ children }) => {
                                             </li>
                                         )}
                                     </>
-                                )}
-
-                                {isAuthenticated && user && user.role !== 'parent' && (
-                                    <li className="nav-stat-item">
-                                        <Link className="stat-badge drawer" to="/profile" title="View Profile" data-testid="header-drawer">
-                                            <Archive size={20} className="stat-icon" />
-                                            <div className="stat-content">
-                                                <span className="stat-label">Drawer</span>
-                                                <span className="stat-value">{user.drawer || 'N/A'}</span>
-                                            </div>
-                                        </Link>
-                                    </li>
                                 )}
 
                                 {isAuthenticated && isParent && (

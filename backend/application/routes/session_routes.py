@@ -4,13 +4,14 @@ Type: py
 Summary: Flask routes for session routes functionality.
 """
 
+import threading
 from datetime import timedelta
 
 import boto3
 import requests
 from application.extensions import db
 from application.models.session_log import SessionLog
-from application.utilities.helper_functions import utcnow_naive
+from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import Blueprint, jsonify
 from flask import session as flask_session
 
@@ -21,6 +22,8 @@ session = Blueprint("session", __name__)
 HEARTBEAT_WRITE_INTERVAL = timedelta(seconds=60)
 
 _ec2_metadata_cache = None
+_cloudwatch_client = None
+_cloudwatch_client_lock = threading.Lock()
 
 
 def get_ec2_metadata():
@@ -47,8 +50,20 @@ def get_ec2_metadata():
 
 
 def get_cloudwatch_client():
-    _, region = get_ec2_metadata()
-    return boto3.client("cloudwatch", region_name=region)
+    """The process-wide CloudWatch client, created on the first heartbeat.
+
+    A boto3 client can be shared between threads and greenlets, but building one
+    (credential lookup, endpoint resolution) is slow and is not thread-safe, so it
+    happens once, under a lock. A failed attempt is not remembered: the next
+    heartbeat tries again.
+    """
+    global _cloudwatch_client
+    if _cloudwatch_client is None:
+        with _cloudwatch_client_lock:
+            if _cloudwatch_client is None:
+                _, region = get_ec2_metadata()
+                _cloudwatch_client = boto3.client("cloudwatch", region_name=region)
+    return _cloudwatch_client
 
 
 @session.route("/heartbeat", methods=["POST"])
@@ -102,4 +117,4 @@ def heartbeat():
         # heartbeat means they are back, so show them online again
         User.set_online(user_id, True)
 
-    return jsonify(success=True, timestamp=utcnow_naive().isoformat())
+    return jsonify(success=True, timestamp=to_utc_iso(utcnow_naive()))

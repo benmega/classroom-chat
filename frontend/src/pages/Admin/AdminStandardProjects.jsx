@@ -22,7 +22,7 @@ const AdminStandardProjects = () => {
     const [form, setForm] = useState({
         name: '', description: '', chapter: '', link: '', github_link: '', 
         video_url: '', code_snippet: '', image_url: '',
-        difficulty: 'Intermediate', concepts: '', goals: ''
+        difficulty: 'Intermediate', concepts: '', goals: '', project_type: 'code'
     });
 
     useEffect(() => {
@@ -69,14 +69,16 @@ const AdminStandardProjects = () => {
                 image_url: project.image_url || '',
                 difficulty: project.difficulty || 'Intermediate',
                 concepts: Array.isArray(project.concepts) ? project.concepts.join(', ') : (project.concepts || ''),
-                goals: Array.isArray(project.goals) ? project.goals.join('\n') : (project.goals || '')
+                goals: Array.isArray(project.goals) ? project.goals.join('\n') : (project.goals || ''),
+                // A template list cached before project types existed has no project_type.
+                project_type: project.project_type || 'code'
             });
         } else {
             setEditingProject(null);
             setForm({
                 name: '', description: '', chapter: '', link: '', github_link: '', 
                 video_url: '', code_snippet: '', image_url: '',
-                difficulty: 'Intermediate', concepts: '', goals: ''
+                difficulty: 'Intermediate', concepts: '', goals: '', project_type: 'code'
             });
         }
         setIsModalOpen(true);
@@ -167,8 +169,13 @@ const AdminStandardProjects = () => {
                                         {!p.image_url && <BookOpen size={48} aria-hidden="true" />}
                                     </span>
                                     <span className="project-card-body">
-                                        <span className="project-card-title" title={p.name}>
-                                            {p.name}
+                                        <span className="project-card-title-row">
+                                            <span className="project-card-title" title={p.name}>
+                                                {p.name}
+                                            </span>
+                                            {p.project_type === '3d' && (
+                                                <span className="project-type-tag" title="3D model project">3D</span>
+                                            )}
                                         </span>
                                         <span className="project-card-desc">
                                             {p.description || "No description provided."}
@@ -197,15 +204,28 @@ const AdminStandardProjects = () => {
 
             <Modal isOpen={isModalOpen} onClose={closeModal} title={editingProject ? 'Edit Standard Project' : 'Add Standard Project'} maxWidth="760px">
                 <form onSubmit={handleSubmit} className="admin-form">
-                    <div className="form-group">
-                        <label htmlFor="input-155">Project Name <span className="text-error">*</span></label>
-                        <input id="input-155"
-                            type="text"
-                            required
-                            value={form.name}
-                            onChange={e => setForm({...form, name: e.target.value})}
-                            placeholder="e.g. Text-Based Adventure"
-                        />
+                    <div className="standard-project-form-row standard-project-name-row">
+                        <div className="form-group">
+                            <label htmlFor="input-155">Project Name <span className="text-error">*</span></label>
+                            <input id="input-155"
+                                type="text"
+                                required
+                                value={form.name}
+                                onChange={e => setForm({...form, name: e.target.value})}
+                                placeholder="e.g. Text-Based Adventure"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="input-project-type">Project type</label>
+                            <select id="input-project-type"
+                                className="admin-select"
+                                value={form.project_type}
+                                onChange={e => setForm({...form, project_type: e.target.value})}
+                            >
+                                <option value="code">Code project</option>
+                                <option value="3d">3D model</option>
+                            </select>
+                        </div>
                     </div>
                     <div className="standard-project-form-row">
                         <div className="form-group">

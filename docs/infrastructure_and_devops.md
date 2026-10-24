@@ -7,6 +7,54 @@ still served by the EC2 Flask backend (`api-blossom.benmega.com`, the `VITE_API_
 
 ---
 
+## Origins
+
+The browser talks to two origins, both under `benmega.com`:
+
+| Origin | Served by | What it serves |
+| :--- | :--- | :--- |
+| `https://blossom.benmega.com` | CloudFront in front of an S3 bucket; published by `deploy-frontend.yml` | The React SPA: `index.html`, the hashed JS and CSS, and everything from `frontend/public` (including `/static/...` and `/images/...`) |
+| `https://api-blossom.benmega.com` | EC2: nginx (TLS, CORS preflight) in front of gunicorn on `127.0.0.1:8000`; the Route 53 record is kept current by `infrastructure/update-dns.sh` | The JSON API (`/api`, `/user`, `/message`, `/challenge`, `/duck_trade`, `/notes`, `/server`), Socket.IO (`/socket.io`) and uploaded files (for example `/user/profile_pictures/...`, `/user/project_images/...`) |
+
+The instance can be stopped when idle. The "server is sleeping" page (`ServerOffline.jsx`) starts it
+through an API Gateway endpoint, `VITE_WAKEUP_API_URL`, which is a third origin used only for that.
+
+**How the frontend chooses an origin.** `deploy-frontend.yml` builds with
+`VITE_API_URL=https://api-blossom.benmega.com`; unset (development) means the same origin, which is the
+Vite proxy. `getApiUrl()` in `frontend/src/utils/apiUrl.js` leaves absolute URLs alone, keeps `/static/...`
+and `/images/...` on the frontend origin (they are bundled from `frontend/public`) and puts every other
+path on the API origin. The Socket.IO endpoint and the bookmarklet links use `getAbsoluteApiBaseUrl()`.
+nginx on the API host does not proxy `/static`, so a `/static/...` path built against the API origin
+is a 404.
+
+**Deep links.** S3 cannot rewrite paths, so the CloudFront distribution maps its 403 and 404 responses
+to `/index.html` with status 200 (a custom error response, configured on the distribution, not in
+this repo) and React Router takes over, for example for `/admin/submissions` after a hard refresh.
+
+**Cookies and CSRF (production).** The two hosts are subdomains of `benmega.com`, so the SPA's
+requests are same-site and carry the cookies with `withCredentials`.
+
+- The session cookie has domain `.benmega.com`, `Secure`, `HttpOnly` and `SameSite=Lax` (not `None`:
+  nothing is embedded cross-site). The CodeCombat/Ozaria bookmarklet opens `/challenge/submit` with
+  `window.open`, a top-level GET navigation, which `Lax` allows.
+- CSRF uses Flask-WTF's double submit. Every API response sets `csrf_token_v2` (domain `.benmega.com`,
+  `Secure`, `SameSite=Lax`, deliberately not `HttpOnly`); the SPA reads it from `document.cookie` and
+  sends it back as `X-CSRFToken` (`frontend/src/api/client.js`). `WTF_CSRF_SSL_STRICT` is off
+  because Flask-WTF's strict check wants the `Referer` host to equal the request host, which cannot
+  hold when the SPA and the API are on different hosts. The token, `SameSite=Lax` and the CORS
+  allow-list remain.
+
+**CORS.** `CORS_ORIGINS` defaults to `https://blossom.benmega.com` and the CloudFront domain
+(`DEFAULT_PROD_CORS_ORIGINS` in `config.py`). Socket.IO uses the same list. The CodeCombat and Ozaria
+origins (`BOOKMARKLET_ORIGINS`) are allowed on `/challenge/submit` only. `deploy.yml` does not write
+`CORS_ORIGINS` (the status quo is to rely on the code defaults), and because it rewrites
+`backend/.env` on every deploy, a value added to that file by hand would be lost; change the default
+list in `config.py` instead. nginx answers CORS preflight requests itself and names only
+`https://blossom.benmega.com`, so serving the SPA from another host also means editing that line in
+`infrastructure/nginx/api-blossom.benmega.com.conf`.
+
+---
+
 ## 1. Directory Layout (EC2 Server - Backend Only)
 
 ```
@@ -17,7 +65,7 @@ still served by the EC2 Flask backend (`api-blossom.benmega.com`, the `VITE_API_
 │   ├── application/             # Flask app factory + routes
 │   ├── requirements.txt
 │   ├── migrations/              # Alembic migrations (run by deploy.sh)
-│   ├── tools/                   # tools/migrate_classroom.py (run by deploy.sh)
+│   ├── tools/                   # Manual maintenance scripts (deploy.sh runs none of them)
 │   ├── .env                     # NOT committed — injected by deploy.yml
 │   └── instance/
 │       ├── prod_users.db        # Production SQLite database
@@ -30,7 +78,8 @@ still served by the EC2 Flask backend (`api-blossom.benmega.com`, the `VITE_API_
 ## 2. Environment Variables
 
 The file `backend/.env` must exist on the server. It is **never committed** and is
-**injected fresh on every deploy** by `deploy.yml` from GitHub Secrets.
+**injected fresh on every deploy** by `deploy.yml` from GitHub Secrets, which also sets the file to
+mode 600 (owner only; the gunicorn unit runs as the same account).
 
 See `backend/.env.example` for the full list of required variables. The code reads these variables (the Cognito and SES settings are listed in `config.py`):
 
@@ -44,6 +93,7 @@ See `backend/.env.example` for the full list of required variables. The code rea
 | `WEBHOOK_SECRET` | webhook routes | Injected by `deploy.yml` |
 | `WEBHOOK_URL` | `infrastructure/lambda_transcriber/lambda_function.py` (Lambda environment, not the Flask app) | Optional |
 | `CORS_ORIGINS` | `config.py` (production), `routes/challenge_routes.py` | Comma-separated (whitespace and empty entries are ignored). Not written by `deploy.yml`, so the default origin list in `config.py` is used. Localhost origins are defaults only outside production; `/challenge/submit` additionally allows the CodeCombat/Ozaria bookmarklet origins |
+| `FRONTEND_URL` | `config.py`, `utilities/spa.py` (`frontend_url`) | Public address of the React app, used for links to its pages in emails and API responses (class invite links, the student profile link in the certificate email). Default `https://blossom.benmega.com` in production and `http://localhost:5173` elsewhere; a trailing slash is ignored. The API host serves no pages, so these links are never built from the request. Not written by `deploy.yml`, so production uses the default |
 | `SOCKETIO_ASYNC_MODE` | `main.py`, `config.py` | Default `gevent`. `main.py` loads `.env` before deciding whether to monkey-patch, so both read the same value |
 | `PORT`, `FLASK_DEBUG`, `FLASK_USE_RELOADER` | `main.py` (`python main.py` only) | Defaults 8000 / on / on |
 | `RATELIMIT_STORAGE_URI` | `config.py` (Flask-Limiter) | Default `memory://` (per process, see [Single-process assumptions](#single-process-assumptions)) |
@@ -72,7 +122,8 @@ git checkout deploy
 python3 -m venv venv
 venv/bin/pip install -r backend/requirements.txt
 
-# 3. Create swap file (prevents OOM-kill on low-RAM instances)
+# 3. Optional: create a swap file on a low-RAM instance (deploy.sh no longer builds the
+#    frontend, so a deploy does not need one)
 sudo fallocate -l 1G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
@@ -94,7 +145,8 @@ nano backend/.env
 
 ## 4. Systemd — Gunicorn Service
 
-File: `/etc/systemd/system/gunicorn-benmega.service`
+File: `/etc/systemd/system/gunicorn-benmega.service` (a copy is kept in
+`infrastructure/ec2/gunicorn-benmega.service`; `deploy.sh` does not install it).
 
 ```ini
 [Unit]
@@ -104,18 +156,18 @@ After=network.target
 [Service]
 User=ubuntu
 WorkingDirectory=/home/ubuntu/classroom-chat/backend
-ExecStart=/home/ubuntu/classroom-chat/venv/bin/gunicorn -w 1 -b 0.0.0.0:8000 main:app --timeout 300
+# The -k GeventWebSocketWorker is CRITICAL for Socket.io to work in production
+ExecStart=/home/ubuntu/classroom-chat/venv/bin/gunicorn     -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker     -w 1     -b 0.0.0.0:8000     main:app     --timeout 300
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-> The unit above is the documented one; it has not been verified against the live server. The app
-> uses Flask-SocketIO in gevent mode (`gevent`, `gevent-websocket` in `requirements.txt`), which
-> normally needs a gevent-capable worker (`-k geventwebsocket.gunicorn.workers.GeventWebSocketWorker`).
-> Confirm the real unit on EC2 before changing it. Since nginx proxies to `127.0.0.1:8000`, binding
-> to `127.0.0.1` is sufficient.
+> Verified against the live host on 2026-10-03: one gevent-websocket worker (`ps` shows the gunicorn
+> master plus that one worker). It binds `0.0.0.0:8000`, although nginx only needs
+> `127.0.0.1:8000`, so port 8000 must stay closed in the instance's security group. Binding to
+> `127.0.0.1` would remove that dependency.
 
 Key points:
 - `WorkingDirectory` must be `backend/` so gunicorn finds `main.py` and `application/`
@@ -132,7 +184,7 @@ that loads the app) does not fail loudly, it just gives wrong answers:
 | Rate limiter | `limiter` in `extensions.py`; storage is `RATELIMIT_STORAGE_URI`, default `memory://` | Each worker counts separately, so every limit is multiplied by the worker count. Sharing the counters needs a shared store (for example Redis); the `redis` package is not installed and nothing is provisioned. |
 | Socket.IO presence and rooms | `_active_sessions` in `socket_events.py`; `socketio.init_app` has no `message_queue` | Presence, "first connection" detection and broadcasts only see the clients connected to the same worker. |
 | Session cleanup scheduler | APScheduler job `session_cleanup` (`tasks.py`), started by `create_app` | Every process that runs `create_app` starts its own scheduler and runs the job. The cleanup only spares users whose socket is open in its own process (`connected_user_ids()`), so in another process it would treat them as disconnected. |
-| Heartbeat CloudWatch metric | `heartbeat` in `routes/session_routes.py` | Published synchronously by whichever worker serves the heartbeat; it is not throttled, and any throttling added later would also be per process. |
+| Heartbeat CloudWatch metric | `heartbeat` in `routes/session_routes.py` | Published synchronously by whichever worker serves the heartbeat, through one CloudWatch client that each process creates on its first heartbeat; it is not throttled, and any throttling added later would also be per process. |
 
 Rate limits are keyed by user id for logged-in requests and by client address otherwise; the
 login, signup and the Cognito register, login and forgot-password routes are always keyed by address.
@@ -147,8 +199,8 @@ others. By default it starts in every process that loads the app, except:
 - any process started with `SCHEDULER_ENABLED=0`
 
 Moving to several workers (or hosts) is a separate piece of work: it needs the rate limiter on a
-shared store, a Socket.IO `message_queue` with presence moved out of `_active_sessions`, and a
-verified gevent-capable worker class (see the note above).
+shared store and a Socket.IO `message_queue` with presence moved out of `_active_sessions`. The
+gevent-websocket worker class the live unit already uses is suitable.
 
 ---
 
@@ -166,32 +218,58 @@ It covers:
 - HTTP to HTTPS redirect and TLS (Let's Encrypt certificate for `api-blossom.benmega.com`)
 - Security headers (HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`)
 - CORS preflight: `OPTIONS` requests to the API routes are answered by nginx itself, ahead of Flask
-- Proxying of the API route prefixes (`api`, `user`, `session`, `message`, `upload`, `challenge`, `ai`,
-  `duck_trade`, `notes`, `server`) to Gunicorn on `127.0.0.1:8000`, with 300 s read/send timeouts and a
+- Proxying of the API route prefixes (`api`, `user`, `message`, `challenge`, `duck_trade`, `notes`,
+  `server`) to Gunicorn on `127.0.0.1:8000`, with 300 s read/send timeouts and a
   500 MB request body limit for uploads (Flask itself caps request bodies at 25 MB, except the project
   video upload endpoints, which may send up to 500 MB)
 - WebSocket (`/socket.io`) proxying with the `Upgrade` headers
 
 `/dev-login` is deliberately not proxied: it is disabled in production. The React app uses
-`/api/achievements/*`, which is covered by the `api` prefix.
+`/api/achievements/*`, which is covered by the `api` prefix. A new top-level URL prefix in the Flask
+app must be added to the nginx regex; `tests/test_deploy_files.py` fails when the two lists differ.
 
-> **Note on Frontend Routing**: The frontend SPA (`blossom.benmega.com`) is hosted on **AWS S3** and served globally via **AWS CloudFront**. CloudFront handles SSL termination and redirects, and the S3 bucket is configured to serve `index.html` for client-side routing.
+This is the only nginx site `deploy.sh` installs. It no longer installs a site for
+`blossom.benmega.com` or builds the frontend: the SPA comes from S3 + CloudFront only. A host that
+was deployed with an older `deploy.sh` may still have that old site enabled. It is no longer
+managed, so remove it by hand once:
+
+```bash
+sudo rm -f /etc/nginx/sites-enabled/blossom-frontend /etc/nginx/sites-available/blossom-frontend
+sudo systemctl reload nginx
+```
+
+> **Note on Frontend Routing**: The frontend SPA (`blossom.benmega.com`) is hosted on **AWS S3** and served via **AWS CloudFront**, which terminates TLS for that host. Client-side routes work on a hard refresh because CloudFront maps 403/404 responses to `/index.html`, not because of any S3 or nginx setting. See [Origins](#origins).
 
 ---
 
 ## 6. CI/CD Pipeline (GitHub Actions)
 
-- **`deploy-frontend.yml`**: Triggers on push to `deploy`. Builds the React SPA and uploads the static assets directly to the AWS S3 bucket. Runs are serialised (`concurrency` group); a newer push queues behind an in-flight run instead of cancelling it.
-- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, online SQLite DB backup, `flask db upgrade`, `python -m tools.migrate_classroom`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)). Runs are serialised (`concurrency` group) so two deploys never run `deploy.sh` at the same time.
+- **`deploy-frontend.yml`**: Triggers on push to `deploy` (and manually). Builds the React SPA with `VITE_API_URL` pointing at the API origin, runs `aws s3 sync --delete` to the S3 bucket and invalidates the CloudFront cache. It is the only place the frontend is built for production. Runs are serialised (`concurrency` group); a newer push queues behind an in-flight run instead of cancelling it.
+- **`deploy.yml`**: Triggers on push to `deploy`. SSHes into EC2, writes `backend/.env` from GitHub Secrets, then runs `deploy.sh` (dependency install, online SQLite DB backup, `flask db upgrade`, `flask seed`, service restart, health check with automatic rollback; see [section 8](#8-database-migrations)). Runs are serialised (`concurrency` group) so two deploys never run `deploy.sh` at the same time.
 - **`lint.yml`**: Ruff (Python) + ESLint (React) on every PR and on pushes to `main`/`master`/`working`. Also the lint gate for both deploy workflows.
 - **`tests.yml`**: On pushes and PRs to `main`/`master`: a backend job (mypy, Alembic single-head check, Pytest) and a frontend job (Vitest with coverage, Playwright E2E against a locally started backend). Also the test gate for both deploy workflows.
+- **`pip-audit.yml`**: advisory only (a failing audit never fails the run and no deploy waits for it). Runs `pip-audit` on `backend/requirements.txt` when a requirements file changes, weekly, and on demand, and lists known vulnerabilities in the run log. Like `npm audit` in `lint.yml`, it reports and does not gate.
 - **`ai-coder.yml`**: the single AI workflow; runs when an issue or pull request receives the `ai-plan` label
   (plan, then code) or the `ai-draft` label (code directly). Runs are serialized per issue/PR.
-  Do not add those labels casually; they start automated AI workflows.
+  Do not add those labels casually; they start automated AI workflows. Only label events from the
+  repository owner start a run, every job has a timeout, and `.github/scripts/requirements.txt` lists the
+  packages the AI scripts import (installed by the workflow and by `tests.yml`).
+  The work is split across four jobs. `analyze` (the plan; it may comment on and label the issue) and
+  `code` (the agent) run with read-only tokens, and `code` never holds the personal access token. The
+  agent's test runs execute code it wrote, so `code` ends by exporting its changes as one patch against the
+  commit it checked out, leaving out `.github/`, and uploads only that patch. `publish` takes a fresh
+  checkout, applies the patch (refusing a path inside `.git` and any change to `.github/`), then pushes to
+  the PR branch or opens the draft PR with the personal access token. `cleanup` removes the `ai-draft`
+  label. The agent's file tools also stay inside the repository and refuse `.git/` and `.github/`, and its
+  test runs get a minimal environment.
+  Not covered: the test runs still execute with the runner's privileges inside the `code` job, so code the
+  agent wrote can read the `OPENAI_API_KEY` and that job's read-only token there (never the personal access
+  token). The owner-only trigger is the main protection against that, and the OpenAI key should have a
+  spending limit.
 
 Required GitHub Secrets: `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
 `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `WEBHOOK_SECRET`, as well as AWS credentials for S3 uploads.
-The `ai-coder.yml` workflow additionally uses the `OPENAI_API_KEY` secret; the Flask app itself no longer reads it.
+The `ai-coder.yml` workflow additionally uses the `OPENAI_API_KEY` and `MY_WORKFLOW_TOKEN` (personal access token) secrets; the Flask app itself no longer reads the OpenAI key.
 
 ---
 
@@ -230,17 +308,19 @@ does not match the code.
 4. **Dangling-stamp purge**: if `flask db current` fails because `alembic_version` points at a
    revision that no longer exists, `flask db stamp base --purge` clears the stamp.
 5. **`flask db upgrade`**: applies the pending migrations (a no-op on a fresh install).
-6. **`python -m tools.migrate_classroom`**: idempotent *data* steps only (the reserved `global` and
-   `archive` classrooms, enrolment backfills, archiving orphaned conversations, admin roles). It
-   contains no DDL and is safe to re-run.
-7. **`flask seed`**: seed data that is backed by files in the repo: course instances
-   (`backend/instance/migration/course_instances_seed.csv`; rows whose classroom or course does
-   not exist are skipped with a warning), challenges (`level_seed_data.csv`) and the standard
-   project templates (`application/commands/projects_data.py`).
-8. **Admin role**: `sqlite3 ... UPDATE users SET role='admin' WHERE LOWER(username)='ben'`.
+6. **`flask seed`**: seed data that is backed by files in the repo: courses and achievements
+   (`backend/instance/migration/courses_seed.csv` and `achievements_seed.csv`; insert-only, a
+   row that already exists is never changed), course instances
+   (`course_instances_seed.csv`; rows whose classroom or course does
+   not exist are skipped with a warning), challenges (`level_seed_data.csv`, keyed on the slug)
+   the standard project templates (`application/commands/projects_data.py`) and the student tests (`application/commands/quiz_data/*.json`; content follows the files, admin settings are kept; see [student_tests.md](student_tests.md#9-seed-data)).
+7. **Admin role**: `sqlite3 ... UPDATE users SET role='admin' WHERE LOWER(username)='ben'`.
 
 After that the service restarts and the health check runs; if it fails, the code is reset to the
 previous commit and the step 1 backup is restored.
+
+The reserved `global` and `archive` classrooms are not a deploy step: `seed_global_data()` in
+`application/__init__.py` creates them whenever the app starts, which includes `flask seed`.
 
 The bootstrap in step 3 exists because the root revision (`3a10e78a7fd0`) is an empty placeholder:
 the history upgrades an existing schema and cannot build one from nothing (`flask db upgrade` on a
@@ -252,18 +332,49 @@ blank database fails with `NoSuchTableError: users`).
   review the generated file and commit it with the model change. Run `flask db heads` before
   pushing; there must be exactly one head. `backend/scripts/lint_migrations.py` (run by
   `scripts/preflight.ps1`) lints migrations for idempotency.
+- `backend/tests/test_schema.py` fails when a model changes without a migration. It upgrades the
+  schema of a long-lived database (`backend/tests/schemas/legacy_b2fd06ed54ab.sql`, no rows) to
+  head and compares the result with the models, checks that a database built from the models and
+  stamped needs no migration, and that there is one head. The comparison includes CHECK
+  constraints and the `WHERE` clause of partial indexes, which Alembic's own autogenerate skips.
 - No raw-SQL or one-off database scripts (ad hoc `sqlite3` files, `ALTER TABLE` snippets, helper
-  scripts kept under `backend/instance/`). Steps 2 and 8 above are the only raw SQL left in
+  scripts kept under `backend/instance/`). Steps 2 and 7 above are the only raw SQL left in
   `deploy.sh`; do not add more.
-- A data fix is either an Alembic data migration (runs once) or an idempotent step in
-  `tools/migrate_classroom.py` (runs on every deploy). Never put DDL in `tools/migrate_classroom.py`.
+- A data fix is an Alembic data migration (runs once). Data that every install needs is an
+  idempotent upsert in `flask seed` (runs on every deploy). `tools/migrate_classroom.py`, which
+  used to run data steps on every deploy, is retired: it does nothing, `deploy.sh` no longer runs
+  it, and it must not gain new steps. The file is deleted once a deploy has run without it.
 - `db.create_all()` does not ALTER existing tables, so never rely on it for schema changes. The
   app factory only calls it outside production; `deploy.sh` uses it once to bootstrap a brand-new
-  database before stamping it to head.
+  database before stamping it to head. A new model table therefore needs a `create_table`
+  migration like any other change. In development the factory also compares the database with the
+  models at startup and logs a schema-drift report (`application/utilities/schema_check.py`).
 
-Create a new migration on a development machine (from `backend/`, with `FLASK_APP=main.py`):
+### Development databases
+
+A development database is normally built by `create_all`, so Alembic has no revision for it, and
+`create_all` never alters a table that already exists. After a pull that changes the models the
+next start therefore logs the schema-drift report. What to do depends on the database (commands
+from `backend/`, with `FLASK_APP=main.py`):
+
+- **Built by `create_all` (no Alembic revision)**: delete the database file and the next start
+  builds a new one. To keep its data instead, stamp it with the revision that was head when it was
+  built and upgrade from there: `flask db stamp <revision>`, then `flask db upgrade`. `flask db
+  heads` at the commit the database was built from prints that revision; for a database built
+  just before the constraint migrations of October 2026 it is `5c02b3fd911f`. Do not run
+  `flask db upgrade` without the stamp (it replays the whole history against a schema that already
+  has most of it and fails part-way), and do not run `flask db migrate` (it refuses a database
+  that is not at head, and the migrations for a pulled change already exist).
+- **Stamped** (it was upgraded with `flask db upgrade` before): run `flask db upgrade`.
+
+Only a model change of your own needs a new migration. The database has to be at head first, as
+above (`flask db stamp head` for a database that `create_all` built from the code you started
+from). Then:
 
 ```bash
 flask db migrate -m "describe the change"
 flask db upgrade
 ```
+
+`flask seed` reports rows that the database rejected when its schema is older than the models;
+the same steps apply before seeding again.

@@ -353,14 +353,14 @@ describe('App Component', () => {
       expect(window.location.pathname).toBe('/parent/dashboard');
     });
 
-    it('lets a parent use the chat, which is shared with students', async () => {
+    it('sends a parent who opens the chat to the parent dashboard', async () => {
       window.history.pushState({}, 'Test page', '/chat');
       signedInAs({ role: 'parent' });
 
       renderApp();
 
-      expect(await screen.findByText('Chat Page Mock')).toBeInTheDocument();
-      expect(window.location.pathname).toBe('/chat');
+      expect(await screen.findByText('Parent Dashboard Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/parent/dashboard');
     });
 
     describe('where a signed-in user lands when they open /login', () => {
@@ -448,6 +448,29 @@ describe('App Component', () => {
     renderApp();
     expect(await screen.findByText('Profile Page Mock')).toBeInTheDocument();
     expect(window.location.pathname).toBe('/profile/jane-doe');
+  });
+
+  it('sends an unknown address to the landing page, replacing it in history so Back does not bounce', async () => {
+    useAuthStore.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: false,
+      isServerOffline: false,
+      user: null,
+      checkAuth: vi.fn(),
+    });
+    const push = vi.spyOn(window.history, 'pushState');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    window.history.pushState({}, 'Test page', '/no-such-page');
+    push.mockClear();
+
+    renderApp();
+
+    expect(await screen.findByText('Landing Page Mock')).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/');
+    expect(push).not.toHaveBeenCalled();
+    expect(replace).toHaveBeenCalledWith(expect.anything(), '', expect.stringMatching(/^\/$/));
+    push.mockRestore();
+    replace.mockRestore();
   });
 
   it('calls checkAuth on mount', () => {

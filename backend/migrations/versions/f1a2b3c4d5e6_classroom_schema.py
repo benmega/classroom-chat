@@ -20,8 +20,9 @@ This migration absorbs all DDL from that script so the full schema history
 lives in one place.
 
 DATA SEEDING (global/archive classrooms, retroactive enrolments, etc.) is
-intentionally NOT here.  Data seeding belongs in tools/migrate_classroom.py,
-which is called by deploy.sh AFTER `flask db upgrade` completes.
+intentionally NOT here.  It was done by tools/migrate_classroom.py, which has
+since been retired: the reserved classrooms are created by seed_global_data()
+when the app starts, and the enrolment backfills were one-time jobs.
 
 ────────────────────────────────────────────────────────────────────────────
 FOR FUTURE DEVELOPERS
@@ -34,8 +35,8 @@ FOR FUTURE DEVELOPERS
       # then edit the generated file and add existence guards like the ones
       # below if you need the migration to be idempotent on prod.
 
-• Data seeding (INSERT rows, backfills) is fine in tools/migrate_classroom.py
-  or a dedicated seed script — just never DDL there.
+• Data seeding (idempotent upserts) belongs in `flask seed`; a one-time
+  backfill is an Alembic data migration.  Do not add either to tools/ scripts.
 
 • Every DDL operation in this file is guarded with an inspector check so the
   migration is idempotent — safe to run against a database that was built by
