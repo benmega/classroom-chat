@@ -379,7 +379,7 @@
     flex: 0 0 200px;
 }
 
-.btn-danger {
+:where(.admin-class-dashboard) .btn-danger {
     padding: 0.6rem 1rem;
     border-radius: 8px;
     border: 1px solid var(--error-color, var(--error-color));
@@ -391,7 +391,7 @@
     text-align: center;
 }
 
-.btn-danger:hover {
+:where(.admin-class-dashboard) .btn-danger:hover {
     background: var(--error-color, var(--error-color));
     color: var(--text-on-primary);
 }
@@ -590,7 +590,7 @@
 .classroom-tabs .tab-btn:focus-visible,
 .back-btn-text:focus-visible,
 .btn-action-sm:focus-visible,
-.btn-danger:focus-visible,
+:where(.admin-class-dashboard) .btn-danger:focus-visible,
 .student-info:focus-visible,
 .roster-search-input:focus-visible,
 .student-enroll-select:focus-visible {
