@@ -1,0 +1,430 @@
+{
+  "slug": "cs-olympiad-grades-3-5",
+  "title": "Computer Science (Grades 3–5)",
+  "grade_band": "Grades 3–5",
+  "sort_order": 1,
+  "description": "Interactive 30-question practice exam for Junior Groups (Grades 3–4–5). Test your skills across computer hardware, software tools, isometric block-coding puzzles, and Python CodeCombat logic.",
+  "source_url": "https://codingolympiad.org/documents/CS_3-4-5.pdf",
+  "questions": [
+    {
+      "number": 1,
+      "domain": "Hardware & OS",
+      "prompt": "What is typically considered to be the most important hardware component in the computer?",
+      "options": {
+        "A": "Central Processing Unit (CPU)",
+        "B": "Monitor",
+        "C": "Speaker",
+        "D": "External Hard Drive"
+      },
+      "answer": "A",
+      "explanation": "The Central Processing Unit (CPU) is the 'brain' of the computer that executes instructions and processes data.",
+      "diagram_html": null
+    },
+    {
+      "number": 2,
+      "domain": "Productivity & Apps",
+      "prompt": "What is the keyboard shortcut for ‘select all’ in Windows OS?",
+      "options": {
+        "A": "Control + x",
+        "B": "Control + f",
+        "C": "Control + a",
+        "D": "Control + s"
+      },
+      "answer": "C",
+      "explanation": "Ctrl + A selects all text or items in the active window or document.",
+      "diagram_html": null
+    },
+    {
+      "number": 3,
+      "domain": "Hardware & OS",
+      "prompt": "Which of the following is a Google mobile operating system?",
+      "options": {
+        "A": "Harmony OS",
+        "B": "Android OS",
+        "C": "Windows OS",
+        "D": "iOS"
+      },
+      "answer": "B",
+      "explanation": "Android OS is developed by Google for smartphones and tablets.",
+      "diagram_html": null
+    },
+    {
+      "number": 4,
+      "domain": "Hardware & OS",
+      "prompt": "Some examples of voice assistants are ________.",
+      "options": {
+        "A": "Facebook, Microsoft Word",
+        "B": "Siri, Alexa, Google Assistant",
+        "C": "Adobe Photoshop, Snapchat",
+        "D": "Spotify, TikTok, WhatsApp"
+      },
+      "answer": "B",
+      "explanation": "Apple Siri, Amazon Alexa, and Google Assistant are AI-powered voice assistants.",
+      "diagram_html": null
+    },
+    {
+      "number": 5,
+      "domain": "Productivity & Apps",
+      "prompt": "What is the highlighted rectangle called in this software application?",
+      "options": {
+        "A": "Chart",
+        "B": "Graphics",
+        "C": "Slide",
+        "D": "Image Holder"
+      },
+      "answer": "C",
+      "explanation": "In presentation software like Google Slides or PowerPoint, each individual page in the left thumbnail rail is called a Slide.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-inner\">\n  <div class=\"text-[11px] font-semibold text-slate-400 mb-2 flex items-center justify-between\">\n    <span>Google Slides — Untitled presentation</span>\n    <span class=\"text-amber-600 font-bold\">● Highlighted UI Area</span>\n  </div>\n  <svg viewBox=\"0 0 600 220\" class=\"w-full h-auto rounded-xl border border-slate-300 bg-white\">\n    <rect x=\"0\" y=\"0\" width=\"600\" height=\"28\" fill=\"#F8FAFC\" />\n    <circle cx=\"18\" cy=\"14\" r=\"6\" fill=\"#F59E0B\" />\n    <text x=\"32\" y=\"18\" font-family=\"Inter, sans-serif\" font-size=\"10\" font-weight=\"700\" fill=\"#334155\">Untitled presentation</text>\n    <text x=\"160\" y=\"18\" font-family=\"Inter, sans-serif\" font-size=\"9\" fill=\"#64748B\">File   Edit   View   Insert   Format   Slide   Arrange   Tools</text>\n    <line x1=\"0\" y1=\"28\" x2=\"600\" y2=\"28\" stroke=\"#E2E8F0\" />\n    <rect x=\"0\" y=\"28\" width=\"130\" height=\"192\" fill=\"#F1F5F9\" />\n    <line x1=\"130\" y1=\"28\" x2=\"130\" y2=\"220\" stroke=\"#CBD5E1\" />\n    <text x=\"12\" y=\"52\" font-family=\"Inter, sans-serif\" font-size=\"9\" font-weight=\"700\" fill=\"#64748B\">1</text>\n    <rect x=\"26\" y=\"40\" width=\"88\" height=\"52\" rx=\"4\" fill=\"#FFFFFF\" stroke=\"#CBD5E1\" />\n    <rect x=\"36\" y=\"54\" width=\"68\" height=\"8\" rx=\"2\" fill=\"#E2E8F0\" />\n    <rect x=\"46\" y=\"68\" width=\"48\" height=\"6\" rx=\"2\" fill=\"#F1F5F9\" />\n    <text x=\"12\" y=\"122\" font-family=\"Inter, sans-serif\" font-size=\"9\" font-weight=\"700\" fill=\"#EA580C\">2</text>\n    <rect x=\"22\" y=\"106\" width=\"96\" height=\"60\" rx=\"6\" fill=\"#FFF7ED\" stroke=\"#F97316\" stroke-width=\"3.5\" />\n    <rect x=\"32\" y=\"120\" width=\"76\" height=\"10\" rx=\"2\" fill=\"#FDBA74\" />\n    <rect x=\"32\" y=\"136\" width=\"54\" height=\"18\" rx=\"2\" fill=\"#FFEDD5\" />\n    <rect x=\"165\" y=\"48\" width=\"400\" height=\"152\" rx=\"6\" fill=\"#FFFFFF\" stroke=\"#CBD5E1\" />\n    <rect x=\"205\" y=\"82\" width=\"320\" height=\"36\" rx=\"4\" fill=\"#F8FAFC\" stroke=\"#CBD5E1\" stroke-dasharray=\"4 2\" />\n    <text x=\"365\" y=\"105\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"14\" font-weight=\"700\" fill=\"#94A3B8\">Click to add title</text>\n    <rect x=\"235\" y=\"128\" width=\"260\" height=\"26\" rx=\"4\" fill=\"#F8FAFC\" stroke=\"#CBD5E1\" stroke-dasharray=\"4 2\" />\n    <text x=\"365\" y=\"145\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" fill=\"#94A3B8\">Click to add subtitle</text>\n    <path d=\"M 210 136 L 128 136\" stroke=\"#F97316\" stroke-width=\"4\" />\n    <polygon points=\"124,136 136,129 136,143\" fill=\"#F97316\" />\n  </svg>\n</div>"
+    },
+    {
+      "number": 6,
+      "domain": "Productivity & Apps",
+      "prompt": "Which one is NOT a functional use of the hyperlink feature in Microsoft Word?",
+      "options": {
+        "A": "Insert an email address",
+        "B": "Link to another website",
+        "C": "Insert a file link",
+        "D": "Send a printout"
+      },
+      "answer": "D",
+      "explanation": "Hyperlinks connect to websites, files, or email addresses, but they do not send physical printouts to a printer.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-inner\">\n  <div class=\"text-[11px] font-semibold text-slate-400 mb-2 flex items-center justify-between\">\n    <span>Microsoft Word — Insert Ribbon Tab (Links Group)</span>\n    <span class=\"text-pink-600 font-bold\">● Highlighted Feature: Hyperlink</span>\n  </div>\n  <svg viewBox=\"0 0 560 150\" class=\"w-full h-auto rounded-xl border border-slate-300 bg-white\">\n    <rect x=\"0\" y=\"0\" width=\"560\" height=\"30\" fill=\"#1E40AF\" />\n    <text x=\"20\" y=\"20\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"600\" fill=\"#DBEAFE\">Insert</text>\n    <text x=\"75\" y=\"20\" font-family=\"Inter, sans-serif\" font-size=\"11\" fill=\"#93C5FD\">Draw</text>\n    <text x=\"125\" y=\"20\" font-family=\"Inter, sans-serif\" font-size=\"11\" fill=\"#93C5FD\">Design</text>\n    <text x=\"185\" y=\"20\" font-family=\"Inter, sans-serif\" font-size=\"11\" fill=\"#93C5FD\">Review</text>\n    <text x=\"245\" y=\"20\" font-family=\"Inter, sans-serif\" font-size=\"11\" fill=\"#93C5FD\">View</text>\n    <g transform=\"translate(35, 42)\">\n      <rect x=\"0\" y=\"0\" width=\"90\" height=\"84\" rx=\"8\" fill=\"#F8FAFC\" stroke=\"#E2E8F0\" />\n      <rect x=\"28\" y=\"14\" width=\"34\" height=\"28\" rx=\"4\" fill=\"#DBEAFE\" stroke=\"#2563EB\" stroke-width=\"2\" />\n      <circle cx=\"45\" cy=\"28\" r=\"6\" fill=\"#2563EB\" />\n      <text x=\"45\" y=\"66\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"600\" fill=\"#334155\">Media</text>\n    </g>\n    <g transform=\"translate(155, 38)\">\n      <rect x=\"0\" y=\"0\" width=\"110\" height=\"92\" rx=\"8\" fill=\"#FDF2F8\" stroke=\"#DB2777\" stroke-width=\"3.5\" />\n      <circle cx=\"55\" cy=\"30\" r=\"14\" fill=\"#DBEAFE\" stroke=\"#0284C7\" stroke-width=\"2\" />\n      <ellipse cx=\"55\" cy=\"30\" rx=\"7\" ry=\"14\" fill=\"none\" stroke=\"#0284C7\" stroke-width=\"1.5\" />\n      <line x1=\"41\" y1=\"30\" x2=\"69\" y2=\"30\" stroke=\"#0284C7\" stroke-width=\"1.5\" />\n      <rect x=\"42\" y=\"38\" width=\"14\" height=\"7\" rx=\"3.5\" fill=\"#FFFFFF\" stroke=\"#475569\" stroke-width=\"2\" />\n      <rect x=\"52\" y=\"38\" width=\"14\" height=\"7\" rx=\"3.5\" fill=\"#FFFFFF\" stroke=\"#475569\" stroke-width=\"2\" />\n      <text x=\"55\" y=\"72\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"12\" font-weight=\"800\" fill=\"#BE185D\">Hyperlink</text>\n    </g>\n    <g transform=\"translate(295, 42)\">\n      <rect x=\"0\" y=\"0\" width=\"100\" height=\"84\" rx=\"8\" fill=\"#F8FAFC\" stroke=\"#E2E8F0\" />\n      <path d=\"M38 14 H62 V46 L50 37 L38 46 Z\" fill=\"#38BDF8\" stroke=\"#0284C7\" stroke-width=\"2\" />\n      <text x=\"50\" y=\"66\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"600\" fill=\"#334155\">Bookmark</text>\n    </g>\n    <g transform=\"translate(415, 42)\">\n      <rect x=\"0\" y=\"0\" width=\"110\" height=\"84\" rx=\"8\" fill=\"#F8FAFC\" stroke=\"#E2E8F0\" />\n      <rect x=\"38\" y=\"14\" width=\"24\" height=\"30\" rx=\"2\" fill=\"#FFFFFF\" stroke=\"#64748B\" stroke-width=\"2\" />\n      <rect x=\"48\" y=\"20\" width=\"24\" height=\"30\" rx=\"2\" fill=\"#F1F5F9\" stroke=\"#0284C7\" stroke-width=\"2\" />\n      <text x=\"55\" y=\"66\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"600\" fill=\"#334155\">Cross-reference</text>\n    </g>\n  </svg>\n</div>"
+    },
+    {
+      "number": 7,
+      "domain": "Productivity & Apps",
+      "prompt": "Which icon do you click to add text to a slide?",
+      "options": {
+        "A": "Printer icon (Print)",
+        "B": "Text box icon ('T' inside a bounding box)",
+        "C": "Image icon (Mountain landscape)",
+        "D": "Shapes icon (Circle overlapping a square)"
+      },
+      "answer": "B",
+      "explanation": "The Text Box icon (a 'T' inside a framed rectangle) lets you draw a text box and type onto a slide.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-inner\">\n  <div class=\"text-[11px] font-semibold text-slate-400 mb-2 flex items-center justify-between\">\n    <span>Presentation Toolbar Icons</span>\n    <span class=\"text-cyan-700 font-bold\">Compare Icons A, B, C, D</span>\n  </div>\n  <svg viewBox=\"0 0 600 130\" class=\"w-full h-auto rounded-xl border border-slate-300 bg-white\">\n    <rect x=\"15\" y=\"14\" width=\"570\" height=\"42\" rx=\"8\" fill=\"#F8FAFC\" stroke=\"#CBD5E1\" />\n    <text x=\"35\" y=\"40\" font-family=\"Inter, sans-serif\" font-size=\"16\" font-weight=\"700\" fill=\"#475569\">+   ▾   ↶   ↷</text>\n    <line x1=\"145\" y1=\"22\" x2=\"145\" y2=\"48\" stroke=\"#CBD5E1\" />\n    <g transform=\"translate(55, 68)\">\n      <rect x=\"0\" y=\"0\" width=\"105\" height=\"50\" rx=\"10\" fill=\"#F8FAFC\" stroke=\"#CBD5E1\" />\n      <text x=\"16\" y=\"30\" font-family=\"Outfit, sans-serif\" font-size=\"14\" font-weight=\"800\" fill=\"#0E7490\">A)</text>\n      <rect x=\"48\" y=\"18\" width=\"26\" height=\"16\" rx=\"2\" fill=\"none\" stroke=\"#334155\" stroke-width=\"2\" />\n      <path d=\"M53 18 V12 H69 V18\" fill=\"none\" stroke=\"#334155\" stroke-width=\"2\" />\n      <rect x=\"53\" y=\"28\" width=\"16\" height=\"10\" fill=\"#FFFFFF\" stroke=\"#334155\" stroke-width=\"1.5\" />\n    </g>\n    <g transform=\"translate(185, 68)\">\n      <rect x=\"0\" y=\"0\" width=\"105\" height=\"50\" rx=\"10\" fill=\"#F8FAFC\" stroke=\"#CBD5E1\" />\n      <text x=\"16\" y=\"30\" font-family=\"Outfit, sans-serif\" font-size=\"14\" font-weight=\"800\" fill=\"#0E7490\">B)</text>\n      <rect x=\"46\" y=\"11\" width=\"28\" height=\"28\" rx=\"3\" fill=\"#FFFFFF\" stroke=\"#334155\" stroke-width=\"2\" />\n      <rect x=\"44\" y=\"9\" width=\"5\" height=\"5\" fill=\"#334155\" />\n      <rect x=\"71\" y=\"9\" width=\"5\" height=\"5\" fill=\"#334155\" />\n      <rect x=\"44\" y=\"36\" width=\"5\" height=\"5\" fill=\"#334155\" />\n      <rect x=\"71\" y=\"36\" width=\"5\" height=\"5\" fill=\"#334155\" />\n      <text x=\"60\" y=\"31\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"16\" font-weight=\"800\" fill=\"#1E293B\">T</text>\n    </g>\n    <g transform=\"translate(315, 68)\">\n      <rect x=\"0\" y=\"0\" width=\"105\" height=\"50\" rx=\"10\" fill=\"#F8FAFC\" stroke=\"#CBD5E1\" />\n      <text x=\"16\" y=\"30\" font-family=\"Outfit, sans-serif\" font-size=\"14\" font-weight=\"800\" fill=\"#0E7490\">C)</text>\n      <rect x=\"46\" y=\"11\" width=\"28\" height=\"28\" rx=\"3\" fill=\"#FFFFFF\" stroke=\"#334155\" stroke-width=\"2\" />\n      <circle cx=\"54\" cy=\"19\" r=\"3\" fill=\"#334155\" />\n      <polygon points=\"48,36 57,24 64,32 68,27 72,36\" fill=\"#334155\" />\n    </g>\n    <g transform=\"translate(445, 68)\">\n      <rect x=\"0\" y=\"0\" width=\"105\" height=\"50\" rx=\"10\" fill=\"#F8FAFC\" stroke=\"#CBD5E1\" />\n      <text x=\"16\" y=\"30\" font-family=\"Outfit, sans-serif\" font-size=\"14\" font-weight=\"800\" fill=\"#0E7490\">D)</text>\n      <circle cx=\"55\" cy=\"22\" r=\"10\" fill=\"#FFFFFF\" stroke=\"#334155\" stroke-width=\"2\" />\n      <rect x=\"56\" y=\"21\" width=\"18\" height=\"18\" fill=\"#FFFFFF\" stroke=\"#334155\" stroke-width=\"2\" />\n    </g>\n  </svg>\n</div>"
+    },
+    {
+      "number": 8,
+      "domain": "Productivity & Apps",
+      "prompt": "Microsoft Word and Google Docs are examples of what?",
+      "options": {
+        "A": "Word processors",
+        "B": "Spreadsheets",
+        "C": "Presentations",
+        "D": "Databases"
+      },
+      "answer": "A",
+      "explanation": "Microsoft Word and Google Docs are word processing applications used to create and edit text documents.",
+      "diagram_html": null
+    },
+    {
+      "number": 9,
+      "domain": "Block Coding Puzzles",
+      "prompt": "Look at the challenge above and find the correct code.",
+      "options": {
+        "A": "forward - forwardUp - forward",
+        "B": "forwardDown - forwardUp - forward",
+        "C": "forward - forwardUp - forwardDown",
+        "D": "forward - forwardDown - forwardUp"
+      },
+      "answer": "C",
+      "explanation": "On each of the 3 sides, the character steps forward 1 flat tile, climbs up the hill (forwardUp), goes down the hill (forwardDown), moves forward 2 tiles, and turns left.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-7 bg-white rounded-xl border border-slate-200 p-3 flex flex-col justify-between\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1\">Isometric Desert Loop Challenge (3 Sides)</div>\n    <svg viewBox=\"0 0 360 200\" class=\"w-full h-auto\">\n      <rect x=\"115\" y=\"65\" width=\"130\" height=\"80\" rx=\"12\" fill=\"#38BDF8\" stroke=\"#0284C7\" stroke-width=\"3\" />\n      <text x=\"180\" y=\"110\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"700\" fill=\"#0369A1\">WATER POOL</text>\n      <rect x=\"250\" y=\"35\" width=\"44\" height=\"145\" rx=\"8\" fill=\"#FDE68A\" stroke=\"#D97706\" stroke-width=\"2\" />\n      <rect x=\"66\" y=\"18\" width=\"228\" height=\"38\" rx=\"8\" fill=\"#FDE68A\" stroke=\"#D97706\" stroke-width=\"2\" />\n      <rect x=\"66\" y=\"35\" width=\"44\" height=\"145\" rx=\"8\" fill=\"#FDE68A\" stroke=\"#D97706\" stroke-width=\"2\" />\n      <g transform=\"translate(254, 92)\">\n        <rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" rx=\"6\" fill=\"#F59E0B\" stroke=\"#B45309\" stroke-width=\"2\" />\n        <circle cx=\"18\" cy=\"18\" r=\"8\" fill=\"#EC4899\" stroke=\"#FFFFFF\" stroke-width=\"2\" />\n        <text x=\"18\" y=\"48\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#92400E\">▲ Hill ▼</text>\n      </g>\n      <g transform=\"translate(162, 20)\">\n        <rect x=\"0\" y=\"0\" width=\"36\" height=\"34\" rx=\"6\" fill=\"#F59E0B\" stroke=\"#B45309\" stroke-width=\"2\" />\n        <circle cx=\"18\" cy=\"17\" r=\"8\" fill=\"#EC4899\" stroke=\"#FFFFFF\" stroke-width=\"2\" />\n      </g>\n      <g transform=\"translate(70, 92)\">\n        <rect x=\"0\" y=\"0\" width=\"36\" height=\"36\" rx=\"6\" fill=\"#F59E0B\" stroke=\"#B45309\" stroke-width=\"2\" />\n        <circle cx=\"18\" cy=\"18\" r=\"8\" fill=\"#EC4899\" stroke=\"#FFFFFF\" stroke-width=\"2\" />\n      </g>\n      <circle cx=\"272\" cy=\"164\" r=\"12\" fill=\"#10B981\" stroke=\"#065F46\" stroke-width=\"2.5\" />\n      <text x=\"272\" y=\"168\" text-anchor=\"middle\" font-size=\"10\" font-weight=\"800\" fill=\"#FFFFFF\">↑</text>\n      <text x=\"180\" y=\"192\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"10\" font-weight=\"700\" fill=\"#065F46\">Each side: flat(1) → climb hill → descend hill → flat(2) → turn left</text>\n    </svg>\n  </div>\n  <div class=\"md:col-span-5 bg-slate-900 text-white rounded-xl p-4 font-mono text-xs space-y-2 flex flex-col justify-center\">\n    <div class=\"text-slate-400 text-[11px] uppercase tracking-wider mb-1\">Block Workspace</div>\n    <div class=\"px-3 py-1.5 rounded-lg bg-emerald-600 font-bold inline-block w-fit\">START</div>\n    <div class=\"pl-3 border-l-2 border-amber-400 space-y-1.5\">\n      <div class=\"px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold\">repeat 3</div>\n      <div class=\"pl-4 space-y-1.5\">\n        <div class=\"px-3 py-1.5 rounded-lg bg-rose-500/30 border border-rose-400 text-rose-200 font-bold\">? (Step 1)</div>\n        <div class=\"px-3 py-1.5 rounded-lg bg-rose-500/30 border border-rose-400 text-rose-200 font-bold\">? (Step 2: Up Hill)</div>\n        <div class=\"px-3 py-1.5 rounded-lg bg-rose-500/30 border border-rose-400 text-rose-200 font-bold\">? (Step 3: Down Hill)</div>\n        <div class=\"px-3 py-1.5 rounded-lg bg-sky-600\">forward 2</div>\n        <div class=\"px-3 py-1.5 rounded-lg bg-indigo-600\">turn left</div>\n      </div>\n    </div>\n  </div>\n</div>"
+    },
+    {
+      "number": 10,
+      "domain": "Block Coding Puzzles",
+      "prompt": "Look at the challenge above and find the correct solution.",
+      "options": {
+        "A": "START → beaver → forward 3 → forward 9",
+        "B": "START → forward 9 → beaver → forward 3",
+        "C": "START → forward 9",
+        "D": "START → forward 5 → turn left → forward 4"
+      },
+      "answer": "A",
+      "explanation": "First, the beaver moves 3 tiles to form a bridge across the river gap, and then the panda walks straight forward 9 tiles to reach the goal.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider\">River Crossing Challenge (Beaver Bridge + Panda)</div>\n  <svg viewBox=\"0 0 560 155\" class=\"w-full h-auto bg-white rounded-xl border border-slate-200\">\n    <rect x=\"0\" y=\"0\" width=\"560\" height=\"155\" rx=\"10\" fill=\"#ECFDF5\" />\n    <rect x=\"60\" y=\"56\" width=\"440\" height=\"44\" rx=\"6\" fill=\"#E2E8F0\" stroke=\"#94A3B8\" stroke-width=\"2\" />\n    <g stroke=\"#CBD5E1\" stroke-width=\"1.5\">\n      <line x1=\"108\" y1=\"56\" x2=\"108\" y2=\"100\" />\n      <line x1=\"156\" y1=\"56\" x2=\"156\" y2=\"100\" />\n      <line x1=\"204\" y1=\"56\" x2=\"204\" y2=\"100\" />\n      <line x1=\"252\" y1=\"56\" x2=\"252\" y2=\"100\" />\n      <line x1=\"300\" y1=\"56\" x2=\"300\" y2=\"100\" />\n      <line x1=\"348\" y1=\"56\" x2=\"348\" y2=\"100\" />\n      <line x1=\"396\" y1=\"56\" x2=\"396\" y2=\"100\" />\n      <line x1=\"444\" y1=\"56\" x2=\"444\" y2=\"100\" />\n    </g>\n    <rect x=\"252\" y=\"0\" width=\"48\" height=\"155\" fill=\"#38BDF8\" />\n    <rect x=\"258\" y=\"114\" width=\"36\" height=\"28\" rx=\"6\" fill=\"#92400E\" stroke=\"#FEF3C7\" stroke-width=\"2\" />\n    <text x=\"276\" y=\"132\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"800\" fill=\"#FFFFFF\">BEAVER</text>\n    <path d=\"M276 112 L276 85\" stroke=\"#FEF08A\" stroke-width=\"2.5\" stroke-dasharray=\"3 2\" />\n    <text x=\"415\" y=\"132\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"10\" font-weight=\"700\" fill=\"#0369A1\">← Beaver moves 3 steps up to bridge river</text>\n    <circle cx=\"475\" cy=\"78\" r=\"15\" fill=\"#1E293B\" stroke=\"#FFFFFF\" stroke-width=\"2.5\" />\n    <text x=\"475\" y=\"82\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"800\" fill=\"#FFFFFF\">PANDA</text>\n    <circle cx=\"84\" cy=\"78\" r=\"12\" fill=\"#EF4444\" stroke=\"#FCA5A5\" stroke-width=\"2.5\" />\n    <text x=\"84\" y=\"46\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"10\" font-weight=\"800\" fill=\"#B91C1C\">GOAL (9 steps)</text>\n  </svg>\n</div>"
+    },
+    {
+      "number": 11,
+      "domain": "Block Coding Puzzles",
+      "prompt": "Look at the challenge above. How many steps does the beaver need to take to complete the path?",
+      "options": {
+        "A": "2",
+        "B": "3",
+        "C": "4",
+        "D": "5"
+      },
+      "answer": "B",
+      "explanation": "Counting the water grid tiles between the beaver and the broken stone bridge shows the beaver needs 3 steps.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider\">Beaver River Path Completion</div>\n  <svg viewBox=\"0 0 520 150\" class=\"w-full h-auto bg-white rounded-xl border border-slate-200\">\n    <rect x=\"0\" y=\"0\" width=\"520\" height=\"150\" fill=\"#E0F2FE\" />\n    <rect x=\"40\" y=\"60\" width=\"170\" height=\"40\" rx=\"6\" fill=\"#E2E8F0\" stroke=\"#64748B\" stroke-width=\"2\" />\n    <rect x=\"260\" y=\"60\" width=\"210\" height=\"40\" rx=\"6\" fill=\"#E2E8F0\" stroke=\"#64748B\" stroke-width=\"2\" />\n    <rect x=\"210\" y=\"60\" width=\"50\" height=\"40\" fill=\"#0284C7\" stroke=\"#FDE047\" stroke-width=\"2\" stroke-dasharray=\"4 2\" />\n    <rect x=\"215\" y=\"6\" width=\"40\" height=\"16\" rx=\"4\" fill=\"#92400E\" stroke=\"#FFFFFF\" stroke-width=\"1.5\" />\n    <text x=\"235\" y=\"17\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"800\" fill=\"#FFFFFF\">BEAVER</text>\n    <circle cx=\"235\" cy=\"30\" r=\"4\" fill=\"#FDE047\" />\n    <circle cx=\"235\" cy=\"44\" r=\"4\" fill=\"#FDE047\" />\n    <circle cx=\"235\" cy=\"58\" r=\"4\" fill=\"#FDE047\" />\n    <text x=\"365\" y=\"36\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"700\" fill=\"#0369A1\">3 grid tiles from Beaver to gap</text>\n    <circle cx=\"70\" cy=\"80\" r=\"13\" fill=\"#0F172A\" />\n    <text x=\"70\" y=\"84\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#FFF\">PANDA</text>\n    <circle cx=\"435\" cy=\"80\" r=\"12\" fill=\"#EF4444\" />\n    <text x=\"435\" y=\"84\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"700\" fill=\"#FFF\">GOAL</text>\n  </svg>\n</div>"
+    },
+    {
+      "number": 12,
+      "domain": "Block Coding Puzzles",
+      "prompt": "Look at the challenge above. What is wrong with the solution?",
+      "options": {
+        "A": "“forwardUp” must be removed.",
+        "B": "“repeat” must be “2”.",
+        "C": "“forwardDown” must be removed.",
+        "D": "All blocks are fine."
+      },
+      "answer": "B",
+      "explanation": "There are 2 identical hill sections along the straight path, so the repeat block must run 2 times instead of 1.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-7 bg-white rounded-xl border border-slate-200 p-3\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">2 Identical Hill Sections Along Straight Path</div>\n    <svg viewBox=\"0 0 380 140\" class=\"w-full h-auto\">\n      <rect x=\"10\" y=\"10\" width=\"360\" height=\"120\" rx=\"10\" fill=\"#FEF3C7\" />\n      <rect x=\"25\" y=\"62\" width=\"330\" height=\"32\" rx=\"6\" fill=\"#CBD5E1\" stroke=\"#64748B\" stroke-width=\"2\" />\n      <circle cx=\"45\" cy=\"78\" r=\"12\" fill=\"#DC2626\" />\n      <text x=\"45\" y=\"82\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"800\" fill=\"#FFF\">START</text>\n      <polygon points=\"115,62 135,34 165,34 185,62\" fill=\"#F59E0B\" stroke=\"#B45309\" stroke-width=\"2\" />\n      <circle cx=\"150\" cy=\"24\" r=\"7\" fill=\"#EC4899\" />\n      <text x=\"150\" y=\"53\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"800\" fill=\"#78350F\">Hill #1</text>\n      <polygon points=\"245,62 265,34 295,34 315,62\" fill=\"#F59E0B\" stroke=\"#B45309\" stroke-width=\"2\" />\n      <circle cx=\"280\" cy=\"24\" r=\"7\" fill=\"#EC4899\" />\n      <text x=\"280\" y=\"53\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"800\" fill=\"#78350F\">Hill #2</text>\n      <text x=\"190\" y=\"115\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"10\" font-weight=\"700\" fill=\"#92400E\">Pattern repeats twice: forward 2 → forwardUp → forwardDown → forward 1</text>\n    </svg>\n  </div>\n  <div class=\"md:col-span-5 bg-slate-900 text-white rounded-xl p-4 font-mono text-xs space-y-1.5 flex flex-col justify-center\">\n    <div class=\"text-slate-400 text-[11px] uppercase tracking-wider mb-1\">Current Solution Shown</div>\n    <div class=\"px-3 py-1 rounded bg-emerald-600 font-bold w-fit\">START</div>\n    <div class=\"pl-3 border-l-2 border-amber-400 space-y-1.5\">\n      <div class=\"px-3 py-1 rounded bg-amber-400 text-slate-950 font-bold\">repeat 1</div>\n      <div class=\"pl-3 space-y-1\">\n        <div class=\"px-2.5 py-1 rounded bg-sky-600\">forward 2</div>\n        <div class=\"px-2.5 py-1 rounded bg-indigo-600\">forwardUp</div>\n        <div class=\"px-2.5 py-1 rounded bg-indigo-600\">forwardDown</div>\n        <div class=\"px-2.5 py-1 rounded bg-sky-600\">forward 1</div>\n      </div>\n    </div>\n  </div>\n</div>"
+    },
+    {
+      "number": 13,
+      "domain": "Block Coding Puzzles",
+      "prompt": "Look at the challenge above. What is the correct number for the repeat block?",
+      "options": {
+        "A": "3",
+        "B": "4",
+        "C": "5",
+        "D": "6"
+      },
+      "answer": "C",
+      "explanation": "The stair-step path has 5 steps and 5 collectible gems, so the stair pattern repeats 5 times.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-7 bg-white rounded-xl border border-slate-200 p-3\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Stair-Step Zig-Zag Path with 5 Pink Gems</div>\n    <svg viewBox=\"0 0 360 160\" class=\"w-full h-auto\">\n      <rect x=\"0\" y=\"0\" width=\"360\" height=\"160\" rx=\"10\" fill=\"#FEF9C3\" />\n      <path d=\"M 40 135 H 85 V 112 H 130 V 89 H 175 V 66 H 220 V 43 H 265 V 20 H 310\" fill=\"none\" stroke=\"#F59E0B\" stroke-width=\"16\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />\n      <circle cx=\"40\" cy=\"135\" r=\"10\" fill=\"#10B981\" />\n      <circle cx=\"85\" cy=\"112\" r=\"7\" fill=\"#EC4899\" stroke=\"#FFF\" stroke-width=\"2\" />\n      <circle cx=\"130\" cy=\"89\" r=\"7\" fill=\"#EC4899\" stroke=\"#FFF\" stroke-width=\"2\" />\n      <circle cx=\"175\" cy=\"66\" r=\"7\" fill=\"#EC4899\" stroke=\"#FFF\" stroke-width=\"2\" />\n      <circle cx=\"220\" cy=\"43\" r=\"7\" fill=\"#EC4899\" stroke=\"#FFF\" stroke-width=\"2\" />\n      <circle cx=\"265\" cy=\"20\" r=\"7\" fill=\"#EC4899\" stroke=\"#FFF\" stroke-width=\"2\" />\n      <text x=\"200\" y=\"145\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"700\" fill=\"#92400E\">5 identical stair steps (Gems #1, #2, #3, #4, #5)</text>\n    </svg>\n  </div>\n  <div class=\"md:col-span-5 bg-slate-900 text-white rounded-xl p-4 font-mono text-xs space-y-1.5 flex flex-col justify-center\">\n    <div class=\"px-3 py-1 rounded bg-emerald-600 font-bold w-fit\">START</div>\n    <div class=\"pl-3 border-l-2 border-amber-400 space-y-1.5\">\n      <div class=\"px-3 py-1 rounded bg-amber-400 text-slate-950 font-bold flex items-center justify-between\">\n        <span>repeat [ ? ]</span>\n        <span class=\"text-rose-700 font-black\">← ?</span>\n      </div>\n      <div class=\"pl-3 space-y-1\">\n        <div class=\"px-2.5 py-1 rounded bg-sky-600\">forward 1</div>\n        <div class=\"px-2.5 py-1 rounded bg-purple-600\">turn left</div>\n        <div class=\"px-2.5 py-1 rounded bg-sky-600\">forward 1</div>\n        <div class=\"px-2.5 py-1 rounded bg-purple-600\">turn right</div>\n      </div>\n    </div>\n  </div>\n</div>"
+    },
+    {
+      "number": 14,
+      "domain": "Block Coding Puzzles",
+      "prompt": "Look at the challenge above. Which block must be in the empty place?",
+      "options": {
+        "A": "forward 3",
+        "B": "forwardUp",
+        "C": "turn right",
+        "D": "turn left"
+      },
+      "answer": "D",
+      "explanation": "At the end of the first hill leg, the character must turn left ('turn left') so the second iteration follows the same alignment.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-7 bg-white rounded-xl border border-slate-200 p-3\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Two-Pool Desert Path with Final Left Turn</div>\n    <svg viewBox=\"0 0 360 155\" class=\"w-full h-auto\">\n      <rect x=\"0\" y=\"0\" width=\"360\" height=\"155\" rx=\"10\" fill=\"#FEF3C7\" />\n      <path d=\"M 320 125 H 210 V 80 H 100 V 35\" fill=\"none\" stroke=\"#F59E0B\" stroke-width=\"18\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />\n      <circle cx=\"320\" cy=\"125\" r=\"10\" fill=\"#DC2626\" />\n      <text x=\"305\" y=\"148\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"700\" fill=\"#991B1B\">START (facing left)</text>\n      <circle cx=\"210\" cy=\"102\" r=\"7\" fill=\"#EC4899\" stroke=\"#FFF\" stroke-width=\"2\" />\n      <circle cx=\"100\" cy=\"57\" r=\"7\" fill=\"#EC4899\" stroke=\"#FFF\" stroke-width=\"2\" />\n      <text x=\"180\" y=\"25\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"10\" font-weight=\"700\" fill=\"#92400E\">After forward 1 at top of each leg, character must turn left!</text>\n    </svg>\n  </div>\n  <div class=\"md:col-span-5 bg-slate-900 text-white rounded-xl p-4 font-mono text-xs space-y-1.5 flex flex-col justify-center\">\n    <div class=\"px-3 py-1 rounded bg-emerald-600 font-bold w-fit\">START</div>\n    <div class=\"pl-3 border-l-2 border-amber-400 space-y-1\">\n      <div class=\"px-3 py-1 rounded bg-amber-400 text-slate-950 font-bold\">repeat 2</div>\n      <div class=\"pl-3 space-y-1\">\n        <div class=\"px-2.5 py-1 rounded bg-sky-600\">forward 3</div>\n        <div class=\"px-2.5 py-1 rounded bg-purple-600\">turn right</div>\n        <div class=\"px-2.5 py-1 rounded bg-indigo-600\">forwardUp</div>\n        <div class=\"px-2.5 py-1 rounded bg-indigo-600\">forwardDown</div>\n        <div class=\"px-2.5 py-1 rounded bg-sky-600\">forward 1</div>\n        <div class=\"px-2.5 py-1.5 rounded bg-rose-500/30 border border-rose-400 text-rose-200 font-bold\">[ ? Empty Block Slot ]</div>\n      </div>\n    </div>\n  </div>\n</div>"
+    },
+    {
+      "number": 15,
+      "domain": "Block Coding Puzzles",
+      "prompt": "Look at the challenge above. What is the correct number for the var block?",
+      "options": {
+        "A": "4",
+        "B": "3",
+        "C": "2",
+        "D": "1"
+      },
+      "answer": "C",
+      "explanation": "Setting var a = 2 repeats the hill-climbing loop 2 times (with forward 2) and moves forward 2 tiles at the end.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-7 bg-white rounded-xl border border-slate-200 p-3\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Arctic Penguin Variable 'a' Challenge</div>\n    <svg viewBox=\"0 0 360 145\" class=\"w-full h-auto\">\n      <rect x=\"0\" y=\"0\" width=\"360\" height=\"145\" rx=\"10\" fill=\"#E0F2FE\" />\n      <rect x=\"20\" y=\"65\" width=\"320\" height=\"32\" rx=\"6\" fill=\"#F8FAFC\" stroke=\"#38BDF8\" stroke-width=\"2\" />\n      <circle cx=\"42\" cy=\"81\" r=\"11\" fill=\"#0F172A\" />\n      <text x=\"42\" y=\"84\" text-anchor=\"middle\" font-size=\"7\" font-weight=\"800\" fill=\"#FFF\">PENGUIN</text>\n      <polygon points=\"95,65 115,38 145,38 165,65\" fill=\"#bae6fd\" stroke=\"#0284C7\" stroke-width=\"2\" />\n      <circle cx=\"130\" cy=\"30\" r=\"6\" fill=\"#EAB308\" />\n      <polygon points=\"195,65 215,38 245,38 265,65\" fill=\"#bae6fd\" stroke=\"#0284C7\" stroke-width=\"2\" />\n      <circle cx=\"230\" cy=\"30\" r=\"6\" fill=\"#EAB308\" />\n      <circle cx=\"315\" cy=\"81\" r=\"10\" fill=\"#0284C7\" />\n      <text x=\"180\" y=\"122\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"10\" font-weight=\"700\" fill=\"#0369A1\">2 Ice Mounds (repeat a = 2) + final forward a = 2 steps</text>\n    </svg>\n  </div>\n  <div class=\"md:col-span-5 bg-slate-900 text-white rounded-xl p-4 font-mono text-xs space-y-1.5 flex flex-col justify-center\">\n    <div class=\"px-3 py-1 rounded bg-emerald-600 font-bold w-fit\">START</div>\n    <div class=\"px-3 py-1.5 rounded bg-rose-600 font-bold\">var a = [ ? ]</div>\n    <div class=\"pl-3 border-l-2 border-amber-400 space-y-1\">\n      <div class=\"px-3 py-1 rounded bg-amber-400 text-slate-950 font-bold\">repeat a</div>\n      <div class=\"pl-3 space-y-1\">\n        <div class=\"px-2.5 py-1 rounded bg-sky-600\">forward a</div>\n        <div class=\"px-2.5 py-1 rounded bg-indigo-600\">forwardUp</div>\n        <div class=\"px-2.5 py-1 rounded bg-indigo-600\">forwardDown</div>\n      </div>\n    </div>\n    <div class=\"px-3 py-1 rounded bg-teal-600 font-bold\">seal</div>\n    <div class=\"px-3 py-1 rounded bg-sky-600 font-bold\">forward a</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 16,
+      "domain": "Hardware & OS",
+      "prompt": "Why does the computer need random access memory (RAM)?",
+      "options": {
+        "A": "To shut down the computer.",
+        "B": "For data backup.",
+        "C": "For permanent storage of data.",
+        "D": "For temporary storage of data."
+      },
+      "answer": "D",
+      "explanation": "RAM provides fast, temporary (volatile) memory storage for programs and data currently in use.",
+      "diagram_html": null
+    },
+    {
+      "number": 17,
+      "domain": "Hardware & OS",
+      "prompt": "Which device is ONLY used to output data?",
+      "options": {
+        "A": "Microphone",
+        "B": "Speaker",
+        "C": "Headset (headphones with a microphone)",
+        "D": "Scanner"
+      },
+      "answer": "B",
+      "explanation": "A speaker only outputs audio from the computer. Microphones and scanners are input devices, and a headset is both input and output.",
+      "diagram_html": null
+    },
+    {
+      "number": 18,
+      "domain": "Hardware & OS",
+      "prompt": "Which operating system is running on the iPhone?",
+      "options": {
+        "A": "macOS",
+        "B": "iPadOS",
+        "C": "Windows",
+        "D": "iOS"
+      },
+      "answer": "D",
+      "explanation": "Apple iPhones run iOS (while Macs run macOS and iPads run iPadOS).",
+      "diagram_html": null
+    },
+    {
+      "number": 19,
+      "domain": "Hardware & OS",
+      "prompt": "How many bytes are in 1 kilobyte?",
+      "options": {
+        "A": "1024",
+        "B": "16",
+        "C": "111",
+        "D": "100"
+      },
+      "answer": "A",
+      "explanation": "In binary computer storage, 1 kilobyte (KB) equals 2¹⁰ = 1024 bytes.",
+      "diagram_html": null
+    },
+    {
+      "number": 20,
+      "domain": "Hardware & OS",
+      "prompt": "Which file has the largest size on the computer?",
+      "options": {
+        "A": "mylife.docx (2500 byte)",
+        "B": "calculation.xlsx (120 kilobyte)",
+        "C": "dance.mp3 (4.4 megabyte)",
+        "D": "landscape.jpg (300 kilobyte)"
+      },
+      "answer": "C",
+      "explanation": "4.4 megabytes (MB) is roughly 4,500 kilobytes, which is much larger than 300 KB, 120 KB, or 2500 bytes (~2.5 KB).",
+      "diagram_html": null
+    },
+    {
+      "number": 21,
+      "domain": "Hardware & OS",
+      "prompt": "“A web host provides the services that a website needs to operate on the internet.” What name do we give to a computer that hosts websites?",
+      "options": {
+        "A": "Webserver",
+        "B": "Supercomputer",
+        "C": "Mainframe computer",
+        "D": "PC (Personal Computer)"
+      },
+      "answer": "A",
+      "explanation": "A webserver is a computer system that stores, processes, and delivers web pages to users over the internet.",
+      "diagram_html": null
+    },
+    {
+      "number": 22,
+      "domain": "Hardware & OS",
+      "prompt": "“A valid email address consists of an email prefix and an email domain, both in acceptable formats.” Which of the following is a valid email address?",
+      "options": {
+        "A": "john.weppner.com",
+        "B": "john@weppner.com",
+        "C": "john@weppner",
+        "D": "johnweppner@gmail"
+      },
+      "answer": "B",
+      "explanation": "A valid email requires a prefix, the '@' symbol, and a complete domain name with a top-level domain (e.g., john@weppner.com).",
+      "diagram_html": null
+    },
+    {
+      "number": 23,
+      "domain": "Hardware & OS",
+      "prompt": "A webcam captures digital pictures as it is an ……….. device.",
+      "options": {
+        "A": "system",
+        "B": "output",
+        "C": "input",
+        "D": "software"
+      },
+      "answer": "C",
+      "explanation": "Because a webcam captures images and sends visual data into the computer, it is an input device.",
+      "diagram_html": null
+    },
+    {
+      "number": 24,
+      "domain": "Hardware & OS",
+      "prompt": "Which of the following passwords would be considered the strongest?",
+      "options": {
+        "A": "abc123",
+        "B": "2021",
+        "C": "@1ManShow",
+        "D": "mypassword"
+      },
+      "answer": "C",
+      "explanation": "@1ManShow combines special symbols (@), numbers (1), uppercase letters (M, S), and lowercase letters.",
+      "diagram_html": null
+    },
+    {
+      "number": 25,
+      "domain": "CodeCombat Python",
+      "prompt": "Which line should be corrected, and what is the correct code?",
+      "options": {
+        "A": "line 2: hero.moveUp(5)",
+        "B": "line 5: hero.moveLeft(2)",
+        "C": "line 6: if True:",
+        "D": "line7: hero.findNearestEnemy()"
+      },
+      "answer": "B",
+      "explanation": "Line 5 only moves left 1 step (hero.moveLeft(1)), leaving the hero short of the treasure alcove. Changing line 5 to hero.moveLeft(2) reaches the chest.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Dungeon Treasure Chest (Python)</span>\n    <span class=\"text-amber-400\">Chest is 2 steps Left of the corridor!</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1 leading-relaxed overflow-x-auto\">\n    <div><span class=\"text-slate-500 select-none mr-3\">1</span><span class=\"text-emerald-400\"># Move to the treasure chest and defeat all the ogres</span></div>\n    <div><span class=\"text-slate-500 select-none mr-3\">2</span>hero.moveUp(<span class=\"text-amber-300\">1</span>)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">3</span>hero.moveRight(<span class=\"text-amber-300\">3</span>)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">4</span>hero.moveDown(<span class=\"text-amber-300\">1</span>)</div>\n    <div class=\"bg-rose-500/20 border-l-2 border-rose-400 pl-2 -ml-2\"><span class=\"text-rose-300 select-none mr-3\">5</span>hero.moveLeft(<span class=\"text-rose-300 font-bold\">1</span>) <span class=\"text-rose-300 text-xs\">  # ← Hero stops 1 step short of chest!</span></div>\n    <div><span class=\"text-slate-500 select-none mr-3\">6</span><span class=\"text-purple-400\">while</span> <span class=\"text-amber-300\">True</span>:</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">7</span>    enemy = hero.findNearestEnemy()</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">8</span>    hero.attack(enemy)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">9</span>    hero.attack(enemy)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 26,
+      "domain": "CodeCombat Python",
+      "prompt": "You need to build a fence on the mark to keep the villagers safe! Which code correctly completes this task?",
+      "options": {
+        "A": "hero.build (“fence”, 40, 53)",
+        "B": "hero.build (fence, 40, 53)",
+        "C": "build (“fence”, 40, 53)",
+        "D": "hero.buildXY(“fence”, 40, 53)"
+      },
+      "answer": "D",
+      "explanation": "In CodeCombat Python, building a structure at specific X,Y coordinates uses the hero.buildXY(\"fence\", x, y) method.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Village Defense (X = 40, Y = 53)</span>\n    <span class=\"text-slate-400\">Build a \"fence\" at coordinates (40, 53)</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 select-none mr-3\">1</span><span class=\"text-emerald-400\"># Build a fence on the mark (40, 53) to keep the villagers safe!</span></div>\n    <div class=\"bg-cyan-500/15 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 select-none mr-3\">2</span><span class=\"text-cyan-300 font-bold\">???</span></div>\n  </div>\n</div>"
+    },
+    {
+      "number": 27,
+      "domain": "CodeCombat Python",
+      "prompt": "Find the line that contains a mistake preventing the hero from completing the task.",
+      "options": {
+        "A": "Line 2",
+        "B": "Line 4",
+        "C": "Line 6",
+        "D": "None of them"
+      },
+      "answer": "C",
+      "explanation": "According to the official Coding Olympiad key, Line 6 is identified as the line containing the mistake in the sequence.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Forest Maze Patrol</span>\n    <span class=\"text-amber-400\">Inspect lines 1–10 for the mistake</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1 overflow-x-auto\">\n    <div><span class=\"text-slate-500 select-none mr-3\"> 1</span>enemy = hero.findNearestEnemy()</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 2</span>hero.attack(enemy)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 3</span>hero.moveXY(<span class=\"text-amber-300\">31</span>, <span class=\"text-amber-300\">56</span>)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 4</span>enemy = hero.findNearestEnemy()</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 5</span>hero.attack(enemy)</div>\n    <div class=\"bg-amber-500/15 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-amber-300 select-none mr-3\"> 6</span><span class=\"text-purple-400\">while</span> <span class=\"text-amber-300\">True</span>:</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 7</span>    hero.moveXY(<span class=\"text-amber-300\">39</span>, <span class=\"text-amber-300\">24</span>)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 8</span>    enemy = hero.findNearestEnemy()</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 9</span>    hero.attack(enemy)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">10</span>    hero.attack(enemy)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 28,
+      "domain": "CodeCombat Python",
+      "prompt": "Which line correctly fills in the blank (line 5) so the code works as intended?",
+      "options": {
+        "A": "distance = hero.distance(enemy)",
+        "B": "distance = hero.distanceTo(enemy)",
+        "C": "hero.attack(enemy)",
+        "D": "hero.moveTo(distance)"
+      },
+      "answer": "B",
+      "explanation": "hero.distanceTo(enemy) calculates the distance between the hero and the target enemy and stores it in the 'distance' variable.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Range Distance Check</span>\n    <span class=\"text-slate-400\">Fill in Line 5</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1 overflow-x-auto\">\n    <div><span class=\"text-slate-500 select-none mr-3\"> 1</span><span class=\"text-emerald-400\"># Attack the chest to break it open.</span></div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 2</span><span class=\"text-emerald-400\"># Defend yourself when a munchkin gets too close.</span></div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 3</span><span class=\"text-purple-400\">while</span> <span class=\"text-amber-300\">True</span>:</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 4</span>    enemy = hero.findNearestEnemy()</div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 select-none mr-3\"> 5</span>    <span class=\"text-cyan-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 6</span>    <span class=\"text-purple-400\">if</span> enemy:</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 7</span>        <span class=\"text-purple-400\">if</span> distance &lt; <span class=\"text-amber-300\">10</span>:</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 8</span>            hero.attack(enemy)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\"> 9</span>        <span class=\"text-purple-400\">else</span>:</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">10</span>            hero.attack(<span class=\"text-amber-300\">\"Chest\"</span>)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 29,
+      "domain": "CodeCombat Python",
+      "prompt": "Which line correctly fills in the blank (line 5) so the code works as intended?",
+      "options": {
+        "A": "repeat forever:",
+        "B": "while True:",
+        "C": "if True:",
+        "D": "for i in range(10):"
+      },
+      "answer": "B",
+      "explanation": "In Python, an infinite loop to keep attacking the Cupboard until it breaks is written as 'while True:'.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Break the Cupboard</span>\n    <span class=\"text-slate-400\">Fill in Line 5</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1 overflow-x-auto\">\n    <div><span class=\"text-slate-500 select-none mr-3\">1</span><span class=\"text-emerald-400\"># Move to the cupboard and attack it continuously.</span></div>\n    <div><span class=\"text-slate-500 select-none mr-3\">2</span>hero.moveUp(<span class=\"text-amber-300\">2</span>)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">3</span>hero.moveRight(<span class=\"text-amber-300\">2</span>)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">4</span>hero.moveDown(<span class=\"text-amber-300\">1</span>)</div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 select-none mr-3\">5</span><span class=\"text-cyan-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 select-none mr-3\">6</span>    hero.attack(<span class=\"text-amber-300\">\"Cupboard\"</span>)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 30,
+      "domain": "CodeCombat Python",
+      "prompt": "The code runs, but the hero stops attacking after the first enemy. Which change will fix the problem?",
+      "options": {
+        "A": "Add parentheses () after hero.findNearestEnemy on line 3",
+        "B": "Replace hero.attack(enemy1) with hero.attack(“enemy1”)",
+        "C": "Add hero.cleave(enemy2) after the second attack",
+        "D": "Remove enemy3 = hero.findNearestEnemy()"
+      },
+      "answer": "A",
+      "explanation": "On line 3, hero.findNearestEnemy is missing its parentheses (), so the method is never called and enemy2 is not assigned an enemy.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Calling Methods with Parentheses</span>\n    <span class=\"text-rose-400\">Spot why the hero stops after enemy1</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1 overflow-x-auto\">\n    <div><span class=\"text-slate-500 select-none mr-3\">1</span>enemy1 = hero.findNearestEnemy()</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">2</span>hero.attack(enemy1)</div>\n    <div class=\"bg-rose-500/20 border-l-2 border-rose-400 pl-2 -ml-2\"><span class=\"text-rose-300 select-none mr-3\">3</span>enemy2 = hero.findNearestEnemy</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">4</span>hero.attack(enemy2)</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">5</span>enemy3 = hero.findNearestEnemy()</div>\n    <div><span class=\"text-slate-500 select-none mr-3\">6</span>hero.attack(enemy3)</div>\n  </div>\n</div>"
+    }
+  ]
+}

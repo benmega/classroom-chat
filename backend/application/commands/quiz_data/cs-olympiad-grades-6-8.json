@@ -1,0 +1,430 @@
+{
+  "slug": "cs-olympiad-grades-6-8",
+  "title": "Computer Science (Grades 6–8)",
+  "grade_band": "Grades 6–8",
+  "sort_order": 2,
+  "description": "Interactive 30-question practice exam for Middle Groups (Grades 6–7–8). Covers Input-Process-Output architecture, spreadsheet formulas, binary/hex numbers, Codementum Python puzzles, and CodeCombat logic.",
+  "source_url": "https://codingolympiad.org/documents/CS_6-7-8.pdf",
+  "questions": [
+    {
+      "number": 1,
+      "domain": "Systems & Networks",
+      "prompt": "Input → Process → [ ? ] (with Feedback). Which of the following goes in the green box?",
+      "options": {
+        "A": "Print",
+        "B": "Next",
+        "C": "Re-put",
+        "D": "Output"
+      },
+      "answer": "D",
+      "explanation": "The fundamental computing model is Input → Process → Output (with a Feedback loop).",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Information Processing Cycle Diagram</div>\n  <svg viewBox=\"0 0 540 125\" class=\"w-full h-auto bg-white rounded-xl border border-slate-200\">\n    <rect x=\"30\" y=\"25\" width=\"115\" height=\"44\" rx=\"10\" fill=\"#DBEAFE\" stroke=\"#2563EB\" stroke-width=\"2\" />\n    <text x=\"87\" y=\"52\" text-anchor=\"middle\" font-family=\"Outfit, sans-serif\" font-size=\"14\" font-weight=\"800\" fill=\"#1E40AF\">Input</text>\n    <path d=\"M148 47 H198\" stroke=\"#64748B\" stroke-width=\"2.5\" />\n    <polygon points=\"202,47 192,42 192,52\" fill=\"#64748B\" />\n    <rect x=\"206\" y=\"25\" width=\"125\" height=\"44\" rx=\"10\" fill=\"#E0E7FF\" stroke=\"#4F46E5\" stroke-width=\"2\" />\n    <text x=\"268\" y=\"52\" text-anchor=\"middle\" font-family=\"Outfit, sans-serif\" font-size=\"14\" font-weight=\"800\" fill=\"#3730A3\">Process</text>\n    <path d=\"M335 47 H385\" stroke=\"#64748B\" stroke-width=\"2.5\" />\n    <polygon points=\"389,47 379,42 379,52\" fill=\"#64748B\" />\n    <rect x=\"393\" y=\"25\" width=\"115\" height=\"44\" rx=\"10\" fill=\"#DCFCE7\" stroke=\"#16A34A\" stroke-width=\"3\" />\n    <text x=\"450\" y=\"52\" text-anchor=\"middle\" font-family=\"Outfit, sans-serif\" font-size=\"16\" font-weight=\"900\" fill=\"#15803D\">?</text>\n    <!-- Feedback Loop -->\n    <path d=\"M450 70 V102 H87 V73\" fill=\"none\" stroke=\"#94A3B8\" stroke-width=\"2\" stroke-dasharray=\"4 3\" />\n    <rect x=\"220\" y=\"88\" width=\"96\" height=\"24\" rx=\"6\" fill=\"#F1F5F9\" stroke=\"#CBD5E1\" />\n    <text x=\"268\" y=\"104\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"700\" fill=\"#475569\">Feedback</text>\n  </svg>\n</div>"
+    },
+    {
+      "number": 2,
+      "domain": "Systems & Networks",
+      "prompt": "What temporarily holds all programs and data in current use?",
+      "options": {
+        "A": "Random Access Memory",
+        "B": "Solid State Drive",
+        "C": "Hard Disk Drive",
+        "D": "USB Flash Memory"
+      },
+      "answer": "A",
+      "explanation": "Random Access Memory (RAM) is volatile primary memory that temporarily holds active programs and data.",
+      "diagram_html": null
+    },
+    {
+      "number": 3,
+      "domain": "Spreadsheets & Web",
+      "prompt": "Which best describes spreadsheet software applications?",
+      "options": {
+        "A": "Creating, editing, saving and printing documents.",
+        "B": "Entering data, calculating equations and creating charts and graphs.",
+        "C": "Editing an image and changing its colors.",
+        "D": "Editing a video and changing its format."
+      },
+      "answer": "B",
+      "explanation": "Spreadsheets (like Excel and Google Sheets) organize tabular data, compute formulas/equations, and generate charts.",
+      "diagram_html": null
+    },
+    {
+      "number": 4,
+      "domain": "Systems & Networks",
+      "prompt": "Look at the above image. What type of network cable is shown?",
+      "options": {
+        "A": "Ethernet Cable",
+        "B": "Telephone Cable",
+        "C": "Electric Cable",
+        "D": "Fiberoptic Cable"
+      },
+      "answer": "A",
+      "explanation": "The image shows a standard twisted-pair Ethernet LAN cable with an 8-pin RJ45 connector.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Network Connector Hardware Identification</div>\n  <svg viewBox=\"0 0 500 115\" class=\"w-full h-auto bg-white rounded-xl border border-slate-200\">\n    <!-- Blue Ethernet Cable & RJ45 8P8C Crystal Plug -->\n    <path d=\"M 30 65 Q 130 65 210 60\" fill=\"none\" stroke=\"#2563EB\" stroke-width=\"22\" stroke-linecap=\"round\" />\n    <!-- Boot -->\n    <rect x=\"200\" y=\"42\" width=\"45\" height=\"36\" rx=\"4\" fill=\"#1D4ED8\" />\n    <!-- Clear RJ45 Housing -->\n    <rect x=\"245\" y=\"38\" width=\"68\" height=\"44\" rx=\"5\" fill=\"#E0F2FE\" stroke=\"#0284C7\" stroke-width=\"2.5\" />\n    <!-- Locking clip -->\n    <path d=\"M 255 38 L 295 24 L 298 30 L 265 38\" fill=\"#BAE6FD\" stroke=\"#0284C7\" stroke-width=\"1.5\" />\n    <!-- 8 Gold Contact Pins -->\n    <g fill=\"#F59E0B\">\n      <rect x=\"296\" y=\"43\" width=\"12\" height=\"3\" />\n      <rect x=\"296\" y=\"48\" width=\"12\" height=\"3\" />\n      <rect x=\"296\" y=\"53\" width=\"12\" height=\"3\" />\n      <rect x=\"296\" y=\"58\" width=\"12\" height=\"3\" />\n      <rect x=\"296\" y=\"63\" width=\"12\" height=\"3\" />\n      <rect x=\"296\" y=\"68\" width=\"12\" height=\"3\" />\n      <rect x=\"296\" y=\"73\" width=\"12\" height=\"3\" />\n    </g>\n    <text x=\"405\" y=\"56\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"12\" font-weight=\"800\" fill=\"#1E3A8A\">8-Pin RJ45 Modular Plug</text>\n    <text x=\"405\" y=\"74\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" fill=\"#64748B\">LAN / Twisted Pair Cord</text>\n  </svg>\n</div>"
+    },
+    {
+      "number": 5,
+      "domain": "Systems & Networks",
+      "prompt": "Which of the following software manages all the types of data on your computer?",
+      "options": {
+        "A": "Graphic software",
+        "B": "Operating system",
+        "C": "Database software",
+        "D": "Social media apps"
+      },
+      "answer": "B",
+      "explanation": "The Operating System (OS) is system software that manages all hardware resources, files, and data on a computer.",
+      "diagram_html": null
+    },
+    {
+      "number": 6,
+      "domain": "Spreadsheets & Web",
+      "prompt": "Which application is the most similar to Google Docs?",
+      "options": {
+        "A": "Adobe Photoshop",
+        "B": "Microsoft PowerPoint",
+        "C": "Adobe Acrobat Reader",
+        "D": "Microsoft Word"
+      },
+      "answer": "D",
+      "explanation": "Both Google Docs and Microsoft Word are full-featured word processors.",
+      "diagram_html": null
+    },
+    {
+      "number": 7,
+      "domain": "Spreadsheets & Web",
+      "prompt": "Streaming is real-time and continuously sending audio or video files from a server to a user. Which of the following is not a streaming platform?",
+      "options": {
+        "A": "Youtube",
+        "B": "Spotify",
+        "C": "Netflix",
+        "D": "Google Maps"
+      },
+      "answer": "D",
+      "explanation": "Google Maps is a web mapping and navigation service, whereas YouTube, Spotify, and Netflix are media streaming platforms.",
+      "diagram_html": null
+    },
+    {
+      "number": 8,
+      "domain": "Spreadsheets & Web",
+      "prompt": "What function can be used to find the largest number in a range of numbers?",
+      "options": {
+        "A": "=SUM",
+        "B": "=AVERAGE",
+        "C": "=MAX",
+        "D": "=IF"
+      },
+      "answer": "C",
+      "explanation": "The =MAX() function returns the maximum (largest) numeric value in a selected range of cells.",
+      "diagram_html": null
+    },
+    {
+      "number": 9,
+      "domain": "Spreadsheets & Web",
+      "prompt": "Spreadsheet formulas must always begin with ________.",
+      "options": {
+        "A": "euro(€) sign",
+        "B": "equal(=) sign",
+        "C": "at(@) sign",
+        "D": "asterix(*) sign"
+      },
+      "answer": "B",
+      "explanation": "Every formula or function in Excel or Google Sheets must begin with an equals sign (=).",
+      "diagram_html": null
+    },
+    {
+      "number": 10,
+      "domain": "Codementum Python",
+      "prompt": "Look at the challenge above and choose the correct code.",
+      "options": {
+        "A": "beaver.forward(3) → forward(1) → turn(right) → forward(5)",
+        "B": "beaver.forward(3) → forward(3) → turn(right) → forward(8)",
+        "C": "turn(left) → beaver.forward(3) → forward(3) → forward(8)",
+        "D": "beaver.forward(3) → forward(3) → turn(left) → forward(8)"
+      },
+      "answer": "D",
+      "explanation": "The beaver moves 3 steps to bridge the water, then the character walks forward(3), turns left onto the bridge, and walks forward(8) to the gem.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider\">Codementum Python — Beaver Bridge + Turn Left Path</div>\n  <svg viewBox=\"0 0 520 140\" class=\"w-full h-auto bg-white rounded-xl border border-slate-200\">\n    <rect x=\"0\" y=\"0\" width=\"520\" height=\"140\" fill=\"#E0F2FE\" />\n    <!-- Vertical start path (3 steps) then Left turn (8 steps) -->\n    <rect x=\"380\" y=\"25\" width=\"40\" height=\"95\" rx=\"6\" fill=\"#E2E8F0\" stroke=\"#64748B\" stroke-width=\"2\" />\n    <rect x=\"90\" y=\"25\" width=\"330\" height=\"40\" rx=\"6\" fill=\"#FDE68A\" stroke=\"#D97706\" stroke-width=\"2\" />\n    <rect x=\"382\" y=\"65\" width=\"36\" height=\"24\" rx=\"4\" fill=\"#92400E\" />\n    <text x=\"400\" y=\"80\" text-anchor=\"middle\" font-size=\"8\" font-weight=\"800\" fill=\"#FFF\">BEAVER(3)</text>\n    <circle cx=\"400\" cy=\"108\" r=\"11\" fill=\"#0F172A\" />\n    <text x=\"400\" y=\"111\" text-anchor=\"middle\" font-size=\"7\" font-weight=\"800\" fill=\"#FFF\">PANDA</text>\n    <circle cx=\"115\" cy=\"45\" r=\"11\" fill=\"#EF4444\" />\n    <text x=\"245\" y=\"49\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"11\" font-weight=\"800\" fill=\"#92400E\">← turn(left), then forward(8) to Goal</text>\n  </svg>\n</div>"
+    },
+    {
+      "number": 11,
+      "domain": "Codementum Python",
+      "prompt": "Look at the challenge above and find the repeat number.",
+      "options": {
+        "A": "repeat 4:",
+        "B": "repeat 3:",
+        "C": "repeat 2:",
+        "D": "repeat 1:"
+      },
+      "answer": "C",
+      "explanation": "The path contains 2 identical dune-climbing segments, so the loop header is 'repeat 2:'.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-6 bg-white rounded-xl border border-slate-200 p-3 flex flex-col justify-center\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1\">Desert Sand Dune Loop (2 Loop Cycles)</div>\n    <p class=\"text-xs text-slate-600 leading-relaxed\">The monkey traverses two identical L-shaped dune segments (each: <code class=\"font-mono\">forward(3)</code>, <code class=\"font-mono\">turn(right)</code>, <code class=\"font-mono\">forwardUp()</code>, <code class=\"font-mono\">forwardDown()</code>, <code class=\"font-mono\">forward(1)</code>, <code class=\"font-mono\">turn(left)</code>).</p>\n  </div>\n  <div class=\"md:col-span-6 bg-slate-950 text-slate-100 rounded-xl p-4 font-mono text-xs space-y-1\">\n    <div class=\"bg-amber-500/20 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-amber-300 font-bold\">repeat [ ? ]:</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span>    forward(<span class=\"text-amber-300\">3</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>    turn(right)</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>    forwardUp()</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>    forwardDown()</div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>    forward(<span class=\"text-amber-300\">1</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">7</span>    turn(left)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 12,
+      "domain": "Codementum Python",
+      "prompt": "Look at the challenge above and find the correct turn codes.",
+      "options": {
+        "A": "right-left",
+        "B": "left-back",
+        "C": "left-left",
+        "D": "back-back"
+      },
+      "answer": "B",
+      "explanation": "In each of the 4 cross arms, the monkey turns left into the arm, walks 3 tiles, turns back (180°), and walks 3 tiles back to the center.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-6 bg-white rounded-xl border border-slate-200 p-3 flex flex-col justify-center\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1\">4-Arm Cross Bridge Over Water</div>\n    <p class=\"text-xs text-slate-600 leading-relaxed\">Starting from the center of a 4-way \"+\" bridge, for each of the 4 arms the monkey turns <code class=\"font-mono\">left</code> onto the arm, walks <code class=\"font-mono\">forward(3)</code> to grab the gem, turns <code class=\"font-mono\">back</code> (180°), and walks <code class=\"font-mono\">forward(3)</code> to return to the center.</p>\n  </div>\n  <div class=\"md:col-span-6 bg-slate-950 text-slate-100 rounded-xl p-4 font-mono text-xs space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-purple-400\">repeat</span> <span class=\"text-amber-300\">4</span>:</div>\n    <div class=\"bg-amber-500/20 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-slate-500 mr-3\">2</span>    turn( <span class=\"text-amber-300 font-bold\">[ ? ]</span> )</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>    forward(<span class=\"text-amber-300\">3</span>)</div>\n    <div class=\"bg-amber-500/20 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-slate-500 mr-3\">4</span>    turn( <span class=\"text-amber-300 font-bold\">[ ? ]</span> )</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>    forward(<span class=\"text-amber-300\">3</span>)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 13,
+      "domain": "Codementum Python",
+      "prompt": "Look at the challenge above and find the correct forward codes.",
+      "options": {
+        "A": "3",
+        "B": "a",
+        "C": "a+1",
+        "D": "5"
+      },
+      "answer": "B",
+      "explanation": "Since a=2 is defined on line 1 and each zig-zag segment is 2 tiles long, both forward commands take the variable 'a'.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-6 bg-white rounded-xl border border-slate-200 p-3 flex flex-col justify-center\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1\">Arctic Zig-Zag Path with Variable <code class=\"font-mono\">a = 2</code></div>\n    <p class=\"text-xs text-slate-600 leading-relaxed\">Each stair step has length 2 tiles, stored in variable <code class=\"font-mono\">a = 2</code>. Inside the <code class=\"font-mono\">repeat 3:</code> loop, both forward calls use the variable <code class=\"font-mono\">a</code>.</p>\n  </div>\n  <div class=\"md:col-span-6 bg-slate-950 text-slate-100 rounded-xl p-4 font-mono text-xs space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span>a = <span class=\"text-amber-300\">2</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span><span class=\"text-purple-400\">repeat</span> <span class=\"text-amber-300\">3</span>:</div>\n    <div class=\"bg-amber-500/20 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-slate-500 mr-3\">3</span>    forward( <span class=\"text-amber-300 font-bold\">[ ? ]</span> )</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>    turn(right)</div>\n    <div class=\"bg-amber-500/20 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-slate-500 mr-3\">5</span>    forward( <span class=\"text-amber-300 font-bold\">[ ? ]</span> )</div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>    turn(left)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 14,
+      "domain": "Codementum Python",
+      "prompt": "Look at the challenge above and find the correct turtles[0] codes.",
+      "options": {
+        "A": "forwardUp(3)",
+        "B": "forward(2)",
+        "C": "forwardDown(2)",
+        "D": "forward(3)"
+      },
+      "answer": "D",
+      "explanation": "Just like turtles[1].forward(3), the first turtle (turtles[0]) needs forward(3) to move into position and complete the bridge.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-6 bg-white rounded-xl border border-slate-200 p-3 flex flex-col justify-center\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1\">Turtle Array Indexing (<code class=\"font-mono\">turtles[0]</code>)</div>\n    <p class=\"text-xs text-slate-600 leading-relaxed\">Both <code class=\"font-mono\">turtle1</code> (<code class=\"font-mono\">turtles[0]</code>) and <code class=\"font-mono\">turtle2</code> (<code class=\"font-mono\">turtles[1]</code>) must move 3 tiles forward to bridge the two water gaps before the monkey runs its loop.</p>\n  </div>\n  <div class=\"md:col-span-6 bg-slate-950 text-slate-100 rounded-xl p-4 font-mono text-xs space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span>turtles = [turtle1, turtle2]</div>\n    <div class=\"bg-amber-500/20 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-slate-500 mr-3\">2</span>turtles[<span class=\"text-amber-300\">0</span>].<span class=\"text-amber-300 font-bold\">[ ? ]</span></div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>turtles[<span class=\"text-amber-300\">1</span>].forward(<span class=\"text-amber-300\">3</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span><span class=\"text-purple-400\">repeat</span> <span class=\"text-amber-300\">2</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>    forward(<span class=\"text-amber-300\">3</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>    forwardUp()</div>\n    <div><span class=\"text-slate-500 mr-3\">7</span>    forwardDown()</div>\n    <div><span class=\"text-slate-500 mr-3\">8</span>    forward(<span class=\"text-amber-300\">1</span>)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 15,
+      "domain": "Systems & Networks",
+      "prompt": "The personal computer’s main circuit board is called a ________.",
+      "options": {
+        "A": "Mainboard",
+        "B": "Mainboot",
+        "C": "Baseboard",
+        "D": "Mainchip"
+      },
+      "answer": "A",
+      "explanation": "The main printed circuit board (motherboard) in a PC is also known as the mainboard.",
+      "diagram_html": null
+    },
+    {
+      "number": 16,
+      "domain": "Spreadsheets & Web",
+      "prompt": "________ is a small piece of data that tracks your preferences on different websites.",
+      "options": {
+        "A": "Cookie",
+        "B": "Virus",
+        "C": "Malware",
+        "D": "Internet"
+      },
+      "answer": "A",
+      "explanation": "An HTTP cookie is a small text file stored by a web browser to remember user sessions and site preferences.",
+      "diagram_html": null
+    },
+    {
+      "number": 17,
+      "domain": "Systems & Networks",
+      "prompt": "“Cloud-based computing allows users access to software applications that run on server computers remotely.” Which one is a cloud-based service?",
+      "options": {
+        "A": "Google Drive",
+        "B": "Harddisk Drive",
+        "C": "Blu-Ray Drive",
+        "D": "Fiberoptic Cable"
+      },
+      "answer": "A",
+      "explanation": "Google Drive is a cloud storage and synchronization service hosted on remote servers.",
+      "diagram_html": null
+    },
+    {
+      "number": 18,
+      "domain": "Systems & Networks",
+      "prompt": "Primary storage is typically located inside the computer. It temporarily holds applications and data currently in use. Which of the following are examples of primary storage?",
+      "options": {
+        "A": "SSD and HDD",
+        "B": "USB Stick and External HDD",
+        "C": "RAM and ROM",
+        "D": "DVD and CD"
+      },
+      "answer": "C",
+      "explanation": "RAM (Random Access Memory) and ROM (Read-Only Memory) are primary memory directly accessible by the CPU.",
+      "diagram_html": null
+    },
+    {
+      "number": 19,
+      "domain": "Systems & Networks",
+      "prompt": "How many bits are there in 2 bytes?",
+      "options": {
+        "A": "4",
+        "B": "8",
+        "C": "12",
+        "D": "16"
+      },
+      "answer": "D",
+      "explanation": "Since 1 byte = 8 bits, 2 bytes = 2 × 8 = 16 bits.",
+      "diagram_html": null
+    },
+    {
+      "number": 20,
+      "domain": "Systems & Networks",
+      "prompt": "What is the binary value 1111 equivalent in hexadecimal?",
+      "options": {
+        "A": "E",
+        "B": "F",
+        "C": "15",
+        "D": "1E"
+      },
+      "answer": "B",
+      "explanation": "Binary 1111 equals 8 + 4 + 2 + 1 = 15 in decimal, which is represented by the digit F in hexadecimal.",
+      "diagram_html": null
+    },
+    {
+      "number": 21,
+      "domain": "Systems & Networks",
+      "prompt": "QR codes have increased in popularity over the last decade due to the rise of ____?",
+      "options": {
+        "A": "Printer",
+        "B": "Smartphones",
+        "C": "Monitors",
+        "D": "Keyboard"
+      },
+      "answer": "B",
+      "explanation": "Built-in smartphone cameras allow users to scan QR codes anywhere instantly.",
+      "diagram_html": null
+    },
+    {
+      "number": 22,
+      "domain": "Spreadsheets & Web",
+      "prompt": "How can you open a link in a new tab window?",
+      "options": {
+        "A": "target=“_self”",
+        "B": "target=“_blank”",
+        "C": "target=“_parent”",
+        "D": "target=“_new”"
+      },
+      "answer": "B",
+      "explanation": "In HTML, adding target=\"_blank\" to an <a> anchor tag opens the linked page in a new browser tab.",
+      "diagram_html": null
+    },
+    {
+      "number": 23,
+      "domain": "Spreadsheets & Web",
+      "prompt": "Which operator can be used to compare two values in Python?",
+      "options": {
+        "A": "!=",
+        "B": "==",
+        "C": ">>",
+        "D": "<<"
+      },
+      "answer": "B",
+      "explanation": "The double equals operator (==) checks equality between two values in Python (answer key: B).",
+      "diagram_html": null
+    },
+    {
+      "number": 24,
+      "domain": "CodeCombat Python",
+      "prompt": "How to start writing an “if statement” in Python?",
+      "options": {
+        "A": "if x==5;",
+        "B": "if x=5;",
+        "C": "if x==5:",
+        "D": "if x and 5"
+      },
+      "answer": "C",
+      "explanation": "Python if statements use the equality operator (==) and end the header line with a colon (:), i.e., if x==5:.",
+      "diagram_html": null
+    },
+    {
+      "number": 25,
+      "domain": "CodeCombat Python",
+      "prompt": "Which answer correctly completes the missing part in line 4?",
+      "options": {
+        "A": "hero.moveRight()",
+        "B": "hero.moveRight(2)",
+        "C": "hero.moveDown(2)",
+        "D": "hero.turnRight()"
+      },
+      "answer": "B",
+      "explanation": "After moving down 2 units, the hero must move 2 steps right (hero.moveRight(2)) before moving back up 2 units.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Dungeon U-Bend Corridor</span>\n    <span class=\"text-slate-400\">Complete Line 4</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-emerald-400\"># Movement code will guide your hero through the dungeon.</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span>hero.moveDown(<span class=\"text-amber-300\">2</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span></div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">4</span><span class=\"text-cyan-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>hero.moveUp(<span class=\"text-amber-300\">2</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>hero.moveRight(<span class=\"text-amber-300\">2</span>)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 26,
+      "domain": "CodeCombat Python",
+      "prompt": "Which pair of commands correctly completes the missing parts in line 2 and line 5?",
+      "options": {
+        "A": "moveRight",
+        "B": "hero.moveRight:",
+        "C": "hero.moveRight()",
+        "D": "hero.moveRight"
+      },
+      "answer": "C",
+      "explanation": "Calling a hero method in Python requires the object prefix and parentheses: hero.moveRight().",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Defeat Brak and Treg</span>\n    <span class=\"text-slate-400\">Complete Lines 2 and 5</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-emerald-400\"># Defeat ogres: \"Brak\" and \"Treg\".</span></div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">2</span><span class=\"text-cyan-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>hero.attack(<span class=\"text-amber-300\">\"Brak\"</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>hero.attack(<span class=\"text-amber-300\">\"Brak\"</span>)</div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">5</span><span class=\"text-cyan-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>hero.attack(<span class=\"text-amber-300\">\"Treg\"</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">7</span>hero.attack(<span class=\"text-amber-300\">\"Treg\"</span>)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 27,
+      "domain": "CodeCombat Python",
+      "prompt": "Which answer correctly fills in the blank in line 7 so the hero can complete the mission?",
+      "options": {
+        "A": "hero.moveRight(2)",
+        "B": "hero.attack(“Enemy”)",
+        "C": "hero.attack(“Two”)",
+        "D": "hero.buildXY(“fence”, 40, 30)"
+      },
+      "answer": "C",
+      "explanation": "The guard ogre is named \"Two\" and takes two hits to defeat, so line 7 repeats hero.attack(\"Two\").",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Free Prisoner &amp; Defeat Guard Named \"Two\"</span>\n    <span class=\"text-slate-400\">Complete Line 7</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-emerald-400\"># Free the prisoner, defeat the guard (\"Two\") and grab the gem.</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span>hero.moveRight()</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>hero.attack(<span class=\"text-amber-300\">\"Weak Door\"</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>hero.moveRight()</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>hero.moveDown()</div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>hero.attack(<span class=\"text-amber-300\">\"Two\"</span>)</div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">7</span><span class=\"text-cyan-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 mr-3\">8</span>hero.moveDown()</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 28,
+      "domain": "CodeCombat Python",
+      "prompt": "Which line correctly fills in the blank (line 10) so the hero behaves as described?",
+      "options": {
+        "A": "hero.moveXY(40, 34)",
+        "B": "hero.wait(1)",
+        "C": "hero.attack(“Chest”)",
+        "D": "hero.cleave(enemy)"
+      },
+      "answer": "A",
+      "explanation": "When no enemy is present (the else branch), the hero moves to the patrol coordinates using hero.moveXY(40, 34).",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Forest Patrol Point (40, 34)</span>\n    <span class=\"text-slate-400\">Complete Line 10</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\"> 1</span><span class=\"text-emerald-400\"># If you see an enemy, attack it.</span></div>\n    <div><span class=\"text-slate-500 mr-3\"> 2</span><span class=\"text-emerald-400\"># Otherwise, move to the patrol point (40, 34).</span></div>\n    <div><span class=\"text-slate-500 mr-3\"> 3</span><span class=\"text-purple-400\">while</span> <span class=\"text-amber-300\">True</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\"> 4</span>    enemy = hero.findNearestEnemy()</div>\n    <div><span class=\"text-slate-500 mr-3\"> 5</span>    <span class=\"text-purple-400\">if</span> enemy:</div>\n    <div><span class=\"text-slate-500 mr-3\"> 6</span>        hero.attack(enemy)</div>\n    <div><span class=\"text-slate-500 mr-3\"> 7</span>        hero.attack(enemy)</div>\n    <div><span class=\"text-slate-500 mr-3\"> 8</span>    <span class=\"text-purple-400\">else</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\"> 9</span>        <span class=\"text-emerald-400\"># Move to the patrol X mark at (40, 34):</span></div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">10</span>        <span class=\"text-cyan-300 font-bold\">???</span></div>\n  </div>\n</div>"
+    },
+    {
+      "number": 29,
+      "domain": "CodeCombat Python",
+      "prompt": "Which correction will fix the problem so that the hero attacks the door properly?",
+      "options": {
+        "A": "line 5: hero.attack(“Door”)",
+        "B": "line 5: hero.attack.Door",
+        "C": "line 5: door = hero.findNearestDoor()",
+        "D": "line 4: if True:"
+      },
+      "answer": "A",
+      "explanation": "Target names must be passed as string literals in quotes: hero.attack(\"Door\").",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Break the Door</span>\n    <span class=\"text-rose-400\">Fix Line 5</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-emerald-400\"># Break the door!</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span><span class=\"text-emerald-400\"># It will take many hits, so use a \"while-true\" loop.</span></div>\n    <div><span class=\"text-slate-500 mr-3\">3</span></div>\n    <div><span class=\"text-slate-500 mr-3\">4</span><span class=\"text-purple-400\">while</span> <span class=\"text-amber-300\">True</span>:</div>\n    <div class=\"bg-rose-500/20 border-l-2 border-rose-400 pl-2 -ml-2\"><span class=\"text-rose-300 mr-3\">5</span>    hero.attack(Door) <span class=\"text-rose-300 text-xs\">  # ← Missing quotes around \"Door\"</span></div>\n  </div>\n</div>"
+    },
+    {
+      "number": 30,
+      "domain": "CodeCombat Python",
+      "prompt": "Which answer correctly completes the missing part in line 3?",
+      "options": {
+        "A": "for i in range(2):",
+        "B": "repeat forever:",
+        "C": "if hero.canMoveRight():",
+        "D": "while True:"
+      },
+      "answer": "D",
+      "explanation": "Using 'while True:' repeats hero.moveRight(2) and hero.moveDown(2) continuously to navigate the entire stair maze in 3 lines.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 flex items-center justify-between text-xs font-mono\">\n    <span class=\"text-cyan-400 font-bold\">CodeCombat — Navigate the Maze in Under 5 Statements</span>\n    <span class=\"text-slate-400\">Complete Line 3</span>\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-emerald-400\"># Navigate the maze in less than 5 statements.</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span></div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">3</span><span class=\"text-cyan-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>    hero.moveRight(<span class=\"text-amber-300\">2</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>    hero.moveDown(<span class=\"text-amber-300\">2</span>)</div>\n  </div>\n</div>"
+    }
+  ]
+}

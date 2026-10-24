@@ -1,0 +1,430 @@
+{
+  "slug": "cs-olympiad-grades-9-11",
+  "title": "Computer Science (Grades 9–11)",
+  "grade_band": "Grades 9–11",
+  "sort_order": 3,
+  "description": "Interactive 30-question practice exam for Senior Groups (Grades 9–10–11). Covers hexadecimal & parity bits, CPU architecture (ALU & Fetch-Decode-Execute), logic gates, web protocols, and Python Game Dev.",
+  "source_url": "https://codingolympiad.org/documents/CS_9-10-11.pdf",
+  "questions": [
+    {
+      "number": 1,
+      "domain": "Data & Logic Gates",
+      "prompt": "1F = ..............? Which is the denary (base-10) conversion for the above hexadecimal?",
+      "options": {
+        "A": "30",
+        "B": "31",
+        "C": "32",
+        "D": "33"
+      },
+      "answer": "B",
+      "explanation": "In hexadecimal (base 16), 1F = (1 × 16) + 15 = 31 in denary (base 10).",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1\">Hexadecimal to Denary (Base-10) Conversion</div>\n  <div class=\"font-mono text-2xl sm:text-3xl font-extrabold text-slate-900 py-2\">\n    <span class=\"px-3 py-1 rounded-xl bg-indigo-100 text-indigo-800 border border-indigo-200\">1F<sub>16</sub></span>\n    <span class=\"mx-3 text-slate-400\">=</span>\n    <span class=\"px-3 py-1 rounded-xl bg-amber-100 text-amber-800 border border-amber-300\">?<sub>10</sub></span>\n  </div>\n</div>"
+    },
+    {
+      "number": 2,
+      "domain": "Data & Logic Gates",
+      "prompt": "What is the maximum denary value of an 8-bit binary number?",
+      "options": {
+        "A": "255",
+        "B": "225",
+        "C": "100",
+        "D": "8"
+      },
+      "answer": "A",
+      "explanation": "An 8-bit binary number of all ones (11111111₂) equals 2⁸ − 1 = 255.",
+      "diagram_html": null
+    },
+    {
+      "number": 3,
+      "domain": "Architecture & Networks",
+      "prompt": "What is the difference between an IP address and a MAC address?",
+      "options": {
+        "A": "An IP address provides a device’s location on the internet, and a MAC identifies the device connected to the internet.",
+        "B": "An IP address gives the internet speed of the computer, and a MAC shows an email address.",
+        "C": "An IP address gives the cable type of the network, and a MAC offers the computer’s location.",
+        "D": "IP and MAC show only the location of the server computers."
+      },
+      "answer": "A",
+      "explanation": "An IP address provides logical addressing/location on a network, while a MAC address uniquely identifies the physical network interface hardware.",
+      "diagram_html": null
+    },
+    {
+      "number": 4,
+      "domain": "Architecture & Networks",
+      "prompt": "“Communication between client computers and web servers is done by HTTP. It is a set of rules that must be obeyed when transferring files across the internet.” What is the meaning of the ‘s’ in HTTPS?",
+      "options": {
+        "A": "HTTP speed",
+        "B": "HTTP semantic",
+        "C": "HTTP over secure",
+        "D": "HTTP over high speed"
+      },
+      "answer": "C",
+      "explanation": "HTTPS stands for Hypertext Transfer Protocol Secure (HTTP over TLS/SSL encryption).",
+      "diagram_html": null
+    },
+    {
+      "number": 5,
+      "domain": "Web & Spreadsheets",
+      "prompt": "In a spreadsheet, what is the function of this highlighted icon?",
+      "options": {
+        "A": "delete a sheet",
+        "B": "align text in a cell",
+        "C": "clear cells of contents or formats",
+        "D": "merge cells"
+      },
+      "answer": "D",
+      "explanation": "The icon with two inward-pointing arrows inside a cell border is the 'Merge cells' button in Google Sheets / Excel.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Spreadsheet Toolbar Icon Identification</div>\n  <svg viewBox=\"0 0 420 90\" class=\"w-full h-auto bg-white rounded-xl border border-slate-200\">\n    <rect x=\"20\" y=\"18\" width=\"380\" height=\"54\" rx=\"10\" fill=\"#F8FAFC\" stroke=\"#CBD5E1\" />\n    <!-- Borders icon -->\n    <rect x=\"55\" y=\"31\" width=\"28\" height=\"28\" rx=\"3\" fill=\"none\" stroke=\"#64748B\" stroke-width=\"2\" />\n    <line x1=\"69\" y1=\"31\" x2=\"69\" y2=\"59\" stroke=\"#64748B\" stroke-width=\"1.5\" />\n    <line x1=\"55\" y1=\"45\" x2=\"83\" y2=\"45\" stroke=\"#64748B\" stroke-width=\"1.5\" />\n    <!-- Highlighted Merge Cells Icon -->\n    <rect x=\"125\" y=\"23\" width=\"66\" height=\"44\" rx=\"8\" fill=\"#FFF7ED\" stroke=\"#F97316\" stroke-width=\"3\" />\n    <rect x=\"139\" y=\"31\" width=\"38\" height=\"28\" rx=\"3\" fill=\"#FFFFFF\" stroke=\"#1E293B\" stroke-width=\"2\" />\n    <path d=\"M145 45 H154 M151 41 L155 45 L151 49\" fill=\"none\" stroke=\"#1E293B\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />\n    <path d=\"M171 45 H162 M165 41 L161 45 L165 49\" fill=\"none\" stroke=\"#1E293B\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" />\n    <text x=\"295\" y=\"49\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"12\" font-weight=\"800\" fill=\"#EA580C\">← Highlighted Spreadsheet Icon</text>\n  </svg>\n</div>"
+    },
+    {
+      "number": 6,
+      "domain": "Architecture & Networks",
+      "prompt": "The CPU carries out and repeats instructions continuously, one after another, billions of times a second. This is known as ….. .",
+      "options": {
+        "A": "Fetch-Decode-Execute Cycle",
+        "B": "The Copy-Paste Cycle",
+        "C": "The Get-Post Cycle",
+        "D": "Turn on/off Cycle"
+      },
+      "answer": "A",
+      "explanation": "The CPU processes instructions by continuously repeating the Fetch-Decode-Execute cycle.",
+      "diagram_html": null
+    },
+    {
+      "number": 7,
+      "domain": "Web & Spreadsheets",
+      "prompt": "Which attribute completes the <a> tag (<a ___=\"https://www.google.com\">Go to Google</a>) to set a link to Google?",
+      "options": {
+        "A": "ref",
+        "B": "src",
+        "C": "href",
+        "D": "link"
+      },
+      "answer": "C",
+      "explanation": "HTML anchor (<a>) tags specify the destination URL using the href (Hypertext Reference) attribute.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 p-4 font-mono text-xs sm:text-sm\">\n  <span class=\"text-slate-400\">&lt;a </span><span class=\"px-2 py-0.5 rounded bg-amber-400 text-slate-950 font-bold\">???</span><span class=\"text-slate-400\">=\"https://www.google.com\"&gt;</span>Go to Google<span class=\"text-slate-400\">&lt;/a&gt;</span>\n</div>"
+    },
+    {
+      "number": 8,
+      "domain": "Web & Spreadsheets",
+      "prompt": "This code has HTML and CSS tags. Find and locate the CSS tag.",
+      "options": {
+        "A": "<head>...</head>",
+        "B": "<body>...</body>",
+        "C": "<style>...</style>",
+        "D": "<h1>...</h1>"
+      },
+      "answer": "C",
+      "explanation": "Internal CSS rules inside an HTML document are enclosed within the <style>...</style> element.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    HTML Document with Embedded CSS Styling\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-0.5 overflow-x-auto\">\n    <div>&lt;!DOCTYPE html&gt;</div>\n    <div>&lt;html&gt;</div>\n    <div>&lt;head&gt;</div>\n    <div class=\"text-amber-300 font-bold\">&lt;style&gt;</div>\n    <div class=\"pl-4 text-sky-300\">body {background-color: powderblue;}</div>\n    <div class=\"pl-4 text-sky-300\">h1   {color: blue;}</div>\n    <div class=\"pl-4 text-sky-300\">p    {color: red;}</div>\n    <div class=\"text-amber-300 font-bold\">&lt;/style&gt;</div>\n    <div>&lt;/head&gt;</div>\n    <div>&lt;body&gt;</div>\n    <div class=\"pl-4\">&lt;h1&gt;This is a heading&lt;/h1&gt;</div>\n    <div class=\"pl-4\">&lt;p&gt;This is a paragraph.&lt;/p&gt;</div>\n    <div>&lt;/body&gt;</div>\n    <div>&lt;/html&gt;</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 9,
+      "domain": "Web & Spreadsheets",
+      "prompt": "Which property is used to change the background color in CSS?",
+      "options": {
+        "A": "background-color",
+        "B": "back-color",
+        "C": "color-background",
+        "D": "background"
+      },
+      "answer": "A",
+      "explanation": "The standard CSS property dedicated to setting an element's background color is background-color.",
+      "diagram_html": null
+    },
+    {
+      "number": 10,
+      "domain": "Web & Spreadsheets",
+      "prompt": "What are these features in Google Sheets / Docs?",
+      "options": {
+        "A": "Bulleted list",
+        "B": "Numbered list",
+        "C": "Checklist",
+        "D": "Header and Footer"
+      },
+      "answer": "B",
+      "explanation": "The screenshot displays hierarchical numbered list presets (1., a., i.).",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Formatting Menu Preview</div>\n  <div class=\"grid grid-cols-3 gap-3 max-w-md mx-auto\">\n    <div class=\"p-3 rounded-xl bg-white border border-slate-300 font-mono text-xs text-slate-700 space-y-1\">\n      <div class=\"font-bold text-cyan-700\">1. ______</div>\n      <div class=\"pl-3\">a. ____</div>\n      <div class=\"pl-6\">i. __</div>\n      <div class=\"font-bold text-cyan-700\">2. ______</div>\n    </div>\n    <div class=\"p-3 rounded-xl bg-white border border-slate-300 font-mono text-xs text-slate-700 space-y-1\">\n      <div class=\"font-bold text-cyan-700\">1) ______</div>\n      <div class=\"pl-3\">a) ____</div>\n      <div class=\"pl-6\">i) __</div>\n      <div class=\"font-bold text-cyan-700\">2) ______</div>\n    </div>\n    <div class=\"p-3 rounded-xl bg-white border border-slate-300 font-mono text-xs text-slate-700 space-y-1\">\n      <div class=\"font-bold text-cyan-700\">1. ______</div>\n      <div class=\"pl-2\">1.1. ____</div>\n      <div class=\"pl-4\">1.2.1. __</div>\n      <div class=\"font-bold text-cyan-700\">2. ______</div>\n    </div>\n  </div>\n</div>"
+    },
+    {
+      "number": 11,
+      "domain": "Data & Logic Gates",
+      "prompt": "If the inputs are A=1, B=0 and C=1, what will be P (A AND B) and Q (B OR C)’s outputs?",
+      "options": {
+        "A": "P=0, Q=1",
+        "B": "P=0, Q=0",
+        "C": "P=1, Q=0",
+        "D": "P=1, Q=1"
+      },
+      "answer": "A",
+      "explanation": "P = A AND B = 1 AND 0 = 0. Q = B OR C = 0 OR 1 = 1. Therefore P=0, Q=1.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Combinational Logic Gate Circuit (Inputs: A = 1, B = 0, C = 1)</div>\n  <svg viewBox=\"0 0 520 175\" class=\"w-full h-auto bg-white rounded-xl border border-slate-200\">\n    <!-- Inputs A, B, C -->\n    <text x=\"30\" y=\"45\" font-family=\"JetBrains Mono, monospace\" font-size=\"14\" font-weight=\"800\" fill=\"#0F172A\">A = 1</text>\n    <text x=\"30\" y=\"95\" font-family=\"JetBrains Mono, monospace\" font-size=\"14\" font-weight=\"800\" fill=\"#0F172A\">B = 0</text>\n    <text x=\"30\" y=\"145\" font-family=\"JetBrains Mono, monospace\" font-size=\"14\" font-weight=\"800\" fill=\"#0F172A\">C = 1</text>\n    <!-- Wires to Top Gate (AND) -->\n    <line x1=\"85\" y1=\"40\" x2=\"210\" y2=\"40\" stroke=\"#334155\" stroke-width=\"2.5\" />\n    <line x1=\"85\" y1=\"90\" x2=\"150\" y2=\"90\" stroke=\"#334155\" stroke-width=\"2.5\" />\n    <circle cx=\"150\" cy=\"90\" r=\"4\" fill=\"#334155\" />\n    <line x1=\"150\" y1=\"90\" x2=\"150\" y2=\"62\" stroke=\"#334155\" stroke-width=\"2.5\" />\n    <line x1=\"150\" y1=\"62\" x2=\"210\" y2=\"62\" stroke=\"#334155\" stroke-width=\"2.5\" />\n    <!-- Wires to Bottom Gate (OR) -->\n    <line x1=\"150\" y1=\"90\" x2=\"150\" y2=\"115\" stroke=\"#334155\" stroke-width=\"2.5\" />\n    <line x1=\"150\" y1=\"115\" x2=\"215\" y2=\"115\" stroke=\"#334155\" stroke-width=\"2.5\" />\n    <line x1=\"85\" y1=\"140\" x2=\"215\" y2=\"140\" stroke=\"#334155\" stroke-width=\"2.5\" />\n    <!-- Top Gate: AND Gate -->\n    <path d=\"M 210 26 H 250 A 25 25 0 0 1 250 76 H 210 Z\" fill=\"#DBEAFE\" stroke=\"#1D4ED8\" stroke-width=\"2.5\" />\n    <text x=\"242\" y=\"55\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"12\" font-weight=\"800\" fill=\"#1E3A8A\">AND</text>\n    <line x1=\"275\" y1=\"51\" x2=\"395\" y2=\"51\" stroke=\"#1D4ED8\" stroke-width=\"2.5\" />\n    <rect x=\"395\" y=\"35\" width=\"75\" height=\"32\" rx=\"8\" fill=\"#EFF6FF\" stroke=\"#3B82F6\" stroke-width=\"2\" />\n    <text x=\"432\" y=\"55\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\" font-size=\"14\" font-weight=\"800\" fill=\"#1D4ED8\">P = ?</text>\n    <!-- Bottom Gate: OR Gate -->\n    <path d=\"M 208 102 Q 225 127 208 152 Q 255 152 280 127 Q 255 102 208 102 Z\" fill=\"#DCFCE7\" stroke=\"#15803D\" stroke-width=\"2.5\" />\n    <text x=\"242\" y=\"131\" text-anchor=\"middle\" font-family=\"Inter, sans-serif\" font-size=\"12\" font-weight=\"800\" fill=\"#166534\">OR</text>\n    <line x1=\"280\" y1=\"127\" x2=\"395\" y2=\"127\" stroke=\"#15803D\" stroke-width=\"2.5\" />\n    <rect x=\"395\" y=\"111\" width=\"75\" height=\"32\" rx=\"8\" fill=\"#F0FDF4\" stroke=\"#22C55E\" stroke-width=\"2\" />\n    <text x=\"432\" y=\"131\" text-anchor=\"middle\" font-family=\"JetBrains Mono, monospace\" font-size=\"14\" font-weight=\"800\" fill=\"#15803D\">Q = ?</text>\n  </svg>\n</div>"
+    },
+    {
+      "number": 12,
+      "domain": "Python & Game Dev",
+      "prompt": "What is the correct expression for line 7 in the above code?",
+      "options": {
+        "A": "a=a–1",
+        "B": "a=a–2",
+        "C": "a=a+2",
+        "D": "a=a+1"
+      },
+      "answer": "D",
+      "explanation": "Each step of the stair increases in length by 1 tile (1, then 2, then 3), so line 7 increments a by 1: a=a+1.",
+      "diagram_html": "<div class=\"grid grid-cols-1 md:grid-cols-12 gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"md:col-span-6 bg-white rounded-xl border border-slate-200 p-3 flex flex-col justify-center\">\n    <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1\">Increasing Step-Length Path (1 → 2 → 3)</div>\n    <p class=\"text-xs text-slate-600 leading-relaxed\">In iteration 1, the character moves <code class=\"font-mono\">a = 1</code> tile per turn. In iteration 2, it moves <code class=\"font-mono\">a = 2</code> tiles. In iteration 3, it moves <code class=\"font-mono\">a = 3</code> tiles. Line 7 increments <code class=\"font-mono\">a</code> by 1 each loop.</p>\n  </div>\n  <div class=\"md:col-span-6 bg-slate-950 text-slate-100 rounded-xl p-4 font-mono text-xs space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span>a = <span class=\"text-amber-300\">1</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span><span class=\"text-purple-400\">repeat</span> <span class=\"text-amber-300\">3</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>    forward(a)</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>    turn(left)</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>    forward(a)</div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>    turn(right)</div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">7</span>    <span class=\"text-cyan-300 font-bold\">a = ....</span></div>\n  </div>\n</div>"
+    },
+    {
+      "number": 13,
+      "domain": "Data & Logic Gates",
+      "prompt": "“There are several uses of the hexadecimal number system in computer technologies.” Which is NOT an example of using hexadecimal?",
+      "options": {
+        "A": "HTML / CSS Colour Codes",
+        "B": "MAC Addresses",
+        "C": "Assembly Code and Memory Dumps",
+        "D": "Email addresses"
+      },
+      "answer": "D",
+      "explanation": "Hexadecimal is used for HTML color codes (#FF5733), MAC addresses, and memory dumps, but not for standard email addresses.",
+      "diagram_html": null
+    },
+    {
+      "number": 14,
+      "domain": "Architecture & Networks",
+      "prompt": "Which cable/transmission type uses one single wire that allows a signal to be sent in one direction at a time?",
+      "options": {
+        "A": "Serial - Simplex",
+        "B": "Parallel - Simplex",
+        "C": "Parallel - Duplex",
+        "D": "Simple - Direct"
+      },
+      "answer": "A",
+      "explanation": "Serial transmission sends bits one after another down a single wire, and Simplex means unidirectional flow.",
+      "diagram_html": null
+    },
+    {
+      "number": 15,
+      "domain": "Data & Logic Gates",
+      "prompt": "In an even parity scheme, what would be the correct parity bit for the binary string 1101 0001 ?",
+      "options": {
+        "A": "1101 0001 1",
+        "B": "1 1101 0001",
+        "C": "1101 0001",
+        "D": "1101 0001 0"
+      },
+      "answer": "D",
+      "explanation": "The binary string 1101 0001 already has four 1s (an even number), so the even parity bit appended is 0: 1101 0001 0.",
+      "diagram_html": null
+    },
+    {
+      "number": 16,
+      "domain": "Architecture & Networks",
+      "prompt": "The CPU consists of the control unit (CU) and arithmetic logic unit (ALU) as well as cache memory. What is the function of the ALU?",
+      "options": {
+        "A": "Carries out the decoding of instructions.",
+        "B": "Controls the flow of data within the CPU.",
+        "C": "Executes instructions.",
+        "D": "Carries out all of the arithmetic and logical operations."
+      },
+      "answer": "D",
+      "explanation": "The Arithmetic Logic Unit (ALU) performs all mathematical calculations (+, −, ×, ÷) and logical comparisons (AND, OR, NOT, <, >).",
+      "diagram_html": null
+    },
+    {
+      "number": 17,
+      "domain": "Architecture & Networks",
+      "prompt": "What is the name of the cycle the CPUs follow?",
+      "options": {
+        "A": "Iteration cycle",
+        "B": "Fetch-Execute cycle",
+        "C": "Fine-Emitting cycle",
+        "D": "Fast-Dynamic Cycle"
+      },
+      "answer": "B",
+      "explanation": "CPUs operate by following the Fetch-Execute (or Fetch-Decode-Execute) instruction cycle.",
+      "diagram_html": null
+    },
+    {
+      "number": 18,
+      "domain": "Data & Logic Gates",
+      "prompt": "Binary is a base-2 number system invented by Gottfried Leibniz that’s made up of only two numbers or digits: ...... and ……",
+      "options": {
+        "A": "0 - 9",
+        "B": "1 - 2",
+        "C": "0 - 1",
+        "D": "1 - 1"
+      },
+      "answer": "C",
+      "explanation": "Base-2 (binary) uses only two digits: 0 and 1.",
+      "diagram_html": null
+    },
+    {
+      "number": 19,
+      "domain": "Data & Logic Gates",
+      "prompt": "Which logic gate does this symbol belong to?",
+      "options": {
+        "A": "AND",
+        "B": "XOR",
+        "C": "OR",
+        "D": "NOT"
+      },
+      "answer": "B",
+      "explanation": "An OR-shaped gate with an extra curved input line on the left is the Exclusive-OR (XOR) gate symbol.",
+      "diagram_html": "<div class=\"rounded-2xl border border-slate-200 bg-slate-50 p-4\">\n  <div class=\"text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2\">Logic Gate Symbol Identification</div>\n  <svg viewBox=\"0 0 420 110\" class=\"w-full h-auto bg-white rounded-xl border border-slate-200\">\n    <line x1=\"90\" y1=\"38\" x2=\"162\" y2=\"38\" stroke=\"#0F172A\" stroke-width=\"3\" />\n    <line x1=\"90\" y1=\"72\" x2=\"162\" y2=\"72\" stroke=\"#0F172A\" stroke-width=\"3\" />\n    <!-- Double curved input of XOR gate -->\n    <path d=\"M 152 22 Q 174 55 152 88\" fill=\"none\" stroke=\"#0F172A\" stroke-width=\"3.5\" stroke-linecap=\"round\" />\n    <path d=\"M 164 22 Q 186 55 164 88 Q 225 88 255 55 Q 225 22 164 22 Z\" fill=\"#E0F2FE\" stroke=\"#0F172A\" stroke-width=\"3.5\" stroke-linejoin=\"round\" />\n    <line x1=\"255\" y1=\"55\" x2=\"330\" y2=\"55\" stroke=\"#0F172A\" stroke-width=\"3\" />\n  </svg>\n</div>"
+    },
+    {
+      "number": 20,
+      "domain": "Architecture & Networks",
+      "prompt": "What is metadata?",
+      "options": {
+        "A": "Data about data such as colour depth, file size, file format etc.",
+        "B": "Data",
+        "C": "Database",
+        "D": "Data about a folder"
+      },
+      "answer": "A",
+      "explanation": "Metadata is 'data about data'—descriptive properties like image resolution, color depth, file size, and creation date.",
+      "diagram_html": null
+    },
+    {
+      "number": 21,
+      "domain": "Architecture & Networks",
+      "prompt": "What are the two types of compression?",
+      "options": {
+        "A": "Lossy and lossless compression",
+        "B": "Lost and lossless compression",
+        "C": "Low and high compression",
+        "D": "Fast and Few compression"
+      },
+      "answer": "A",
+      "explanation": "Data compression is categorized into lossy compression (e.g., JPEG, MP3) and lossless compression (e.g., PNG, ZIP).",
+      "diagram_html": null
+    },
+    {
+      "number": 22,
+      "domain": "Architecture & Networks",
+      "prompt": "Based on the description below, identify the correct transmission type: “Data can be transmitted in both directions but only one direction at a time”",
+      "options": {
+        "A": "Simplex",
+        "B": "Half-Duplex",
+        "C": "Full-Duplex",
+        "D": "Serial"
+      },
+      "answer": "B",
+      "explanation": "Half-Duplex allows two-way communication, but only one direction can transmit at any given moment (like a walkie-talkie).",
+      "diagram_html": null
+    },
+    {
+      "number": 23,
+      "domain": "Python & Game Dev",
+      "prompt": "What is the output of the code above?",
+      "options": {
+        "A": "99",
+        "B": "100",
+        "C": "101",
+        "D": "120"
+      },
+      "answer": "B",
+      "explanation": "x starts at 0 and increments by 2 while x < 100. When x reaches 98, it enters the loop one last time (98 + 2 = 100), then exits and prints 100.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    Python While-Loop Trace\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span>x = <span class=\"text-amber-300\">0</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span><span class=\"text-purple-400\">while</span> (x &lt; <span class=\"text-amber-300\">100</span>):</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>    x += <span class=\"text-amber-300\">2</span></div>\n    <div><span class=\"text-slate-500 mr-3\">4</span><span class=\"text-sky-300\">print</span>(x)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 24,
+      "domain": "Python & Game Dev",
+      "prompt": "What is the output of the code above?",
+      "options": {
+        "A": "1",
+        "B": "3",
+        "C": "5",
+        "D": "7"
+      },
+      "answer": "C",
+      "explanation": "Since a = 0, the outer condition (if a > 0:) is False, so execution jumps directly to the else block: x = 0 + 5 = 5.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    Python Nested Conditional Trace\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\"> 1</span>x = <span class=\"text-amber-300\">0</span></div>\n    <div><span class=\"text-slate-500 mr-3\"> 2</span>a = <span class=\"text-amber-300\">0</span></div>\n    <div><span class=\"text-slate-500 mr-3\"> 3</span>b = <span class=\"text-amber-300\">-1</span></div>\n    <div><span class=\"text-slate-500 mr-3\"> 4</span><span class=\"text-purple-400\">if</span> a &gt; <span class=\"text-amber-300\">0</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\"> 5</span>    <span class=\"text-purple-400\">if</span> b &lt; <span class=\"text-amber-300\">0</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\"> 6</span>        x = x + <span class=\"text-amber-300\">2</span></div>\n    <div><span class=\"text-slate-500 mr-3\"> 7</span>    <span class=\"text-purple-400\">elif</span> a &gt; <span class=\"text-amber-300\">2</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\"> 8</span>        x = x + <span class=\"text-amber-300\">3</span></div>\n    <div><span class=\"text-slate-500 mr-3\"> 9</span><span class=\"text-purple-400\">else</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\">10</span>    x = x + <span class=\"text-amber-300\">5</span></div>\n    <div><span class=\"text-slate-500 mr-3\">11</span><span class=\"text-sky-300\">print</span>(x)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 25,
+      "domain": "Python & Game Dev",
+      "prompt": "The code causes an error or does not work as expected. Which correction will make the hero attack enemies properly?",
+      "options": {
+        "A": "Replace if enemies: with while enemies:",
+        "B": "Change hero.attack(enemy) to hero.attack(“enemy”)",
+        "C": "Move enemy = hero.findNearestEnemy() outside the loop",
+        "D": "Replace if enemies: with if enemy:"
+      },
+      "answer": "D",
+      "explanation": "Line 2 defines the variable 'enemy' (singular), so line 3 must check 'if enemy:' rather than the undefined 'enemies'.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    CodeCombat — Variable Name Mismatch Debugging\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-purple-400\">while</span> <span class=\"text-amber-300\">True</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\">2</span>    enemy = hero.findNearestEnemy()</div>\n    <div class=\"bg-rose-500/20 border-l-2 border-rose-400 pl-2 -ml-2\"><span class=\"text-rose-300 mr-3\">3</span>    <span class=\"text-purple-400\">if</span> enemies:</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>        hero.attack(enemy)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 26,
+      "domain": "Python & Game Dev",
+      "prompt": "One line in the code is unnecessary. Which line should be removed for the code to run properly?",
+      "options": {
+        "A": "enemy1 = “Kratt”",
+        "B": "while True:",
+        "C": "hero.attack(enemy3)",
+        "D": "enemy3 = “Ursa”"
+      },
+      "answer": "B",
+      "explanation": "According to the official Coding Olympiad key, removing 'while True:' (or the unnecessary loop wrapper) is the expected answer (B).",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    CodeCombat — Identify the Unnecessary Line\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-emerald-400\"># Defeat the ogres.</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span><span class=\"text-purple-400\">while</span> <span class=\"text-amber-300\">True</span>:</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>    enemy1 = <span class=\"text-amber-300\">\"Kratt\"</span></div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>    enemy2 = <span class=\"text-amber-300\">\"Gart\"</span></div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>    enemy3 = <span class=\"text-amber-300\">\"Ursa\"</span></div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>    hero.attack(enemy1)</div>\n    <div><span class=\"text-slate-500 mr-3\">7</span>    hero.attack(enemy2)</div>\n    <div><span class=\"text-slate-500 mr-3\">8</span>    hero.attack(enemy3)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 27,
+      "domain": "Python & Game Dev",
+      "prompt": "Correct the code in lines 1 and 4 so that the program runs properly.",
+      "options": {
+        "A": "enemy2 = hero.findEnemy(2)",
+        "B": "enemy2 = hero.findNearestEnemies()",
+        "C": "enemy2 = findNearestEnemy(2)",
+        "D": "enemy2 = hero.findNearestEnemy()"
+      },
+      "answer": "D",
+      "explanation": "In CodeCombat, finding the closest enemy uses the method hero.findNearestEnemy().",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    CodeCombat — Correcting Enemy Target Lookup (Lines 1 &amp; 4)\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div class=\"bg-amber-500/20 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-amber-300 mr-3\">1</span>enemy1 = <span class=\"text-amber-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 mr-3\">2</span>hero.attack(enemy1)</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>hero.attack(enemy1)</div>\n    <div class=\"bg-amber-500/20 border-l-2 border-amber-400 pl-2 -ml-2\"><span class=\"text-amber-300 mr-3\">4</span>enemy2 = <span class=\"text-amber-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>hero.attack(enemy2)</div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>hero.attack(enemy2)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 28,
+      "domain": "Python & Game Dev",
+      "prompt": "Which line has an error that would prevent the code from running correctly?",
+      "options": {
+        "A": "game.spawnPlayerXY(“knight”; 5, 8)",
+        "B": "game.addMoveGoalXY(10, 18)",
+        "C": "game.addMoveGoalXY(10, 38)",
+        "D": "game.addMoveGoalXY(48, 41)"
+      },
+      "answer": "A",
+      "explanation": "In game.spawnPlayerXY(\"knight\"; 5, 8), a semicolon (;) was typed instead of a comma (,) after \"knight\".",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    CodeCombat Game Dev — Syntax Error Detection\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-emerald-400\"># Move to all the red X marks to win.</span></div>\n    <div class=\"bg-rose-500/20 border-l-2 border-rose-400 pl-2 -ml-2\"><span class=\"text-rose-300 mr-3\">2</span>game.spawnPlayerXY(<span class=\"text-amber-300\">\"knight\"</span><span class=\"text-rose-300 font-bold\">;</span> <span class=\"text-amber-300\">5</span>, <span class=\"text-amber-300\">8</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>game.addMoveGoalXY(<span class=\"text-amber-300\">10</span>, <span class=\"text-amber-300\">18</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>game.addMoveGoalXY(<span class=\"text-amber-300\">10</span>, <span class=\"text-amber-300\">38</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>game.addMoveGoalXY(<span class=\"text-amber-300\">48</span>, <span class=\"text-amber-300\">41</span>)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 29,
+      "domain": "Python & Game Dev",
+      "prompt": "Write code on line 2 to create a hero in the game so that it can attack enemies.",
+      "options": {
+        "A": "game.createPlayerXY(“champion”, 20, 20)",
+        "B": "game.create.PlayerXY(“champion”: 20, 20)",
+        "C": "game.spawnPlayerXY(“champion”, 20, 20)",
+        "D": "game.buildPlayerXY(“champion”, 20, 20)"
+      },
+      "answer": "C",
+      "explanation": "The CodeCombat game development API uses game.spawnPlayerXY(\"champion\", 20, 20) to spawn a playable hero.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    CodeCombat Game Dev — Spawn Player on Line 2\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span><span class=\"text-emerald-400\"># Spawn a \"champion\" hero at (20, 20)</span></div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">2</span><span class=\"text-cyan-300 font-bold\">???</span></div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>game.addSurviveGoal()</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>game.addDefeatGoal()</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>game.spawnXY(<span class=\"text-amber-300\">\"munchkin\"</span>, <span class=\"text-amber-300\">40</span>, <span class=\"text-amber-300\">18</span>)</div>\n  </div>\n</div>"
+    },
+    {
+      "number": 30,
+      "domain": "Python & Game Dev",
+      "prompt": "Move to all the X marks. There are fire traps on the X marks that hurt the player! Spawn a potion-small object to heal the player.",
+      "options": {
+        "A": "game.spawn(“potion-small”, 30, 39)",
+        "B": "game.spawnXY(potion-small, 30, 39)",
+        "C": "game.spawnXY(“potion-small”, 30, 39)",
+        "D": "game.spawnXY(“potion-small”, x=30, y=39)"
+      },
+      "answer": "C",
+      "explanation": "Spawning an item at X,Y coordinates requires game.spawnXY(\"potion-small\", 30, 39) with the item type in quotes.",
+      "diagram_html": "<div class=\"rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 text-slate-100 shadow-lg\">\n  <div class=\"bg-slate-900 px-4 py-2 border-b border-slate-800 text-xs font-mono text-cyan-400 font-bold\">\n    CodeCombat Game Dev — Spawn Healing Potion\n  </div>\n  <div class=\"p-4 font-mono text-xs sm:text-sm space-y-1\">\n    <div><span class=\"text-slate-500 mr-3\">1</span>game.spawnPlayerXY(<span class=\"text-amber-300\">\"samurai\"</span>, <span class=\"text-amber-300\">40</span>, <span class=\"text-amber-300\">50</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">2</span>game.addSurviveGoal()</div>\n    <div><span class=\"text-slate-500 mr-3\">3</span>game.addMoveGoalXY(<span class=\"text-amber-300\">15</span>, <span class=\"text-amber-300\">40</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">4</span>game.spawnXY(<span class=\"text-amber-300\">\"fire-trap\"</span>, <span class=\"text-amber-300\">25</span>, <span class=\"text-amber-300\">40</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">5</span>game.addMoveGoalXY(<span class=\"text-amber-300\">65</span>, <span class=\"text-amber-300\">40</span>)</div>\n    <div><span class=\"text-slate-500 mr-3\">6</span>game.spawnXY(<span class=\"text-amber-300\">\"fire-trap\"</span>, <span class=\"text-amber-300\">55</span>, <span class=\"text-amber-300\">40</span>)</div>\n    <div class=\"bg-cyan-500/20 border-l-2 border-cyan-400 pl-2 -ml-2\"><span class=\"text-cyan-300 mr-3\">7</span><span class=\"text-cyan-300 font-bold\">???  # Spawn \"potion-small\" at (30, 39)</span></div>\n  </div>\n</div>"
+    }
+  ]
+}
