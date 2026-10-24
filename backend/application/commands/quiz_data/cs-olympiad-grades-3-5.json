@@ -1,9 +1,8 @@
 {
   "slug": "cs-olympiad-grades-3-5",
   "title": "Computer Science (Grades 3–5)",
-  "grade_band": "Grades 3–5",
+  "description": "Hardware, apps, block coding, Python.",
   "sort_order": 1,
-  "description": "Interactive 30-question practice exam for Junior Groups (Grades 3–4–5). Test your skills across computer hardware, software tools, isometric block-coding puzzles, and Python CodeCombat logic.",
   "source_url": "https://codingolympiad.org/documents/CS_3-4-5.pdf",
   "questions": [
     {

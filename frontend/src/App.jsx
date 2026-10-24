@@ -34,6 +34,9 @@ const Shop = React.lazy(() => import('./pages/General/Shop'));
 const ProjectInfo = React.lazy(() => import('./pages/General/ProjectInfo'));
 const EditProfile = React.lazy(() => import('./pages/User/EditProfile'));
 const ManageProject = React.lazy(() => import('./pages/User/ManageProject'));
+const TestList = React.lazy(() => import('./pages/Tests/TestList'));
+const TakeTest = React.lazy(() => import('./pages/Tests/TakeTest'));
+const TestResult = React.lazy(() => import('./pages/Tests/TestResult'));
 
 // --- Admin pages: lazily loaded (students never need these) ---
 const ToReview = React.lazy(() => import('./pages/Admin/ToReview'));
@@ -50,6 +53,7 @@ const DuckTransactions = React.lazy(() => import('./pages/Admin/DuckTransactions
 const AdminStudentActivity = React.lazy(() => import('./pages/Admin/AdminStudentActivity'));
 const AdminCRUD = React.lazy(() => import('./admin/AdminPanel'));
 const KioskUpload = React.lazy(() => import('./pages/Admin/KioskUpload'));
+const AdminTests = React.lazy(() => import('./pages/Admin/AdminTests'));
 
 // --- Parent pages: lazily loaded (students never need these) ---
 const ParentDashboard = React.lazy(() => import('./pages/Parent/ParentDashboard'));
@@ -276,6 +280,9 @@ function App() {
           <Route path="/settings" element={<EditProfile />} />
           <Route path="/project/new" element={<ManageProject />} />
           <Route path="/project/edit/:projectId" element={<ManageProject />} />
+          <Route path="/tests" element={<TestList />} />
+          <Route path="/tests/results/:attemptId" element={<TestResult />} />
+          <Route path="/tests/:slug" element={<TakeTest />} />
         </Route>
 
         <Route element={<PublicLayout />}>
@@ -326,6 +333,8 @@ function App() {
                 <Route path="advanced" element={<AdvancedPanel />} />
                 <Route path="transactions" element={<DuckTransactions />} />
                 <Route path="student-activity" element={<AdminStudentActivity />} />
+                <Route path="tests" element={<AdminTests />} />
+                <Route path="tests/results/:attemptId" element={<TestResult />} />
                 <Route path="review" element={<Navigate to="/admin/to-review" replace />} />
                 <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
               </Routes>
@@ -336,6 +345,7 @@ function App() {
         <Route element={<ProtectedLayout parentOnly />}>
           <Route path="/parent/dashboard" element={<ParentDashboard />} />
           <Route path="/parent/report/:studentId" element={<ParentReportCard />} />
+          <Route path="/parent/tests/results/:attemptId" element={<TestResult />} />
           <Route path="/parent/course-progress/:slug" element={<CourseProgressTree />} />
           <Route path="/parent/course-progress/:slug/breakdown" element={<CourseLevelBreakdown />} />
         </Route>

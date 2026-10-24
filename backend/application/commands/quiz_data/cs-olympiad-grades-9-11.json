@@ -1,9 +1,8 @@
 {
   "slug": "cs-olympiad-grades-9-11",
   "title": "Computer Science (Grades 9–11)",
-  "grade_band": "Grades 9–11",
+  "description": "Architecture, networks, web, Python.",
   "sort_order": 3,
-  "description": "Interactive 30-question practice exam for Senior Groups (Grades 9–10–11). Covers hexadecimal & parity bits, CPU architecture (ALU & Fetch-Decode-Execute), logic gates, web protocols, and Python Game Dev.",
   "source_url": "https://codingolympiad.org/documents/CS_9-10-11.pdf",
   "questions": [
     {

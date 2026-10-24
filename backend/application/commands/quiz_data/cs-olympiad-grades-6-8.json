@@ -1,9 +1,8 @@
 {
   "slug": "cs-olympiad-grades-6-8",
   "title": "Computer Science (Grades 6–8)",
-  "grade_band": "Grades 6–8",
+  "description": "Systems, spreadsheets, binary, Python.",
   "sort_order": 2,
-  "description": "Interactive 30-question practice exam for Middle Groups (Grades 6–7–8). Covers Input-Process-Output architecture, spreadsheet formulas, binary/hex numbers, Codementum Python puzzles, and CodeCombat logic.",
   "source_url": "https://codingolympiad.org/documents/CS_6-7-8.pdf",
   "questions": [
     {
