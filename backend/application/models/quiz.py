@@ -5,8 +5,6 @@ Summary: SQLAlchemy models for student tests: a quiz, its multiple-choice questi
          the attempts students make at it.
 """
 
-from datetime import timedelta
-
 from ..extensions import db
 from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
@@ -105,12 +103,18 @@ class QuizAttempt(db.Model):
     # Question numbers the student marked
     flagged = db.Column(db.JSON, nullable=False, default=list)
     started_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+    # When the attempt runs out (naive UTC), fixed at start from the quiz's time limit
+    # of that moment; None without a limit. A later change to the limit leaves it alone.
+    deadline = db.Column(db.DateTime, nullable=True)
     submitted_at = db.Column(db.DateTime, nullable=True)  # None while in progress
     elapsed_seconds = db.Column(db.Integer, nullable=False, default=0)
     # Set when the attempt is submitted
     correct_count = db.Column(db.Integer, nullable=True)
     total_count = db.Column(db.Integer, nullable=True)
     score_percent = db.Column(db.Integer, nullable=True)
+    # Snapshot of what was graded, set at submit:
+    # {"<number>": {"answer": letter, "selected": letter|None, "domain": str}}
+    graded = db.Column(db.JSON, nullable=True)
     # Ducks credited for this attempt (the first attempt of a quiz only)
     ducks_awarded = db.Column(db.Integer, nullable=False, default=0)
 
@@ -123,14 +127,6 @@ class QuizAttempt(db.Model):
     @property
     def is_submitted(self):
         return self.submitted_at is not None
-
-    @property
-    def deadline(self):
-        """When the attempt runs out (naive UTC), or None without a time limit."""
-        minutes = self.quiz.time_limit_minutes if self.quiz else None
-        if not minutes:
-            return None
-        return self.started_at + timedelta(minutes=minutes)
 
     def deadline_iso(self):
         return to_utc_iso(self.deadline)

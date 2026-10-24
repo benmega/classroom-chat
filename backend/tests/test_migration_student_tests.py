@@ -58,6 +58,11 @@ def test_upgrade_creates_the_tables_with_their_keys(migration, conn):
     attempts = {c["name"]: c for c in inspector.get_columns("quiz_attempts")}
     assert not attempts["ducks_awarded"]["nullable"]
     assert attempts["submitted_at"]["nullable"]
+    # Fixed per attempt: the deadline at start, the graded snapshot at submit
+    assert attempts["deadline"]["nullable"]
+    assert isinstance(attempts["deadline"]["type"], sa.DateTime)
+    assert attempts["graded"]["nullable"]
+    assert isinstance(attempts["graded"]["type"], sa.JSON)
     referred = {
         (fk["constrained_columns"][0], fk["referred_table"], fk["options"]["ondelete"])
         for table in ("quiz_attempts", "quiz_rewards")

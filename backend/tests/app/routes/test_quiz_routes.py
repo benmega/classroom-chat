@@ -243,6 +243,62 @@ def test_start_sets_a_deadline_with_a_time_limit(client, student):
     assert attempt["deadline"] == (row.started_at + timedelta(minutes=10)).isoformat() + "Z"
 
 
+def test_start_stores_the_deadline_on_the_attempt(client, student):
+    make_quiz(time_limit_minutes=10)
+    login(client, student)
+
+    attempt_id = data(start(client))["attempt"]["id"]
+
+    row = db.session.get(QuizAttempt, attempt_id)
+    assert row.deadline == row.started_at + timedelta(minutes=10)
+
+
+def test_adding_a_time_limit_later_does_not_reach_an_attempt_in_progress(client, student, admin, quiz):
+    login(client, student)
+    attempt_id = data(start(client))["attempt"]["id"]
+    row = db.session.get(QuizAttempt, attempt_id)
+    row.started_at = utcnow_naive() - timedelta(hours=2)
+    db.session.commit()
+    login(client, admin)
+    client.patch("/api/quizzes/admin/quiz-one", json={"time_limit_minutes": 5})
+    login(client, student)
+
+    state = data(client.get(f"/api/quizzes/attempts/{attempt_id}"))["attempt"]
+    assert state["deadline"] is None
+    assert state["quiz"]["time_limit_minutes"] is None
+    assert save(client, attempt_id, {"answers": {"1": "A"}}).status_code == 200
+    response = client.post(f"/api/quizzes/attempts/{attempt_id}/submit", json={"answers": {"2": "B"}})
+    assert response.status_code == 200
+    assert data(response)["attempt"]["correct"] == 2
+    # An attempt started afterwards gets the new limit
+    again = data(start(client))["attempt"]
+    assert again["quiz"]["time_limit_minutes"] == 5
+    assert again["deadline"] is not None
+
+
+def test_removing_the_time_limit_later_keeps_the_deadline_of_an_attempt_in_progress(
+    client, student, admin
+):
+    make_quiz(time_limit_minutes=10)
+    login(client, student)
+    attempt_id = data(start(client))["attempt"]["id"]
+    expire_attempt(attempt_id, minutes=11)
+    login(client, admin)
+    client.patch("/api/quizzes/admin/quiz-one", json={"time_limit_minutes": None})
+    login(client, student)
+
+    state = data(client.get(f"/api/quizzes/attempts/{attempt_id}"))["attempt"]
+    assert state["deadline"] is not None
+    assert state["quiz"]["time_limit_minutes"] == 10
+    response = save(client, attempt_id, {"answers": {"1": "A"}})
+    assert response.status_code == 409
+    assert response.get_json()["expired"] is True
+    response = client.post(f"/api/quizzes/attempts/{attempt_id}/submit", json={"answers": {"1": "A"}})
+    assert data(response)["attempt"]["correct"] == 0
+    # An attempt started afterwards has no limit
+    assert data(start(client))["attempt"]["deadline"] is None
+
+
 def test_start_allows_a_retake(client, student, quiz):
     first_id = submitted_attempt(client, student, {})
 
@@ -327,6 +383,14 @@ def open_attempt(client, student, quiz):
     return data(start(client))["attempt"]["id"]
 
 
+def expire_attempt(attempt_id, **age):
+    """Make the attempt start ``age`` ago, with its deadline ten minutes after that."""
+    row = db.session.get(QuizAttempt, attempt_id)
+    row.started_at = utcnow_naive() - timedelta(**age)
+    row.deadline = row.started_at + timedelta(minutes=10)
+    db.session.commit()
+
+
 def save(client, attempt_id, body):
     return client.patch(f"/api/quizzes/attempts/{attempt_id}", json=body)
 
@@ -372,12 +436,24 @@ def test_save_with_nothing_to_save_is_fine(client, open_attempt):
         {"answers": {"9": "A"}},
         {"answers": {"x": "A"}},
         {"answers": {"-1": "A"}},
+        {"answers": {"0": "A"}},
+        {"answers": {"10001": "A"}},
+        {"answers": {"1000000": "A"}},
+        {"answers": {"9" * 5000: "A"}},
+        {"answers": {"1": "A", "9" * 5000: "A"}},
+        {"flagged": [10**30]},
+        {"flagged": [0]},
+        {"flagged": [-1]},
+        {"flagged": ["9" * 5000]},
+        {"flagged": [[1]]},
         {"answers": ["A"]},
         {"flagged": [9]},
         {"flagged": ["x"]},
         {"flagged": [True]},
         {"flagged": "1"},
         {"elapsed_seconds": -1},
+        {"elapsed_seconds": 86401},
+        {"elapsed_seconds": 10**30},
         {"elapsed_seconds": "5"},
         {"elapsed_seconds": 1.5},
         {"elapsed_seconds": True},
@@ -401,13 +477,43 @@ def test_save_rejects_a_body_that_is_not_an_object(client, open_attempt):
     assert client.patch(f"/api/quizzes/attempts/{open_attempt}", json=[1]).status_code == 400
 
 
-def test_elapsed_seconds_never_goes_down(client, open_attempt):
+def test_elapsed_seconds_keeps_the_larger_value_and_still_saves_the_answers(client, open_attempt):
     save(client, open_attempt, {"elapsed_seconds": 30})
 
-    assert save(client, open_attempt, {"elapsed_seconds": 29}).status_code == 400
+    response = save(client, open_attempt, {"elapsed_seconds": 29, "answers": {"1": "B"}})
+
+    assert response.status_code == 200
+    assert data(response)["attempt"]["elapsed_seconds"] == 30
+    assert data(response)["attempt"]["answers"] == {"1": "B"}
     assert save(client, open_attempt, {"elapsed_seconds": 30}).status_code == 200
     response = save(client, open_attempt, {"elapsed_seconds": 31})
     assert data(response)["attempt"]["elapsed_seconds"] == 31
+    assert db.session.get(QuizAttempt, open_attempt).elapsed_seconds == 31
+
+
+def test_elapsed_seconds_accepts_a_day(client, open_attempt):
+    response = save(client, open_attempt, {"elapsed_seconds": 86400})
+
+    assert data(response)["attempt"]["elapsed_seconds"] == 86400
+
+
+def test_a_submit_with_a_lower_elapsed_keeps_the_larger_one(client, open_attempt):
+    save(client, open_attempt, {"elapsed_seconds": 50})
+
+    response = client.post(
+        f"/api/quizzes/attempts/{open_attempt}/submit",
+        json={"elapsed_seconds": 20, "answers": {"1": "A"}},
+    )
+
+    result = data(response)["attempt"]
+    assert (result["elapsed_seconds"], result["correct"]) == (50, 1)
+
+
+def test_a_submit_with_a_huge_number_is_a_400_and_grades_nothing(client, open_attempt):
+    for body in ({"elapsed_seconds": 10**30}, {"answers": {"9" * 5000: "A"}}, {"flagged": [10**30]}):
+        response = client.post(f"/api/quizzes/attempts/{open_attempt}/submit", json=body)
+        assert response.status_code == 400
+    assert db.session.get(QuizAttempt, open_attempt).submitted_at is None
 
 
 def test_saving_a_submitted_attempt_conflicts(client, open_attempt):
@@ -422,9 +528,7 @@ def test_save_after_the_deadline_expires(client, student):
     make_quiz(time_limit_minutes=10)
     login(client, student)
     attempt_id = data(start(client))["attempt"]["id"]
-    row = db.session.get(QuizAttempt, attempt_id)
-    row.started_at = utcnow_naive() - timedelta(minutes=10, seconds=40)
-    db.session.commit()
+    expire_attempt(attempt_id, minutes=10, seconds=40)
 
     response = save(client, attempt_id, {"answers": {"1": "A"}})
 
@@ -439,9 +543,7 @@ def test_save_within_the_grace_period_still_counts(client, student):
     make_quiz(time_limit_minutes=10)
     login(client, student)
     attempt_id = data(start(client))["attempt"]["id"]
-    row = db.session.get(QuizAttempt, attempt_id)
-    row.started_at = utcnow_naive() - timedelta(minutes=10, seconds=5)
-    db.session.commit()
+    expire_attempt(attempt_id, minutes=10, seconds=5)
 
     assert save(client, attempt_id, {"answers": {"1": "A"}}).status_code == 200
 
@@ -548,9 +650,7 @@ def test_submit_after_the_deadline_ignores_the_body(client, student):
     login(client, student)
     attempt_id = data(start(client))["attempt"]["id"]
     save(client, attempt_id, {"answers": {"1": "A"}})
-    row = db.session.get(QuizAttempt, attempt_id)
-    row.started_at = utcnow_naive() - timedelta(minutes=11)
-    db.session.commit()
+    expire_attempt(attempt_id, minutes=11)
 
     response = client.post(
         f"/api/quizzes/attempts/{attempt_id}/submit",
@@ -1159,3 +1259,115 @@ def test_the_reward_key_is_unique_per_user_and_quiz(student, quiz):
     db.session.commit()
     assert balance(student) == 0
     assert QuizReward.query.count() == 1
+
+
+# --- results match the stored score ----------------------------------------------
+
+
+def test_the_snapshot_is_stored_at_submit(client, student, quiz):
+    attempt_id = submitted_attempt(client, student, {"1": "A", "2": "C"})
+
+    row = db.session.get(QuizAttempt, attempt_id)
+
+    assert row.graded == {
+        "1": {"answer": "A", "selected": "A", "domain": "Hardware"},
+        "2": {"answer": "B", "selected": "C", "domain": "Hardware"},
+        "3": {"answer": "C", "selected": None, "domain": "Python"},
+        "4": {"answer": "A", "selected": None, "domain": "Python"},
+    }
+
+
+def test_an_attempt_in_progress_has_no_snapshot(client, open_attempt):
+    assert db.session.get(QuizAttempt, open_attempt).graded is None
+
+
+def test_a_result_ignores_a_key_changed_after_the_submit(client, student, quiz):
+    attempt_id = submitted_attempt(client, student, {"1": "A", "2": "B", "3": "C"})
+    before = data(client.get(f"/api/quizzes/attempts/{attempt_id}"))["attempt"]
+    QuizQuestion.query.filter_by(quiz_id=quiz.id, number=1).one().answer = "D"
+    QuizQuestion.query.filter_by(quiz_id=quiz.id, number=2).one().domain = "Moved"
+    db.session.commit()
+
+    after = data(client.get(f"/api/quizzes/attempts/{attempt_id}"))["attempt"]
+
+    assert (after["correct"], after["wrong"], after["skipped"]) == (3, 0, 1)
+    assert after["domains"] == before["domains"]
+    assert after["review"][0]["answer"] == "A"
+    assert after["review"][0]["is_correct"] is True
+    assert after["review"][1]["domain"] == "Hardware"
+    # The text still follows the live question
+    assert after["review"][0]["prompt"] == "Prompt 1"
+
+
+def test_a_result_still_counts_a_question_deleted_after_the_submit(client, student, quiz):
+    attempt_id = submitted_attempt(client, student, {"1": "A", "3": "C"})
+    QuizQuestion.query.filter_by(quiz_id=quiz.id, number=3).delete()
+    db.session.commit()
+
+    result = data(client.get(f"/api/quizzes/attempts/{attempt_id}"))["attempt"]
+
+    assert (result["total"], result["correct"], result["wrong"], result["skipped"]) == (4, 2, 0, 2)
+    assert result["score_percent"] == 50
+    assert result["domains"] == [
+        {"domain": "Hardware", "correct": 1, "total": 2},
+        {"domain": "Python", "correct": 1, "total": 2},
+    ]
+    assert [r["number"] for r in result["review"]] == [1, 2, 4]
+
+
+def test_a_result_ignores_a_question_added_after_the_submit(client, student, quiz):
+    attempt_id = submitted_attempt(client, student, {"1": "A"})
+    quiz.questions.append(
+        QuizQuestion(number=5, domain="New", prompt="p", options={"A": "a"}, answer="A")
+    )
+    db.session.commit()
+
+    result = data(client.get(f"/api/quizzes/attempts/{attempt_id}"))["attempt"]
+
+    assert (result["total"], result["correct"], result["skipped"]) == (4, 1, 3)
+    assert [d["domain"] for d in result["domains"]] == ["Hardware", "Python"]
+    assert len(result["review"]) == 4
+
+
+def test_a_save_that_loses_the_race_with_a_submit_changes_nothing(client, student, quiz, monkeypatch):
+    """The submit lands between the save validating the attempt and writing it."""
+    from application.services import quiz_service
+
+    login(client, student)
+    attempt_id = data(start(client))["attempt"]["id"]
+    save(client, attempt_id, {"answers": {"1": "A"}, "elapsed_seconds": 5})
+    original = quiz_service.parse_progress
+
+    def parse_then_get_submitted(attempt, payload, questions):
+        changes = original(attempt, payload, questions)
+        db.session.execute(
+            db.update(QuizAttempt)
+            .where(QuizAttempt.id == attempt_id)
+            .values(submitted_at=utcnow_naive(), graded={}, correct_count=1, total_count=4)
+        )
+        return changes
+
+    monkeypatch.setattr(quiz_service, "parse_progress", parse_then_get_submitted)
+
+    response = save(client, attempt_id, {"answers": {"1": "B", "2": "B"}, "elapsed_seconds": 99})
+
+    assert response.status_code == 409
+    db.session.expire_all()
+    row = db.session.get(QuizAttempt, attempt_id)
+    assert row.answers == {"1": "A"}
+    assert row.elapsed_seconds == 5
+
+
+def test_a_submit_grades_the_answers_it_stores(client, student, quiz):
+    login(client, student)
+    attempt_id = data(start(client))["attempt"]["id"]
+    save(client, attempt_id, {"answers": {"1": "A"}})
+
+    client.post(f"/api/quizzes/attempts/{attempt_id}/submit", json={"answers": {"2": "B"}})
+
+    row = db.session.get(QuizAttempt, attempt_id)
+    assert row.answers == {"1": "A", "2": "B"}
+    assert row.correct_count == 2
+    assert {k: v["selected"] for k, v in row.graded.items()} == {"1": "A", "2": "B", "3": None, "4": None}
+    assert save(client, attempt_id, {"answers": {"1": "D"}}).status_code == 409
+    assert db.session.get(QuizAttempt, attempt_id).answers == {"1": "A", "2": "B"}

@@ -4,7 +4,8 @@ Adds the tables of the student tests feature: quizzes, quiz_questions,
 quiz_attempts and quiz_rewards.
 
 quiz_questions and quiz_attempts belong to their quiz (ON DELETE CASCADE), and
-quiz_attempts also to its user. A question number is unique within a quiz. A user
+quiz_attempts also to its user. An attempt keeps its own deadline, fixed when it
+starts, and a snapshot of what was graded when it is submitted. A question number is unique within a quiz. A user
 has at most one attempt in progress (submitted_at IS NULL) per quiz, which a partial
 unique index holds. quiz_rewards records the first submission of a quiz by a
 student, one row per (user, quiz), so the ducks for it are paid once even when the
@@ -89,10 +90,12 @@ def upgrade():
             sa.Column("flagged", sa.JSON(), nullable=False),
             sa.Column("started_at", sa.DateTime(), nullable=False),
             sa.Column("submitted_at", sa.DateTime(), nullable=True),
+            sa.Column("deadline", sa.DateTime(), nullable=True),
             sa.Column("elapsed_seconds", sa.Integer(), nullable=False),
             sa.Column("correct_count", sa.Integer(), nullable=True),
             sa.Column("total_count", sa.Integer(), nullable=True),
             sa.Column("score_percent", sa.Integer(), nullable=True),
+            sa.Column("graded", sa.JSON(), nullable=True),
             sa.Column("ducks_awarded", sa.Integer(), nullable=False),
             sa.ForeignKeyConstraint(
                 ["quiz_id"],

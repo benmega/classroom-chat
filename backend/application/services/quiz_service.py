@@ -10,13 +10,17 @@ from datetime import timedelta
 from application.extensions import db
 from application.models.quiz import QuizAttempt, QuizReward
 from application.utilities.helper_functions import to_utc_iso, utcnow_naive
-from sqlalchemy import update
+from sqlalchemy import case, update
 from sqlalchemy.exc import IntegrityError
 
 # A save or submit this long after the deadline still counts: the clock of the
 # browser and the request itself take a moment.
 GRACE_SECONDS = 30
 MAX_TIME_LIMIT_MINUTES = 600
+# Bounds that keep every number the API reads small enough to be a real one
+MAX_ELAPSED_SECONDS = 86400
+MAX_QUESTION_NUMBER = 10000
+_MAX_NUMBER_DIGITS = 6
 
 
 class QuizValidationError(ValueError):
@@ -45,35 +49,61 @@ def percent(correct, total):
 # --- deadline ---------------------------------------------------------------
 
 
+def deadline_for(quiz, started_at):
+    """The deadline of an attempt starting at ``started_at``: the quiz's limit today."""
+    if not quiz.time_limit_minutes:
+        return None
+    return started_at + timedelta(minutes=quiz.time_limit_minutes)
+
+
 def is_expired(attempt, now=None):
-    """True once the attempt is past its deadline plus the grace period."""
+    """True once the attempt is past its stored deadline plus the grace period."""
     deadline = attempt.deadline
     if deadline is None:
         return False
     return (now or utcnow_naive()) > deadline + timedelta(seconds=GRACE_SECONDS)
 
 
+def time_limit_minutes(attempt):
+    """The limit the attempt started with (not the quiz's current one), or None."""
+    if attempt.deadline is None:
+        return None
+    return round((attempt.deadline - attempt.started_at).total_seconds() / 60)
+
+
 # --- progress ---------------------------------------------------------------
 
 
-def apply_progress(attempt, payload, questions):
-    """Validate ``payload`` ({answers?, flagged?, elapsed_seconds?}) and apply it.
+def parse_progress(attempt, payload, questions):
+    """Validate ``payload`` ({answers?, flagged?, elapsed_seconds?}) against the attempt.
 
-    Nothing is changed unless the whole payload is valid. ``answers`` is merged into
-    the saved ones (a null or empty letter clears an answer); ``flagged`` replaces the
-    saved list. Raises QuizValidationError.
+    Returns the changes to store ({answers?, flagged?, elapsed_seconds?}); it stores
+    nothing itself, and returns nothing unless the whole payload is valid. ``answers``
+    is merged into the saved ones (a null or empty letter clears an answer);
+    ``flagged`` replaces the saved list; an ``elapsed_seconds`` lower than the saved
+    one is not an error, the larger stays. Raises QuizValidationError.
     """
     if payload is None:
-        return
+        return {}
     if not isinstance(payload, dict):
         raise QuizValidationError("Invalid body")
-    by_number = {question.number: question for question in questions}
+    try:
+        return _parse_progress(attempt, payload, questions)
+    except QuizValidationError:
+        raise
+    except (ValueError, OverflowError) as exc:
+        raise QuizValidationError("Invalid body") from exc
 
-    answers = dict(attempt.answers or {})
+
+def _parse_progress(attempt, payload, questions):
+    by_number = {question.number: question for question in questions}
+    changes = {}
+
     if payload.get("answers") is not None:
         incoming = payload["answers"]
         if not isinstance(incoming, dict):
             raise QuizValidationError("answers must be an object")
+        answers = dict(attempt.answers or {})
         for key, letter in incoming.items():
             number = _question_number(key, by_number)
             if letter is None or letter == "":
@@ -82,65 +112,130 @@ def apply_progress(attempt, payload, questions):
             if not isinstance(letter, str) or letter not in (by_number[number].options or {}):
                 raise QuizValidationError(f"Invalid answer for question {number}")
             answers[str(number)] = letter
+        changes["answers"] = answers
 
-    flagged = None
     if payload.get("flagged") is not None:
         incoming = payload["flagged"]
         if not isinstance(incoming, list):
             raise QuizValidationError("flagged must be a list")
-        flagged = sorted({_question_number(number, by_number) for number in incoming})
+        changes["flagged"] = sorted({_question_number(number, by_number) for number in incoming})
 
-    elapsed = None
     if payload.get("elapsed_seconds") is not None:
         elapsed = payload["elapsed_seconds"]
-        if not _is_int(elapsed) or elapsed < 0:
-            raise QuizValidationError("elapsed_seconds must be a non-negative integer")
-        if elapsed < (attempt.elapsed_seconds or 0):
-            raise QuizValidationError("elapsed_seconds cannot decrease")
+        if not _is_int(elapsed) or not 0 <= elapsed <= MAX_ELAPSED_SECONDS:
+            raise QuizValidationError(
+                f"elapsed_seconds must be a whole number from 0 to {MAX_ELAPSED_SECONDS}"
+            )
+        changes["elapsed_seconds"] = max(elapsed, attempt.elapsed_seconds or 0)
 
-    attempt.answers = answers
-    if flagged is not None:
-        attempt.flagged = flagged
-    if elapsed is not None:
-        attempt.elapsed_seconds = elapsed
+    return changes
 
 
 def _question_number(value, by_number):
     """The question number behind a key or list item, or QuizValidationError."""
-    if isinstance(value, str) and value.isascii() and value.isdigit():
+    if isinstance(value, str):
+        if not (value.isascii() and value.isdigit()) or len(value) > _MAX_NUMBER_DIGITS:
+            raise QuizValidationError("Invalid question number")
         number = int(value)
     elif _is_int(value):
         number = value
     else:
+        raise QuizValidationError("Invalid question number")
+    if not 1 <= number <= MAX_QUESTION_NUMBER:
         raise QuizValidationError("Invalid question number")
     if number not in by_number:
         raise QuizValidationError(f"Unknown question {number}")
     return number
 
 
+def _column_values(changes):
+    """``changes`` as UPDATE values; elapsed_seconds can only grow, even against a
+    save from another tab that landed after this one was read."""
+    values = {key: value for key, value in changes.items() if key != "elapsed_seconds"}
+    if "elapsed_seconds" in changes:
+        elapsed = changes["elapsed_seconds"]
+        values["elapsed_seconds"] = case(
+            (QuizAttempt.elapsed_seconds < elapsed, elapsed),
+            else_=QuizAttempt.elapsed_seconds,
+        )
+    return values
+
+
+def save_progress(attempt, changes):
+    """Store ``changes`` from parse_progress on a still-open attempt.
+
+    A conditional UPDATE (submitted_at IS NULL), so a save racing a submit cannot
+    change the answers after they were graded. Returns False, having stored nothing,
+    when the attempt was submitted meanwhile. The caller commits.
+    """
+    if not changes:
+        return True
+    saved = db.session.execute(
+        update(QuizAttempt)
+        .where(QuizAttempt.id == attempt.id, QuizAttempt.submitted_at.is_(None))
+        .values(**_column_values(changes))
+        .execution_options(synchronize_session=False)
+    )
+    if saved.rowcount != 1:
+        return False
+    db.session.expire(attempt)
+    return True
+
+
 # --- grading ----------------------------------------------------------------
 
 
+def snapshot(answers, questions):
+    """What gets graded: {"<number>": {answer, selected, domain}} per question."""
+    answers = answers or {}
+    return {
+        str(question.number): {
+            "answer": question.answer,
+            "selected": answers.get(str(question.number)) or None,
+            "domain": question.domain,
+        }
+        for question in questions
+    }
+
+
 def grade(attempt, questions):
-    """Per-question outcome and totals for the attempt's saved answers."""
-    answers = attempt.answers or {}
+    """Per-question outcome and totals of an attempt.
+
+    A submitted attempt is read from the snapshot taken at submit, so these figures
+    stay those of the stored score whatever happens to the questions afterwards; the
+    live ``questions`` only supply the text. Without a snapshot the saved answers are
+    graded against ``questions``.
+    """
+    rows = attempt.graded or snapshot(attempt.answers, questions)
+    by_number = {question.number: question for question in questions}
     correct = skipped = 0
     domains = {}
     review = []
-    for question in questions:
-        selected = answers.get(str(question.number)) or None
-        is_correct = selected == question.answer
+    for key in sorted(rows, key=int):
+        row = rows[key]
+        number = int(key)
+        question = by_number.get(number)
+        selected = row.get("selected") or None
+        is_correct = selected is not None and selected == row.get("answer")
         if selected is None:
             skipped += 1
         if is_correct:
             correct += 1
-        entry = domains.setdefault(
-            question.domain, {"domain": question.domain, "correct": 0, "total": 0}
-        )
+        name = row.get("domain") or (question.domain if question else "")
+        entry = domains.setdefault(name, {"domain": name, "correct": 0, "total": 0})
         entry["total"] += 1
         entry["correct"] += int(is_correct)
-        review.append((question, selected, is_correct))
-    total = len(questions)
+        review.append(
+            {
+                "number": number,
+                "question": question,
+                "domain": name,
+                "answer": row.get("answer"),
+                "selected": selected,
+                "is_correct": is_correct,
+            }
+        )
+    total = len(rows)
     return {
         "correct": correct,
         "wrong": total - correct - skipped,
@@ -151,31 +246,33 @@ def grade(attempt, questions):
     }
 
 
-def submit(attempt, questions, now=None):
-    """Grade and close the attempt. The caller commits."""
-    graded = grade(attempt, questions)
-    attempt.submitted_at = now or utcnow_naive()
-    attempt.correct_count = graded["correct"]
-    attempt.total_count = graded["total"]
-    attempt.score_percent = percent(graded["correct"], graded["total"])
+def close_attempt(attempt, questions, changes=None):
+    """Store ``changes``, grade and close an attempt that is still open. The caller commits.
 
-
-def close_attempt(attempt, questions):
-    """Grade and close an attempt that is still open. The caller commits.
-
-    The attempt is claimed with a conditional UPDATE first, so of two submits racing
-    for it only one goes on. Returns False when another request closed it already.
+    One conditional UPDATE (submitted_at IS NULL) writes the final answers, the
+    snapshot that was graded and the score together: of two submits racing for the
+    attempt only one goes on, and a save cannot slip in between. Returns False when
+    another request closed the attempt already.
     """
-    now = utcnow_naive()
+    changes = changes or {}
+    taken = snapshot(changes.get("answers", attempt.answers), questions)
+    correct = sum(1 for row in taken.values() if row["selected"] == row["answer"])
     claimed = db.session.execute(
         update(QuizAttempt)
         .where(QuizAttempt.id == attempt.id, QuizAttempt.submitted_at.is_(None))
-        .values(submitted_at=now)
+        .values(
+            **_column_values(changes),
+            submitted_at=utcnow_naive(),
+            graded=taken,
+            correct_count=correct,
+            total_count=len(taken),
+            score_percent=percent(correct, len(taken)),
+        )
         .execution_options(synchronize_session=False)
     )
     if claimed.rowcount != 1:
         return False
-    submit(attempt, questions, now)
+    db.session.expire(attempt)
     return True
 
 
@@ -232,7 +329,7 @@ def serialize_state(attempt, questions):
         "quiz": {
             "slug": quiz.slug,
             "title": quiz.title,
-            "time_limit_minutes": quiz.time_limit_minutes,
+            "time_limit_minutes": time_limit_minutes(attempt),
         },
         "started_at": to_utc_iso(attempt.started_at),
         "deadline": to_utc_iso(attempt.deadline),
@@ -282,17 +379,19 @@ def serialize_result(attempt, questions, include_review):
     if include_review:
         result["review"] = [
             {
-                "number": question.number,
-                "domain": question.domain,
-                "prompt": question.prompt,
-                "options": sorted_options(question),
-                "diagram_html": question.diagram_html or None,
-                "selected": selected,
-                "answer": question.answer,
-                "is_correct": is_correct,
-                "explanation": question.explanation,
+                "number": row["number"],
+                "domain": row["domain"],
+                "prompt": row["question"].prompt,
+                "options": sorted_options(row["question"]),
+                "diagram_html": row["question"].diagram_html or None,
+                "selected": row["selected"],
+                "answer": row["answer"],
+                "is_correct": row["is_correct"],
+                "explanation": row["question"].explanation,
             }
-            for question, selected, is_correct in graded["review"]
+            # A question deleted since has no text left to show; it still counts above
+            for row in graded["review"]
+            if row["question"] is not None
         ]
     return result
 

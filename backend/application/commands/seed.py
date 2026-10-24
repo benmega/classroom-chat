@@ -235,7 +235,9 @@ def seed_command():
         click.echo(
             "Student tests: "
             f"quizzes +{stats['quizzes_inserted']}/~{stats['quizzes_updated']}, "
-            f"questions +{stats['questions_inserted']}/~{stats['questions_updated']}."
+            f"questions +{stats['questions_inserted']}/~{stats['questions_updated']}"
+            + (f"/-{stats['questions_deleted']}" if stats["questions_deleted"] else "")
+            + "."
         )
     except Exception as e:
         db.session.rollback()

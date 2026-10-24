@@ -13,7 +13,7 @@ from application.models.quiz import Quiz, QuizAttempt, QuizQuestion
 from application.models.user import User
 from application.services import quiz_service
 from application.services.quiz_service import QuizValidationError
-from application.utilities.helper_functions import to_utc_iso
+from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import Blueprint, request, session
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -162,7 +162,16 @@ def start_attempt(slug):
     ).first():
         return {"error": "Retakes are off for this test"}, 403
 
-    attempt = QuizAttempt(quiz_id=quiz.id, user_id=user.id, answers={}, flagged=[])
+    started_at = utcnow_naive()
+    attempt = QuizAttempt(
+        quiz_id=quiz.id,
+        user_id=user.id,
+        answers={},
+        flagged=[],
+        started_at=started_at,
+        # Fixed now: a later change of the time limit does not reach this attempt
+        deadline=quiz_service.deadline_for(quiz, started_at),
+    )
     db.session.add(attempt)
     try:
         db.session.commit()
@@ -231,9 +240,13 @@ def save_attempt(attempt_id):
         return {"error": "Time is up", "expired": True}, 409
 
     try:
-        quiz_service.apply_progress(attempt, _payload() or {}, _questions(attempt.quiz_id))
+        changes = quiz_service.parse_progress(attempt, _payload() or {}, _questions(attempt.quiz_id))
     except QuizValidationError as exc:
         return {"error": str(exc)}, 400
+    if not quiz_service.save_progress(attempt, changes):
+        # Submitted while this save was on its way: the graded answers stay as they are
+        db.session.rollback()
+        return {"error": "This attempt is already submitted"}, 409
     db.session.commit()
     return {
         "attempt": {
@@ -259,12 +272,13 @@ def submit_attempt(attempt_id):
 
     questions = _questions(attempt.quiz_id)
     # Past the deadline the saved answers are graded as they are
+    changes = {}
     if not quiz_service.is_expired(attempt):
         try:
-            quiz_service.apply_progress(attempt, _payload(), questions)
+            changes = quiz_service.parse_progress(attempt, _payload(), questions)
         except QuizValidationError as exc:
             return {"error": str(exc)}, 400
-    if not quiz_service.close_attempt(attempt, questions):
+    if not quiz_service.close_attempt(attempt, questions, changes):
         db.session.rollback()
         return {"error": "This attempt is already submitted"}, 409
     quiz_service.award_ducks(user, attempt)
