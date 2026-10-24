@@ -18,6 +18,7 @@ from application.models.message import Message
 from application.models.note import Note
 from application.models.parent_message import ParentMessage
 from application.models.project import Project
+from application.models.quiz import Quiz, QuizAttempt, QuizReward
 from application.models.session_log import SessionLog
 from application.models.skill import Skill
 from application.models.store_item import StoreItem
@@ -25,6 +26,7 @@ from application.models.submission import Submission
 from application.models.user import User
 from application.models.user_certificate import UserCertificate
 from application.models.user_item_purchase import UserItemPurchase
+from application.utilities.helper_functions import utcnow_naive
 from sqlalchemy import func, select
 from tests.factories import (
     AchievementFactory,
@@ -95,6 +97,15 @@ def _give_everything_a_student_has(student, classroom, achievement, item):
                 user_id=student.id, achievement_id=achievement.id, url="https://x"
             ),
             UserItemPurchase(user_id=student.id, item_id=item.id, times_purchased=1),
+        ]
+    )
+    quiz = Quiz.query.first() or Quiz(slug="deletion-test", title="Deletion test")
+    db.session.add(quiz)
+    db.session.flush()
+    db.session.add_all(
+        [
+            QuizAttempt(quiz=quiz, user=student, answers={"1": "A"}, submitted_at=utcnow_naive()),
+            QuizReward(quiz_id=quiz.id, user_id=student.id, ducks=1),
         ]
     )
     classroom.users.append(student)
@@ -206,6 +217,11 @@ def test_deleting_a_student_deletes_what_belonged_to_it(world):
         ] * (2 if model is ChallengeLog else 1)
     # Messages other people wrote stay, also the one that was addressed to the student
     assert Message.query.count() == kept_messages
+    # The attempt and reward of the student go; the other student's stay, and the test
+    assert QuizAttempt.query.count() == 1
+    assert QuizAttempt.query.one().user_id == world["bystanders"][0]
+    assert QuizReward.query.count() == 1
+    assert Quiz.query.count() == 1
     # The parent stays, without the child
     parent = db.session.get(User, world["parent"])
     assert parent is not None
