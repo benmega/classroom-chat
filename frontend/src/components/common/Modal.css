@@ -246,3 +246,9 @@
 
 
 
+
+:where(.admin-modal-overlay) .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}

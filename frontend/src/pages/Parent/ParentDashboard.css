@@ -863,3 +863,10 @@
     }
 }
 
+
+:where(.parent-dashboard) .dashboard-panel {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 25px;
+    box-shadow: var(--shadow-soft);
+}

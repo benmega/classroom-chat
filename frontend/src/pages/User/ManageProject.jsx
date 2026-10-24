@@ -300,14 +300,14 @@ const ManageProject = () => {
                                     <div className="form-group">
                                         <label htmlFor="input-180">Demo Link <span className="optional-badge">Optional</span></label>
                                         <div className="video-input-wrapper">
-                                            <LinkIcon size={16} className="input-icon" />
+                                            <LinkIcon size={16} className="input-icon-inside" />
                                             <input id="input-180"
                                                 type="url"
                                                 name="link"
                                                 value={projectData.link || ''}
                                                 onChange={handleInputChange}
                                                 placeholder="https://..."
-                                                className="form-control with-icon"
+                                                className="form-control with-icon-pl"
                                             />
                                         </div>
                                     </div>
@@ -334,7 +334,7 @@ const ManageProject = () => {
                                         <p className="media-hint">Add a YouTube/Vimeo link, or upload/record a video directly.</p>
                                         
                                         <div className="video-input-wrapper">
-                                            <Youtube size={16} className="input-icon" />
+                                            <Youtube size={16} className="input-icon-inside" />
                                             <input 
                                                 type="text" 
                                                 name="video_url" 
@@ -342,7 +342,7 @@ const ManageProject = () => {
                                                 onChange={handleInputChange} 
                                                 placeholder="YouTube/Vimeo URL" 
                                                 aria-label="Video URL (YouTube or Vimeo)"
-                                                className="form-control with-icon" 
+                                                className="form-control with-icon-pl" 
                                             />
                                         </div>
                                         <div className="or-divider"><span>OR</span></div>
