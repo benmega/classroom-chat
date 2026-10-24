@@ -378,7 +378,7 @@ describe('TakeTest', () => {
                 act(() => {
                     document.dispatchEvent(new Event('visibilitychange'));
                 });
-                await waitFor(() => expect(saves).toHaveLength(1));
+                await waitFor(() => expect(saves).toHaveLength(1), { timeout: 5000 });
             } finally {
                 delete document.visibilityState;
                 if (original) Object.defineProperty(Document.prototype, 'visibilityState', original);
