@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Zap, TrendingUp, BarChart2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Activity, Award, BookOpen, User, ChevronDown, ChevronUp, Zap, TrendingUp, BarChart2, ClipboardList } from 'lucide-react';
 import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
 import { getApiUrl } from '../../utils/apiUrl';
-import { parseServerDate } from '../../utils/formatters';
+import { parseServerDate, safeDate } from '../../utils/formatters';
+import { listStudentAttempts } from '../../api/quizzes';
 import ContributionGraph from '../../components/profile/ContributionGraph';
 import ProjectPortfolio from '../../components/profile/ProjectPortfolio';
 import DigitalNotebook from '../../components/profile/DigitalNotebook';
@@ -68,6 +69,7 @@ const ParentReportCard = () => {
     const [selectedProject, setSelectedProject] = useState(null);
     const [slideshowIndex, setSlideshowIndex] = useState(null);
     const [historyData, setHistoryData] = useState(null);
+    const [testAttempts, setTestAttempts] = useState([]);
 
 
     useEffect(() => {
@@ -99,6 +101,22 @@ const ParentReportCard = () => {
         };
         fetchHistory();
     }, [studentId, error]);
+
+    useEffect(() => {
+        if (!studentId) return;
+        let cancelled = false;
+        listStudentAttempts(studentId)
+            .then((data) => {
+                if (!cancelled) setTestAttempts(Array.isArray(data?.attempts) ? data.attempts : []);
+            })
+            .catch(() => {
+                // Non-critical: the section stays hidden
+                if (!cancelled) setTestAttempts([]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [studentId]);
 
     if (isLoading) {
         return (
@@ -193,6 +211,7 @@ const ParentReportCard = () => {
         (!reportData.unlocked_achievements || reportData.unlocked_achievements.length === 0) &&
         (!reportData.projects || reportData.projects.length === 0) &&
         (!reportData.notes || reportData.notes.length === 0) &&
+        testAttempts.length === 0 &&
         (!historyData?.recent_events || historyData.recent_events.length === 0) &&
         (!reportData.contribution_data?.rows || !reportData.contribution_data.rows.some(row => row && row.some(cell => cell && cell.level > 0))) &&
         (!historyData || (
@@ -259,6 +278,44 @@ const ParentReportCard = () => {
                 <div className="dashboard-grid report-dashboard-grid report-dashboard-grid-spaced">
                     <div className="column-left">
                         <CourseProgress target={reportData} isParentView={true} studentId={studentId} />
+
+                        {testAttempts.length > 0 && (
+                            <section className="dashboard-panel">
+                                <div className="panel-header">
+                                    <h2><ClipboardList size={20} /> Tests</h2>
+                                </div>
+                                <ul className="report-tests-list">
+                                    {testAttempts.map((attempt) => {
+                                        const submitted = attempt.status === 'submitted';
+                                        const body = (
+                                            <>
+                                                <span className="report-tests-title">{attempt.quiz?.title}</span>
+                                                <span className="report-tests-date">
+                                                    {safeDate(submitted ? attempt.submitted_at : attempt.started_at)}
+                                                </span>
+                                                <span className="report-tests-score">
+                                                    {submitted ? `${attempt.correct}/${attempt.total}` : 'In progress'}
+                                                </span>
+                                                {submitted && (
+                                                    <span className="report-tests-percent">{attempt.score_percent}%</span>
+                                                )}
+                                            </>
+                                        );
+                                        return (
+                                            <li key={attempt.id}>
+                                                {submitted ? (
+                                                    <Link to={`/parent/tests/results/${attempt.id}`} className="report-tests-row">
+                                                        {body}
+                                                    </Link>
+                                                ) : (
+                                                    <div className="report-tests-row">{body}</div>
+                                                )}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </section>
+                        )}
 
                         {reportData.unlocked_achievements && reportData.unlocked_achievements.length > 0 && (
                             <section className="dashboard-panel">
