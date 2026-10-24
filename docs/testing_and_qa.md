@@ -18,6 +18,7 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
     - `backend/tests/conftest.py`: Defines fixtures for the app instance, database, and authenticated clients.
     - `backend/tests/app/routes/`: Functional tests for each blueprint (auth, admin subroutes, message, achievements, shop, cognito, ...).
     - `backend/tests/app/models/`, `backend/tests/application/services/`: Model and service-layer unit tests.
+    - `backend/tests/app/routes/test_quiz_routes.py`, `backend/tests/app/test_quiz_seed.py`, `backend/tests/test_migration_student_tests.py`: Student tests API, seed and migration (see [student_tests.md](student_tests.md#12-tests)).
     - `backend/tests/test_socket_events.py`, `backend/tests/app/test_app_socket_events.py`: Socket.IO event tests.
 - **Strategy**: 
     - Focused on API endpoint validation (status codes, JSON payloads).
@@ -30,6 +31,7 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 - **Key Coverage**:
     - **Unit Tests**: React hooks (`useAuthStore`), utility functions, and common components.
     - **Component Tests**: Interaction testing for complex UI components (e.g., Modals, Dashboards).
+- **Student tests**: `src/pages/Tests/*.test.jsx`, `src/components/quiz/*.test.jsx` and `src/pages/Admin/AdminTests.test.jsx` (autosave, clock, result view, sandboxed diagrams, admin page). Run with `npx vitest run src/pages/Tests src/components/quiz`.
 - **Real-time Testing**: Vitest is used to mock Socket.io events and verify component state updates.
 
 ### 2.3 E2E Testing (System Tests)
@@ -38,6 +40,7 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 - **Scenarios**:
     - **Auth Flow**: Signup -> Login -> Dashboard redirect.
     - **Messaging**: Real-time message exchange between multiple mock users.
+    - **Student tests** (`student_tests.spec.js`): take, resume and submit a test, no answer key while open, admin result view and delete, no leak to the public profile or an unlinked parent. Needs the backend on port 8000 with `flask seed` run.
     - **Responsiveness**: Visual regression checks across desktop and mobile viewports.
 
 ---

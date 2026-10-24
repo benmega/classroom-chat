@@ -1,9 +1,11 @@
 
 
+import json
 import logging
 import os
 import re
-from urllib.parse import parse_qs
+from html import escape
+from urllib.parse import parse_qs, urlparse
 
 from application import Configuration
 from application.config import (
@@ -34,9 +36,12 @@ _ALREADY_CLAIMED_MESSAGE = (
 )
 _CLAIM_FAILED_MESSAGE = "Could not log your challenge right now. Please try again."
 
+# Hosts a claim may come from: the same sites the bookmarklet runs on
+_CLAIM_HOSTS = "|".join(re.escape(urlparse(o).hostname) for o in BOOKMARKLET_ORIGINS)
+
 # Base pattern for CodeCombat and Ozaria URLs
 BASE_PATTERN = (
-    r"https://(?P<domain>[\w\.-]+)"
+    rf"https://(?P<domain>(?i:{_CLAIM_HOSTS}))"
     r"(?:"
     r"/play/(?:(?:ozaria|junior)/)?level/(?P<challenge_slug>[\w-]+)"
     r"|/s/(?P<slug>[\w-]+)/lessons/(?P<lesson_id>\d+)/levels/(?P<level_id>\d+)"
@@ -63,6 +68,25 @@ CHALLENGE_ORIGINS = [*FRONTEND_ORIGINS, *BOOKMARKLET_ORIGINS]
 def _wants_json():
     """True when the caller is an API client rather than a browser form."""
     return request.is_json or request.accept_mimetypes.accept_json
+
+
+def _popup_page(text):
+    """The page the bookmarklet's popup tab shows: an alert, then the same text.
+
+    The text can contain challenge names and error messages, so it is data: it
+    is JSON-encoded for the script (with <, > and & escaped so it cannot close
+    the script element) and HTML-escaped for the page body.
+    """
+    script_text = (
+        json.dumps(text)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
+    return (
+        f"<html><body><script>alert({script_text}); window.close();</script>"
+        f"{escape(text)}</body></html>"
+    )
 
 
 @challenge.route("/submit", methods=["GET", "POST"])
@@ -108,9 +132,7 @@ def submit_challenge():
         if url:
             is_get_submission = True
             helper = request.args.get("helpers", "") or ""
-            notes = request.args.get("notes", "") or ""
             helper = helper.strip()
-            notes = notes.strip()
         else:
             if request.is_json or request.accept_mimetypes.accept_json:
                 return jsonify({"status": "ready"})
@@ -122,16 +144,13 @@ def submit_challenge():
                 return jsonify({"success": False, "message": "Invalid JSON body"}), 400
             url = data.get("url")
             helper = data.get("helpers") or ""
-            notes = data.get("notes") or ""
-            if not isinstance(helper, str) or not isinstance(notes, str):
-                msg = "helpers and notes must be text"
+            if not isinstance(helper, str):
+                msg = "helpers must be text"
                 return jsonify({"success": False, "message": msg}), 400
             helper = helper.strip()
-            notes = notes.strip()
         else:
             url = request.form.get("url")
             helper = (request.form.get("helpers") or "").strip()
-            notes = (request.form.get("notes") or "").strip()
 
     if not url or not isinstance(url, str):
         msg = "Challenge URL is required"
@@ -192,7 +211,7 @@ def submit_challenge():
             )
 
         if is_get_submission:
-            return f"<html><body><script>alert('{message}'); window.close();</script>{message}</body></html>"
+            return _popup_page(message)
 
         return jsonify(
             {
@@ -237,12 +256,7 @@ def submit_challenge():
                 msg = "This course wasn't connected yet. A request to add it has already been submitted."
 
     if is_get_submission:
-        # Escape single quotes in the message for JS alert
-        safe_msg = msg.replace("'", "\\'")
-        return (
-            f"<html><body><script>alert('Failed: {safe_msg}'); window.close();</script>Failed: {msg}</body></html>",
-            400,
-        )
+        return _popup_page(f"Failed: {msg}"), 400
 
     return jsonify(
         {
@@ -353,7 +367,7 @@ def _extract_challenge_details(message):
     if not match:
         return None
 
-    domain = match.group("domain")
+    domain = match.group("domain").lower()
     challenge_slug = match.group("challenge_slug") or match.group("slug")
     params_str = match.group("params") or ""
 

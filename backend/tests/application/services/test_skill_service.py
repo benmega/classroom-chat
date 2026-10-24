@@ -229,8 +229,21 @@ def test_challenge_counts_wd_slug_repeated_across_logs_counts_once(client, init_
     user = _make_user()
     db.session.add_all(
         [
-            ChallengeLog(user_id=user.id, domain="x", challenge_slug="wd1-intro", course_id="a"),
-            ChallengeLog(user_id=user.id, domain="x", challenge_slug="wd1-intro", course_id="b"),
+            # The same level, claimed in two course instances
+            ChallengeLog(
+                user_id=user.id,
+                domain="x",
+                challenge_slug="wd1-intro",
+                course_id="a",
+                course_instance="instance-1",
+            ),
+            ChallengeLog(
+                user_id=user.id,
+                domain="x",
+                challenge_slug="wd1-intro",
+                course_id="b",
+                course_instance="instance-2",
+            ),
         ]
     )
     db.session.commit()

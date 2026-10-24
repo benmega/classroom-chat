@@ -20,6 +20,15 @@ vi.mock('react-hot-toast', () => ({
   },
 }));
 
+// vitest swaps imported CSS (even ?raw) for an empty string, so the sprite's rules are stood in for here.
+vi.mock('../../assets/css/sprite.css?raw', () => ({
+  default: [
+    '.badge { width: 128px; }',
+    '.badge-old-timer { background-position: -0px -0px; }',
+    '.badge-master-coder { background-position: -128px -0px; }',
+  ].join(' '),
+}));
+
 const existing = {
   id: 5,
   name: 'Old Timer',
@@ -72,6 +81,28 @@ describe('AdminAchievements', () => {
       expect(await screen.findByText('Old Timer')).toBeInTheDocument();
       expect(screen.getByText(/20 ducks/)).toBeInTheDocument();
       expect(client.get).toHaveBeenCalledWith('/api/achievements/all');
+    });
+
+    it('shows each badge from its sprite class, not from a per-badge image file', async () => {
+      render(<AdminAchievements />);
+      await screen.findByText('Old Timer');
+
+      const header = document.querySelector('.project-card-header');
+      expect(header.querySelector('.badge.badge-old-timer')).toBeInTheDocument();
+      expect(header.style.backgroundImage).toBe('');
+      expect(document.querySelector('img')).toBeNull();
+    });
+
+    it('keeps the award icon for a badge that has no cell in the sprite', async () => {
+      mockList([existing, { ...existing, id: 7, name: 'Newcomer', slug: 'new-badge' }]);
+      render(<AdminAchievements />);
+      await screen.findByText('Newcomer');
+
+      const [known, unknown] = document.querySelectorAll('.project-card-header');
+      expect(known.querySelector('.badge-old-timer')).toBeInTheDocument();
+      expect(known.querySelector('svg')).toBeNull();
+      expect(unknown.querySelector('.badge')).toBeNull();
+      expect(unknown.querySelector('svg.achievement-fallback-icon')).toBeInTheDocument();
     });
 
     it('shows an empty state', async () => {
@@ -165,6 +196,25 @@ describe('AdminAchievements', () => {
 
       expect(toast.error).toHaveBeenCalledWith('Reward must be a whole number of at least 1.');
       expect(client.post).not.toHaveBeenCalled();
+    });
+
+    it('previews the badge from its sprite class once a slug is typed', async () => {
+      await openAddForm();
+      expect(document.querySelector('.preview-badge .badge')).toBeNull();
+
+      fillAddForm({ slug: 'master-coder' });
+
+      expect(document.querySelector('.preview-badge .badge')).toHaveClass('badge-master-coder');
+      expect(document.querySelector('.preview-badge img')).toBeNull();
+    });
+
+    it('keeps the award icon in the preview for a slug that has no cell in the sprite', async () => {
+      await openAddForm();
+
+      fillAddForm({ slug: 'new-badge' });
+
+      expect(document.querySelector('.preview-badge .badge')).toBeNull();
+      expect(document.querySelector('.preview-badge svg')).toBeInTheDocument();
     });
 
     it('restricts the slug input to lowercase letters, digits and hyphens', async () => {

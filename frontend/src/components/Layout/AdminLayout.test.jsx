@@ -7,9 +7,13 @@ import AdminLayout from './AdminLayout';
 import useAuthStore from '../../store/useAuthStore';
 import client from '../../api/client';
 import { SidebarProvider } from '../../context/SidebarContext';
+import AdminPageHeader from '../admin/AdminPageHeader';
 
 vi.mock('../../api/client', () => ({
-    default: { get: vi.fn().mockResolvedValue({ data: { status: 'error' } }) },
+    default: {
+        get: vi.fn().mockResolvedValue({ data: { status: 'error' } }),
+        post: vi.fn().mockResolvedValue({ data: { status: 'success' } }),
+    },
 }));
 
 const renderLayout = (children) => render(
@@ -33,6 +37,12 @@ describe('AdminLayout Component', () => {
 
         expect(screen.getByRole('link', { name: 'Admin HQ Home' })).toBeInTheDocument();
         expect(screen.getByText('Admin Page Content')).toBeInTheDocument();
+    });
+
+    it('links to the Tests page in the rail', () => {
+        renderLayout(<div>Admin Page Content</div>);
+
+        expect(screen.getByRole('link', { name: 'Tests' })).toHaveAttribute('href', '/admin/tests');
     });
 
     it('shows Access Denied instead of the children for a non-admin', () => {
@@ -68,6 +78,67 @@ describe('AdminLayout Component', () => {
     });
 });
 
+describe('AdminLayout mobile menu', () => {
+    beforeEach(() => {
+        useAuthStore.setState({
+            isAuthenticated: true,
+            user: { role: 'admin', username: 'admin1' },
+        });
+    });
+
+    it('has a menu button that is not a submit button and starts collapsed', () => {
+        renderLayout(<div>Admin Page Content</div>);
+
+        const menu = screen.getByRole('button', { name: 'Open Sidebar' });
+        expect(menu).toHaveAttribute('type', 'button');
+        expect(menu).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('opens the sidebar from the keyboard and reports it with aria-expanded', async () => {
+        const user = userEvent.setup();
+        const { container } = renderLayout(<div>Admin Page Content</div>);
+        const menu = screen.getByRole('button', { name: 'Open Sidebar' });
+        expect(container.querySelector('.admin-app-container')).not.toHaveClass('mobile-open');
+
+        menu.focus();
+        await user.keyboard('{Enter}');
+
+        expect(container.querySelector('.admin-app-container')).toHaveClass('mobile-open');
+        expect(menu).toHaveAttribute('aria-expanded', 'true');
+
+        await user.click(screen.getByRole('button', { name: 'Close sidebar' }));
+
+        expect(container.querySelector('.admin-app-container')).not.toHaveClass('mobile-open');
+        expect(menu).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('closes the open menu when the route changes', async () => {
+        const user = userEvent.setup();
+        const { container } = render(
+            <MemoryRouter initialEntries={['/admin']}>
+                <SidebarProvider>
+                    <AdminLayout><div>Admin Page Content</div></AdminLayout>
+                </SidebarProvider>
+            </MemoryRouter>
+        );
+
+        await user.click(screen.getByRole('button', { name: 'Open Sidebar' }));
+        expect(container.querySelector('.admin-app-container')).toHaveClass('mobile-open');
+
+        await user.click(screen.getByRole('link', { name: 'User Management' }));
+
+        expect(container.querySelector('.admin-app-container')).not.toHaveClass('mobile-open');
+    });
+
+    it('is the only menu button on a page that has a page header', () => {
+        renderLayout(<AdminPageHeader title="User Directory" />);
+
+        expect(screen.getByRole('heading', { level: 1, name: 'User Directory' })).toBeInTheDocument();
+        expect(screen.getAllByRole('button', { name: /menu|sidebar/i }).map((b) => b.getAttribute('aria-label')))
+            .toEqual(['Close sidebar', 'Open Sidebar']);
+    });
+});
+
 describe('AdminLayout logout', () => {
     // The probe sits outside AdminLayout: signing out turns the layout into Access Denied
     const LocationProbe = () => <div data-testid="location">{useLocation().pathname}</div>;
@@ -95,13 +166,13 @@ describe('AdminLayout logout', () => {
 
         await waitFor(() => expect(screen.getByTestId('location').textContent).toBe('/'));
         expect(useAuthStore.getState().isAuthenticated).toBe(false);
-        expect(client.get).toHaveBeenCalledWith('/user/logout');
+        expect(client.post).toHaveBeenCalledWith('/user/logout');
     });
 
     it('still leaves the admin area when the logout request fails', async () => {
         const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
         renderWithLocation();
-        client.get.mockRejectedValueOnce(new Error('Network Error'));
+        client.post.mockRejectedValueOnce(new Error('Network Error'));
 
         await userEvent.click(screen.getByRole('button', { name: 'Logout' }));
 

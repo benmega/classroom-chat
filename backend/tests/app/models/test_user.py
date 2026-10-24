@@ -121,6 +121,8 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
     today = datetime.now()
     logs = []
 
+    # A level may be logged once per course instance, so the days with several
+    # logs repeat their level in different instances.
     # level 1 (1 log)
     logs.append(
         ChallengeLog(
@@ -137,9 +139,10 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
                 user_id=user.id,
                 domain="codecombat.com",
                 challenge_slug="b",
+                course_instance=f"instance-{n}",
                 timestamp=today - timedelta(days=1),
             )
-            for _ in range(2)
+            for n in range(2)
         ]
     )
     # level 3 (5 logs)
@@ -149,9 +152,10 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
                 user_id=user.id,
                 domain="codecombat.com",
                 challenge_slug="c",
+                course_instance=f"instance-{n}",
                 timestamp=today - timedelta(days=2),
             )
-            for _ in range(5)
+            for n in range(5)
         ]
     )
     # level 4 (7 logs)
@@ -161,9 +165,10 @@ def test_user_get_contribution_data_with_logs(add_sample_user, init_db):
                 user_id=user.id,
                 domain="codecombat.com",
                 challenge_slug="d",
+                course_instance=f"instance-{n}",
                 timestamp=today - timedelta(days=3),
             )
-            for _ in range(7)
+            for n in range(7)
         ]
     )
 
@@ -386,6 +391,48 @@ def test_add_ducks_min_balance_checks_the_stored_balance_not_a_stale_copy(
 
     assert _stored_balances(user_id) == (0, 10)
     assert DuckTransaction.query.filter_by(user_id=user_id).count() == 0
+
+
+def test_add_ducks_fractional_credits_and_debits_leave_no_float_residue(
+    add_sample_user,
+):
+    user = add_sample_user("residue", "pwd")
+
+    for _ in range(3):
+        assert user.add_ducks(1.1, reason="credit") is True
+    assert user.add_ducks(-3.3, reason="debit", min_balance=0) is True
+    db.session.commit()
+
+    # Unrounded this leaves 4.4e-16 (and 3.3000000000000003 earned).
+    assert _stored_balances(user.id) == (0, 3.3)
+
+
+def test_add_ducks_can_spend_all_of_a_balance_built_from_fractions(add_sample_user):
+    """0.7 + 0.1 + 0.1 + 0.1 is 0.9999999999999999 as raw floats, which would
+    refuse a debit of the whole 1 duck."""
+    user = add_sample_user("spend_all", "pwd")
+
+    for amount in (0.7, 0.1, 0.1, 0.1):
+        assert user.add_ducks(amount, reason="credit") is True
+    db.session.commit()
+    assert _stored_balances(user.id) == (1, 1)
+
+    assert user.add_ducks(-1, reason="all of it", min_balance=0) is True
+    db.session.commit()
+
+    assert _stored_balances(user.id) == (0, 1)
+
+
+def test_add_ducks_without_a_database_row_rounds_the_same_way():
+    user = User(username="transient_frac", password_hash="x", earned_ducks=0, duck_balance=0)
+
+    for amount in (0.7, 0.1, 0.1, 0.1):
+        assert user.add_ducks(amount, reason="credit") is True
+    assert (user.duck_balance, user.earned_ducks) == (1, 1)
+
+    assert user.add_ducks(-1, reason="all of it", min_balance=0) is True
+    assert (user.duck_balance, user.earned_ducks) == (0, 1)
+    db.session.rollback()  # drop the (user-less) transaction rows staged above
 
 
 def test_add_ducks_without_a_database_row_uses_plain_arithmetic():
@@ -806,7 +853,106 @@ def test_start_session_is_idempotent(sample_user):
     assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 2
 
 
-def test_end_session_closes_every_open_session(sample_user):
+def test_a_second_open_session_is_refused_by_the_database(sample_user):
+    now = datetime.utcnow()
+    db.session.add(SessionLog(user_id=sample_user.id, start_time=now, last_seen=now))
+    db.session.commit()
+
+    db.session.add(SessionLog(user_id=sample_user.id, start_time=now, last_seen=now))
+    with pytest.raises(IntegrityError):
+        db.session.commit()
+    db.session.rollback()
+
+    assert len(_open_logs(sample_user.id)) == 1
+
+
+def test_ended_sessions_and_other_users_are_not_limited(sample_user, sample_admin):
+    now = datetime.utcnow()
+    db.session.add_all(
+        [
+            SessionLog(user_id=sample_user.id, start_time=now, last_seen=now, end_time=now),
+            SessionLog(user_id=sample_user.id, start_time=now, last_seen=now, end_time=now),
+            SessionLog(user_id=sample_user.id, start_time=now, last_seen=now),
+            SessionLog(user_id=sample_admin.id, start_time=now, last_seen=now),
+        ]
+    )
+    db.session.commit()
+
+    assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 3
+    assert len(_open_logs(sample_user.id)) == 1
+    assert len(_open_logs(sample_admin.id)) == 1
+
+
+def _lookup_misses_once(monkeypatch):
+    """The first lookup of the open session finds none, as it does for a request
+    that looked just before another request's insert was committed."""
+    real = SessionLog._open_session
+    misses = [None]
+
+    def lookup(user_id):
+        return misses.pop() if misses else real(user_id)
+
+    monkeypatch.setattr(SessionLog, "_open_session", lookup)
+
+
+def test_start_session_returns_the_session_another_request_opened_first(
+    sample_user, monkeypatch
+):
+    theirs = SessionLog.start_session(sample_user.id)
+    _lookup_misses_once(monkeypatch)
+
+    ours = SessionLog.start_session(sample_user.id)
+
+    assert ours.id == theirs.id
+    assert [log.id for log in _open_logs(sample_user.id)] == [theirs.id]
+    assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 1
+
+
+def test_start_session_reraises_an_integrity_error_it_cannot_explain(init_db):
+    # No user_id: the insert is refused, and not because a session is already open
+    with pytest.raises(IntegrityError):
+        SessionLog.start_session(None)
+    db.session.rollback()
+
+    assert SessionLog.query.count() == 0
+
+
+def test_set_online_keeps_the_session_another_request_opened_first(
+    add_sample_user, init_db, monkeypatch
+):
+    user = add_sample_user("testuser_race", "pwd")
+    theirs = SessionLog.start_session(user.id)
+    assert user.is_online is not True
+    _lookup_misses_once(monkeypatch)
+
+    User.set_online(user.id, True)
+
+    assert db.session.get(User, user.id).is_online is True
+    assert [log.id for log in _open_logs(user.id)] == [theirs.id]
+    assert SessionLog.query.filter_by(user_id=user.id).count() == 1
+
+
+@pytest.mark.parametrize("online, commits", [(True, 2), (False, 1)])
+def test_set_online_gives_up_when_the_integrity_error_stays(
+    add_sample_user, init_db, online, commits
+):
+    user = add_sample_user("testuser_stuck", "pwd")
+    user_id = user.id
+    refused = IntegrityError("INSERT", {}, Exception("refused"))
+
+    with patch.object(db.session, "commit", side_effect=refused) as commit:
+        with pytest.raises(IntegrityError):
+            User.set_online(user_id, online)
+
+    # Going online is tried once more; nothing was persisted either way
+    assert commit.call_count == commits
+    assert SessionLog.query.filter_by(user_id=user_id).count() == 0
+    assert db.session.get(User, user_id).is_online is not True
+
+
+def test_end_session_closes_every_open_session(
+    sample_user, several_open_sessions_allowed
+):
     now = datetime.utcnow()
     orphan_start = now - timedelta(hours=5)
     orphan_seen = now - timedelta(hours=4)
@@ -861,7 +1007,9 @@ def test_touch_without_open_session_does_nothing(sample_user):
     assert SessionLog.query.filter_by(user_id=sample_user.id).count() == 1
 
 
-def test_touch_only_bumps_the_newest_open_session(sample_user):
+def test_touch_only_bumps_the_newest_open_session(
+    sample_user, several_open_sessions_allowed
+):
     now = datetime.utcnow()
     orphan_seen = now - timedelta(hours=4)
     orphan = SessionLog(

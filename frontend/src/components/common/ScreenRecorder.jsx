@@ -293,7 +293,9 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
       }
     }
     
-    const originalStyle = window.getComputedStyle(document.body).overflow;
+    // The inline value, not the computed one: inside the signed-in shell a stylesheet rule already
+    // computes to hidden, and writing that back would leave the page locked after the shell is gone.
+    const originalStyle = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     return () => {

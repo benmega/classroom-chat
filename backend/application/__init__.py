@@ -184,20 +184,25 @@ def create_app(config_class=None):
     with app.app_context():
         setup_models()
 
-        # Only use create_all in non-production environments to avoid schema drift issues.
-        # Production should use migrations via 'flask db upgrade'.
-        import sys
-
-        if app.config.get("ENV") != "production" and "db" not in sys.argv:
+        # Who owns the schema follows from the config class (Flask 3 has no "ENV"
+        # config key). In production it is Alembic alone: deploy.sh bootstraps a new
+        # database and runs 'flask db upgrade', and create_all here would add tables
+        # behind the migrations' back. Everywhere else the tables are built from the
+        # models. A 'flask db' command builds nothing, so it sees the database as it is.
+        running_flask_db = "db" in sys.argv
+        if not issubclass(config_class, ProductionConfig) and not running_flask_db:
             db.create_all()
-            if app.config.get("ENV") == "development":
+            if issubclass(config_class, DevelopmentConfig):
                 check_for_schema_drift(app)
-        inspector = inspect(db.engine)
-        if "db" not in sys.argv:
-            if not inspector.has_table("users"):
-                logger.info("Database initialized for the first time.")
-            # Ensure the default configuration exists, including on a fresh DB
-            ensure_default_configuration()
+        if not running_flask_db:
+            if inspect(db.engine).has_table(Configuration.__tablename__):
+                # Ensure the default configuration exists, including on a fresh DB
+                ensure_default_configuration()
+            else:
+                # Production before deploy.sh has created the schema
+                logger.warning(
+                    "The database has no schema yet: skipping the default configuration."
+                )
 
         if _should_start_scheduler(app):
             try:

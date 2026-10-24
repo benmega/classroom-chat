@@ -25,6 +25,10 @@ DEFAULT_PROD_CORS_ORIGINS = [
     "https://blossom.benmega.com",
     "https://d2pa3ix3n5behv.cloudfront.net",
 ]
+# Public address of the React app, used for links to its pages in emails and API
+# responses (the API host serves no pages). FRONTEND_URL overrides both.
+DEFAULT_DEV_FRONTEND_URL = "http://localhost:5173"
+DEFAULT_PROD_FRONTEND_URL = "https://blossom.benmega.com"
 # Sites the CodeCombat/Ozaria bookmarklet posts from (/challenge/submit only).
 BOOKMARKLET_ORIGINS = [
     "https://codecombat.com",
@@ -42,6 +46,26 @@ def split_csv(value):
 def cors_origins_from_env(default):
     """Origins from the CORS_ORIGINS env var, or a copy of ``default`` when it is unset or blank."""
     return split_csv(os.getenv("CORS_ORIGINS", "")) or list(default)
+
+
+def frontend_url_from_env(default):
+    """The FRONTEND_URL env var without a trailing slash, or ``default`` when it is unset or blank."""
+    return os.getenv("FRONTEND_URL", "").strip().rstrip("/") or default
+
+
+# Values that must never be used as a real secret in production: the .env.example
+# placeholders, the development fallbacks below, and the usual stand-ins.
+PLACEHOLDER_SECRETS = frozenset({
+    "change_me", "changeme", "change-me", "admin", "password", "secret", "test", "dev",
+    "placeholder", "dev-secret-key-change-me", "admin-dev-password",
+})
+
+
+def reject_placeholder_secret(name, value):
+    """Raise RuntimeError if ``value`` is an obvious placeholder (the value is never logged)."""
+    normalized = (value or "").strip().strip("'\"").lower()
+    if normalized in PLACEHOLDER_SECRETS or normalized.startswith(("change_me", "changeme", "your-", "your_")):
+        raise RuntimeError(f"{name} is set to a placeholder value; set a real secret in production.")
 
 
 # backend/instance: the SQLite databases and the application log (app.log) live here.
@@ -72,6 +96,8 @@ class Config:
         if os.getenv("FLASK_ENV") == "production":
             raise RuntimeError("SECRET_KEY must be set in production environment!")
         SECRET_KEY = "dev-secret-key-change-me"
+    elif os.getenv("FLASK_ENV") == "production":
+        reject_placeholder_secret("SECRET_KEY", SECRET_KEY)
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "userData")
     # Global request body cap, just above SUBMISSION_MAX_BYTES. Project video
@@ -81,8 +107,8 @@ class Config:
     LARGE_UPLOAD_MAX_CONTENT_LENGTH = 500 * 1024 * 1024
     LARGE_UPLOAD_ENDPOINTS: ClassVar[set[str]] = {"user.new_project", "user.edit_project"}
     ALLOWED_EXTENSIONS: ClassVar[set[str]] = {"png", "jpg", "jpeg", "gif", "webp"}
-    SUBMISSION_ALLOWED_EXTENSIONS: ClassVar[set[str]] = {
-        "png", "jpg", "jpeg", "gif", "webp", "pdf", "doc", "docx", "txt", "ppt", "pptx", "zip"
+    SUBMISSION_BLOCKED_EXTENSIONS: ClassVar[set[str]] = {
+        "exe", "bat", "cmd", "sh", "msi", "vbs", "ps1"
     }
     SUBMISSION_MAX_BYTES = 20 * 1024 * 1024  # 20MB
 
@@ -96,6 +122,30 @@ class Config:
     MAX_IMAGE_PIXELS = 25_000_000  # width * height
     IMAGE_MAX_FRAMES = 100  # animated GIF / WebP / APNG
 
+    # Project files (application/utilities/project_files.py): a project's 3D models,
+    # source files and assets. They come with the project form, whose endpoints are in
+    # LARGE_UPLOAD_ENDPOINTS, so a project's whole set fits in one request. The
+    # frontend mirrors these lists and caps (frontend/src/utils/projectFiles.js).
+    PROJECT_MODEL_EXTENSIONS: ClassVar[frozenset[str]] = frozenset(
+        {"stl", "obj", "glb", "gltf", "3mf", "ply"}
+    )
+    # Shown as text and always served as text/plain, so script and page types are
+    # safe here; binaries (exe, msi, dll, ...) are never accepted.
+    PROJECT_SOURCE_EXTENSIONS: ClassVar[frozenset[str]] = frozenset({
+        "py", "js", "jsx", "ts", "tsx", "mjs", "cjs", "html", "htm", "css", "scss",
+        "json", "md", "txt", "java", "c", "h", "cpp", "hpp", "cs", "go", "rs", "rb",
+        "php", "lua", "sql", "xml", "yml", "yaml", "toml", "ini", "csv", "gd", "kt",
+        "swift", "sh", "bat", "ps1", "r", "m",
+    })
+    PROJECT_ASSET_EXTENSIONS: ClassVar[frozenset[str]] = frozenset(
+        {"png", "jpg", "jpeg", "gif", "webp", "mp3", "wav", "ogg", "m4a", "pdf"}
+    )
+    PROJECT_MODEL_MAX_BYTES = 50 * 1024 * 1024
+    PROJECT_SOURCE_MAX_BYTES = 1024 * 1024
+    PROJECT_ASSET_MAX_BYTES = 10 * 1024 * 1024
+    PROJECT_FILES_MAX_COUNT = 40  # per project
+    PROJECT_FILES_MAX_TOTAL_BYTES = 150 * 1024 * 1024  # per project
+
 
     ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
     ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
@@ -103,6 +153,11 @@ class Config:
         if os.getenv("FLASK_ENV") == "production":
             raise RuntimeError("ADMIN_PASSWORD must be set in production environment!")
         ADMIN_PASSWORD = "admin-dev-password"  # Slightly better than 1234
+    elif os.getenv("FLASK_ENV") == "production":
+        reject_placeholder_secret("ADMIN_PASSWORD", ADMIN_PASSWORD)
+    # Read per request by routes/api_webhooks.py; only checked here when it is set.
+    if os.getenv("FLASK_ENV") == "production" and os.getenv("WEBHOOK_SECRET"):
+        reject_placeholder_secret("WEBHOOK_SECRET", os.getenv("WEBHOOK_SECRET"))
 
     # Cognito OAuth configuration
     COGNITO_USER_POOL_ID = os.getenv("COGNITO_USER_POOL_ID")
@@ -127,6 +182,8 @@ class Config:
     # SocketIO configuration. main.py reads the same variable to decide whether
     # to gevent-monkey-patch, so the two always agree.
     SOCKETIO_ASYNC_MODE = os.getenv("SOCKETIO_ASYNC_MODE") or "gevent"
+
+    FRONTEND_URL = frontend_url_from_env(DEFAULT_DEV_FRONTEND_URL)
 
     # Rate limiter storage. The in-memory default is per process, which is only
     # correct while a single worker serves the app (see docs/infrastructure_and_devops.md).
@@ -174,6 +231,7 @@ class ProductionConfig(Config):
     )
     # nginx is the one proxy in front of gunicorn.
     TRUSTED_PROXY_COUNT = int(os.getenv("TRUSTED_PROXY_COUNT", 1))
+    FRONTEND_URL = frontend_url_from_env(DEFAULT_PROD_FRONTEND_URL)
 
     SESSION_COOKIE_DOMAIN = ".benmega.com"
     SESSION_COOKIE_SAMESITE = "Lax"

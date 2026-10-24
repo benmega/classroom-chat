@@ -17,7 +17,7 @@
     gap: 1.5rem;
 }
 
-.section-title {
+:where(.admin-achievements-page) .section-title {
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--slate-800);
@@ -29,11 +29,11 @@
     padding-bottom: 8px;
 }
 
-.form-group {
+:where(.admin-achievements-page, .admin-modal-overlay) .form-group {
     margin-bottom: 1rem;
 }
 
-.form-group label {
+:where(.admin-achievements-page, .admin-modal-overlay) .form-group label {
     display: block;
     font-weight: 700;
     margin-bottom: 0.5rem;
@@ -41,7 +41,9 @@
     font-size: 0.9rem;
 }
 
-.form-group input, .form-group select, .form-group textarea {
+:where(.admin-achievements-page, .admin-modal-overlay) .form-group input,
+:where(.admin-achievements-page, .admin-modal-overlay) .form-group select,
+:where(.admin-achievements-page, .admin-modal-overlay) .form-group textarea {
     width: 100%;
     padding: 12px 16px;
     border-radius: 12px;
@@ -52,11 +54,13 @@
     font-family: inherit;
 }
 
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-    border-color: var(--primary-color);
+:where(.admin-achievements-page, .admin-modal-overlay) .form-group input:focus,
+:where(.admin-achievements-page, .admin-modal-overlay) .form-group select:focus,
+:where(.admin-achievements-page, .admin-modal-overlay) .form-group textarea:focus {
+    border-color: var(--primary-accessible);
     background: var(--bg-primary);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    outline: none;
+    box-shadow: var(--focus-ring);
+    outline: 2px solid transparent;
 }
 
 .hint {
@@ -81,7 +85,7 @@
     width: 100%;
     padding: 16px;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 14px;
     font-weight: 700;
@@ -128,7 +132,7 @@
     margin-bottom: 1rem;
 }
 
-.badge-wrapper {
+:where(.admin-achievements-page) .badge-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -144,6 +148,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* The badge sprite is natively 128px; the preview slot is 64px. The negative margin trims the layout box to
+   match the scaled image, and the explicit position and margin beat the .badge-wrapper .badge rule of the
+   student achievements page, which applies if that stylesheet is loaded too. */
+.admin-achievements-page .preview-badge .badge {
+    position: static;
+    flex: none;
+    margin: -32px;
+    transform: scale(0.5);
+    transform-origin: center;
+}
+
+/* Stands in for a badge that has no cell in the sprite; the card header's own colour is for light-on-blue headers. */
+:where(.admin-achievements-page) .achievement-fallback-icon {
+    color: var(--text-muted);
 }
 
 :where(.admin-achievements-page) .reward-tag {
@@ -178,7 +198,7 @@
     font-size: 0.85rem;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 1024px) {
     :where(.admin-achievements-page) .achievement-form-container {
         grid-template-columns: 1fr;
     }

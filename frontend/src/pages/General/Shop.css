@@ -150,7 +150,7 @@
 
 .shop-btn-purchase {
     background: var(--primary-color, var(--success-color));
-    color: white;
+    color: var(--text-on-primary);
     cursor: pointer;
 }
 
@@ -226,7 +226,7 @@
     border-radius: 50%;
     padding: 4px;
     --preview-color: var(--border-color, var(--accent-color));
-    background: linear-gradient(45deg, var(--preview-color), #ffffff, var(--preview-color), rgba(0, 0, 0, 0.3), var(--preview-color));
+    background: linear-gradient(45deg, var(--preview-color), var(--text-on-primary), var(--preview-color), rgba(0, 0, 0, 0.3), var(--preview-color));
     background-size: 400%;
     animation: rainbow-border calc(var(--border-speed, 1.5s) * 2) linear infinite, borderPulse var(--border-speed, 1.5s) infinite;
     display: flex;

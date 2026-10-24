@@ -64,6 +64,25 @@ describe('ChatMessage', () => {
         });
     });
 
+    describe('timestamp', () => {
+        const clock = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const shown = (container) => container.querySelector('.chat-message-timestamp').textContent;
+
+        it('shows the UTC time as local time whether or not the string carries the UTC mark', () => {
+            const marked = renderMessage({ created_at: '2024-05-01T10:00:00Z' });
+            const bare = renderMessage({ created_at: '2024-05-01T10:00:00' });
+
+            expect(shown(marked.container)).toBe(clock('2024-05-01T10:00:00Z'));
+            expect(shown(bare.container)).toBe(clock('2024-05-01T10:00:00Z'));
+        });
+
+        it('says Just now for a message without a timestamp', () => {
+            const { container } = renderMessage({ created_at: null });
+
+            expect(shown(container)).toBe('Just now');
+        });
+    });
+
     describe('delete button', () => {
         it('has an accessible name and deletes the message for its owner', () => {
             const onDelete = vi.fn();

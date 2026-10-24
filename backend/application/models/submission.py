@@ -1,6 +1,6 @@
-
-
 from ..extensions import db
+from ..utilities.helper_functions import to_utc_iso
+from ..utilities.stored_files import remove_files_of_deleted_rows
 
 
 class Submission(db.Model):
@@ -8,7 +8,10 @@ class Submission(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     classroom_id = db.Column(
         db.String(64), db.ForeignKey("classrooms.id"), nullable=True, index=True
@@ -41,5 +44,12 @@ class Submission(db.Model):
             "note": self.note,
             "teacher_note": self.teacher_note,
             "status": self.status,
-            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "timestamp": to_utc_iso(self.timestamp),
         }
+
+
+# A deleted submission takes its uploaded file with it, however the row goes: on
+# its own, or with the user it belongs to. The file is removed only once the
+# delete is committed, so a transaction that is rolled back keeps the row and
+# the file.
+remove_files_of_deleted_rows(Submission)

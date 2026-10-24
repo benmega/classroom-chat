@@ -1,4 +1,4 @@
-.access-denied-container {
+.access-denied-page {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -11,7 +11,7 @@
   text-align: center;
 }
 
-.access-denied-card {
+.access-denied-page-card {
   background: rgba(239, 68, 68, 0.1);
   padding: 2rem;
   border-radius: 1.5rem;
@@ -61,7 +61,7 @@
   justify-content: center;
   gap: 0.75rem;
   background-color: var(--primary-color);
-  color: white;
+  color: var(--text-on-primary);
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
   text-decoration: none;

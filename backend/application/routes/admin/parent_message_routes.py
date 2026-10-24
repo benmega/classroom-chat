@@ -11,7 +11,7 @@ from application.models.parent_message import ParentMessage
 from application.utilities.helper_functions import utcnow_naive
 from flask import request, session
 
-from ..admin_routes import admin_bp
+from .blueprint import admin_bp
 
 VALID_STATUS_FILTERS = {"pending", "resolved", "all"}
 MAX_LIST_RESULTS = 200

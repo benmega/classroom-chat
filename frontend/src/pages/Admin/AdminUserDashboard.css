@@ -41,7 +41,7 @@
     align-items: start;
 }
 
-.section-title {
+:where(.admin-user-redesign) .section-title {
     grid-column: 1 / -1;
     display: flex;
     align-items: center;
@@ -69,14 +69,14 @@
 }
 
 /* Action button colors */
-.action-blue { background: linear-gradient(135deg, var(--blue-600), var(--blue-600)); color: white; border: none; }
+.action-blue { background: linear-gradient(135deg, var(--blue-600), var(--blue-600)); color: var(--text-on-primary); border: none; }
 .action-blue:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); transform: translateY(-1px); }
 
-.action-green { background: linear-gradient(135deg, var(--success-color), var(--success-dark)); color: white; border: none; }
+.action-green { background: linear-gradient(135deg, var(--success-color), var(--success-dark)); color: var(--text-on-primary); border: none; }
 .action-green:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transform: translateY(-1px); }
 
 .action-neutral { background: rgba(241, 245, 249, 0.9); border: 1px solid rgba(203, 213, 225, 0.8); color: var(--text-primary, var(--text-primary)); }
-.action-neutral:hover:not(:disabled) { background: white; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.action-neutral:hover:not(:disabled) { background: var(--bg-primary); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
 /* Perks list vertical layout */
 .perks-list {
@@ -99,7 +99,7 @@
 }
 
 .perk-list-item:hover {
-    background: white;
+    background: var(--bg-primary);
     transform: translateX(2px);
     border-color: rgba(148, 163, 184, 0.8);
 }
@@ -134,9 +134,9 @@
 
 /* Base resets & utilities inside dashboard */
 .mt-xs { margin-top: 0.5rem; }
-.mt-sm { margin-top: 1rem; }
-.mb-xs { margin-bottom: 0.5rem; }
-.w-full { width: 100%; }
+:where(.admin-user-redesign) .mt-sm { margin-top: 1rem; }
+:where(.admin-user-redesign) .mb-xs { margin-bottom: 0.5rem; }
+:where(.admin-user-redesign) .w-full { width: 100%; }
 .truncate {
     white-space: nowrap;
     overflow: hidden;
@@ -169,7 +169,7 @@
     font-weight: 700;
 }
 
-.banner-actions { 
+:where(.admin-user-redesign) .banner-actions { 
     display: flex; 
     gap: 0.5rem; 
 }
@@ -260,7 +260,7 @@
 /* --------------------------------------------------------------------------
    STANDARDIZED PILL BADGES (Matching Shape for Online, Activity, & Roles)
    -------------------------------------------------------------------------- */
-.status-pill,
+:where(.admin-user-redesign) .status-pill,
 .activity-pill,
 .course-badge {
     display: inline-flex;
@@ -285,7 +285,7 @@
     border: 1px solid rgba(100, 116, 139, 0.25);
 }
 
-.status-pill .status-dot {
+:where(.admin-user-redesign) .status-pill .status-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
@@ -438,7 +438,7 @@
 
 .track-card-btn.active .track-card-icon {
     background: var(--primary-accessible, #006D74);
-    color: white;
+    color: var(--text-on-primary);
     border-color: var(--primary-accessible, #006D74);
 }
 
@@ -474,7 +474,7 @@
     top: 6px;
     right: 8px;
     background: var(--success-dark);
-    color: white;
+    color: var(--text-on-primary);
     font-size: 0.65rem;
     font-weight: 800;
     padding: 0.15rem 0.45rem;
@@ -551,10 +551,10 @@
 .dense-group select:focus, 
 .inline-input:focus, 
 .inline-select:focus {
-    outline: none;
-    background: white;
+    outline: 2px solid transparent;
+    background: var(--bg-primary);
     border-color: var(--primary-accessible, #006D74);
-    box-shadow: 0 0 0 3px rgba(0, 109, 116, 0.15);
+    box-shadow: var(--focus-ring);
 }
 
 .dense-toggles {
@@ -629,7 +629,7 @@
 }
 
 .quick-action-link:hover {
-    background: white;
+    background: var(--bg-primary);
     border-color: var(--primary-accessible, #006D74);
     color: var(--primary-accessible, #006D74);
     transform: translateX(2px);
@@ -673,7 +673,7 @@
     flex: none;
 }
 
-/* Amount / drawer entries never need more than 10 characters. */
+/* Amount entries never need more than 10 characters. */
 .economy-row-card > input:not([type="hidden"]) {
     width: 9ch;
     flex: none;
@@ -769,7 +769,7 @@
 
 .perk-chip.on {
     background: linear-gradient(135deg, var(--success-color), var(--success-dark));
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
@@ -862,7 +862,7 @@
 
 .btn-compact.primary { 
     background: linear-gradient(135deg, var(--blue-600), var(--blue-600)); 
-    color: white; 
+    color: var(--text-on-primary); 
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
@@ -897,7 +897,7 @@
     box-shadow: none; 
 }
 
-.btn-icon {
+:where(.admin-user-redesign) .btn-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -910,8 +910,8 @@
     transition: all 0.2s ease;
 }
 
-.btn-icon:hover { 
-    background: white; 
+:where(.admin-user-redesign) .btn-icon:hover { 
+    background: var(--bg-primary); 
     color: var(--primary-accessible, #006D74); 
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -1017,4 +1017,39 @@
         width: 100%;
         justify-content: center;
     }
+}
+
+/* Tests section */
+.admin-user-tests-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.admin-user-tests-table th {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-user-tests-table td {
+    padding: 0.5rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-user-tests-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-user-tests-link {
+    color: var(--primary-accessible);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.admin-user-tests-link:hover {
+    text-decoration: underline;
 }

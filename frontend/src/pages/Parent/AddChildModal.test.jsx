@@ -39,7 +39,7 @@ describe('AddChildModal', () => {
 
             expect(screen.getByRole('textbox')).toBeInTheDocument();
             expect(screen.getByRole('heading', { name: 'Connect Your Child' })).toBeInTheDocument();
-            expect(document.querySelector('.modal-overlay')).toHaveAttribute('role', 'presentation');
+            expect(document.querySelector('.add-child-overlay')).toHaveAttribute('role', 'presentation');
             expect(screen.getAllByRole('button').map((b) => b.textContent || b.getAttribute('aria-label'))).toEqual(['Close', 'Connect']);
         });
 
@@ -69,7 +69,7 @@ describe('AddChildModal', () => {
             fireEvent.click(screen.getByRole('heading', { name: 'Connect Your Child' }));
             expect(onClose).not.toHaveBeenCalled();
 
-            fireEvent.click(document.querySelector('.modal-overlay'));
+            fireEvent.click(document.querySelector('.add-child-overlay'));
             expect(onClose).toHaveBeenCalledTimes(1);
         });
     });

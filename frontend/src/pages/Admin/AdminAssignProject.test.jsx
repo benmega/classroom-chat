@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import AdminAssignProject from './AdminAssignProject';
@@ -56,7 +56,8 @@ describe('AdminAssignProject', () => {
             expect(client.get).toHaveBeenCalledWith('/api/project-templates');
         });
         
-        const select = screen.getByRole('combobox');
+        // The form has two selects (template and project type), so the template one is found by its label.
+        const select = screen.getByLabelText(/Standard Project Template/);
         expect(select).toBeInTheDocument();
         await waitFor(() => {
             expect(screen.getByText('Standard Project 1')).toBeInTheDocument();
@@ -163,7 +164,8 @@ describe('AdminAssignProject', () => {
         await waitFor(() => {
             expect(client.post).toHaveBeenCalledWith('/api/admin/assign-project', expect.objectContaining({
                 name: 'Cool Project',
-                user_id: 42
+                user_id: 42,
+                project_type: 'code'
             }));
         });
         
@@ -184,7 +186,7 @@ describe('AdminAssignProject', () => {
             expect(screen.getByText('SP')).toBeInTheDocument();
         });
         
-        const select = screen.getByRole('combobox');
+        const select = screen.getByLabelText(/Standard Project Template/);
         fireEvent.change(select, { target: { value: '1' } });
         
         const assignedNameInput = screen.getByPlaceholderText(/awesome game/i);
@@ -225,6 +227,110 @@ describe('AdminAssignProject', () => {
         expect(mockNavigate).not.toHaveBeenCalled();
     });
 
+    describe('project type', () => {
+        const openPage = async (templates = {}) => {
+            client.get.mockResolvedValueOnce({ data: { status: 'success', data: { templates } } });
+            renderWithRouter(<AdminAssignProject />);
+            await waitFor(() => expect(client.get).toHaveBeenCalledWith('/api/project-templates'));
+        };
+
+        const pickStudent = async () => {
+            client.get.mockResolvedValueOnce({
+                data: { users: [{ id: 42, username: 'testuser', nickname: 'Test User' }] }
+            });
+            fireEvent.change(screen.getByPlaceholderText(/search/i), { target: { value: 'test' } });
+            fireEvent.click(await screen.findByText('Test User (testuser) - #42'));
+        };
+
+        const pickTemplate = (id) => {
+            fireEvent.change(screen.getByLabelText(/Standard Project Template/), { target: { value: String(id) } });
+        };
+
+        const submit = () => {
+            fireEvent.submit(screen.getByRole('button', { name: /Assign Project/ }).closest('form'));
+        };
+
+        it('offers both types and starts on a code project', async () => {
+            await openPage();
+
+            const select = screen.getByLabelText('Project type');
+
+            expect(select).toHaveValue('code');
+            expect(within(select).getAllByRole('option').map(o => o.textContent)).toEqual(['Code project', '3D model']);
+        });
+
+        it('sends the type that was picked', async () => {
+            await openPage();
+            await pickStudent();
+            fireEvent.change(screen.getByPlaceholderText(/awesome game/i), { target: { value: 'Robot Arm' } });
+            fireEvent.change(screen.getByLabelText('Project type'), { target: { value: '3d' } });
+            client.post.mockResolvedValueOnce({ data: { status: 'success', message: 'Assigned!' } });
+
+            submit();
+
+            await waitFor(() => {
+                expect(client.post).toHaveBeenCalledWith('/api/admin/assign-project', expect.objectContaining({
+                    name: 'Robot Arm',
+                    user_id: 42,
+                    project_type: '3d'
+                }));
+            });
+            expect(mockNavigate).toHaveBeenCalledWith('/admin/to-review');
+        });
+
+        it('prefills the type from the chosen standard project and sends it', async () => {
+            await openPage({ 1: { id: 1, name: 'Marble Run', project_type: '3d' } });
+            await screen.findByText('Marble Run');
+
+            pickTemplate(1);
+
+            expect(screen.getByLabelText('Project type')).toHaveValue('3d');
+
+            await pickStudent();
+            client.post.mockResolvedValueOnce({ data: { status: 'success', message: 'Assigned!' } });
+            submit();
+
+            await waitFor(() => {
+                expect(client.post).toHaveBeenCalledWith('/api/admin/assign-project', expect.objectContaining({
+                    name: 'Marble Run',
+                    project_type: '3d'
+                }));
+            });
+        });
+
+        it('lets the admin change the prefilled type before assigning', async () => {
+            await openPage({ 1: { id: 1, name: 'Marble Run', project_type: '3d' } });
+            await screen.findByText('Marble Run');
+            pickTemplate(1);
+            fireEvent.change(screen.getByLabelText('Project type'), { target: { value: 'code' } });
+
+            await pickStudent();
+            client.post.mockResolvedValueOnce({ data: { status: 'success', message: 'Assigned!' } });
+            submit();
+
+            await waitFor(() => {
+                expect(client.post).toHaveBeenCalledWith('/api/admin/assign-project', expect.objectContaining({
+                    name: 'Marble Run',
+                    project_type: 'code'
+                }));
+            });
+        });
+
+        it('falls back to a code project for a standard project without a type', async () => {
+            await openPage({
+                1: { id: 1, name: 'Marble Run', project_type: '3d' },
+                2: { id: 2, name: 'Quiz Game' },
+            });
+            await screen.findByText('Quiz Game');
+            pickTemplate(1);
+            expect(screen.getByLabelText('Project type')).toHaveValue('3d');
+
+            pickTemplate(2);
+
+            expect(screen.getByLabelText('Project type')).toHaveValue('code');
+        });
+    });
+
     describe('accessible names', () => {
         it('names the button that clears the chosen student', async () => {
             client.get.mockResolvedValueOnce({
@@ -261,7 +367,7 @@ describe('AdminAssignProject', () => {
             });
             renderWithRouter(<AdminAssignProject />);
             await screen.findByText('SP');
-            fireEvent.change(screen.getByRole('combobox'), { target: { value: '1' } });
+            fireEvent.change(screen.getByLabelText(/Standard Project Template/), { target: { value: '1' } });
 
             const demo = screen.getByRole('button', { name: 'Demo link (preview)' });
 

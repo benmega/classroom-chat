@@ -4,9 +4,11 @@ Seed data for the 3D Modeling learning track.
 Every challenge is a mini-project with exactly one project template; the
 template name equals the challenge name, and the template carries the
 challenge slug so that approving the student's project completes the challenge.
+Every template is a "3d" project: the student uploads the model file itself.
 """
 
 THREE_D_DOMAIN = "3d-modeling"
+THREE_D_PROJECT_TYPE = "3d"
 
 THREE_D_COURSES = [
     {
@@ -29,14 +31,33 @@ THREE_D_COURSES = [
     },
 ]
 
-_SUBMIT_TINKERCAD = (
+# The last goal of every template: how to hand the model in.
+SUBMIT_TINKERCAD = (
+    "Upload your model file: in Tinkercad click Export and choose .STL, then add "
+    "the file to your project. A screenshot is optional, the site can make a cover "
+    "picture from your model."
+)
+SUBMIT_BLENDER = (
+    "Upload your model file: in Blender choose File > Export > STL or glTF (.glb), "
+    "then add the file to your project. A screenshot of your render is optional, "
+    "the site can make a cover picture from your model."
+)
+
+# The submit goals from before students could upload model files. The seed swaps
+# them for the ones above on templates that still hold them word for word, so a
+# goal an admin rewrote is left alone.
+OLD_SUBMIT_TINKERCAD = (
     "Submit your Tinkercad share link in the project link field and attach a "
     "screenshot of your model."
 )
-_SUBMIT_BLENDER = (
+OLD_SUBMIT_BLENDER = (
     "Submit your Blender project link (or a shared cloud link to your .blend "
     "file) in the project link field and attach a screenshot of your render."
 )
+SUBMIT_GOAL_REPLACEMENTS = {
+    OLD_SUBMIT_TINKERCAD: SUBMIT_TINKERCAD,
+    OLD_SUBMIT_BLENDER: SUBMIT_BLENDER,
+}
 
 # One entry per challenge, in course order. The position within a course
 # becomes Challenge.sequence (1..n).
@@ -55,8 +76,9 @@ THREE_D_CHALLENGES = [
             "Explain in your own words how a 3D printer builds an object layer by layer.",
             "Open Tinkercad and place, move, and resize a few basic shapes.",
             "Design a simple object with a flat bottom so it could be printed without falling over.",
-            _SUBMIT_TINKERCAD,
+            SUBMIT_TINKERCAD,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
     {
         "course_id": "3d-1",
@@ -71,8 +93,9 @@ THREE_D_CHALLENGES = [
             "Add a text shape with your name and make it sit on top of a flat base.",
             "Group the letters and the base together so they print as one piece.",
             "Add a hole near the edge so the name tag can hang on a ring.",
-            _SUBMIT_TINKERCAD,
+            SUBMIT_TINKERCAD,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
     {
         "course_id": "3d-1",
@@ -87,8 +110,9 @@ THREE_D_CHALLENGES = [
             "Turn a shape into a hole and use it to cut into a solid shape.",
             "Make an object with at least three cut-out parts, such as a house with a door and windows.",
             "Use the align tool to line up your holes neatly.",
-            _SUBMIT_TINKERCAD,
+            SUBMIT_TINKERCAD,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
     {
         "course_id": "3d-1",
@@ -103,8 +127,9 @@ THREE_D_CHALLENGES = [
             "Build a snowman from at least three spheres of different sizes.",
             "Add details like eyes, a nose, arms, and a hat.",
             "Make sure every part touches the body so the snowman prints as one solid piece.",
-            _SUBMIT_TINKERCAD,
+            SUBMIT_TINKERCAD,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
     {
         "course_id": "3d-1",
@@ -119,8 +144,9 @@ THREE_D_CHALLENGES = [
             "Combine at least five shapes, mixing solid shapes and holes.",
             "Group them step by step and check the result after each group.",
             "Finish with a useful object, such as a pencil holder, a phone stand, or a cookie cutter.",
-            _SUBMIT_TINKERCAD,
+            SUBMIT_TINKERCAD,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
     {
         "course_id": "3d-1",
@@ -135,8 +161,9 @@ THREE_D_CHALLENGES = [
             "Use the revolve or shape generator tools to make a round object by spinning a shape.",
             "Design something with a curved side, such as a vase, a cup, or a chess piece.",
             "Combine your spun shape with at least one other part or hole.",
-            _SUBMIT_TINKERCAD,
+            SUBMIT_TINKERCAD,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
     # ------------------------------------------------------------------ Blender 1
     {
@@ -152,8 +179,9 @@ THREE_D_CHALLENGES = [
             "Orbit, pan, and zoom the 3D view without getting lost.",
             "Add objects and use move, rotate, and scale to arrange a small scene.",
             "Change at least one object's shape in Edit Mode.",
-            _SUBMIT_BLENDER,
+            SUBMIT_BLENDER,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
     {
         "course_id": "3d-2",
@@ -168,8 +196,9 @@ THREE_D_CHALLENGES = [
             "Model a donut shape and make it smooth with a modifier.",
             "Add frosting and sprinkles, and give each part its own color or material.",
             "Render a picture of your donut on a plate or table.",
-            _SUBMIT_BLENDER,
+            SUBMIT_BLENDER,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
     {
         "course_id": "3d-2",
@@ -184,7 +213,8 @@ THREE_D_CHALLENGES = [
             "Set keyframes on the timeline to move, rotate, or scale an object.",
             "Make an animation at least two seconds long that loops or ends cleanly.",
             "Render your animation, or a few frames of it, to share.",
-            _SUBMIT_BLENDER,
+            SUBMIT_BLENDER,
         ],
+        "project_type": THREE_D_PROJECT_TYPE,
     },
 ]

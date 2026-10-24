@@ -7,6 +7,37 @@ import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
 import { formatStaticUrl } from '../utils/formatters';
 import { extractVideoThumbnail } from '../utils/video';
+import { validateNewFiles } from '../utils/projectFiles';
+
+const PROJECT_TYPES = ['code', '3d'];
+// The type a project or template states, or null when it states none we know (an older server sends none)
+const knownProjectType = (value) => (PROJECT_TYPES.includes(value) ? value : null);
+
+// The form field each kind of file is uploaded under
+const FILE_FIELDS = { model: 'model_files', source: 'source_files', asset: 'asset_files' };
+const FILE_KIND_LIST = Object.keys(FILE_FIELDS);
+const NO_PENDING_FILES = { model: [], source: [], asset: [] };
+
+// A picked folder can hold hundreds of files the project cannot take. Past this many, the remaining
+// rejections are counted in one toast instead of burying the page.
+const MAX_REJECTION_TOASTS = 3;
+
+// Folders nobody means to publish with a project: installed dependencies and caches (hidden folders such
+// as .git are skipped as well). Left in, they would use up the file cap before the student's own files.
+const SKIPPED_FOLDERS = new Set(['node_modules', '__pycache__', 'venv']);
+
+// Where a file sits inside the project: its place in a picked folder, top folder included, else its name
+const relativePathOf = (file) => file.webkitRelativePath || file.name;
+
+const isSkippedInFolder = (file) => {
+    if (!file.webkitRelativePath) return false;
+    const folders = file.webkitRelativePath.split('/');
+    const name = folders.pop();
+    // The first folder is the one the student picked, so its own name never counts against it
+    return name.startsWith('.') || folders.slice(1).some((folder) => folder.startsWith('.') || SKIPPED_FOLDERS.has(folder));
+};
+
+const SNAPSHOT_EXTENSIONS = { 'image/jpeg': 'jpg', 'image/webp': 'webp' };
 
 export const useProjectManagement = () => {
     const { projectId } = useParams();
@@ -38,16 +69,37 @@ export const useProjectManagement = () => {
     const [projectVideo, setProjectVideo] = useState(null);
     const [isCustomImage, setIsCustomImage] = useState(false);
     const [error, setError] = useState(null);
+    const [projectType, setProjectTypeState] = useState('code');
+    const [existingFiles, setExistingFiles] = useState([]);
+    const [pendingFiles, setPendingFiles] = useState(NO_PENDING_FILES);
+    const [removedFileIds, setRemovedFileIds] = useState(() => new Set());
+    const [pendingModelPreviewUrl, setPendingModelPreviewUrl] = useState(null);
+    // Percent of the request body sent while a save carries files, else null
+    const [uploadProgress, setUploadProgress] = useState(null);
     // The object URL behind the current image preview, if it was made from a local file
     // (a preview of the saved server image is a plain URL and needs no cleanup).
     const previewBlobRef = useRef(null);
     const isMountedRef = useRef(true);
+    // The pending files as last set, for a second pick that arrives before React has re-rendered
+    const pendingFilesRef = useRef(NO_PENDING_FILES);
+    // The first pending model and the object URL that previews it
+    const modelPreviewRef = useRef({ file: null, url: null });
+    // isCustomImage for a model snapshot that resolves after the student picked a cover of their own
+    const customCoverRef = useRef(false);
+    const nextLocalFileIdRef = useRef(1);
 
     const revokePreviewBlob = useCallback(() => {
         if (previewBlobRef.current) {
             URL.revokeObjectURL(previewBlobRef.current);
             previewBlobRef.current = null;
         }
+    }, []);
+
+    const revokeModelPreview = useCallback(() => {
+        if (modelPreviewRef.current.url) {
+            URL.revokeObjectURL(modelPreviewRef.current.url);
+        }
+        modelPreviewRef.current = { file: null, url: null };
     }, []);
 
     // Previews a local file, releasing the blob URL of the one it replaces.
@@ -65,8 +117,9 @@ export const useProjectManagement = () => {
         return () => {
             isMountedRef.current = false;
             revokePreviewBlob();
+            revokeModelPreview();
         };
-    }, [revokePreviewBlob]);
+    }, [revokePreviewBlob, revokeModelPreview]);
 
     useEffect(() => {
         if (!projectId && studentIdParam) {
@@ -108,7 +161,9 @@ export const useProjectManagement = () => {
                         revokePreviewBlob();
                         setImagePreview(formatStaticUrl(p.image_url));
                         setIsCustomImage(true);
+                        customCoverRef.current = true;
                     }
+                    setExistingFiles(Array.isArray(p.files) ? p.files : []);
                     
                     // Preselect the template this project was built from: by template_id
                     // when present, else by exact (case-insensitive) name for older projects.
@@ -122,6 +177,11 @@ export const useProjectManagement = () => {
                         if (byName) matchingTemplate = byName;
                     }
                     setSelectedTemplate(matchingTemplate);
+                    setProjectTypeState(
+                        knownProjectType(p.project_type)
+                        || knownProjectType(fetchedTemplates[matchingTemplate]?.project_type)
+                        || 'code'
+                    );
                 }
             } catch (error) {
                 console.error('Error fetching project data:', error);
@@ -164,9 +224,16 @@ export const useProjectManagement = () => {
                 name: template,
                 description: templates[template]?.description || ''
             }));
+            // A template decides what kind of project it is
+            setProjectTypeState(knownProjectType(templates[template]?.project_type) || 'code');
         } else {
             setProjectData(prev => ({ ...prev, name: '' }));
         }
+    };
+
+    const setProjectType = (value) => {
+        const type = knownProjectType(value);
+        if (type) setProjectTypeState(type);
     };
 
     const handleFileChange = async (e) => {
@@ -176,6 +243,7 @@ export const useProjectManagement = () => {
                 setProjectImage(files[0]);
                 setPreviewFromFile(files[0]);
                 setIsCustomImage(true);
+                customCoverRef.current = true;
             } else if (name === 'project_video') {
                 setProjectVideo(files[0]);
                 
@@ -211,6 +279,110 @@ export const useProjectManagement = () => {
         }
     };
 
+    // The viewer previews one model: the first pending one. Its object URL is made when that file
+    // changes and released when it is replaced, removed or the page goes away.
+    const syncModelPreview = (firstModel) => {
+        if (modelPreviewRef.current.file === firstModel) return;
+        revokeModelPreview();
+        if (firstModel && isMountedRef.current) {
+            modelPreviewRef.current = { file: firstModel, url: URL.createObjectURL(firstModel) };
+        }
+        setPendingModelPreviewUrl(modelPreviewRef.current.url);
+    };
+
+    const commitPendingFiles = (next) => {
+        pendingFilesRef.current = next;
+        setPendingFiles(next);
+        syncModelPreview(next.model[0]?.file ?? null);
+    };
+
+    const reportRejections = (rejected) => {
+        rejected.slice(0, MAX_REJECTION_TOASTS).forEach(({ file, reason }) => {
+            const text = reason || 'This file cannot be added.';
+            // Name the file when the reason does not, so one rejection among many picked files can be traced
+            toast.error(text.includes(file.name) ? text : `${file.name}: ${text}`);
+        });
+        const unreported = rejected.length - MAX_REJECTION_TOASTS;
+        if (unreported > 0) {
+            toast.error(`${unreported} more ${unreported === 1 ? 'file was' : 'files were'} not added.`);
+        }
+    };
+
+    const addFiles = (kind, fileList) => {
+        if (!FILE_FIELDS[kind]) return;
+        const picked = Array.from(fileList || []).filter((file) => !isSkippedInFolder(file));
+        if (picked.length === 0) return;
+
+        // A file picked again under a path already pending takes the place of the earlier pick
+        const incoming = new Map(picked.map((file) => [relativePathOf(file), file]));
+        const current = pendingFilesRef.current;
+        const otherPending = FILE_KIND_LIST.flatMap((k) => current[k].filter((entry) => k !== kind || !incoming.has(entry.path)));
+        // The caps count the saved files that survive the save: not marked for removal, and not replaced
+        // by an upload to the same path (the server replaces those)
+        const uploadPaths = new Set([...otherPending.map((entry) => entry.path), ...incoming.keys()]);
+        const keptSaved = existingFiles.filter((file) => !removedFileIds.has(file.id) && !uploadPaths.has(file.path));
+
+        const { accepted, rejected } = validateNewFiles(kind, [...incoming.values()], {
+            existing: keptSaved,
+            pendingAdds: otherPending.map((entry) => entry.file),
+        });
+        reportRejections(rejected);
+        if (accepted.length === 0) return;
+
+        const added = accepted
+            .map((file) => ({ id: nextLocalFileIdRef.current++, file, path: relativePathOf(file) }))
+            .sort((a, b) => a.path.localeCompare(b.path));
+        const addedByPath = new Map(added.map((entry) => [entry.path, entry]));
+        const earlierPaths = new Set(current[kind].map((entry) => entry.path));
+        commitPendingFiles({
+            ...current,
+            [kind]: [
+                ...current[kind].map((entry) => addedByPath.get(entry.path) ?? entry),
+                ...added.filter((entry) => !earlierPaths.has(entry.path)),
+            ],
+        });
+    };
+
+    const removePendingFile = (kind, localId) => {
+        const current = pendingFilesRef.current;
+        if (!current[kind]) return;
+        commitPendingFiles({ ...current, [kind]: current[kind].filter((entry) => entry.id !== localId) });
+    };
+
+    // Marks a saved file for removal on save, or keeps it again
+    const toggleRemoveExisting = (fileId) => {
+        setRemovedFileIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(fileId)) {
+                next.delete(fileId);
+            } else {
+                next.add(fileId);
+            }
+            return next;
+        });
+    };
+
+    // The page hands over a frame of the 3D model once its viewer has drawn it. That frame becomes the
+    // cover only while the project has no cover of its own (a saved one or one the student picked).
+    const setCoverFromModelSnapshot = useCallback((blob) => {
+        if (!blob || customCoverRef.current || !isMountedRef.current) return false;
+        const extension = SNAPSHOT_EXTENSIONS[blob.type] || 'png';
+        const cover = new File([blob], `model_cover.${extension}`, { type: blob.type || 'image/png' });
+        setProjectImage(cover);
+        setPreviewFromFile(cover);
+        toast.success('Made a cover image from your 3D model!');
+        return true;
+    }, [setPreviewFromFile]);
+
+    // What the project will hold once saved, per kind: the saved files it keeps plus the pending ones
+    const pendingPaths = new Set(FILE_KIND_LIST.flatMap((kind) => pendingFiles[kind].map((entry) => entry.path)));
+    const fileCounts = { model: pendingFiles.model.length, source: pendingFiles.source.length, asset: pendingFiles.asset.length };
+    existingFiles.forEach((file) => {
+        if (file.kind in fileCounts && !removedFileIds.has(file.id) && !pendingPaths.has(file.path)) {
+            fileCounts[file.kind] += 1;
+        }
+    });
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSaving(true);
@@ -221,6 +393,7 @@ export const useProjectManagement = () => {
                 formData.append(key, value);
             }
         });
+        formData.append('project_type', projectType);
 
         // Link the project to its template so renaming it later can't break the link.
         // A custom project is only sent explicitly (as "null") when editing, to clear a link;
@@ -234,11 +407,25 @@ export const useProjectManagement = () => {
 
         if (projectImage) formData.append('project_image', projectImage);
         if (projectVideo) formData.append('project_video', projectVideo);
+        // The part's file name carries the path inside the project, so an uploaded folder keeps its layout
+        FILE_KIND_LIST.forEach((kind) => {
+            pendingFiles[kind].forEach(({ file, path }) => formData.append(FILE_FIELDS[kind], file, path));
+        });
+        removedFileIds.forEach((id) => formData.append('remove_file_ids', id));
+
+        // Only a save that carries files can take long enough for its progress to be worth showing
+        const sendsFiles = Boolean(projectImage || projectVideo) || FILE_KIND_LIST.some((kind) => pendingFiles[kind].length > 0);
+        const trackUpload = (event) => {
+            if (event.total) setUploadProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
+        };
+        if (sendsFiles) setUploadProgress(0);
 
         try {
             const url = projectId ? `/user/project/edit/${projectId}` : '/user/project/new';
             const isResubmit = projectData.status === 'rejected';
-            const response = await client.post(url, formData);
+            const response = sendsFiles
+                ? await client.post(url, formData, { onUploadProgress: trackUpload })
+                : await client.post(url, formData);
 
             if (response.data.status === 'success') {
                 if (response.data.data?.video_processing) {
@@ -264,6 +451,7 @@ export const useProjectManagement = () => {
             toast.error(getErrorMessage(error, 'An error occurred.'));
         } finally {
             setIsSaving(false);
+            setUploadProgress(null);
         }
     };
 
@@ -305,11 +493,24 @@ export const useProjectManagement = () => {
         isSaving,
         imagePreview,
         projectVideo,
+        isCustomImage,
         error,
+        projectType,
+        setProjectType,
+        existingFiles,
+        pendingFiles,
+        removedFileIds,
+        fileCounts,
+        pendingModelPreviewUrl,
+        uploadProgress,
         handleInputChange,
         handleTemplateChange,
         handleFileChange,
         handleRecordedVideo,
+        addFiles,
+        removePendingFile,
+        toggleRemoveExisting,
+        setCoverFromModelSnapshot,
         handleSubmit,
         handleDelete,
         adjustTextareaHeight,

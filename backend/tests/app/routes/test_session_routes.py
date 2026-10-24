@@ -1,10 +1,13 @@
-from datetime import datetime, timedelta
+import threading
+import time
+from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
 import pytest
 from application.extensions import db
 from application.models.session_log import SessionLog
 from application.models.user import User
+from application.routes import session_routes
 from application.utilities.helper_functions import utcnow_naive
 from application.utilities.session_cleanup import close_stale_sessions
 
@@ -157,14 +160,17 @@ def test_heartbeat_without_open_session_succeeds_quietly(
 
 
 @patch("application.routes.session_routes.get_cloudwatch_client")
-def test_heartbeat_timestamp_is_naive_utc(mock_cw_client, logged_in_client_with_session):
+def test_heartbeat_timestamp_is_utc_with_an_explicit_designator(mock_cw_client, logged_in_client_with_session):
     before = utcnow_naive()
 
     resp = logged_in_client_with_session.post("/api/session/heartbeat")
 
-    stamp = datetime.fromisoformat(resp.json["timestamp"])
-    assert stamp.tzinfo is None
-    assert before <= stamp <= utcnow_naive()
+    raw = resp.json["timestamp"]
+    assert raw.endswith("Z")
+    # Python 3.10's fromisoformat does not take a trailing Z
+    stamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    assert stamp.tzinfo == timezone.utc
+    assert before <= stamp.replace(tzinfo=None) <= utcnow_naive()
 
 
 @patch("application.routes.session_routes.get_cloudwatch_client")
@@ -203,3 +209,89 @@ def test_heartbeat_reopens_session_the_cleanup_job_closed(mock_cw_client, client
     open_logs = SessionLog.query.filter_by(user_id=sample_user.id, end_time=None).all()
     assert len(open_logs) == 1
     assert open_logs[0].id != log.id
+
+
+# --- One CloudWatch client per process ------------------------------------------
+
+
+@pytest.fixture
+def no_cached_cloudwatch_client(monkeypatch):
+    """Start with no cached client; monkeypatch puts the real cache back afterwards."""
+    monkeypatch.setattr(session_routes, "_cloudwatch_client", None)
+
+
+@pytest.fixture
+def ec2_identity():
+    with patch.object(session_routes, "get_ec2_metadata", return_value=("i-abc", "eu-west-1")):
+        yield
+
+
+def test_cloudwatch_client_is_created_once_and_reused(no_cached_cloudwatch_client, ec2_identity):
+    with patch.object(session_routes.boto3, "client") as make_client:
+        first = session_routes.get_cloudwatch_client()
+        second = session_routes.get_cloudwatch_client()
+
+    assert first is second is make_client.return_value
+    make_client.assert_called_once_with("cloudwatch", region_name="eu-west-1")
+
+
+def test_heartbeats_share_one_client_and_publish_one_datapoint_each(
+    no_cached_cloudwatch_client, ec2_identity, logged_in_client_with_session
+):
+    with patch.object(session_routes.boto3, "client") as make_client:
+        for _ in range(3):
+            assert logged_in_client_with_session.post("/api/session/heartbeat").status_code == 200
+
+    make_client.assert_called_once_with("cloudwatch", region_name="eu-west-1")
+    put_metric_data = make_client.return_value.put_metric_data
+    assert put_metric_data.call_count == 3
+    # Still published synchronously, one datapoint per heartbeat
+    put_metric_data.assert_called_with(
+        MetricData=[
+            {
+                "MetricName": "UserActivity",
+                "Dimensions": [{"Name": "InstanceId", "Value": "i-abc"}],
+                "Unit": "Count",
+                "Value": 1.0,
+            }
+        ],
+        Namespace="ClassroomChat/Activity",
+    )
+
+
+def test_a_failed_client_creation_is_not_cached(
+    no_cached_cloudwatch_client, ec2_identity, logged_in_client_with_session
+):
+    working_client = MagicMock()
+    with patch.object(
+        session_routes.boto3,
+        "client",
+        side_effect=[RuntimeError("no credentials"), working_client],
+    ) as make_client:
+        first = logged_in_client_with_session.post("/api/session/heartbeat")
+        second = logged_in_client_with_session.post("/api/session/heartbeat")
+
+    assert first.status_code == second.status_code == 200
+    assert make_client.call_count == 2
+    working_client.put_metric_data.assert_called_once()
+
+
+def test_concurrent_first_use_builds_a_single_client(no_cached_cloudwatch_client, ec2_identity):
+    def slow_client(*args, **kwargs):
+        time.sleep(0.05)  # long enough for every other thread to arrive meanwhile
+        return MagicMock()
+
+    clients = []
+    with patch.object(session_routes.boto3, "client", side_effect=slow_client) as make_client:
+        threads = [
+            threading.Thread(target=lambda: clients.append(session_routes.get_cloudwatch_client()))
+            for _ in range(8)
+        ]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+    assert make_client.call_count == 1
+    assert len(clients) == 8
+    assert all(client is clients[0] for client in clients)

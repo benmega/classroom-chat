@@ -102,7 +102,6 @@
     border-radius: 8px;
     color: var(--text-primary);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
-    outline: none;
 }
 
 .join-classroom-prominent .join-code-input {
@@ -112,14 +111,16 @@
 }
 
 .join-code-input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 18%, transparent);
+    outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
+    outline-offset: 2px;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
 .join-code-btn {
     padding: 0.5rem 1rem;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 8px;
     font-size: var(--font-sm);
@@ -177,7 +178,7 @@
 }
 
 .join-success-icon {
-    color: #22c55e;
+    color: var(--green-500);
     flex-shrink: 0;
 }
 

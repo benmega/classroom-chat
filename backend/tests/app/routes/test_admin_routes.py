@@ -1179,6 +1179,53 @@ def test_handle_project_review_errors(client, sample_admin, sample_user, test_ap
     assert resp2.status_code == 200  # Defaults to 0.006
 
 
+def test_handle_project_review_rejects_a_body_that_is_not_a_json_object(
+    client, sample_admin, sample_user, test_app
+):
+    from application.models.project import Project
+
+    login_as_admin(client, sample_admin)
+
+    with test_app.app_context():
+        project = Project(name="Odd Body P", user_id=sample_user.id)
+        db.session.add(project)
+        db.session.commit()
+        p_id = project.id
+
+    url = f"/api/admin/handle-project-review/{p_id}"
+    for body in ("null", "[]", '["approve"]', '"approve"', "42", "{not json"):
+        resp = client.post(url, data=body, content_type="application/json")
+        assert resp.status_code == 400, body
+        assert resp.get_json()["status"] == "error"
+    # A post that is not JSON at all gets the same answer.
+    assert client.post(url, data="action=approve").status_code == 400
+
+    with test_app.app_context():
+        assert db.session.get(Project, p_id).status == "pending"
+
+
+def test_assign_project_rejects_a_body_that_is_not_a_json_object(
+    client, sample_admin, test_app
+):
+    from application.models.project import Project
+
+    login_as_admin(client, sample_admin)
+
+    with test_app.app_context():
+        before = Project.query.count()
+
+    for body in ("null", "[]", '[{"name": "x"}]', '"x"', "42", "{not json"):
+        resp = client.post(
+            "/api/admin/assign-project", data=body, content_type="application/json"
+        )
+        assert resp.status_code == 400, body
+        assert resp.get_json()["status"] == "error"
+    assert client.post("/api/admin/assign-project", data="name=x").status_code == 400
+
+    with test_app.app_context():
+        assert Project.query.count() == before
+
+
 def test_assign_project(client, sample_admin, sample_user, test_app):
     """Test assigning a project."""
     from application.models.project import Project

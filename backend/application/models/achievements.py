@@ -5,7 +5,7 @@ Summary: SQLAlchemy model for achievement definitions and metadata.
 """
 
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 class Achievement(db.Model):  # type: ignore[name-defined,misc]
@@ -39,7 +39,10 @@ class UserAchievement(db.Model):  # type: ignore[name-defined,misc]
     __tablename__ = "user_achievement"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     achievement_id = db.Column(
         db.Integer, db.ForeignKey("achievement.id"), nullable=False, index=True
@@ -53,5 +56,5 @@ class UserAchievement(db.Model):  # type: ignore[name-defined,misc]
             "id": self.id,
             "achievement_id": self.achievement_id,
             "achievement": self.achievement.to_dict() if self.achievement else None,
-            "earned_at": self.earned_at.isoformat() if self.earned_at else None,
+            "earned_at": to_utc_iso(self.earned_at),
         }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import AdminStudentActivity from './AdminStudentActivity';
 import client from '../../api/client';
 
@@ -13,6 +13,10 @@ vi.mock('../../api/client', () => ({
 describe('AdminStudentActivity', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+    });
+
+    afterEach(() => {
+        vi.unstubAllEnvs();
     });
 
     it('says in words, not only in colour, whether each student is online', async () => {
@@ -35,6 +39,25 @@ describe('AdminStudentActivity', () => {
         expect(within(kim).getByRole('img', { name: 'Offline' })).toHaveAttribute('title', 'Offline');
         expect(within(sam).getByText('Loops')).toBeInTheDocument();
         expect(within(kim).getByText('No recent activity')).toBeInTheDocument();
+    });
+
+    it('loads avatars from the API host, keeping the bundled default on the page host', async () => {
+        vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+        client.get.mockResolvedValue({
+            data: {
+                data: {
+                    students: [
+                        { id: 1, username: 'sam', is_online: true, profile_picture_url: '/user/profile_pictures/sam.png' },
+                        { id: 2, username: 'kim', is_online: false, profile_picture_url: '/static/images/Default_pfp.jpg' },
+                    ],
+                },
+            },
+        });
+
+        render(<AdminStudentActivity />);
+
+        expect(await screen.findByAltText('sam')).toHaveAttribute('src', 'https://api.example.com/user/profile_pictures/sam.png');
+        expect(screen.getByAltText('kim')).toHaveAttribute('src', '/static/images/Default_pfp.jpg');
     });
 
     it('shows an empty state when there are no students', async () => {

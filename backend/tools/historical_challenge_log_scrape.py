@@ -3,16 +3,22 @@ import os
 import re
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import requests
 
 # 1. CONFIGURATION
-# PASTE YOUR COOKIE HERE
-YOUR_COOKIE = """_ga=GA1.2.1818552674.1665805079; _fbp=fb.1.1665805090786.306764578; __stripe_mid=3291438a-ab74-4a95-81de-083406d17536128861; cf_clearance=hRI_WhIEPkZTlnEFl1Epd83ilpf.LQgn0zUQksuHu3A-1746342968-1.2.1.1-h.o9x1I4k1pRqSONn66lo6oPTH588wxXUV7GWliEzUEpncLGVsAqXGakcPMZPFkVTq0b1TdsgSPxOH3OZb899XLzBRqV.7KyzKsvJHsMwBpUMfJydmzzHr1uYW2h7667M0T76nYtDHIJq.aAQFvvoZwWsbulwqqVba8E46I8F93X6RzO8.kuzwKAZ8O8C_AW.Bulp9ub8SAw3vIH6c1akg7mmQTv_Cc6DXfBzNHopHn4uicVoNDlImOxTrT2ib6ye.cKjiXyqiG9tgD6a0.EECQyWPQ25YporprSESSjESyh20qtAJ3GPT3Cpk4a2LhPzP4jIe1x0h6PgK0ETUPsSo9iexrLFZOOszBxRBDX_W4l4xOJje3MmUEhHE_JjSUQ; _gcl_au=1.1.462457496.1761962615; g_state={"i_l":0,"i_ll":1765088852115}; shaTagVal=production-2025-12-05-08-10-20; _gid=GA1.2.1240164609.1765378129; codecombat.sess=eyJwYXNzcG9ydCI6eyJ1c2VyIjp7ImlkIjoiNjJkMjNkOTc1ZGFmZDYwMDI1ZjhjNTIwIiwiY3JlYXRlZCI6IjIwMjUtMTItMTBUMTQ6NTY6MDcrMDA6MDAiLCJleHBpcmVzIjoiMjAyNi0wMS0xMFQxNDo1NjowNyswMDowMCJ9fX0=; codecombat.sess.sig=bPj6gzsM_4BYzOtl1AGeKY-f6mg; fs_lua=1.1765378568744; fs_uid=#RQW5S#1d9cf541-7531-42eb-8f75-c5ef2280d761:e9962044-7e56-4741-b520-586330a04f76:1765378132171::2#e29d7b99#/1787464886; _gat=1; _ga_6D0ZC7L5M1=GS2.2.s1765378132$o528$g1$t1765378569$j60$l0$h0; _dd_s=logs=1&id=71bfbfd9-c19a-4008-acab-a92d8519a9a9&created=1765378129054&expire=1765379469374"""
+# Teacher session cookies, one per site, read from the environment so no session is ever stored
+# in the repository. Copy the Cookie header from a logged-in browser tab and export it before
+# running, e.g. CODECOMBAT_COOKIE='...' and OZARIA_COOKIE='...'. Requests to a site whose
+# variable is unset are sent without a cookie and the API answers 401.
+COOKIE_ENV_VARS = {
+    "codecombat.com": "CODECOMBAT_COOKIE",
+    "ozaria.com": "OZARIA_COOKIE",
+}
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Cookie": YOUR_COOKIE.replace("\n", ""),
     "Accept": "application/json",
 }
 
@@ -41,17 +47,29 @@ REQUEST_TIMEOUT = 30
 
 
 # 2. HELPER FUNCTIONS
+def request_headers(url):
+    """HEADERS plus the session cookie of the site that url points at, if one is set."""
+    headers = dict(HEADERS)
+    host = urlparse(url).hostname or ""
+    for site, env_var in COOKIE_ENV_VARS.items():
+        if host == site or host.endswith("." + site):
+            cookie = os.environ.get(env_var, "").replace("\n", "").strip()
+            if cookie:
+                headers["Cookie"] = cookie
+    return headers
+
+
 def fetch_json(url, description):
     print(f"Fetching {description}...")
     try:
-        response = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+        response = requests.get(url, headers=request_headers(url), timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Error fetching {description}: {e}")
         # e.response is None for connection errors and timeouts
         if e.response is not None and e.response.status_code == 401:
-            print("(!) AUTH ERROR: Cookie expired.")
+            print("(!) AUTH ERROR: Cookie expired or not set (see COOKIE_ENV_VARS).")
         return []
 
 

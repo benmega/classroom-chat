@@ -21,7 +21,8 @@ import {
     ChevronDown,
     ChevronUp,
     Edit,
-    RotateCcw
+    RotateCcw,
+    Box
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -31,14 +32,78 @@ import { getErrorMessage } from '../../utils/apiError';
 import { showConfirm } from '../../utils/confirm';
 import { formatStaticUrl } from '../../utils/formatters';
 import { safeUrl } from '../../utils/safeUrl';
+import { groupProjectFiles, primaryModelFile, projectFileUrl } from '../../utils/projectFiles';
 import './ToReview.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Modal from '../../components/common/Modal';
 import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
+import ModelViewer from '../../components/common/ModelViewer';
+import ProjectFileBrowser from '../../components/common/ProjectFileBrowser';
+import AssetGallery from '../../components/common/AssetGallery';
 
-// submitted_at is nullable on certificates; new Date(null/undefined) would show a bogus date.
+// A timestamp can be missing (submitted_at is nullable on certificates); new Date(null/undefined) would show a bogus date.
 const formatSubmittedAt = (value) => (value ? new Date(value).toLocaleString() : 'Unknown date');
+
+// The certificate PDF is served by the API host, whose X-Frame-Options forbid framing it from the frontend's
+// host, so the PDF is fetched (the API client sends the session cookie) and framed from a blob: URL instead.
+const CertificatePreview = ({ certId }) => {
+    const [pdfUrl, setPdfUrl] = useState(null);
+    const [failed, setFailed] = useState(false);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        let objectUrl = null;
+        let cancelled = false;
+        client.get(`/api/achievements/view_certificate/${certId}`, { responseType: 'blob', signal: controller.signal })
+            .then((response) => {
+                if (cancelled) return;
+                objectUrl = URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+                setPdfUrl(objectUrl);
+            })
+            .catch(() => {
+                if (!cancelled) setFailed(true);
+            });
+        return () => {
+            cancelled = true;
+            controller.abort();
+            if (objectUrl) URL.revokeObjectURL(objectUrl);
+        };
+    }, [certId]);
+
+    if (failed) {
+        return (
+            <div className="cert-preview-placeholder">
+                <AlertCircle size={20} aria-hidden="true" />
+                <span>Preview unavailable</span>
+            </div>
+        );
+    }
+    if (!pdfUrl) {
+        return <div className="cert-preview-placeholder" role="status" aria-label="Loading certificate preview" />;
+    }
+    return (
+        <iframe
+            src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
+            title="Certificate Preview"
+            frameBorder="0"
+            scrolling="no"
+            tabIndex="-1"
+        ></iframe>
+    );
+};
+
+// A collapsible block in the style of the code-snippet toggle. Its content is mounted only while it is open, so the
+// 3D viewer (which loads three.js) and the file browser (one request per file) cost nothing for cards nobody expands.
+const ReviewSection = ({ label, isOpen, onToggle, children }) => (
+    <div className="collapsible-code">
+        <button type="button" className="code-toggle-btn" aria-expanded={isOpen} onClick={onToggle}>
+            <span>{label}</span>
+            {isOpen ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
+        </button>
+        {isOpen && <div className="review-section-body">{children}</div>}
+    </div>
+);
 
 const ToReview = () => {
     const cachedReview = adminCache.get('admin_to_review');
@@ -61,7 +126,7 @@ const ToReview = () => {
     const [projectRewards, setProjectRewards] = useState({});
     const [selectedClassrooms, setSelectedClassrooms] = useState({});
     const [selectedCourses, setSelectedCourses] = useState({});
-    const [expandedCodeSnippets, setExpandedCodeSnippets] = useState({});
+    const [expandedSections, setExpandedSections] = useState({});
 
     const [selectedUsers, setSelectedUsers] = useState(new Set());
     const [selectedTrades, setSelectedTrades] = useState(new Set());
@@ -471,7 +536,7 @@ const ToReview = () => {
         certificates.forEach(c => unified.push({ ...c, type: 'certificate', key: `cert-${c.id}`, timestamp: c.submitted_at || new Date().toISOString() }));
         pendingUsers.forEach(u => unified.push({ ...u, type: 'user', key: `user-${u.id}`, timestamp: new Date().toISOString() })); // default fallback
         trades.forEach(t => unified.push({ ...t, type: 'trade', key: `trade-${t.id}`, timestamp: t.timestamp || new Date().toISOString() }));
-        courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.requested_at || new Date().toISOString() }));
+        courseRequests.forEach(r => unified.push({ ...r, type: 'course', key: `course-${r.id}`, timestamp: r.created_at || new Date().toISOString() }));
         parentMessages.forEach(m => unified.push({ ...m, type: 'parent_message', key: `parent-msg-${m.id}`, timestamp: m.created_at || new Date().toISOString() }));
 
         return unified.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -490,13 +555,24 @@ const ToReview = () => {
 
     const displayItems = getDisplayItems();
 
+    const toggleSection = (key) => setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
+
     const renderProjectCard = (p) => {
-        const isExpanded = !!expandedCodeSnippets[p.id];
+        const isExpanded = !!expandedSections[p.id];
         // Student-supplied links: only http(s) URLs (or a site-relative video path) become hrefs.
         const linkHref = safeUrl(p.link);
         const githubHref = safeUrl(p.github_link);
         const videoHref = safeUrl(p.video_url)
             || (p.video_url?.startsWith('/') && !p.video_url.startsWith('//') ? p.video_url : null);
+        // A payload without project_type (an older cached one) is a code project.
+        const is3d = p.project_type === '3d';
+        const files = p.files || [];
+        const { models, sources, assets } = groupProjectFiles(files);
+        const primaryModel = primaryModelFile(files);
+        // Source files count as code, so an uploaded project is not flagged for lacking a pasted snippet; a 3D project
+        // is judged on its model instead.
+        const missingCode = !is3d && !p.code_snippet && !p.github_link && sources.length === 0;
+        const missingModel = is3d && !primaryModel;
         return (
             <div className="review-card project-review-card" key={p.key}>
                 <div className="review-card-header">
@@ -504,6 +580,11 @@ const ToReview = () => {
                         <div className="card-badge badge-project">
                             <FolderKanban size={14} /> Project
                         </div>
+                        {is3d && (
+                            <div className="card-badge badge-project-type">
+                                <Box size={14} aria-hidden="true" /> 3D
+                            </div>
+                        )}
                         {p.teacher_comment && (
                             <div className="card-badge badge-resubmission">
                                 <RotateCcw size={13} /> Resubmitted
@@ -541,9 +622,14 @@ const ToReview = () => {
                             <h3 className="project-title">{p.name}</h3>
                             {p.description && <p className="project-description">{p.description}</p>}
                             <div className="project-indicators">
-                                {(!p.code_snippet && !p.github_link) && (
+                                {missingCode && (
                                     <span className="missing-indicator">
                                         <AlertCircle size={12} /> Missing Code
+                                    </span>
+                                )}
+                                {missingModel && (
+                                    <span className="missing-indicator">
+                                        <AlertCircle size={12} /> Missing 3D model
                                     </span>
                                 )}
                                 {!p.video_url && (
@@ -573,11 +659,56 @@ const ToReview = () => {
                         )}
                     </div>
 
+                    {primaryModel && (
+                        <ReviewSection
+                            label="3D model"
+                            isOpen={!!expandedSections[`model-${p.id}`]}
+                            onToggle={() => toggleSection(`model-${p.id}`)}
+                        >
+                            <div className="review-model-frame">
+                                <ModelViewer
+                                    src={projectFileUrl(primaryModel)}
+                                    filename={primaryModel.name}
+                                    downloadUrl={projectFileUrl(primaryModel, { download: true })}
+                                    ariaLabel={`3D model of ${p.name}`}
+                                    className="review-model-viewer"
+                                />
+                            </div>
+                            <div className="review-model-downloads">
+                                {models.map(model => (
+                                    <a key={model.id} href={projectFileUrl(model, { download: true })} className="project-link-btn">
+                                        <Download size={14} aria-hidden="true" /> Download {model.name}
+                                    </a>
+                                ))}
+                            </div>
+                        </ReviewSection>
+                    )}
+
+                    {sources.length > 0 && (
+                        <ReviewSection
+                            label={`Files (${sources.length})`}
+                            isOpen={!!expandedSections[`files-${p.id}`]}
+                            onToggle={() => toggleSection(`files-${p.id}`)}
+                        >
+                            <ProjectFileBrowser files={files} maxHeight="420px" />
+                        </ReviewSection>
+                    )}
+
+                    {assets.length > 0 && (
+                        <ReviewSection
+                            label={`Assets (${assets.length})`}
+                            isOpen={!!expandedSections[`assets-${p.id}`]}
+                            onToggle={() => toggleSection(`assets-${p.id}`)}
+                        >
+                            <AssetGallery files={files} />
+                        </ReviewSection>
+                    )}
+
                     {p.code_snippet && (
                         <div className="collapsible-code">
                             <button 
                                 className="code-toggle-btn"
-                                onClick={() => setExpandedCodeSnippets(prev => ({ ...prev, [p.id]: !isExpanded }))}
+                                onClick={() => setExpandedSections(prev => ({ ...prev, [p.id]: !isExpanded }))}
                             >
                                 <span>Code Snippet</span>
                                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -594,12 +725,12 @@ const ToReview = () => {
                         <div className="collapsible-code">
                             <button 
                                 className="code-toggle-btn"
-                                onClick={() => setExpandedCodeSnippets(prev => ({ ...prev, [`transcript-${p.id}`]: !prev[`transcript-${p.id}`] }))}
+                                onClick={() => setExpandedSections(prev => ({ ...prev, [`transcript-${p.id}`]: !prev[`transcript-${p.id}`] }))}
                             >
                                 <span>Video Transcript</span>
-                                {expandedCodeSnippets[`transcript-${p.id}`] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                {expandedSections[`transcript-${p.id}`] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                             </button>
-                            {expandedCodeSnippets[`transcript-${p.id}`] && (
+                            {expandedSections[`transcript-${p.id}`] && (
                                 <div className="transcript-view">
                                     {p.video_transcript}
                                 </div>
@@ -699,13 +830,7 @@ const ToReview = () => {
                         className="cert-preview-thumbnail"
                         title="Click to view full certificate"
                     >
-                        <iframe 
-                            src={getApiUrl(`/api/achievements/view_certificate/${c.id}#toolbar=0&navpanes=0&scrollbar=0`)} 
-                            title="Certificate Preview" 
-                            frameBorder="0" 
-                            scrolling="no"
-                            tabIndex="-1"
-                        ></iframe>
+                        <CertificatePreview certId={c.id} />
                         <div className="preview-overlay">
                             <Eye size={20} />
                         </div>
@@ -931,7 +1056,7 @@ const ToReview = () => {
                         <CalendarCheck size={14} /> Course Request
                     </div>
                     <span className="card-time">
-                        <Clock size={12} /> {new Date(c.requested_at).toLocaleString()}
+                        <Clock size={12} /> {formatSubmittedAt(c.created_at)}
                     </span>
                 </div>
 

@@ -103,6 +103,80 @@ def test_timeout_is_handled_like_any_request_error(scraper, monkeypatch, capsys)
     assert "too slow" in capsys.readouterr().out
 
 
+# ---- the teacher session cookie comes from the environment, never from the source ----
+
+COOKIE_MARKERS = ("cf_clearance", "codecombat.sess", "__stripe_mid", "_fbp=")
+COOKIE_SCRAPERS = [historical_cert_scrape, historical_challenge_log_scrape]
+COOKIE_SCRAPER_IDS = ["cert", "challenge_log"]
+
+
+@pytest.mark.parametrize("scraper", SCRAPERS, ids=SCRAPER_IDS)
+def test_source_holds_no_session_cookie(scraper):
+    source = Path(scraper.__file__).read_text(encoding="utf-8")
+
+    assert [marker for marker in COOKIE_MARKERS if marker in source] == []
+
+
+@pytest.fixture
+def cookie_env(monkeypatch):
+    # A cookie copied from a browser can wrap over several lines.
+    monkeypatch.setenv("CODECOMBAT_COOKIE", "cc=1;\nsess=2")
+    monkeypatch.setenv("OZARIA_COOKIE", "oz=9")
+
+
+@pytest.mark.parametrize("scraper", COOKIE_SCRAPERS, ids=COOKIE_SCRAPER_IDS)
+def test_each_site_gets_its_own_cookie(scraper, cookie_env):
+    assert scraper.request_headers("https://codecombat.com/db/x")["Cookie"] == "cc=1;sess=2"
+    assert scraper.request_headers("https://ozaria.com/db/x")["Cookie"] == "oz=9"
+    assert scraper.request_headers("https://www.ozaria.com/db/x")["Cookie"] == "oz=9"
+
+
+@pytest.mark.parametrize("scraper", COOKIE_SCRAPERS, ids=COOKIE_SCRAPER_IDS)
+@pytest.mark.parametrize("url", ["https://example.test/db/x", "https://evilcodecombat.com/db/x", "https://codecombat.com.example.test/x"])
+def test_other_hosts_never_get_a_cookie(scraper, cookie_env, url):
+    assert "Cookie" not in scraper.request_headers(url)
+
+
+@pytest.mark.parametrize("scraper", COOKIE_SCRAPERS, ids=COOKIE_SCRAPER_IDS)
+def test_no_cookie_header_when_the_variable_is_unset(scraper, monkeypatch):
+    monkeypatch.delenv("CODECOMBAT_COOKIE", raising=False)
+    monkeypatch.delenv("OZARIA_COOKIE", raising=False)
+
+    assert "Cookie" not in scraper.request_headers("https://codecombat.com/db/x")
+
+
+@pytest.mark.parametrize("scraper", COOKIE_SCRAPERS, ids=COOKIE_SCRAPER_IDS)
+def test_requests_carry_the_cookie_from_the_environment(scraper, cookie_env, monkeypatch):
+    seen = {}
+
+    def fake_get(url, **kwargs):
+        seen.update(kwargs)
+        return FakeResponse([{"ok": True}])
+
+    monkeypatch.setattr(scraper.requests, "get", fake_get)
+
+    assert scraper.fetch_json("https://codecombat.com/db/x", "Thing") == [{"ok": True}]
+    assert seen["headers"]["Cookie"] == "cc=1;sess=2"
+
+
+def test_course_instance_scrape_reads_each_site_cookie_and_skips_a_site_without_one(monkeypatch, capsys):
+    seen = []
+
+    def fake_fetch(url, description, cookie_string):
+        seen.append(cookie_string)
+        return []
+
+    monkeypatch.setattr(course_instance_scrape, "fetch_json", fake_fetch)
+    monkeypatch.setenv("CODECOMBAT_COOKIE", "cc=1")
+    monkeypatch.delenv("OZARIA_COOKIE", raising=False)
+
+    assert course_instance_scrape.process_domain("codecombat.com") == []
+    assert course_instance_scrape.process_domain("www.ozaria.com") == []
+
+    assert seen == ["cc=1"]
+    assert "OZARIA_COOKIE" in capsys.readouterr().out
+
+
 # ---- 401 detection without the locals() hack ----
 
 

@@ -6,6 +6,7 @@ import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
 import { showConfirm } from '../../utils/confirm';
 import { getApiUrl } from '../../utils/apiUrl';
+import { parseServerDate } from '../../utils/formatters';
 
 import DesktopNotice from '../../components/common/DesktopNotice';
 import useModalA11y from '../../hooks/useModalA11y';
@@ -14,7 +15,7 @@ import Skeleton from '../../components/common/Skeleton';
 
 const timeAgo = (isoString) => {
     if (!isoString) return null;
-    const diff = Date.now() - new Date(isoString).getTime();
+    const diff = Date.now() - parseServerDate(isoString).getTime();
     const mins = Math.floor(diff / 60000);
     const hours = Math.floor(mins / 60);
     const days = Math.floor(hours / 24);
@@ -26,7 +27,7 @@ const timeAgo = (isoString) => {
 
 const isWithinHours = (isoString, hours) => {
     if (!isoString) return false;
-    return Date.now() - new Date(isoString).getTime() < hours * 3600000;
+    return Date.now() - parseServerDate(isoString).getTime() < hours * 3600000;
 };
 
 const ParentDashboard = () => {

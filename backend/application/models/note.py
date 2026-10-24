@@ -8,7 +8,7 @@ from flask import current_app, has_app_context
 
 from ..config import Config
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 def _s3_setting(name):
@@ -22,7 +22,12 @@ class Note(db.Model):
     __tablename__ = "notes"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     filename = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow_naive)
 
@@ -60,5 +65,5 @@ class Note(db.Model):
             "id": self.id,
             "filename": self.filename,
             "url": self.url,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": to_utc_iso(self.created_at),
         }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { getApiUrl, getApiBaseUrl, getAbsoluteApiBaseUrl } from './apiUrl';
 
 describe('getApiBaseUrl', () => {
@@ -14,6 +14,64 @@ describe('getApiBaseUrl', () => {
         expect(getApiBaseUrl()).toBe('https://api.example.com');
         vi.stubEnv('VITE_API_URL', 'https://api.example.com/');
         expect(getApiBaseUrl()).toBe('https://api.example.com');
+    });
+});
+
+describe('missing VITE_API_URL warning', () => {
+    // The warning is printed when the module loads, so each case loads a fresh copy
+    const loadFresh = async () => {
+        vi.resetModules();
+        return import('./apiUrl');
+    };
+    let warn;
+
+    beforeEach(() => {
+        warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+    afterEach(() => {
+        vi.unstubAllEnvs();
+        warn.mockRestore();
+    });
+
+    it('warns once, naming the variable and the origin used, when a production build lacks it', async () => {
+        vi.stubEnv('PROD', true);
+        vi.stubEnv('VITE_API_URL', '');
+
+        const { getApiBaseUrl: fresh } = await loadFresh();
+        fresh();
+        fresh();
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0][0]).toContain('VITE_API_URL');
+        expect(warn.mock.calls[0][0]).toContain(window.location.origin);
+    });
+
+    it('still uses the page origin rather than failing', async () => {
+        vi.stubEnv('PROD', true);
+        vi.stubEnv('VITE_API_URL', '');
+
+        const { getApiBaseUrl: fresh, getApiUrl: freshUrl } = await loadFresh();
+
+        expect(fresh()).toBe('');
+        expect(freshUrl('/api/me')).toBe('/api/me');
+    });
+
+    it('is silent when a production build has VITE_API_URL', async () => {
+        vi.stubEnv('PROD', true);
+        vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+
+        await loadFresh();
+
+        expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('is silent outside production builds, where the dev proxy makes same origin the norm', async () => {
+        vi.stubEnv('PROD', false);
+        vi.stubEnv('VITE_API_URL', '');
+
+        await loadFresh();
+
+        expect(warn).not.toHaveBeenCalled();
     });
 });
 

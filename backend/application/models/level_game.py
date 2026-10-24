@@ -5,7 +5,7 @@ Summary: SQLAlchemy model for sandbox level games unlocked by progression milest
 """
 
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 class LevelGame(db.Model):
@@ -48,5 +48,5 @@ class LevelGame(db.Model):
             "requires_account": self.requires_account,
             "rating": self.rating,
             "verified": self.verified,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": to_utc_iso(self.created_at),
         }

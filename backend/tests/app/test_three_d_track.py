@@ -2,10 +2,18 @@
 
 import pytest
 from application.commands.seed import generate_kebab_slug, seed_command, seed_three_d_track
-from application.commands.three_d_data import THREE_D_CHALLENGES, THREE_D_COURSES
+from application.commands.three_d_data import (
+    OLD_SUBMIT_BLENDER,
+    OLD_SUBMIT_TINKERCAD,
+    SUBMIT_BLENDER,
+    SUBMIT_TINKERCAD,
+    THREE_D_CHALLENGES,
+    THREE_D_COURSES,
+)
 from application.extensions import db
 from application.models.challenge import Challenge
 from application.models.challenge_log import ChallengeLog
+from application.models.configuration import Configuration
 from application.models.course import Course
 from application.models.duck_transaction import DuckTransaction
 from application.models.project import Project
@@ -100,6 +108,58 @@ def test_seed_is_idempotent_and_never_deletes(seeded):
     assert donut.description == "Teacher-edited donut description."
     assert donut.goals == ["Teacher goal"]
     assert donut.challenge_slug == "the-donut"
+
+
+def test_seed_templates_are_3d_projects_that_upload_their_model(seeded):
+    for ch in THREE_D_CHALLENGES:
+        template = ProjectTemplate.query.filter_by(name=ch["name"]).one()
+        assert template.project_type == "3d"
+        submit = SUBMIT_TINKERCAD if ch["course_id"] == "3d-1" else SUBMIT_BLENDER
+        assert template.goals[-1] == submit
+        assert OLD_SUBMIT_TINKERCAD not in template.goals
+        assert OLD_SUBMIT_BLENDER not in template.goals
+    assert "Export" in SUBMIT_TINKERCAD and ".STL" in SUBMIT_TINKERCAD
+    assert "File > Export" in SUBMIT_BLENDER and "glTF" in SUBMIT_BLENDER
+    assert "optional" in SUBMIT_TINKERCAD and "optional" in SUBMIT_BLENDER
+
+
+def test_seed_swaps_an_old_submit_goal_only_where_it_is_unchanged(init_db):
+    # Templates as an earlier seed left them, one of them edited by an admin since
+    edited_goal = OLD_SUBMIT_BLENDER.replace("screenshot", "picture")
+    db.session.add_all(
+        [
+            ProjectTemplate(
+                name="Name Tag Model",
+                description="d",
+                goals=["Add a text shape.", OLD_SUBMIT_TINKERCAD],
+                project_type="code",
+            ),
+            ProjectTemplate(name="The Donut", description="d", goals=["Teacher goal", edited_goal]),
+            ProjectTemplate(name="Intro to Blender", description="d", goals=[OLD_SUBMIT_BLENDER, "Teacher goal 2"]),
+        ]
+    )
+    db.session.commit()
+
+    seed_three_d_track()
+    seed_three_d_track()  # a second deploy changes nothing more
+
+    def template(name):
+        return ProjectTemplate.query.filter_by(name=name).one()
+
+    assert template("Name Tag Model").goals == ["Add a text shape.", SUBMIT_TINKERCAD]
+    assert template("The Donut").goals == ["Teacher goal", edited_goal]
+    assert template("Intro to Blender").goals == [SUBMIT_BLENDER, "Teacher goal 2"]
+    assert {template(n).project_type for n in ("Name Tag Model", "The Donut", "Intro to Blender")} == {"3d"}
+
+
+def test_seed_leaves_the_other_templates_code(seeded):
+    from application.commands.projects_data import PROJECT_SEED_DATA
+
+    names = [name for name, _desc, _chapter in PROJECT_SEED_DATA]
+    others = ProjectTemplate.query.filter(ProjectTemplate.name.in_(names)).all()
+
+    assert others
+    assert {t.project_type for t in others} == {"code"}
 
 
 def test_seed_command_runs_the_3d_step_twice(test_app, init_db):
@@ -255,6 +315,45 @@ def test_approving_template_with_dangling_slug_is_safe(
     assert ChallengeLog.query.filter_by(user_id=sample_user.id).count() == 0
 
 
+def _approval_ducks(client, project, user):
+    ducks_before = user.duck_balance
+    resp = _approve(client, project)
+    assert resp.status_code == 200
+    assert resp.get_json()["challenge_completed"] is True
+    db.session.expire_all()
+    return db.session.get(User, user.id).duck_balance - ducks_before
+
+
+@pytest.mark.parametrize(("multiplier", "ducks"), [(0, 0), (1.0, 1), (2.0, 2)])
+def test_approving_linked_project_scales_ducks_by_the_configured_multiplier(
+    client, sample_admin, sample_user, seeded, multiplier, ducks
+):
+    login_as_admin(client, sample_admin)
+    Configuration.get_or_create().duck_multiplier = multiplier
+    db.session.commit()
+    project = _make_project(sample_user, "Name Tag Model")
+
+    assert _approval_ducks(client, project, sample_user) == ducks
+    # The completion is still recorded when the multiplier pays nothing
+    assert (
+        ChallengeLog.query.filter_by(
+            user_id=sample_user.id, challenge_slug="name-tag-model"
+        ).count()
+        == 1
+    )
+
+
+def test_approving_linked_project_without_a_configuration_row_awards_the_base_value(
+    client, sample_admin, sample_user, seeded
+):
+    login_as_admin(client, sample_admin)
+    Configuration.query.delete()
+    db.session.commit()
+    project = _make_project(sample_user, "Name Tag Model")
+
+    assert _approval_ducks(client, project, sample_user) == 1
+
+
 def test_project_template_routes_persist_challenge_slug(
     client, sample_admin, init_db
 ):
@@ -320,6 +419,39 @@ def test_pass_chapter_for_3d_course(client, sample_admin, sample_user, seeded):
     )
     assert "Awarded 0 ducks and completed 0 challenges" in resp.get_json()["data"]["message"]
     assert ChallengeLog.query.filter_by(user_id=user.id).count() == 6
+
+
+def test_pass_chapter_awards_fractional_rewards(client, sample_admin, sample_user, init_db):
+    login_as_admin(client, sample_admin)
+    for n, value in enumerate([0.1, 0.2, 1.5]):
+        db.session.add(
+            Challenge(
+                name=f"Fraction {n}",
+                slug=f"fraction-{n}",
+                domain="codecombat.com",
+                difficulty="Medium",
+                value=value,
+                course_id="fractions",
+            )
+        )
+    db.session.commit()
+    ducks_before = sample_user.duck_balance
+
+    resp = client.post(
+        f"/api/admin/user/{sample_user.id}/pass_chapter_preview",
+        json={"course_id": "fractions"},
+    )
+    assert resp.status_code == 200
+    # 0.1 + 0.2 + 1.5 is 1.8000000000000003 in binary floating point
+    assert resp.get_json()["data"]["preview"]["ducks_to_award"] == 1.8
+
+    resp = client.post(
+        f"/api/admin/user/{sample_user.id}/pass_chapter", json={"course_id": "fractions"}
+    )
+    assert resp.status_code == 200
+    assert "Awarded 1.8 ducks and completed 3 challenges" in resp.get_json()["data"]["message"]
+    db.session.expire_all()
+    assert db.session.get(User, sample_user.id).duck_balance == pytest.approx(ducks_before + 1.8)
 
 
 # ------------------------------------------------------------ track resolution
@@ -428,8 +560,8 @@ def test_course_progress_breakdown_reports_last_completed_at(seeded, sample_user
     data = sample_user.get_course_progress_data()["3d-modeling"]
     by_course = {b["course_id"]: b for b in data["breakdown"]}
     # Latest completion within each course wins.
-    assert by_course["3d-1"]["last_completed_at"] == "2026-01-05T09:00:00"
-    assert by_course["3d-2"]["last_completed_at"] == "2026-02-01T09:00:00"
+    assert by_course["3d-1"]["last_completed_at"] == "2026-01-05T09:00:00Z"
+    assert by_course["3d-2"]["last_completed_at"] == "2026-02-01T09:00:00Z"
 
 
 def test_course_progress_breakdown_last_completed_at_none_without_progress(
@@ -454,3 +586,29 @@ def test_grant_challenge_completion_is_idempotent(seeded, sample_user):
     assert sample_user.duck_balance == before + 1
     assert sample_user.active_track == "3d"
     assert len(THREE_D_COURSES) == 2 and len(THREE_D_CHALLENGES) == 9
+
+
+@pytest.mark.parametrize(
+    "value, multiplier, expected",
+    [(1.5, 1, 1.5), (0.5, 1, 0.5), (1.5, 2, 3.0), (0.3, 1.5, 0.45)],
+)
+def test_grant_challenge_completion_awards_fractional_rewards(
+    init_db, sample_user, value, multiplier, expected
+):
+    from application.services.challenge_completion import grant_challenge_completion
+
+    ch = Challenge(
+        name="Fraction", slug="fraction", domain="codecombat.com", difficulty="Medium", value=value
+    )
+    db.session.add(ch)
+    db.session.commit()
+    before = sample_user.duck_balance
+
+    assert grant_challenge_completion(
+        sample_user, ch, duck_multiplier=multiplier, evaluate=False
+    ) is True
+
+    db.session.refresh(sample_user)
+    assert sample_user.duck_balance == pytest.approx(before + expected)
+    transaction = DuckTransaction.query.filter_by(user_id=sample_user.id).one()
+    assert transaction.amount == pytest.approx(expected)

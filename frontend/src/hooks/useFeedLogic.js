@@ -2,6 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from
 import toast from 'react-hot-toast';
 import useAuthStore from '../store/useAuthStore';
 import client from '../api/client';
+import { getErrorMessage } from '../utils/apiError';
 import useChatSocket from './useChatSocket';
 import { showConfirm } from '../utils/confirm';
 import { GLOBAL_CLASSROOM_ID } from '../utils/constants';
@@ -222,7 +223,8 @@ export const useFeedLogic = (filterClassroomId = null) => {
           textareaRef.current.style.height = 'auto';
         }
       } catch (err) {
-        toast.error('Failed to submit file');
+        const errorMsg = getErrorMessage(err, 'Failed to submit file');
+        toast.error(errorMsg);
         console.error(err);
       }
       return;

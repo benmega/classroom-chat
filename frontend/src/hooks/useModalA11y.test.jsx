@@ -443,6 +443,25 @@ describe('useModalA11y', () => {
 
             expect(document.body.style.overflow).toBe('auto');
         });
+
+        // Inside the signed-in shell a stylesheet rule already computes body to hidden. Restoring that computed
+        // value as an inline style would leave every later page (sign-in, landing) unable to scroll.
+        it('leaves no inline overflow behind when a stylesheet already hides the body', () => {
+            const sheet = document.createElement('style');
+            sheet.textContent = 'body { overflow: hidden; }';
+            document.head.appendChild(sheet);
+            try {
+                expect(window.getComputedStyle(document.body).overflow).toBe('hidden');
+                const { rerender } = render(<Dialog lockScroll />);
+                expect(document.body.style.overflow).toBe('hidden');
+
+                rerender(<Dialog lockScroll isOpen={false} />);
+
+                expect(document.body.style.overflow).toBe('');
+            } finally {
+                sheet.remove();
+            }
+        });
     });
 
     it('does nothing at all while closed', () => {

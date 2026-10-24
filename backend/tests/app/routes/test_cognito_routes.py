@@ -3,7 +3,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from application.models.session_log import SessionLog
 from application.models.user import User
+from application.utilities.db_helpers import RESERVED_USERNAMES, is_reserved_username
 from botocore.exceptions import ClientError
+from tests.factories import UserFactory
 
 
 @pytest.fixture
@@ -163,3 +165,53 @@ def test_repeat_login_does_not_open_a_second_session(
     logs = SessionLog.query.filter_by(user_id=user.id).all()
     assert len(logs) == 1
     assert logs[0].end_time is None
+
+
+@pytest.mark.parametrize(
+    "local_part",
+    [
+        variant
+        for name in sorted(RESERVED_USERNAMES)
+        for variant in (name, name.upper(), name.title())
+    ],
+)
+@patch("application.routes.cognito_routes.jwt.get_unverified_claims")
+def test_login_never_names_a_new_parent_after_a_reserved_username(
+    mock_get_claims, local_part, client, mock_boto_client, init_db
+):
+    email = f"{local_part}@example.com"
+    mock_boto_client.initiate_auth.return_value = {
+        "AuthenticationResult": {"IdToken": "dummy_token"}
+    }
+    mock_get_claims.return_value = {"sub": "test-sub-reserved", "email": email}
+
+    resp = client.post(
+        "/api/auth/cognito/login", json={"email": email, "password": "Password123!"}
+    )
+
+    assert resp.status_code == 200
+    user = User.query.filter_by(email=email).one()
+    assert not is_reserved_username(user.username)
+    assert user.username == f"{local_part.lower()}1"
+    assert user.role == "parent"
+    assert resp.json["username"] == user.username
+
+
+@patch("application.routes.cognito_routes.jwt.get_unverified_claims")
+def test_login_keeps_counting_past_taken_names_for_a_reserved_local_part(
+    mock_get_claims, client, mock_boto_client, init_db
+):
+    name = sorted(RESERVED_USERNAMES)[0]
+    UserFactory(username=f"{name}1")
+    email = f"{name.upper()}@example.com"
+    mock_boto_client.initiate_auth.return_value = {
+        "AuthenticationResult": {"IdToken": "dummy_token"}
+    }
+    mock_get_claims.return_value = {"sub": "test-sub-reserved-2", "email": email}
+
+    resp = client.post(
+        "/api/auth/cognito/login", json={"email": email, "password": "Password123!"}
+    )
+
+    assert resp.status_code == 200
+    assert User.query.filter_by(email=email).one().username == f"{name}2"

@@ -1,7 +1,7 @@
 
 
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 
 class CourseInstanceRequest(db.Model):
@@ -12,7 +12,9 @@ class CourseInstanceRequest(db.Model):
     __tablename__ = "course_instance_requests"
 
     id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    student_id = db.Column(
+        db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
 
     course_instance_id = db.Column(db.String(64), nullable=False)
     requested_course_id = db.Column(db.String(64), nullable=True)
@@ -29,7 +31,7 @@ class CourseInstanceRequest(db.Model):
             "requested_course_id": self.requested_course_id,
             "url": self.url,
             "status": self.status,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": to_utc_iso(self.created_at),
         }
 
     def __repr__(self):

@@ -5,11 +5,11 @@
 }
 
 /* Filter Tabs */
-.filter-tabs-container {
+:where(.admin-submissions-page) .filter-tabs-container {
     margin-bottom: 1.5rem;
 }
 
-.filter-tabs {
+:where(.admin-submissions-page) .filter-tabs {
     display: inline-flex;
     align-items: center;
     gap: 4px;
@@ -21,7 +21,7 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.filter-tabs .tab-btn {
+:where(.admin-submissions-page) .filter-tabs .tab-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -39,19 +39,19 @@
     position: static;
 }
 
-.filter-tabs .tab-btn:hover {
+:where(.admin-submissions-page) .filter-tabs .tab-btn:hover {
     color: var(--text-primary);
     background: var(--bg-secondary);
 }
 
-.filter-tabs .tab-btn.active {
+:where(.admin-submissions-page) .filter-tabs .tab-btn.active {
     background: var(--primary-accessible);
-    color: #ffffff;
+    color: var(--text-on-primary);
     font-weight: 700;
     box-shadow: 0 2px 4px rgba(0, 109, 116, 0.25);
 }
 
-.filter-tabs .tab-btn.active::after {
+:where(.admin-submissions-page) .filter-tabs .tab-btn.active::after {
     display: none;
 }
 
@@ -63,7 +63,7 @@
 }
 
 .submission-card {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 16px;
     border: 1px solid var(--border-subtle);
     padding: 1rem;
@@ -85,13 +85,13 @@
     margin-bottom: 0.5rem;
 }
 
-.user-info {
+:where(.admin-submissions-page) .user-info {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.avatar-placeholder {
+:where(.admin-submissions-page) .avatar-placeholder {
     width: 36px;
     height: 36px;
     background: var(--bg-tertiary);
@@ -138,7 +138,7 @@
     gap: 4px;
 }
 
-.status-badge {
+:where(.admin-submissions-page) .status-badge {
     font-size: 0.7rem;
     font-weight: 800;
     text-transform: uppercase;
@@ -219,8 +219,9 @@
 }
 
 .teacher-note-input:focus {
-    outline: none;
-    border-color: var(--primary-color, #4f46e5);
+    outline: 2px solid transparent;
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
 }
 
 .submission-actions {
@@ -259,7 +260,7 @@
 
 .submission-actions .btn-approve {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     box-shadow: 0 4px 14px rgba(14, 178, 187, 0.3);
 }
 
@@ -277,7 +278,7 @@
 
 .submission-actions .btn-reject:hover:not(:disabled) {
     background: var(--error-color);
-    color: white;
+    color: var(--text-on-primary);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
@@ -304,15 +305,15 @@
 
 @media (max-width: 800px) {
     /* Filter tabs: scrollable on mobile */
-    .filter-tabs-container {
+    :where(.admin-submissions-page) .filter-tabs-container {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
-    .filter-tabs {
+    :where(.admin-submissions-page) .filter-tabs {
         width: max-content;
         max-width: 100%;
     }
-    .filter-tabs .tab-btn {
+    :where(.admin-submissions-page) .filter-tabs .tab-btn {
         padding: 10px 14px;
         min-height: 44px; /* WCAG touch target */
     }
@@ -321,7 +322,7 @@
     }
 }
 
-@media (max-width: 500px) {
+@media (max-width: 640px) {
     .submissions-list {
         grid-template-columns: 1fr;
     }

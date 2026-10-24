@@ -115,6 +115,28 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().user).toBeNull();
   });
 
+  it('login reads the message field of an error body that has no error field', async () => {
+    server.use(
+      http.post('*/user/login', () => HttpResponse.json({ success: false, message: 'Too many attempts.' }, { status: 429 }))
+    );
+
+    const result = await useAuthStore.getState().login('testuser', 'password123');
+
+    expect(result).toEqual({ success: false, error: 'Too many attempts.' });
+  });
+
+  it('login does not show a proxy error page as the message', async () => {
+    server.use(
+      http.post('*/user/login', () =>
+        new HttpResponse('<html><body>502 Bad Gateway</body></html>', { status: 502, headers: { 'Content-Type': 'text/html' } })
+      )
+    );
+
+    const result = await useAuthStore.getState().login('testuser', 'password123');
+
+    expect(result).toEqual({ success: false, error: 'Login failed' });
+  });
+
   it('login falls back to a generic message when the server sends no error text', async () => {
     server.use(http.post('*/user/login', () => new HttpResponse(null, { status: 500 })));
 
@@ -131,6 +153,49 @@ describe('useAuthStore', () => {
     );
     const result = await useAuthStore.getState().loginParentCognito('parent@test.com', 'password');
     expect(result.success).toBe(true);
+  });
+
+  describe('loginParentCognito failures', () => {
+    const cognitoLogin = () => useAuthStore.getState().loginParentCognito('parent@test.com', 'password');
+
+    it('reports the error text of a rejected sign-in', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () => HttpResponse.json({ error: 'Incorrect email or password.' }, { status: 401 }))
+      );
+
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Incorrect email or password.' });
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+
+    it('reads the message field and a plain string body the same way as the other pages', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () => HttpResponse.json({ message: 'Account locked.' }, { status: 403 }))
+      );
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Account locked.' });
+
+      server.use(
+        http.post('*/api/auth/cognito/login', () => new HttpResponse('Sign-in is unavailable.', { status: 503 }))
+      );
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Sign-in is unavailable.' });
+    });
+
+    it('falls back to a generic message for a page that is not an error message', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () =>
+          new HttpResponse('<html><body>502 Bad Gateway</body></html>', { status: 502, headers: { 'Content-Type': 'text/html' } })
+        )
+      );
+
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Login failed' });
+    });
+
+    it('falls back to a generic message when the server answers without success', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () => HttpResponse.json({ success: false }))
+      );
+
+      expect(await cognitoLogin()).toEqual({ success: false, error: 'Login failed' });
+    });
   });
 
   it('completeTutorial updates user state', async () => {
@@ -164,7 +229,7 @@ describe('useAuthStore', () => {
   });
 
   it('logout discards the chat socket and clears state even when the request fails', async () => {
-    server.use(http.get('*/user/logout', () => HttpResponse.error()));
+    server.use(http.post('*/user/logout', () => HttpResponse.error()));
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
 
     await expect(useAuthStore.getState().logout()).resolves.toBeUndefined();
@@ -175,7 +240,7 @@ describe('useAuthStore', () => {
   });
 
   it('logout does not reject on a server error, so callers still navigate away', async () => {
-    server.use(http.get('*/user/logout', () => new HttpResponse(null, { status: 500 })));
+    server.use(http.post('*/user/logout', () => new HttpResponse(null, { status: 500 })));
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 }, hamburgerProgress: 0.4 });
 
     await expect(useAuthStore.getState().logout()).resolves.toBeUndefined();
@@ -187,13 +252,66 @@ describe('useAuthStore', () => {
   });
 
   it('logout warns that the server may still hold the session when the request fails', async () => {
-    server.use(http.get('*/user/logout', () => HttpResponse.error()));
+    server.use(http.post('*/user/logout', () => HttpResponse.error()));
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
 
     await useAuthStore.getState().logout();
 
     expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('still be signed in'));
     expect(warn).toHaveBeenCalled();
+  });
+
+  it('logout falls back to the deprecated GET when the server does not accept POST yet', async () => {
+    const methods = [];
+    server.use(
+      http.post('*/user/logout', ({ request }) => {
+        methods.push(request.method);
+        return new HttpResponse(null, { status: 405 });
+      }),
+      http.get('*/user/logout', ({ request }) => {
+        methods.push(request.method);
+        return HttpResponse.json({ status: 'success', message: 'Logged out' });
+      })
+    );
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await useAuthStore.getState().logout();
+
+    expect(methods).toEqual(['POST', 'GET']);
+    expect(toast.error).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    expect(useAuthStore.getState().user).toBeNull();
+  });
+
+  it('logout warns when neither POST nor the deprecated GET ends the session', async () => {
+    server.use(
+      http.post('*/user/logout', () => new HttpResponse(null, { status: 405 })),
+      http.get('*/user/logout', () => new HttpResponse(null, { status: 500 }))
+    );
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await expect(useAuthStore.getState().logout()).resolves.toBeUndefined();
+
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('still be signed in'));
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it('logout does not retry with GET on an error other than 405', async () => {
+    const methods = [];
+    server.use(
+      http.post('*/user/logout', () => new HttpResponse(null, { status: 500 })),
+      http.get('*/user/logout', ({ request }) => {
+        methods.push(request.method);
+        return HttpResponse.json({ status: 'success' });
+      })
+    );
+    useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+
+    await useAuthStore.getState().logout();
+
+    expect(methods).toEqual([]);
+    expect(toast.error).toHaveBeenCalledWith(expect.stringContaining('still be signed in'));
   });
 
   it('logout stays quiet when the request succeeds', async () => {

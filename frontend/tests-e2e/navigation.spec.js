@@ -1,69 +1,16 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, STUDENT } from './support/mockBackend.js';
 
 test.describe('Navigation', () => {
-  test.beforeEach(async ({ page }) => {
-    page.on('console', msg => console.log(`BROWSER CONSOLE: [${msg.type()}] ${msg.text()}`));
-    page.on('pageerror', err => console.log(`BROWSER ERROR: ${err.message}`));
-
-    await page.route('**/auth/status', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          data: {
-            logged_in: true,
-            user: { id: 1, username: 'testuser', role: 'student', is_admin: false, packets: 0, duck_balance: 100, has_seen_tutorial: true }
-          }
-        }),
-      });
-    });
-
-    await page.route('**/heartbeat', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ status: 'success' }),
-      });
-    });
-
-    await page.route('**/user/profile*', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          status: 'success',
-          data: {
-            target: { id: 1, username: 'testuser', role: 'student' },
-            viewer: { id: 1, username: 'testuser', role: 'student' }
-          }
-        }),
-      });
-    });
-
-    await page.route('**/message/**', async (route) => {
-      const url = route.request().url();
-      if (url.includes('/message/api/me/context')) {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            global_conversation_id: null,
-            classrooms: []
-          }),
-        });
-      } else if (url.includes('/message/api/conversations')) {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ data: [] }),
-        });
-      } else {
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({}),
-        });
-      }
+  test.beforeEach(async ({ page, backend }) => {
+    await backend.mockSession(STUDENT);
+    await backend.mockLayout();
+    await backend.mockChat();
+    await backend.mock('/user/profile', {
+      status: 'success',
+      data: {
+        target: { id: STUDENT.id, username: STUDENT.username, role: STUDENT.role },
+        viewer: { id: STUDENT.id, username: STUDENT.username, role: STUDENT.role },
+      },
     });
 
     await page.addInitScript(() => {
@@ -71,6 +18,8 @@ test.describe('Navigation', () => {
     });
 
     await page.goto('/chat');
+    // The page the rest of the spec starts from: signed in, feed loaded.
+    await expect(page.getByTestId('feed-container')).toBeVisible({ timeout: 15000 });
   });
 
   test('should navigate to profile from dashboard', async ({ page }) => {
@@ -92,11 +41,16 @@ test.describe('Navigation', () => {
 
     await expect(page).toHaveURL(/.*\/profile/);
     await expect(page.locator('.profile-page')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('heading', { level: 1, name: STUDENT.username })).toBeVisible();
   });
 
   test('should navigate to bit-shift', async ({ page }) => {
-    await expect(page.getByTestId('nav-bit-shift')).toBeVisible({ timeout: 15000 });
-    await page.getByTestId('nav-bit-shift').click();
+    const ducks = page.getByTestId('nav-bit-shift');
+    await expect(ducks).toBeVisible({ timeout: 15000 });
+    await expect(ducks).toContainText(String(STUDENT.duck_balance));
+    await ducks.click();
+
     await expect(page).toHaveURL('/bit-shift');
+    await expect(page.getByRole('switch', { name: 'Byte mode' })).toBeAttached();
   });
 });

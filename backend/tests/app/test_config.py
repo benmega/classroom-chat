@@ -89,6 +89,49 @@ def test_production_config_cors_origins(load_config, monkeypatch):
     assert load_config().ProductionConfig.CORS_ORIGINS == ["https://a.example", "https://b.example"]
 
 
+# ---- Production secrets ----------------------------------------------------
+
+REAL_SECRETS = {
+    "SECRET_KEY": "k" * 64,
+    "ADMIN_PASSWORD": "p" * 64,
+    "WEBHOOK_SECRET": "w" * 38,
+}
+
+
+@pytest.fixture
+def production_env(monkeypatch):
+    monkeypatch.setenv("FLASK_ENV", "production")
+    for name, value in REAL_SECRETS.items():
+        monkeypatch.setenv(name, value)
+
+
+def test_production_accepts_real_secrets(load_config, production_env):
+    config = load_config().Config
+    assert REAL_SECRETS["SECRET_KEY"] == config.SECRET_KEY
+    assert REAL_SECRETS["ADMIN_PASSWORD"] == config.ADMIN_PASSWORD
+
+
+@pytest.mark.parametrize("name", sorted(REAL_SECRETS))
+@pytest.mark.parametrize("value", ["change_me", "ChangeMe", " 'admin' ", "your-secret-key", "dev-secret-key-change-me"])
+def test_production_rejects_placeholder_secrets(load_config, production_env, monkeypatch, name, value):
+    monkeypatch.setenv(name, value)
+    with pytest.raises(RuntimeError, match=f"{name} is set to a placeholder") as excinfo:
+        load_config()
+    assert value.strip() not in str(excinfo.value)
+
+
+def test_production_allows_an_unset_webhook_secret(load_config, production_env, monkeypatch):
+    monkeypatch.delenv("WEBHOOK_SECRET")
+    load_config()
+
+
+def test_development_allows_placeholder_secrets(load_config, monkeypatch):
+    monkeypatch.setenv("FLASK_ENV", "development")
+    monkeypatch.setenv("SECRET_KEY", "change_me")
+    monkeypatch.setenv("ADMIN_PASSWORD", "admin")
+    assert load_config().Config.SECRET_KEY == "change_me"
+
+
 def test_default_origin_lists():
     assert not any("localhost" in o or "127.0.0.1" in o for o in DEFAULT_PROD_CORS_ORIGINS)
     assert all(o.startswith(("http://localhost:", "http://127.0.0.1:")) for o in DEFAULT_DEV_CORS_ORIGINS)

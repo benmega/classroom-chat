@@ -1,5 +1,5 @@
 import adminCache from '../../utils/adminCache';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
@@ -140,7 +140,8 @@ describe('AdminStandardProjects', () => {
                 name: 'New Template',
                 description: 'New Desc',
                 concepts: ['Vars', 'Loops'],
-                goals: ['Goal 1', 'Goal 2']
+                goals: ['Goal 1', 'Goal 2'],
+                project_type: 'code'
             }));
         });
     });
@@ -445,6 +446,119 @@ describe('AdminStandardProjects', () => {
 
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('A template with this name already exists.');
+        });
+    });
+
+    describe('project type', () => {
+        const templates = {
+            1: { id: 1, name: 'Fizz Buzz', description: 'Code one', project_type: 'code' },
+            2: { id: 2, name: 'Marble Run', description: 'Model one', project_type: '3d' },
+            3: { id: 3, name: 'Legacy Quiz', description: 'Saved before project types' },
+        };
+
+        const loadTemplates = async (list = templates) => {
+            client.get.mockResolvedValue({ data: { status: 'success', data: { templates: list } } });
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByRole('button', { name: /^Add Project/ });
+        };
+
+        const submitForm = () => {
+            const save = screen.getAllByRole('button', { name: /Save Template/i }).find(el => el.tagName === 'BUTTON');
+            fireEvent.submit(save.closest('form'));
+        };
+
+        it('tags only the 3D templates in the list', async () => {
+            await loadTemplates();
+            await screen.findByText('Marble Run');
+
+            const card = (name) => within(screen.getByText(name).closest('.project-card'));
+
+            expect(card('Marble Run').getByText('3D')).toBeInTheDocument();
+            expect(card('Fizz Buzz').queryByText('3D')).not.toBeInTheDocument();
+            expect(card('Legacy Quiz').queryByText('3D')).not.toBeInTheDocument();
+        });
+
+        it('offers both types and starts a new template as a code project', async () => {
+            await loadTemplates({});
+
+            fireEvent.click(screen.getByRole('button', { name: /Add Project/i }));
+
+            const select = screen.getByLabelText('Project type');
+            expect(select).toHaveValue('code');
+            expect(within(select).getAllByRole('option').map(o => o.textContent)).toEqual(['Code project', '3D model']);
+        });
+
+        it('creates a 3D template when the type is switched to 3D model', async () => {
+            await loadTemplates({});
+            fireEvent.click(screen.getByRole('button', { name: /Add Project/i }));
+            fireEvent.change(screen.getByPlaceholderText(/e.g. Text-Based Adventure/i), { target: { value: 'Robot Arm' } });
+            fireEvent.change(screen.getByLabelText('Project type'), { target: { value: '3d' } });
+            client.post.mockResolvedValueOnce({ data: { status: 'success', message: 'Created successfully.' } });
+
+            submitForm();
+
+            await waitFor(() => {
+                expect(client.post).toHaveBeenCalledWith('/api/project-templates', expect.objectContaining({
+                    name: 'Robot Arm',
+                    project_type: '3d'
+                }));
+            });
+        });
+
+        it('fills the editor with the type of the template and sends it back on update', async () => {
+            await loadTemplates();
+            await screen.findByText('Marble Run');
+            fireEvent.click(screen.getByRole('button', { name: /^Marble Run/ }));
+            expect(screen.getByLabelText('Project type')).toHaveValue('3d');
+            client.put.mockResolvedValueOnce({ data: { status: 'success', message: 'Updated successfully.' } });
+
+            submitForm();
+
+            await waitFor(() => {
+                expect(client.put).toHaveBeenCalledWith('/api/project-templates/2', expect.objectContaining({
+                    name: 'Marble Run',
+                    project_type: '3d'
+                }));
+            });
+        });
+
+        it('changes the type of an existing template', async () => {
+            await loadTemplates();
+            await screen.findByText('Fizz Buzz');
+            fireEvent.click(screen.getByRole('button', { name: /^Fizz Buzz/ }));
+            fireEvent.change(screen.getByLabelText('Project type'), { target: { value: '3d' } });
+            client.put.mockResolvedValueOnce({ data: { status: 'success', message: 'Updated successfully.' } });
+
+            submitForm();
+
+            await waitFor(() => {
+                expect(client.put).toHaveBeenCalledWith('/api/project-templates/1', expect.objectContaining({ project_type: '3d' }));
+            });
+        });
+
+        it('treats a template without a type as a code project', async () => {
+            await loadTemplates();
+            await screen.findByText('Legacy Quiz');
+            fireEvent.click(screen.getByRole('button', { name: /^Legacy Quiz/ }));
+            expect(screen.getByLabelText('Project type')).toHaveValue('code');
+            client.put.mockResolvedValueOnce({ data: { status: 'success', message: 'Updated successfully.' } });
+
+            submitForm();
+
+            await waitFor(() => {
+                expect(client.put).toHaveBeenCalledWith('/api/project-templates/3', expect.objectContaining({ project_type: 'code' }));
+            });
+        });
+
+        it('starts the next new template as a code project again after editing a 3D one', async () => {
+            await loadTemplates();
+            await screen.findByText('Marble Run');
+            fireEvent.click(screen.getByRole('button', { name: /^Marble Run/ }));
+            fireEvent.click(screen.getAllByRole('button', { name: /Cancel/i })[0]);
+
+            fireEvent.click(screen.getByRole('button', { name: /Add Project/i }));
+
+            expect(screen.getByLabelText('Project type')).toHaveValue('code');
         });
     });
 

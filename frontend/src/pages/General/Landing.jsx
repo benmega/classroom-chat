@@ -11,13 +11,14 @@ const Landing = () => {
     const { isMobile } = useViewport();
 
     useEffect(() => {
+        // replace: Back must not return to this page just to be sent on again
         if (isAuthenticated && user) {
             if (user.role === 'parent') {
-                navigate('/parent/dashboard');
+                navigate('/parent/dashboard', { replace: true });
             } else if (user.role === 'admin') {
-                navigate('/admin/dashboard');
+                navigate('/admin/dashboard', { replace: true });
             } else {
-                navigate('/chat');
+                navigate('/chat', { replace: true });
             }
         }
     }, [isAuthenticated, user, navigate]);

@@ -83,7 +83,7 @@
 
 .brand-logo svg,
 .brand-logo img {
-    color: white;
+    color: var(--text-on-primary);
     width: 65%;
     height: 65%;
     object-fit: contain;
@@ -114,7 +114,7 @@
     position: relative;
 }
 
-.input-icon {
+:where(.auth-page) .input-icon {
     position: absolute;
     left: 1.25rem;
     top: 50%;
@@ -191,7 +191,7 @@
     font-weight: 700;
     letter-spacing: 0.02em;
     background: var(--gradient-primary);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
@@ -258,7 +258,7 @@
     height: 20px;
     border: 2px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
-    border-top-color: white;
+    border-top-color: var(--text-on-primary);
     animation: spin 0.8s linear infinite;
 }
 
@@ -462,7 +462,7 @@
 }
 .auth-role-btn.active {
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     font-weight: bold;
 }
 .auth-role-btn.inactive {

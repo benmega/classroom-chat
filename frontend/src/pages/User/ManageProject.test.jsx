@@ -84,7 +84,7 @@ describe('ManageProject', () => {
     it('renders code snippet and teacher comment in preview', async () => {
         server.use(
             http.get('*/user/project/edit/1', async () => {
-                return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'My Cool Game', description: 'A game I built', image_url: 'cover.jpg', teacher_comment: 'Great job!', code_snippet: 'print("hello")', link: 'http://example.com' } } });
+                return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'My Cool Game', description: 'A game I built', image_url: 'cover.jpg', status: 'approved', teacher_comment: 'Great job!', code_snippet: 'print("hello")', link: 'http://example.com' } } });
             })
         );
 
@@ -99,6 +99,89 @@ describe('ManageProject', () => {
         expect(await screen.findByText('Core Information')).toBeInTheDocument();
         expect(screen.getByText('Teacher Note: Great job!')).toBeInTheDocument();
         expect(screen.getByText('print("hello")')).toBeInTheDocument();
+    });
+
+    describe('review feedback', () => {
+        const openProject = async (project) => {
+            server.use(
+                http.get('*/user/project/edit/1', () =>
+                    HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'Maze', ...project } } })
+                )
+            );
+            render(
+                <MemoryRouter initialEntries={['/manage-project/1']}>
+                    <Routes>
+                        <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                    </Routes>
+                </MemoryRouter>
+            );
+            await screen.findByText('Core Information');
+        };
+        const previewNote = () => document.querySelector('.preview-section-core .card-teacher-feedback');
+
+        it('shows the revision banner and the feedback of a rejected project and offers to resubmit', async () => {
+            await openProject({ status: 'rejected', teacher_comment: 'Add comments to the loop' });
+
+            const banner = document.querySelector('.revision-notice-banner');
+            expect(banner).toHaveTextContent('Revision Requested');
+            expect(banner).toHaveTextContent('"Add comments to the loop"');
+            expect(banner).toHaveTextContent('save to resubmit your project for review');
+            expect(previewNote()).toHaveTextContent('Revision Note: Add comments to the loop');
+            expect(previewNote()).toHaveClass('revision-feedback');
+
+            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+            expect(screen.getByRole('button', { name: 'Resubmit for Review' })).toBeInTheDocument();
+        });
+
+        it('shows the banner but no feedback note for a rejected project without a comment', async () => {
+            await openProject({ status: 'rejected', teacher_comment: null });
+
+            const banner = document.querySelector('.revision-notice-banner');
+            expect(banner).toHaveTextContent('Revision Requested');
+            expect(banner.querySelector('.revision-notice-feedback')).toBeNull();
+            expect(previewNote()).toBeNull();
+        });
+
+        it('shows no revision banner on an approved project and calls its comment a teacher note', async () => {
+            await openProject({ status: 'approved', teacher_comment: 'Well done' });
+
+            expect(document.querySelector('.revision-notice-banner')).toBeNull();
+            expect(previewNote()).toHaveTextContent('Teacher Note: Well done');
+            expect(previewNote()).not.toHaveClass('revision-feedback');
+            expect(previewNote()).not.toHaveClass('pending-feedback');
+        });
+
+        it('does not call the old revision note of a resubmitted project a teacher note', async () => {
+            // A rejected project that was edited goes back to pending but keeps its comment
+            await openProject({ status: 'pending', teacher_comment: 'Add comments to the loop' });
+
+            expect(document.querySelector('.revision-notice-banner')).toBeNull();
+            expect(previewNote()).toHaveTextContent('Feedback: Add comments to the loop');
+            expect(previewNote()).toHaveClass('pending-feedback');
+            expect(screen.queryByText(/Teacher Note/)).not.toBeInTheDocument();
+        });
+
+        it('does not call the first comment an admin types on a new project a previous note', async () => {
+            // The server keeps an admin's comment on a new project, which starts out pending
+            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
+            server.use(
+                http.get('*/user/project/new', () => HttpResponse.json({ status: 'success', data: { students: [] } }))
+            );
+            render(
+                <MemoryRouter initialEntries={['/manage-project']}>
+                    <ManageProject />
+                </MemoryRouter>
+            );
+            await screen.findByText('Core Information');
+            fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
+
+            fireEvent.change(await screen.findByLabelText('Teacher Comment'), { target: { value: 'Great start, keep going' } });
+
+            expect(previewNote()).toHaveTextContent('Feedback: Great start, keep going');
+            expect(previewNote()).not.toHaveTextContent(/Previous/);
+            expect(previewNote()).toHaveClass('pending-feedback');
+        });
     });
 
     it('navigates through tabs', async () => {
@@ -116,12 +199,32 @@ describe('ManageProject', () => {
         expect(screen.getByPlaceholderText(/YouTube\/Vimeo URL/i)).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
-        expect(screen.getByText('Code Showcase')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
         
         expect(screen.getByRole('button', { name: /Create Project/i })).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: /Back/i }));
         expect(screen.getByText(/Media Assets/i)).toBeInTheDocument();
+    });
+
+    it('gives Next and the submit button separate DOM nodes, so Next cannot submit the form', async () => {
+        // A browser applies a click's default action after React has updated the DOM. Were one node to
+        // serve both buttons, the click on Next that reveals the submit button would land on a node that
+        // is a submit button by then, and the form would be sent a step early (seen in Playwright).
+        render(
+            <MemoryRouter initialEntries={['/manage-project']}>
+                <ManageProject />
+            </MemoryRouter>
+        );
+        expect(await screen.findByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+
+        const nextButton = screen.getByRole('button', { name: /Next/i });
+        fireEvent.click(nextButton);
+
+        const submitButton = screen.getByRole('button', { name: /Create Project/i });
+        expect(submitButton).not.toBe(nextButton);
+        expect(nextButton.isConnected).toBe(false);
     });
 
     it('handles image and video file selection', async () => {
@@ -449,6 +552,35 @@ describe('ManageProject', () => {
             await waitFor(() => expect(select).toHaveValue('6'));
             expect(screen.getByLabelText('Teacher Comment')).toHaveValue('Needs comments');
         });
+
+        it('walks an admin on from Code & Files to the review step and back', async () => {
+            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
+            renderNewProject();
+            await screen.findByText('Core Information');
+            fireEvent.click(screen.getByRole('button', { name: '3. Code & Files' }));
+
+            fireEvent.click(screen.getByRole('button', { name: /Next/i }));
+            expect(await screen.findByText('Admin Controls')).toBeInTheDocument();
+
+            fireEvent.click(screen.getByRole('button', { name: /Back/i }));
+            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
+        });
+    });
+
+    it('goes back to the profile on Cancel without saving', async () => {
+        render(
+            <MemoryRouter initialEntries={['/manage-project']}>
+                <Routes>
+                    <Route path="/manage-project" element={<ManageProject />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                </Routes>
+            </MemoryRouter>
+        );
+        await screen.findByText('Core Information');
+
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+        expect(await screen.findByTestId('profile-page')).toBeInTheDocument();
     });
 
     describe('keyboard and screen reader access', () => {
@@ -466,7 +598,7 @@ describe('ManageProject', () => {
 
             const core = screen.getByRole('button', { name: '1. Core Info' });
             const media = screen.getByRole('button', { name: '2. Media' });
-            const code = screen.getByRole('button', { name: '3. Code' });
+            const code = screen.getByRole('button', { name: '3. Code & Files' });
             [core, media, code].forEach((step) => {
                 expect(step.tagName).toBe('BUTTON');
                 expect(step).toHaveAttribute('type', 'button');
@@ -484,9 +616,9 @@ describe('ManageProject', () => {
             expect(screen.getByRole('button', { name: '2. Media' })).toHaveAttribute('aria-current', 'step');
             expect(screen.getByRole('button', { name: '1. Core Info' })).not.toHaveAttribute('aria-current');
 
-            fireEvent.click(screen.getByRole('button', { name: '3. Code' }));
-            expect(screen.getByText('Code Showcase')).toBeInTheDocument();
-            expect(screen.getByRole('button', { name: '3. Code' })).toHaveAttribute('aria-current', 'step');
+            fireEvent.click(screen.getByRole('button', { name: '3. Code & Files' }));
+            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: '3. Code & Files' })).toHaveAttribute('aria-current', 'step');
 
             fireEvent.click(screen.getByRole('button', { name: '1. Core Info' }));
             expect(screen.getByText('Core Information')).toBeInTheDocument();
@@ -501,9 +633,9 @@ describe('ManageProject', () => {
             expect(await screen.findByText('Media Assets')).toBeInTheDocument();
 
             await user.tab();
-            expect(screen.getByRole('button', { name: '3. Code' })).toHaveFocus();
+            expect(screen.getByRole('button', { name: '3. Code & Files' })).toHaveFocus();
             await user.keyboard(' ');
-            expect(screen.getByText('Code Showcase')).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
         });
 
         it('names the video URL field', async () => {
@@ -516,9 +648,9 @@ describe('ManageProject', () => {
 
         it('names the code snippet field', async () => {
             await openProject();
-            fireEvent.click(screen.getByRole('button', { name: '3. Code' }));
+            fireEvent.click(screen.getByRole('button', { name: '3. Code & Files' }));
 
-            expect(await screen.findByRole('textbox', { name: 'Code snippet' })).toHaveAttribute('name', 'code_snippet');
+            expect(await screen.findByRole('textbox', { name: /Highlighted Code Snippet/ })).toHaveAttribute('name', 'code_snippet');
         });
 
         it('keeps both file inputs focusable (visually hidden, not display:none)', async () => {
@@ -534,7 +666,7 @@ describe('ManageProject', () => {
                 expect(input).not.toHaveAttribute('hidden');
             });
 
-            screen.getByRole('button', { name: '3. Code' }).focus();
+            screen.getByRole('button', { name: '3. Code & Files' }).focus();
             await user.tab();
             expect(image).toHaveFocus();
             await user.tab();

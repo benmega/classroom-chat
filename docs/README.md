@@ -10,6 +10,7 @@ Classroom Chat is a web-based application designed to enhance student interactio
 - **Challenge System:** Assign and track challenges with specific point values.
 - **Duck Rewards:** Gamified system rewarding student achievements.
 - **Profile Customization:** Users can manage their profile and view earned achievements.
+- **Student Tests:** Timed multiple-choice tests with server-side grading, duck rewards and results for parents and admins (see [student_tests.md](student_tests.md)).
 - **Educational Design:** Intentional "thinking in binary" philosophy (see [EDUCATIONAL_DESIGN.md](EDUCATIONAL_DESIGN.md)).
 
 ## Quick Start

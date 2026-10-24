@@ -819,7 +819,7 @@ def test_logout_disconnects_every_socket_of_the_user(app, sample_user):
     other_device, _ = _connect(app, sample_user)
     watcher.get_received()
 
-    res = flask_client.get("/user/logout")
+    res = flask_client.post("/user/logout")
 
     assert res.status_code == 302
     assert not first.is_connected()
@@ -835,13 +835,13 @@ def test_logout_disconnects_every_socket_of_the_user(app, sample_user):
 def test_logout_without_open_sockets_still_works(app, sample_user):
     flask_client = _login(app, sample_user)
 
-    assert flask_client.get("/user/logout").status_code == 302
+    assert flask_client.post("/user/logout").status_code == 302
 
 
 def test_logged_out_browser_cannot_reconnect(app, sample_user):
     socket_client, flask_client = _connect(app, sample_user)
 
-    flask_client.get("/user/logout")
+    flask_client.post("/user/logout")
 
     assert not socket_client.is_connected()
     again = socketio.test_client(app, flask_test_client=flask_client)
@@ -851,7 +851,7 @@ def test_logged_out_browser_cannot_reconnect(app, sample_user):
 
 def test_user_can_reconnect_after_logging_back_in(app, sample_user):
     _, flask_client = _connect(app, sample_user)
-    flask_client.get("/user/logout")
+    flask_client.post("/user/logout")
     with flask_client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
@@ -871,7 +871,7 @@ def test_logout_survives_a_failing_socket_disconnect(app, sample_user, monkeypat
 
     monkeypatch.setattr(socketio.server, "disconnect", boom)
 
-    res = flask_client.get("/user/logout")
+    res = flask_client.post("/user/logout")
 
     assert res.status_code == 302
     assert sample_user.id not in socket_events._active_sessions

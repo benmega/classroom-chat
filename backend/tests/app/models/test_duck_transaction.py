@@ -12,7 +12,7 @@ def test_to_dict_serialises_timestamp():
         "user_id": 1,
         "amount": 2.5,
         "reason": "Reward",
-        "timestamp": "2026-01-02T03:04:05",
+        "timestamp": "2026-01-02T03:04:05Z",
     }
 
 

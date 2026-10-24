@@ -2,7 +2,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom';
 import { http, HttpResponse } from 'msw';
 import Login from './Login';
 import { renderWithProviders } from '../../test/test-utils';
@@ -168,6 +168,26 @@ describe('Login Component', () => {
       signInAs('testuser', 'password123');
 
       await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/parent/connect?code=ABC123'));
+    });
+
+    it('takes the login page out of history, so Back leaves it behind instead of returning to it', async () => {
+      const GoBack = () => {
+        const navigate = useNavigate();
+        return <button onClick={() => navigate(-1)}>Back</button>;
+      };
+      render(
+        <MemoryRouter initialEntries={['/home', '/login']} initialIndex={1}>
+          <Login />
+          <GoBack />
+          <Where />
+        </MemoryRouter>
+      );
+
+      signInAs('testuser', 'password123');
+      await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/chat'));
+      fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+
+      expect(screen.getByTestId('where')).toHaveTextContent('/home');
     });
 
     it('stays on the login page after a failed login', async () => {

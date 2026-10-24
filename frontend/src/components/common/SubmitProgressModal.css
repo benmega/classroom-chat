@@ -52,18 +52,6 @@
     position: relative;
 }
 
-.form-title {
-    font-size: 2.25rem;
-    margin-bottom: 0.5rem;
-    color: var(--text-primary);
-    font-weight: 900;
-    letter-spacing: -0.05em;
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
 .form-description {
     color: var(--text-secondary);
     font-size: 1rem;
@@ -77,7 +65,7 @@
     gap: 1.5rem;
 }
 
-.form-group label {
+:where(.submit-challenge-popover) .form-group label {
     display: block;
     font-weight: 700;
     margin-bottom: 0.75rem;
@@ -87,13 +75,13 @@
     letter-spacing: 0.05em;
 }
 
-.input-with-icon {
+:where(.submit-challenge-popover) .input-with-icon {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-.form-control {
+.submit-progress-control {
     width: 100%;
     padding: 14px 18px;
     border-radius: var(--radius-md);
@@ -130,10 +118,11 @@
     border: 1px solid var(--primary-alpha);
 }
 
-.form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: var(--shadow-glow);
-    outline: none;
+.submit-progress-control:focus {
+    border-color: var(--primary-accessible);
+    box-shadow: var(--focus-ring);
+    outline: 2px solid transparent; /* shown in forced-colors mode, where box-shadow is dropped */
+    outline-offset: 2px;
     transform: translateY(-2px);
     background: var(--bg-primary);
 }
@@ -186,49 +175,46 @@
     box-shadow: var(--shadow-md);
 }
 
-.submit-button {
-    width: 100%;
-    padding: 1.15rem;
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: white;
-    background: var(--gradient-primary);
-    border: none;
-    border-radius: var(--radius-lg);
-    cursor: pointer;
-    transition: var(--transition-bounce);
-    box-shadow: var(--shadow-lg);
-    margin-top: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-}
-
-.submit-button:hover:not(:disabled) {
-    transform: translateY(-5px);
-    box-shadow: var(--shadow-glow), var(--shadow-xl);
-    filter: brightness(1.1);
-}
-
-.submit-button:active:not(:disabled) {
-    transform: translateY(-2px);
-}
-
 .btn-loading {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.spinner {
+/* The certificate upload progress bar. These rules sat in SubmitCertificate.css, which nothing imported. */
+:where(.submit-challenge-popover) .progress-container {
+    padding-top: 10px;
+}
+
+:where(.submit-challenge-popover) .progress-bar-wrapper {
+    width: 100%;
+    height: 10px;
+    background: var(--border-subtle);
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+:where(.submit-challenge-popover) .progress-bar-fill {
+    height: 100%;
+    background: var(--primary-color);
+    transition: width 0.3s ease-out;
+}
+
+:where(.submit-challenge-popover) .progress-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-accessible);
+}
+
+:where(.submit-challenge-popover) .spinner {
     animation: rotate 2s linear infinite;
     width: 24px;
     height: 24px;
 }
 
-.spinner .path {
-    stroke: white;
+:where(.submit-challenge-popover) .spinner .path {
+    stroke: var(--text-on-primary);
     stroke-linecap: round;
     animation: dash 1.5s ease-in-out infinite;
 }
@@ -298,9 +284,6 @@
 @media (max-width: 768px) {
     .form-card {
         padding: 1.5rem;
-    }
-    .form-title {
-        font-size: 1.75rem;
     }
 }
 

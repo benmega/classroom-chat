@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, CheckCircle, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft, AlertCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft, AlertCircle, Box, FileCode, FolderUp, Images, Files } from 'lucide-react';
 import AccessDenied from '../Error/AccessDenied';
 import NotFound from '../Error/NotFound';
 import useAuthStore from '../../store/useAuthStore';
@@ -7,9 +7,28 @@ import './ManageProject.css';
 import SmartImage from '../../components/common/SmartImage';
 import ScreenRecorder from '../../components/common/ScreenRecorder';
 import Skeleton from '../../components/common/Skeleton';
+import ModelViewer from '../../components/common/ModelViewer';
+import ProjectFileList from './ProjectFileList';
 import { formatStaticUrl } from '../../utils/formatters';
+import { getFeedbackStyle } from '../../utils/projectFeedback';
+import { acceptForKind, groupProjectFiles, primaryModelFile, projectFileUrl } from '../../utils/projectFiles';
+import { modelFormatFromName } from '../../utils/modelFormats';
 
 import { useProjectManagement } from '../../hooks/useProjectManagement';
+
+const PROJECT_TYPE_OPTIONS = [
+    { value: 'code', label: 'Code project', Icon: Code },
+    { value: '3d', label: '3D model', Icon: Box },
+];
+
+const countOf = (count, one, many) => `${count} ${count === 1 ? one : many}`;
+
+// "1 model, 4 source files, 2 assets", naming only the kinds the project will hold
+const describeFileCounts = ({ model, source, asset }) => [
+    model > 0 && countOf(model, 'model', 'models'),
+    source > 0 && countOf(source, 'source file', 'source files'),
+    asset > 0 && countOf(asset, 'asset', 'assets'),
+].filter(Boolean).join(', ');
 
 const ManageProject = () => {
     const { user: currentUser } = useAuthStore();
@@ -23,11 +42,24 @@ const ManageProject = () => {
         isSaving,
         imagePreview,
         projectVideo,
+        isCustomImage,
         error,
+        projectType,
+        setProjectType,
+        existingFiles,
+        pendingFiles,
+        removedFileIds,
+        fileCounts,
+        pendingModelPreviewUrl,
+        uploadProgress,
         handleInputChange,
         handleTemplateChange,
         handleFileChange,
         handleRecordedVideo,
+        addFiles,
+        removePendingFile,
+        toggleRemoveExisting,
+        setCoverFromModelSnapshot,
         handleSubmit,
         handleDelete,
         adjustTextareaHeight,
@@ -37,11 +69,24 @@ const ManageProject = () => {
     const [isRecorderOpen, setIsRecorderOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('core');
     const descRef = useRef(null);
+    const viewerRef = useRef(null);
 
     const onRecordingComplete = (blob) => {
         handleRecordedVideo(blob);
         setIsRecorderOpen(false);
     };
+
+    // Once the preview has drawn the model, a frame of it becomes the cover, unless the project has a cover
+    // already (asking for the frame renders the scene again, so it is not even taken then)
+    const handleModelLoad = useCallback(async () => {
+        if (isCustomImage || !viewerRef.current) return;
+        try {
+            setCoverFromModelSnapshot(await viewerRef.current.snapshot());
+        } catch (err) {
+            // The cover simply stays as it is; the student can still upload one
+            console.error('Failed to make a cover image from the model:', err);
+        }
+    }, [isCustomImage, setCoverFromModelSnapshot]);
 
     useEffect(() => {
         if (activeTab === 'core' && descRef.current) {
@@ -106,6 +151,56 @@ const ManageProject = () => {
     if (error === 'forbidden') return <AccessDenied />;
     if (error === 'not_found') return <NotFound message="The project you are looking for does not exist or you do not have permission to view it." />;
 
+    const feedback = getFeedbackStyle(projectData.status);
+    // A template fixes the type of the projects built from it; an admin can still change it
+    const canChooseType = selectedTemplate === 'custom' || currentUser?.role === 'admin';
+    const is3d = projectType === '3d';
+    const savedFiles = groupProjectFiles(existingFiles);
+    const savedModel = primaryModelFile(existingFiles.filter((file) => !removedFileIds.has(file.id)));
+    const pendingModel = pendingFiles.model[0];
+    // The model the preview shows: a newly picked one first, else the saved one the project keeps
+    let previewModel = null;
+    if (pendingModel && pendingModelPreviewUrl) {
+        previewModel = { src: pendingModelPreviewUrl, name: pendingModel.file.name };
+    } else if (savedModel) {
+        previewModel = {
+            src: projectFileUrl(savedModel),
+            name: savedModel.name,
+            downloadUrl: projectFileUrl(savedModel, { download: true }),
+        };
+    }
+    const fileSummary = describeFileCounts(fileCounts);
+
+    const pickFiles = (kind) => (e) => {
+        addFiles(kind, e.target.files);
+        // Cleared so that picking the same file again, say after removing it from the list, still fires a change
+        e.target.value = '';
+    };
+
+    const renderFileList = (kind, saved, label, emptyText) => (
+        <ProjectFileList
+            label={label}
+            existingFiles={saved}
+            pendingFiles={pendingFiles[kind]}
+            removedFileIds={removedFileIds}
+            onRemovePending={(localId) => removePendingFile(kind, localId)}
+            onToggleRemoveExisting={toggleRemoveExisting}
+            emptyText={emptyText}
+        />
+    );
+
+    const modelCard = (
+        <div className="media-input-card">
+            <h4><Box size={16} /> 3D Model</h4>
+            <p className="media-hint">Export from Tinkercad with Export &gt; .STL, or from Blender with File &gt; Export &gt; STL or glTF. We will make a cover image from it if you have none.</p>
+            <label className="file-upload-btn primary-upload">
+                <Upload size={16} /> Upload 3D Model
+                <input type="file" name="model_files" multiple accept={acceptForKind('model')} onChange={pickFiles('model')} className="sr-only" />
+            </label>
+            {renderFileList('model', savedFiles.models, '3D model files', 'No 3D model yet.')}
+        </div>
+    );
+
     return (
         <div className="manage-project-page">
             <form onSubmit={handleSubmit} className="manage-project-form">
@@ -126,7 +221,7 @@ const ManageProject = () => {
                         <div className="form-wizard-header">
                             <button type="button" className={`step ${activeTab === 'core' ? 'active' : ''}`} aria-current={activeTab === 'core' ? 'step' : undefined} onClick={() => setActiveTab('core')}>1. Core Info</button>
                             <button type="button" className={`step ${activeTab === 'media' ? 'active' : ''}`} aria-current={activeTab === 'media' ? 'step' : undefined} onClick={() => setActiveTab('media')}>2. Media</button>
-                            <button type="button" className={`step ${activeTab === 'code' ? 'active' : ''}`} aria-current={activeTab === 'code' ? 'step' : undefined} onClick={() => setActiveTab('code')}>3. Code</button>
+                            <button type="button" className={`step ${activeTab === 'code' ? 'active' : ''}`} aria-current={activeTab === 'code' ? 'step' : undefined} onClick={() => setActiveTab('code')}>3. Code &amp; Files</button>
                             {currentUser?.role === 'admin' && (
                                 <button type="button" className={`step ${activeTab === 'review' ? 'active' : ''}`} aria-current={activeTab === 'review' ? 'step' : undefined} onClick={() => setActiveTab('review')}>4. Review</button>
                             )}
@@ -139,7 +234,7 @@ const ManageProject = () => {
                                 <div className="form-section fade-in">
                                     <h3>Core Information</h3>
                                     <div className="form-group">
-                                        <label htmlFor="input-141">Project Type / Template</label>
+                                        <label htmlFor="input-141">Template</label>
                                         <select id="input-141"
                                             name="project_template"
                                             value={selectedTemplate}
@@ -152,6 +247,31 @@ const ManageProject = () => {
                                             ))}
                                         </select>
                                     </div>
+                                    {canChooseType ? (
+                                        <fieldset className="project-type-field">
+                                            <legend>Project Type</legend>
+                                            <div className="project-type-options">
+                                                {PROJECT_TYPE_OPTIONS.map((option) => (
+                                                    <label key={option.value} className={`project-type-option ${projectType === option.value ? 'selected' : ''}`}>
+                                                        <input
+                                                            type="radio"
+                                                            name="project_type"
+                                                            value={option.value}
+                                                            checked={projectType === option.value}
+                                                            onChange={() => setProjectType(option.value)}
+                                                            className="sr-only"
+                                                        />
+                                                        <option.Icon size={16} /> {option.label}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </fieldset>
+                                    ) : (
+                                        <p className="project-type-fixed">
+                                            <strong>Project Type:</strong> {PROJECT_TYPE_OPTIONS.find((option) => option.value === projectType)?.label}
+                                            <span className="optional-badge">Set by the template</span>
+                                        </p>
+                                    )}
                                     <div className="form-group">
                                         <label htmlFor="input-155">Project Name</label>
                                         <input id="input-155"
@@ -197,7 +317,9 @@ const ManageProject = () => {
                             {activeTab === 'media' && (
                                 <div className="form-section fade-in">
                                     <h3>Media Assets</h3>
-                                    
+
+                                    {is3d && modelCard}
+
                                     <div className="media-input-card">
                                         <h4><ImageIcon size={16} /> Cover Image</h4>
                                         <p className="media-hint">Upload a thumbnail to represent your project.</p>
@@ -235,23 +357,52 @@ const ManageProject = () => {
                                         </div>
                                         {projectVideo && <div className="file-name success-text">Selected: {projectVideo.name.split(/[\\/]/).pop()}</div>}
                                     </div>
+
+                                    {!is3d && modelCard}
                                 </div>
                             )}
 
                             {activeTab === 'code' && (
                                 <div className="form-section fade-in">
-                                    <h3>Code Showcase</h3>
-                                    <p className="media-hint">Paste an interesting snippet of your code to show off your logic.</p>
+                                    <h3>Code &amp; Files</h3>
+                                    {is3d && <p className="media-hint">Everything in this step is optional for a 3D model.</p>}
                                     <div className="form-group">
-                                        <textarea
+                                        <label htmlFor="project-code-snippet">Highlighted Code Snippet <span className="optional-badge">Optional</span></label>
+                                        <p className="media-hint">Paste the most interesting part of your code. It is shown highlighted on your project.</p>
+                                        <textarea id="project-code-snippet"
                                             name="code_snippet"
                                             value={projectData.code_snippet || ''}
                                             onChange={handleInputChange}
                                             className="form-control inline-code-editor"
-                                            aria-label="Code snippet"
                                             placeholder="def my_awesome_function():\n    pass"
-                                            rows={12}
+                                            rows={8}
                                         />
+                                    </div>
+
+                                    <div className="media-input-card">
+                                        <h4><FileCode size={16} /> Source Files</h4>
+                                        <p className="media-hint">Add your code files, or a whole project folder to keep its folders. Hidden folders, node_modules, venv and __pycache__ are left out.</p>
+                                        <div className="upload-actions-row">
+                                            <label className="file-upload-btn secondary-upload">
+                                                <Upload size={16} /> Add Files
+                                                <input type="file" name="source_files" multiple accept={acceptForKind('source')} onChange={pickFiles('source')} className="sr-only" />
+                                            </label>
+                                            <label className="file-upload-btn secondary-upload">
+                                                <FolderUp size={16} /> Add a Folder
+                                                <input type="file" name="source_folder" multiple webkitdirectory="" onChange={pickFiles('source')} className="sr-only" />
+                                            </label>
+                                        </div>
+                                        {renderFileList('source', savedFiles.sources, 'Source files', 'No source files yet.')}
+                                    </div>
+
+                                    <div className="media-input-card">
+                                        <h4><Images size={16} /> Assets</h4>
+                                        <p className="media-hint">Images, sounds and PDFs that belong to your project.</p>
+                                        <label className="file-upload-btn secondary-upload">
+                                            <Upload size={16} /> Add Assets
+                                            <input type="file" name="asset_files" multiple accept={acceptForKind('asset')} onChange={pickFiles('asset')} className="sr-only" />
+                                        </label>
+                                        {renderFileList('asset', savedFiles.assets, 'Asset files', 'No assets yet.')}
                                     </div>
                                 </div>
                             )}
@@ -286,8 +437,25 @@ const ManageProject = () => {
                                     
                                     <div className="preview-section-media">
                                         <div className="hero-background">
-                                            <SmartImage src={imagePreview || formatStaticUrl(projectData.image_url) || null} alt={projectData.name || 'Cover'} fallbackType="project" />
-                                            {(projectData.video_url || projectVideo) && <div className="play-overlay"><Play size={48} fill="currentColor" /></div>}
+                                            {previewModel ? (
+                                                <ModelViewer
+                                                    key={previewModel.src}
+                                                    ref={viewerRef}
+                                                    src={previewModel.src}
+                                                    filename={previewModel.name}
+                                                    format={modelFormatFromName(previewModel.name) || undefined}
+                                                    downloadUrl={previewModel.downloadUrl}
+                                                    ariaLabel={`3D preview of ${previewModel.name}`}
+                                                    onLoad={handleModelLoad}
+                                                    className="preview-model-viewer"
+                                                    compact
+                                                />
+                                            ) : (
+                                                <>
+                                                    <SmartImage src={imagePreview || formatStaticUrl(projectData.image_url) || null} alt={projectData.name || 'Cover'} fallbackType="project" />
+                                                    {(projectData.video_url || projectVideo) && <div className="play-overlay"><Play size={48} fill="currentColor" /></div>}
+                                                </>
+                                            )}
                                         </div>
                                     </div>
 
@@ -305,10 +473,14 @@ const ManageProject = () => {
                                         <p className={`preview-desc ${projectData.description ? '' : 'placeholder-text'}`}>
                                             {projectData.description || 'Tell the story of your project...'}
                                         </p>
+
+                                        {fileSummary && (
+                                            <p className="preview-file-summary"><Files size={14} /> {fileSummary}</p>
+                                        )}
                                         
                                         {projectData.teacher_comment && (
-                                            <div className={`card-teacher-feedback mt-3 ${projectData.status === 'rejected' ? 'revision-feedback' : ''}`}>
-                                                {projectData.status === 'rejected' ? <AlertCircle size={14} /> : <CheckCircle size={14} />} {projectData.status === 'rejected' ? 'Revision Note' : 'Teacher Note'}: {projectData.teacher_comment}
+                                            <div className={`card-teacher-feedback mt-3 ${feedback.className}`}>
+                                                <feedback.Icon size={14} /> {feedback.noteLabel}: {projectData.teacher_comment}
                                             </div>
                                         )}
                                     </div>
@@ -319,6 +491,13 @@ const ManageProject = () => {
                                                 <h4><Code size={16} /> Code Snippet</h4>
                                                 <pre className="code-preview-block"><code>{projectData.code_snippet}</code></pre>
                                             </div>
+                                        ) : is3d ? (
+                                            !previewModel && (
+                                                <div className="inline-code-section placeholder-code">
+                                                    <h4><Box size={16} /> 3D Model</h4>
+                                                    <div className="no-code-preview">No 3D model yet. Upload it in the Media step and it will appear at the top, ready to spin and zoom.</div>
+                                                </div>
+                                            )
                                         ) : (
                                             <div className="inline-code-section placeholder-code">
                                                 <h4><Code size={16} /> Code Snippet</h4>
@@ -351,16 +530,23 @@ const ManageProject = () => {
                                 <ArrowLeft size={16} /> Back
                             </button>
                         )}
+                        {/* Distinct keys: without them React keeps one DOM node for both buttons, so a click on Next
+                            turns that node into the submit button before the browser applies the click's default
+                            action, and the form is submitted a step early. */}
                         {(currentUser?.role === 'admin' ? activeTab !== 'review' : activeTab !== 'code') ? (
-                            <button type="button" className="btn-primary" onClick={handleNext}>
+                            <button key="next" type="button" className="btn-primary" onClick={handleNext}>
                                 Next <ArrowRight size={16} />
                             </button>
                         ) : (
-                            <button type="submit" disabled={isSaving} className="btn-save">
-                                <Save size={18} /> {isSaving ? 'Saving...' : (projectData.status === 'rejected' ? 'Resubmit for Review' : (projectId ? 'Update Project' : 'Create Project'))}
+                            <button key="save" type="submit" disabled={isSaving} className="btn-save">
+                                <Save size={18} /> {isSaving ? (uploadProgress === null ? 'Saving...' : `Uploading ${uploadProgress}%`) : (projectData.status === 'rejected' ? 'Resubmit for Review' : (projectId ? 'Update Project' : 'Create Project'))}
                             </button>
                         )}
                     </div>
+                    {/* Announced in quarter steps: every percent would flood a screen reader */}
+                    <span className="sr-only" role="status" aria-live="polite">
+                        {uploadProgress === null ? '' : `Uploading your files: ${Math.floor(uploadProgress / 25) * 25} percent done.`}
+                    </span>
                 </div>
             </form>
 

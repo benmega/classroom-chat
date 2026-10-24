@@ -13,12 +13,14 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
-from application import db
-from application.config import Config
+from application import create_app, db
+from application.config import Config, TestingConfig
+from application.extensions import scheduler, socketio
 from application.models.project import Project
 from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
 from application.models.user import User
+from application.utilities.db_helpers import RESERVED_USERNAMES
 from PIL import Image
 from tests.factories import AdminFactory, UserFactory
 from tests.image_helpers import animated_gif_bytes, jpeg_bytes, png_bytes, png_header_only
@@ -111,7 +113,7 @@ def test_logout(client, init_db):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    response = client.get("/user/logout")
+    response = client.post("/user/logout")
 
     assert response.status_code == 302
 
@@ -124,6 +126,19 @@ def test_logout(client, init_db):
 
     db.session.refresh(sample_user)
     assert sample_user.is_online is False
+
+
+def test_logout_get_is_still_accepted_for_one_release(client, init_db):
+    """A frontend bundle from before the switch to POST still signs out (deprecated path)."""
+    sample_user = UserFactory()
+    with client.session_transaction() as sess:
+        sess["user"] = sample_user.id
+
+    response = client.get("/user/logout")
+
+    assert response.status_code == 302
+    with client.session_transaction() as sess:
+        assert "user" not in sess
 
 
 def test_signup_get(client, init_db):
@@ -744,9 +759,83 @@ def test_logout_json_response(client, init_db):
     with client.session_transaction() as sess:
         sess["user"] = sample_user.id
 
-    resp = client.get("/user/logout", headers={"Accept": "application/json"})
+    resp = client.post("/user/logout", headers={"Accept": "application/json"})
     assert resp.status_code == 200
     assert resp.json["status"] == "success"
+
+
+# ---- Logout with CSRF protection on (as in production) -----------------------
+
+
+@pytest.fixture(scope="module")
+def csrf_client():
+    class CsrfConfig(TestingConfig):
+        WTF_CSRF_ENABLED = True
+
+    from application import tasks
+
+    previous_app = tasks._app_instance
+    with patch.object(scheduler, "start"), patch.object(socketio, "init_app"):
+        app = create_app(CsrfConfig)
+    tasks.set_app_instance(previous_app)
+    return app.test_client()
+
+
+def _sign_in(csrf_client, user_id=1):
+    with csrf_client.session_transaction() as sess:
+        sess["user"] = user_id
+
+
+def _session_user(csrf_client):
+    with csrf_client.session_transaction() as sess:
+        return sess.get("user")
+
+
+def test_logout_post_needs_a_csrf_token_while_signed_in(csrf_client):
+    _sign_in(csrf_client)
+
+    resp = csrf_client.post("/user/logout", headers={"Accept": "application/json"})
+
+    assert resp.status_code == 400
+    assert _session_user(csrf_client) == 1
+
+
+def test_logout_post_with_the_csrf_token_signs_out(csrf_client):
+    _sign_in(csrf_client)
+    # Any response sets the cookie the frontend reads the token from
+    csrf_client.get("/user/api/auth/status")
+    token = csrf_client.get_cookie("csrf_token_v2").value
+
+    resp = csrf_client.post(
+        "/user/logout",
+        headers={"Accept": "application/json", "X-CSRFToken": token},
+    )
+
+    assert resp.status_code == 200
+    assert resp.json["status"] == "success"
+    assert _session_user(csrf_client) is None
+
+
+def test_logout_post_of_an_expired_session_is_answered_as_signed_out(csrf_client):
+    """No session means no token to check and nothing to end: not a 400 for the client to handle."""
+    with csrf_client.session_transaction() as sess:
+        sess.clear()
+
+    resp = csrf_client.post("/user/logout", headers={"Accept": "application/json"})
+
+    assert resp.status_code == 200
+    assert resp.json["status"] == "success"
+    assert _session_user(csrf_client) is None
+
+
+def test_logout_get_skips_the_csrf_check(csrf_client):
+    """The deprecated GET carries no token, as a bundle from before the switch sends none."""
+    _sign_in(csrf_client)
+
+    resp = csrf_client.get("/user/logout")
+
+    assert resp.status_code == 302
+    assert _session_user(csrf_client) is None
 
 
 def test_signup_validations(client, init_db):
@@ -826,6 +915,47 @@ def test_signup_username_collision_ignores_case_and_padding(client, init_db, sub
     assert response.status_code == 409
     assert User.query.count() == users_before
     assert User.query.filter_by(username="collide_me").one().id == original.id
+
+
+def _reserved_variants():
+    """Every reserved name as stored, upper-cased, and title-cased with padding."""
+    return [
+        variant
+        for name in sorted(RESERVED_USERNAMES)
+        for variant in (name, name.upper(), f"  {name.title()}  ")
+    ]
+
+
+@pytest.mark.parametrize("submitted", _reserved_variants())
+def test_signup_refuses_a_reserved_username(client, init_db, submitted):
+    users_before = User.query.count()
+
+    response = client.post("/user/signup", json={"username": submitted, "password": "password123"})
+
+    assert response.status_code == 409
+    assert b"Username already exists" in response.data
+    assert User.query.count() == users_before
+
+
+def test_signup_answers_a_reserved_name_exactly_like_a_taken_one(client, init_db):
+    name = sorted(RESERVED_USERNAMES)[0]
+    body = {"username": name, "password": "password123"}
+
+    unclaimed = client.post("/user/signup", json=body)
+    UserFactory(username=name)
+    taken = client.post("/user/signup", json=body)
+
+    assert (unclaimed.status_code, unclaimed.data) == (taken.status_code, taken.data)
+
+
+@pytest.mark.parametrize("pattern", ["{}1", "my_{}", "{}_x"])
+def test_signup_accepts_a_name_that_only_contains_a_reserved_one(client, init_db, pattern):
+    submitted = pattern.format(sorted(RESERVED_USERNAMES)[0])
+
+    response = client.post("/user/signup", json={"username": submitted, "password": "password123"})
+
+    assert response.status_code == 201
+    assert User.query.filter_by(username=submitted).one().is_approved is False
 
 
 @pytest.mark.parametrize(

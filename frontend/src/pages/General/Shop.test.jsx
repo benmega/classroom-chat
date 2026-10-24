@@ -94,7 +94,7 @@ describe('Shop', () => {
       expect(screen.getByText('Theme')).toBeInTheDocument();
     });
 
-    const purchaseButtons = screen.getAllByText('10.000 Packets');
+    const purchaseButtons = screen.getAllByText('10 Packets');
     expect(purchaseButtons.length).toBeGreaterThan(0);
     
     fireEvent.click(purchaseButtons[0]);
@@ -119,12 +119,33 @@ describe('Shop', () => {
       expect(screen.getByText('Error Item')).toBeInTheDocument();
     });
 
-    const purchaseButton = screen.getByText('10.000 Packets');
+    const purchaseButton = screen.getByText('10 Packets');
     fireEvent.click(purchaseButton);
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('Failed to purchase Error Item');
     });
+  });
+
+  it('lists prices without trailing zeros', async () => {
+    server.use(
+      http.get('*/api/shop/items', () => {
+        return HttpResponse.json([
+          { id: 11, name: 'Cheap Item', description: 'desc', base_price: 0.01, is_purchased: false },
+          { id: 12, name: 'Mid Item', description: 'desc', base_price: 0.05, is_purchased: false },
+          { id: 13, name: 'Odd Item', description: 'desc', base_price: 0.015, is_purchased: false },
+          { id: 14, name: 'Tiny Item', description: 'desc', base_price: 0.008, is_purchased: false },
+        ]);
+      })
+    );
+
+    renderWithProviders(<Shop />);
+
+    for (const price of ['0.01', '0.05', '0.015', '0.008']) {
+      expect(await screen.findByText(`${price} Packets`)).toBeInTheDocument();
+    }
+    expect(screen.queryByText('0.010 Packets')).not.toBeInTheDocument();
+    expect(screen.queryByText('0.050 Packets')).not.toBeInTheDocument();
   });
 
   it('handles changing chat font color', async () => {
@@ -223,6 +244,38 @@ describe('Shop', () => {
     it('submits to the configured API origin, without doubling the slash', async () => {
       vi.stubEnv('VITE_API_URL', 'https://api.example.com/');
       expect(await bookmarkletHref()).toContain("'https://api.example.com/challenge/submit?url='");
+    });
+  });
+
+  describe('wallpaper preview avatar', () => {
+    afterEach(() => vi.unstubAllEnvs());
+
+    const previewAvatar = async (profilePictureUrl) => {
+      useAuthStore.setState({
+        user: { id: 1, username: 'testuser', role: 'student', packets: 100, profile_picture_url: profilePictureUrl },
+      });
+      renderWithProviders(<Shop />);
+      await screen.findByText(/Upload Wallpaper/i);
+      return document.querySelector('.wallpaper-preview .mini-avatar img').getAttribute('src');
+    };
+
+    it('keeps the bundled default avatar on the frontend host when the API is on another origin', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+      expect(await previewAvatar('/static/images/Default_pfp.jpg')).toBe('/static/images/Default_pfp.jpg');
+    });
+
+    it('loads an uploaded avatar from the API origin', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+      expect(await previewAvatar('/user/profile_pictures/me.png')).toBe('https://api.example.com/user/profile_pictures/me.png');
+    });
+
+    it('leaves an absolute avatar URL alone', async () => {
+      vi.stubEnv('VITE_API_URL', 'https://api.example.com');
+      expect(await previewAvatar('https://cdn.example.com/me.png')).toBe('https://cdn.example.com/me.png');
+    });
+
+    it('falls back to a generated avatar when the user has no picture URL', async () => {
+      expect(await previewAvatar(undefined)).toContain('ui-avatars.com/api/?name=testuser');
     });
   });
 

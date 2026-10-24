@@ -33,8 +33,8 @@ def submit_work():
         return {"error": "Invalid file type"}, 400
 
     extension = file.filename.rsplit(".", 1)[1].lower()
-    if extension not in Config.SUBMISSION_ALLOWED_EXTENSIONS:
-        return {"error": "Invalid file type"}, 400
+    if extension in Config.SUBMISSION_BLOCKED_EXTENSIONS:
+        return {"error": f"File type .{extension} is not allowed for security reasons"}, 400
 
     file.seek(0, os.SEEK_END)
     size = file.tell()

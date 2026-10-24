@@ -1,7 +1,7 @@
 import adminCache from '../../utils/adminCache';
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import toast from 'react-hot-toast';
 import ToReview from './ToReview';
 import client from '../../api/client';
@@ -30,6 +30,39 @@ vi.mock('../../components/admin/AdminPageHeader', () => ({
   default: () => <div data-testid="AdminPageHeader">Header</div>
 }));
 
+// The 3D viewer (which loads three.js), the file browser and the asset gallery belong to other modules. Doubles that
+// echo their props keep these tests on what ToReview hands them, whatever the real components render.
+vi.mock('../../components/common/ModelViewer', () => ({
+  default: ({ src, filename, downloadUrl, ariaLabel, className }) => (
+    <div
+      data-testid="model-viewer"
+      role="img"
+      aria-label={ariaLabel}
+      className={className}
+      data-src={src}
+      data-filename={filename}
+      data-download-url={downloadUrl}
+    />
+  ),
+}));
+
+vi.mock('../../components/common/ProjectFileBrowser', () => ({
+  default: ({ files, maxHeight }) => (
+    <div data-testid="project-file-browser" data-max-height={maxHeight}>{files.map((f) => f.path).join(' | ')}</div>
+  ),
+}));
+
+vi.mock('../../components/common/AssetGallery', () => ({
+  default: ({ files }) => <div data-testid="asset-gallery">{files.map((f) => f.path).join(' | ')}</div>,
+}));
+
+// The real grouping, but readable URLs: the real projectFileUrl goes through the apiUrl mock above, which turns every
+// path into about:blank and would make the model URL indistinguishable from its download URL.
+vi.mock('../../utils/projectFiles', async (importOriginal) => ({
+  ...(await importOriginal()),
+  projectFileUrl: (file, { download = false } = {}) => `https://api.test${download ? file.download_url : file.url}`,
+}));
+
 import { showConfirm } from '../../utils/confirm';
 
 vi.mock('../../utils/confirm', () => ({
@@ -42,6 +75,19 @@ beforeEach(() => {
     get src() { return ''; }
     set src(val) {}
   });
+});
+
+// The certificate previews frame an object URL, and happy-dom cannot load blob: URLs (it logs an error
+// per iframe). An about: URL stands in for it: happy-dom opens those without a request.
+const realCreateObjectURL = URL.createObjectURL;
+const realRevokeObjectURL = URL.revokeObjectURL;
+beforeEach(() => {
+  URL.createObjectURL = vi.fn(() => 'about:blank');
+  URL.revokeObjectURL = vi.fn();
+});
+afterEach(() => {
+  URL.createObjectURL = realCreateObjectURL;
+  URL.revokeObjectURL = realRevokeObjectURL;
 });
 
 describe('ToReview Component', () => {
@@ -192,6 +238,71 @@ describe('ToReview Component', () => {
     });
   });
 
+  describe('certificate preview', () => {
+    const cert = { id: 7, achievement: { name: 'Python Basics' }, user: { username: 'bob' }, submitted_at: '2023-01-01T10:00:00' };
+    const objectUrl = 'about:blank?cert=7';
+
+    const mockApi = (certificatePdf) => {
+      client.get.mockImplementation((url) => {
+        if (url.includes('/api/achievements/admin/certificates')) {
+          return Promise.resolve({ data: { status: 'success', data: { certificates: [cert] } } });
+        }
+        if (url.includes('/api/achievements/view_certificate/')) return certificatePdf();
+        return Promise.resolve({ data: { data: [] } });
+      });
+    };
+
+    beforeEach(() => {
+      URL.createObjectURL.mockReturnValue(objectUrl);
+    });
+
+    it('frames an object URL of the PDF fetched through the API client, not the API URL itself', async () => {
+      const pdf = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
+      mockApi(() => Promise.resolve({ data: pdf }));
+
+      render(<ToReview />);
+
+      const frame = await screen.findByTitle('Certificate Preview');
+      expect(frame).toHaveAttribute('src', `${objectUrl}#toolbar=0&navpanes=0&scrollbar=0`);
+      expect(client.get).toHaveBeenCalledWith(
+        '/api/achievements/view_certificate/7',
+        expect.objectContaining({ responseType: 'blob' })
+      );
+      expect(URL.createObjectURL.mock.calls[0][0].type).toBe('application/pdf');
+    });
+
+    it('shows a loading placeholder until the PDF arrives', async () => {
+      mockApi(() => new Promise(() => {}));
+
+      render(<ToReview />);
+
+      expect(await screen.findByRole('status', { name: 'Loading certificate preview' })).toBeInTheDocument();
+      expect(screen.queryByTitle('Certificate Preview')).not.toBeInTheDocument();
+    });
+
+    it('says the preview is unavailable when the PDF cannot be fetched, leaving the card usable', async () => {
+      mockApi(() => Promise.reject({ response: { status: 404 } }));
+
+      render(<ToReview />);
+
+      expect(await screen.findByText('Preview unavailable')).toBeInTheDocument();
+      expect(screen.queryByTitle('Certificate Preview')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
+    });
+
+    it('releases the object URL when the card leaves the list', async () => {
+      mockApi(() => Promise.resolve({ data: new Blob(['%PDF-1.4'], { type: 'application/pdf' }) }));
+      render(<ToReview />);
+      await screen.findByTitle('Certificate Preview');
+
+      const projectsTab = screen.getAllByRole('button').find((b) => b.classList.contains('review-tab-item') && b.textContent.includes('Projects'));
+      fireEvent.click(projectsTab);
+
+      await waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith(objectUrl));
+      expect(screen.queryByTitle('Certificate Preview')).not.toBeInTheDocument();
+    });
+  });
+
   describe('certificates', () => {
     const mockCertificates = (certificates) => {
       client.get.mockImplementation((url) => {
@@ -270,7 +381,7 @@ describe('ToReview Component', () => {
       { id: 42, username: 'eli', nickname: 'Eli', timestamp: '2023-01-02T10:00:00', bit_ducks: [1], byte_ducks: [] },
     ];
     const courseRequests = [
-      { id: 51, student_username: 'fay', requested_course_id: 'co1', course_instance_id: 'inst-1', url: 'https://example.com/c', requested_at: '2023-01-03T10:00:00' },
+      { id: 51, student_username: 'fay', requested_course_id: 'co1', course_instance_id: 'inst-1', url: 'https://example.com/c', created_at: '2023-01-03T10:00:00' },
     ];
 
     const loadItems = async (items = {}, tabLabel = null) => {
@@ -736,6 +847,30 @@ describe('ToReview Component', () => {
     });
 
     describe('course requests', () => {
+      it('shows when the request was made, from the created_at the API sends', async () => {
+        await loadItems({ courseRequests }, 'Course Requests');
+
+        expect(screen.getByText(new Date('2023-01-03T10:00:00').toLocaleString())).toBeInTheDocument();
+        expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
+      });
+
+      it('shows a placeholder instead of Invalid Date when a request has no date', async () => {
+        await loadItems({ courseRequests: [{ ...courseRequests[0], created_at: null }] }, 'Course Requests');
+
+        expect(screen.getByText('Unknown date')).toBeInTheDocument();
+        expect(screen.queryByText(/Invalid Date/i)).not.toBeInTheDocument();
+      });
+
+      it('sorts a request among the other items by when it was made', async () => {
+        await loadItems({
+          projects,
+          courseRequests: [{ ...courseRequests[0], created_at: '2022-12-31T10:00:00' }],
+        });
+
+        const cards = [...document.querySelectorAll('.review-card')];
+        expect(cards.map((c) => c.className.includes('course-review-card'))).toEqual([false, true]);
+      });
+
       it('shows the server reason when a request cannot be approved', async () => {
         await loadItems({ courseRequests }, 'Course Requests');
         client.post.mockRejectedValueOnce(rejectionFor({ success: false, message: 'Course already mapped' }, 409));
@@ -959,6 +1094,282 @@ describe('ToReview Component', () => {
       fireEvent.click(screen.getByRole('button', { name: /Mark as Resolved/i }));
       await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to resolve parent message.'));
       expect(screen.getByText('Stale message')).toBeInTheDocument();
+    });
+  });
+
+  describe('project type and files', () => {
+    const makeFile = (id, kind, path) => {
+      const name = path.split('/').pop();
+      return {
+        id,
+        kind,
+        name,
+        path,
+        size: 100,
+        content_type: 'text/plain; charset=utf-8',
+        url: `/user/project_files/${id}/${name}`,
+        download_url: `/user/project_files/${id}/${name}?download=1`,
+        created_at: '2026-10-14T05:00:00Z',
+      };
+    };
+    const robot = makeFile(1, 'model', 'robot.stl');
+    const mainPy = makeFile(2, 'source', 'src/main.py');
+    const utilsPy = makeFile(3, 'source', 'src/utils.py');
+    const logo = makeFile(4, 'asset', 'logo.png');
+
+    // Carries a video so that "Missing Video" does not muddy the assertions that are about code and models.
+    const makeProject = (overrides = {}) => ({
+      id: 70,
+      name: 'Robot Arm',
+      submitted_at: '2023-01-01',
+      user_nickname: 'Ann',
+      user_username: 'ann',
+      project_type: 'code',
+      code_snippet: null,
+      github_link: null,
+      video_url: 'https://video.test/demo',
+      files: [],
+      ...overrides,
+    });
+
+    const loadProjects = async (...projects) => {
+      client.get.mockImplementation((url) => {
+        if (url.includes('manage-projects')) return Promise.resolve({ data: { data: { projects } } });
+        return Promise.resolve({ data: { data: [] } });
+      });
+      render(<ToReview />);
+      await screen.findByText(projects[0].name);
+    };
+
+    const shown = (text) => screen.queryByText(text) !== null;
+
+    describe('type badge', () => {
+      it('marks a 3D project right after the Project badge', async () => {
+        await loadProjects(makeProject({ project_type: '3d', files: [robot] }));
+
+        const badge = screen.getByText('3D');
+
+        expect(badge).toHaveClass('badge-project-type');
+        expect(badge.previousElementSibling).toHaveClass('badge-project');
+      });
+
+      it.each([
+        ['a code project', { project_type: 'code' }],
+        ['a payload from before project types existed', { project_type: undefined }],
+      ])('adds no badge to %s', async (_label, overrides) => {
+        await loadProjects(makeProject(overrides));
+
+        expect(screen.queryByText('3D')).not.toBeInTheDocument();
+      });
+    });
+
+    describe('missing indicators', () => {
+      it.each([
+        ['a code project with nothing attached', {}, true, false],
+        ['a payload without a project type', { project_type: undefined }, true, false],
+        ['a code project with only an asset', { files: [logo] }, true, false],
+        ['a code project with a pasted snippet', { code_snippet: 'print(1)' }, false, false],
+        ['a code project with a GitHub link', { github_link: 'https://github.com/a/b' }, false, false],
+        ['a code project with source files', { files: [mainPy] }, false, false],
+        ['a 3D project without a model', { project_type: '3d' }, false, true],
+        ['a 3D project with a snippet but no model', { project_type: '3d', code_snippet: 'x = 1' }, false, true],
+        ['a 3D project with source files but no model', { project_type: '3d', files: [mainPy] }, false, true],
+        ['a 3D project with a model', { project_type: '3d', files: [robot] }, false, false],
+        ['a 3D project whose files were never sent', { project_type: '3d', files: undefined }, false, true],
+      ])('%s', async (_label, overrides, flagsCode, flagsModel) => {
+        await loadProjects(makeProject(overrides));
+
+        expect(shown('Missing Code')).toBe(flagsCode);
+        expect(shown('Missing 3D model')).toBe(flagsModel);
+      });
+
+      it('still flags a missing video, on either type', async () => {
+        await loadProjects(
+          makeProject({ video_url: null }),
+          makeProject({ id: 71, name: 'Vase', project_type: '3d', files: [robot], video_url: null })
+        );
+
+        expect(screen.getAllByText('Missing Video')).toHaveLength(2);
+      });
+
+      it('does not flag the video when there is one', async () => {
+        await loadProjects(makeProject());
+
+        expect(shown('Missing Video')).toBe(false);
+      });
+    });
+
+    describe('3D model section', () => {
+      const modelProject = () => makeProject({ project_type: '3d', files: [robot] });
+
+      it('is closed by default, so no viewer (and no three.js) is mounted', async () => {
+        await loadProjects(modelProject());
+
+        expect(screen.getByRole('button', { name: '3D model' })).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByTestId('model-viewer')).not.toBeInTheDocument();
+        expect(screen.queryByRole('link', { name: /Download/ })).not.toBeInTheDocument();
+      });
+
+      it('opens on click with the model URLs for the viewer, and closes again', async () => {
+        await loadProjects(modelProject());
+        const toggle = screen.getByRole('button', { name: '3D model' });
+
+        fireEvent.click(toggle);
+
+        const viewer = screen.getByTestId('model-viewer');
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(viewer).toHaveAttribute('data-src', 'https://api.test/user/project_files/1/robot.stl');
+        expect(viewer).toHaveAttribute('data-download-url', 'https://api.test/user/project_files/1/robot.stl?download=1');
+        expect(viewer).toHaveAttribute('data-filename', 'robot.stl');
+        expect(viewer).toHaveAccessibleName('3D model of Robot Arm');
+        expect(screen.getByRole('link', { name: 'Download robot.stl' }))
+          .toHaveAttribute('href', 'https://api.test/user/project_files/1/robot.stl?download=1');
+
+        fireEvent.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByTestId('model-viewer')).not.toBeInTheDocument();
+      });
+
+      it('shows the first model in the viewer and offers every model for download', async () => {
+        // Sorts after robot.stl by path as well as by position, so the test holds whichever order the helpers keep.
+        const second = makeFile(5, 'model', 'stand.glb');
+        await loadProjects(makeProject({ project_type: '3d', files: [robot, second] }));
+
+        fireEvent.click(screen.getByRole('button', { name: '3D model' }));
+
+        expect(screen.getAllByTestId('model-viewer')).toHaveLength(1);
+        expect(screen.getByTestId('model-viewer')).toHaveAttribute('data-filename', 'robot.stl');
+        expect(screen.getByRole('link', { name: 'Download robot.stl' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Download stand.glb' }))
+          .toHaveAttribute('href', 'https://api.test/user/project_files/5/stand.glb?download=1');
+      });
+
+      it('is offered for any project that carries a model file, whatever its type', async () => {
+        await loadProjects(makeProject({ files: [robot] }));
+
+        expect(screen.getByRole('button', { name: '3D model' })).toBeInTheDocument();
+        expect(shown('Missing 3D model')).toBe(false);
+      });
+
+      it('is absent when the project has no model file', async () => {
+        await loadProjects(
+          makeProject({ project_type: '3d', files: [mainPy, logo] }),
+          makeProject({ id: 71, name: 'Vase', files: [mainPy] })
+        );
+
+        expect(screen.queryByRole('button', { name: '3D model' })).not.toBeInTheDocument();
+      });
+    });
+
+    describe('Files section', () => {
+      const sourceProject = () => makeProject({ files: [robot, mainPy, utilsPy, logo] });
+
+      it('counts only the source files and is closed by default', async () => {
+        await loadProjects(sourceProject());
+
+        expect(screen.getByRole('button', { name: 'Files (2)' })).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByTestId('project-file-browser')).not.toBeInTheDocument();
+      });
+
+      it('opens the file browser on click, with the project files, and closes it again', async () => {
+        await loadProjects(sourceProject());
+        const toggle = screen.getByRole('button', { name: 'Files (2)' });
+
+        fireEvent.click(toggle);
+
+        const browser = screen.getByTestId('project-file-browser');
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(browser).toHaveTextContent('robot.stl | src/main.py | src/utils.py | logo.png');
+        expect(browser).toHaveAttribute('data-max-height', '420px');
+
+        fireEvent.click(toggle);
+
+        expect(screen.queryByTestId('project-file-browser')).not.toBeInTheDocument();
+      });
+
+      it('is absent when the project has no source file', async () => {
+        await loadProjects(makeProject({ files: [robot, logo] }));
+
+        expect(screen.queryByRole('button', { name: /^Files/ })).not.toBeInTheDocument();
+      });
+    });
+
+    describe('Assets section', () => {
+      const assetProject = () => makeProject({ files: [robot, mainPy, logo, makeFile(6, 'asset', 'hit.wav')] });
+
+      it('counts only the assets and is closed by default', async () => {
+        await loadProjects(assetProject());
+
+        expect(screen.getByRole('button', { name: 'Assets (2)' })).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByTestId('asset-gallery')).not.toBeInTheDocument();
+      });
+
+      it('opens the gallery on click, with the project files, and closes it again', async () => {
+        await loadProjects(assetProject());
+        const toggle = screen.getByRole('button', { name: 'Assets (2)' });
+
+        fireEvent.click(toggle);
+
+        expect(toggle).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByTestId('asset-gallery')).toHaveTextContent('robot.stl | src/main.py | logo.png | hit.wav');
+
+        fireEvent.click(toggle);
+
+        expect(screen.queryByTestId('asset-gallery')).not.toBeInTheDocument();
+      });
+
+      it('is absent when the project has no asset', async () => {
+        await loadProjects(makeProject({ files: [robot, mainPy] }));
+
+        expect(screen.queryByRole('button', { name: /^Assets/ })).not.toBeInTheDocument();
+      });
+    });
+
+    describe('sections together', () => {
+      it('adds no toggle to a project without files', async () => {
+        await loadProjects(makeProject({ files: undefined }));
+
+        expect(screen.queryByRole('button', { name: /^(3D model|Files|Assets)/ })).not.toBeInTheDocument();
+      });
+
+      it('opens each section independently, and the code snippet with them', async () => {
+        await loadProjects(makeProject({ project_type: '3d', code_snippet: 'x = 1', files: [robot, mainPy, logo] }));
+
+        fireEvent.click(screen.getByRole('button', { name: 'Files (1)' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Code Snippet' }));
+
+        expect(screen.getByTestId('project-file-browser')).toBeInTheDocument();
+        expect(screen.getByText('x = 1')).toBeInTheDocument();
+        expect(screen.queryByTestId('model-viewer')).not.toBeInTheDocument();
+        expect(screen.queryByTestId('asset-gallery')).not.toBeInTheDocument();
+      });
+
+      it('leaves the video transcript toggle working beside the new sections', async () => {
+        await loadProjects(makeProject({ video_transcript: 'Welcome to my robot', files: [mainPy] }));
+        const toggle = screen.getByRole('button', { name: 'Video Transcript' });
+
+        fireEvent.click(toggle);
+        expect(screen.getByText('Welcome to my robot')).toBeInTheDocument();
+
+        fireEvent.click(toggle);
+        expect(screen.queryByText('Welcome to my robot')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Files (1)' })).toHaveAttribute('aria-expanded', 'false');
+      });
+
+      it('keeps the open state per project', async () => {
+        await loadProjects(
+          makeProject({ id: 70, name: 'Robot Arm', files: [mainPy] }),
+          makeProject({ id: 71, name: 'Vase', files: [mainPy] })
+        );
+        const card = (name) => within(screen.getByText(name).closest('.review-card'));
+
+        fireEvent.click(card('Vase').getByRole('button', { name: 'Files (1)' }));
+
+        expect(card('Vase').getByTestId('project-file-browser')).toBeInTheDocument();
+        expect(card('Robot Arm').queryByTestId('project-file-browser')).not.toBeInTheDocument();
+        expect(card('Robot Arm').getByRole('button', { name: 'Files (1)' })).toHaveAttribute('aria-expanded', 'false');
+      });
     });
   });
 });

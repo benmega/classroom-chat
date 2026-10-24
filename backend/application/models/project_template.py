@@ -1,6 +1,7 @@
 
 
 from ..extensions import db
+from .project import DEFAULT_PROJECT_TYPE
 
 
 class ProjectTemplate(db.Model):
@@ -23,6 +24,13 @@ class ProjectTemplate(db.Model):
     # Optional: slug of the Challenge completed when a project built from this
     # template is approved (used by the 3D modeling track).
     challenge_slug = db.Column(db.String(255), nullable=True)
+    # The type a project built from this template starts with (see Project.project_type)
+    project_type = db.Column(
+        db.String(20),
+        nullable=False,
+        default=DEFAULT_PROJECT_TYPE,
+        server_default=DEFAULT_PROJECT_TYPE,
+    )
 
     def __repr__(self):
         return f"<ProjectTemplate {self.name}>"
@@ -42,4 +50,5 @@ class ProjectTemplate(db.Model):
             "concepts": self.concepts,
             "goals": self.goals,
             "challenge_slug": self.challenge_slug,
+            "project_type": self.project_type,
         }

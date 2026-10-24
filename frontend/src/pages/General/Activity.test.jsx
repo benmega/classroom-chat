@@ -63,4 +63,25 @@ describe('Activity Component', () => {
       expect(screen.getByText('Approved Cert')).toBeInTheDocument();
     });
   });
+
+  it('shows the submitted date of a UTC timestamp, with or without the UTC mark', async () => {
+    client.get.mockResolvedValueOnce({
+      data: {
+        data: {
+          items: [
+            { id: 1, kind: 'file', status: 'pending', title: 'Marked', submitted_at: '2024-05-01T23:30:00Z' },
+            { id: 2, kind: 'file', status: 'pending', title: 'Bare', submitted_at: '2024-05-01T23:30:00' },
+          ],
+          total: 2,
+          has_more: false,
+          page: 1,
+        },
+      },
+    });
+
+    render(<Activity />);
+
+    const expected = new Date('2024-05-01T23:30:00Z').toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    await waitFor(() => expect(screen.getAllByText(expected, { exact: false })).toHaveLength(2));
+  });
 });

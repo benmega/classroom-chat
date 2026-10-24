@@ -8,9 +8,9 @@ The project uses SQLite (in both local development and production) managed throu
 - **Development / testing**: SQLite (`DEV_DATABASE_URI`, default `backend/instance/dev_users.db`).
 - **Production**: `DATABASE_URL`, set by `deploy.yml` to the SQLite file `backend/instance/prod_users.db`.
 - **Schema management**: production schema changes go through Alembic (`backend/migrations/`,
-  applied by `deploy.sh` with `flask db upgrade`, followed by `python -m tools.migrate_classroom`
-  and `flask seed`; a brand-new database is first created with `db.create_all()` and stamped to
-  head). `db.create_all()` is otherwise only run outside production (`application/__init__.py`).
+  applied by `deploy.sh` with `flask db upgrade`, followed by `flask seed`; a brand-new database
+  is first created with `db.create_all()` and stamped to head). `db.create_all()` is otherwise
+  only run outside production (`application/__init__.py`).
   The full ordered list and the rules for schema and data changes are in the "Database upgrade
   path" section of [infrastructure_and_devops.md](infrastructure_and_devops.md#8-database-migrations).
 
@@ -48,9 +48,15 @@ The central entity for authentication and student tracking.
 
 ### 2.5 User Portfolio & Submissions
 - **`projects`**: Student-created projects.
-    - Fields: `id`, `name`, `description`, `link`, `user_id` (FK), `teacher_comment`, `code_snippet`, `github_link`, `video_url`, `video_transcript`, `image_url`.
+    - Fields: `id`, `name`, `description`, `link`, `user_id` (FK), `teacher_comment` (the reviewer's feedback), `packets_awarded` (float, default `0.0`), `code_snippet`, `github_link`, `video_url`, `video_transcript`, `status`, `image_url`, `created_at`, `template_id` (nullable FK to `project_templates`, `ON DELETE SET NULL`, indexed; the template the project was built from), `project_type` (`code`, the default, or `3d`; not null).
+    - `status` is `pending` (the default), `approved` or `rejected`. Approving sets `approved` and records the packets awarded; rejecting sets `rejected`, takes back any packets the project had awarded and keeps the feedback in `teacher_comment`; a student's edit of a rejected project sets it back to `pending`. It is stored, not derived from `teacher_comment`.
+    - `project_type` says what the project is: `3d` for a 3D model (Tinkercad, Blender), whose model file is the work, `code` for everything else. A new project without a type takes the type of its template.
+- **`project_files`**: The files of a project: 3D models, source files and assets (images, audio, PDF).
+    - Fields: `id` (an `AUTOINCREMENT` key: an id is never reused, because the file URLs carry it and are cached), `project_id` (FK to `projects`, `ON DELETE CASCADE`, indexed), `kind` (`model`, `source` or `asset`), `path` (where the file sits in the project, e.g. `src/main.py`: forward slashes, no `.` or `..` segments, each segment cleaned), `stored_path` (relative to `UPLOAD_FOLDER`, always `project_files/<uuid hex>.<ext>`), `content_type` (what the serve route sends), `file_size` (bytes), `created_at`.
+    - One file per path in a project (`uq_project_files_project_id_path`); uploading a path again replaces the file under a new id. `Project.files` lists models, then source files, then assets, each kind by path, and is loaded together with the projects (selectin), so serialising a page of projects costs one query for all their files.
+    - Allowed types, the size cap of each kind and the per-project count and total are in `config.py` (`PROJECT_*`); the checks and the storage are in `backend/application/utilities/project_files.py`.
 - **`project_templates`**: Admin-defined project outlines that students can instantiate.
-    - Fields: `id`, `title`, `description`, `template_repo`.
+    - Fields: `id`, `name` (unique), `description`, `chapter`, `link`, `github_link`, `video_url`, `code_snippet`, `image_url`, `difficulty`, `concepts` (JSON), `goals` (JSON), `challenge_slug` (the Challenge an approved project completes), `project_type` (`code`, the default, or `3d`; the type a project built from the template starts with).
 - **`skills`**: Individual skills listed on user profiles.
     - Fields: `id`, `name`, `user_id` (FK), `category` (language/tool/concept), `icon`, `proficiency` (1 bronze, 2 silver, 3 gold).
 - **`user_certificates`**: Official milestones or external certs.
@@ -86,12 +92,23 @@ The central entity for authentication and student tracking.
 - **`banned_words`**: List of prohibited words for chat moderation.
     - Fields: `id`, `word`, `severity`.
 - **`configuration`**: Global settings (message sending toggle, duck multiplier).
-- **`ai_settings`** and **`configuration.ai_teacher_enabled`**: Deprecated. The AI teacher feature was removed; the table and column are kept until a drop migration can be validated against a production DB copy.
 - **`session_logs`**: Tracking user sessions for analytics.
     - Fields: `id`, `user_id` (FK), `login_time`, `logout_time`.
 - **`connection_attempts`**: Logging of login attempts.
     - Fields: `id`, `username`, `ip_address`, `success`, `timestamp`.
 
+
+### 2.10 Student Tests
+Defined in `models/quiz.py`; the content of `quizzes` and `quiz_questions` comes from `backend/application/commands/quiz_data/*.json` through `flask seed`. See [student_tests.md](student_tests.md).
+- **`quizzes`**: One test.
+    - Fields: `id`, `slug` (unique), `title`, `description`, `source_url`, `sort_order`, `is_active`, `reveal_answers` ("Answers shown"), `allow_retakes`, `time_limit_minutes` (nullable), `created_at`, `updated_at`. The four settings are admin-controlled and never overwritten by the seed.
+- **`quiz_questions`**: A multiple-choice question.
+    - Fields: `id`, `quiz_id` (FK to `quizzes`, `ON DELETE CASCADE`, indexed), `number`, `domain`, `prompt`, `options` (JSON `{"A": "text", ...}`), `answer` (one letter), `explanation`, `diagram_html` (HTML/SVG fragment, rendered in a sandboxed iframe). One `number` per quiz (`uq_quiz_questions_quiz_id_number`).
+- **`quiz_attempts`**: A student's attempt.
+    - Fields: `id`, `quiz_id` (FK, `ON DELETE CASCADE`), `user_id` (FK to `users`, `ON DELETE CASCADE`), `answers` (JSON `{"<number>": "<letter>"}`), `flagged` (JSON list), `started_at`, `deadline` (fixed at start from the time limit; null without one), `submitted_at` (null while in progress), `elapsed_seconds`, `correct_count`, `total_count`, `score_percent`, `graded` (JSON snapshot `{"<number>": {answer, selected, domain}}` taken at submit), `ducks_awarded`.
+    - At most one attempt in progress per user and quiz (partial unique index `uq_quiz_attempts_one_open_per_user_quiz` on `(user_id, quiz_id)` where `submitted_at IS NULL`).
+- **`quiz_rewards`**: The first submission of a quiz by a student, kept when the attempt is deleted so the ducks are paid once.
+    - Fields: `id`, `user_id` (FK, `ON DELETE CASCADE`), `quiz_id` (FK, `ON DELETE CASCADE`), `ducks`, `created_at`. Unique `(user_id, quiz_id)` (`uq_quiz_rewards_user_id_quiz_id`).
 
 ---
 
@@ -99,7 +116,9 @@ The central entity for authentication and student tracking.
 
 ### One-to-Many
 - **User -> Projects**: One student can have multiple portfolio items.
+- **Project -> Project files**: A project holds its 3D models, source files and assets (deleted with the project).
 - **User -> Skills**: One student can list multiple skills.
+- **Quiz -> Questions / Attempts**: A test holds its questions and the attempts made at it (deleted with it). **User -> Quiz attempts / Quiz rewards**: a student's attempts and one reward row per test (deleted with the user).
 - **User -> Messages**: One user authors many individual messages.
 - **User -> Item Purchases**: A user can buy multiple items.
 - **Conversation -> Messages**: One thread contains many messages.
@@ -114,4 +133,10 @@ The central entity for authentication and student tracking.
 
 ## 4. Integrity & Hooks
 - **Slugging**: `before_insert` event on the `User` model automatically generates unique URL-friendly slugs from nicknames.
-- **Cascading Deletes**: Relationships like `achievements` and `notes` are configured with `cascade="all, delete-orphan"` to ensure cleanup when a user is removed.
+- **Cascading Deletes**: Deleting a user deletes every row that belongs to it (projects, skills, notes, achievements, certificates, messages, duck transactions and trades, challenge logs, submissions, course instance requests, session logs, a parent's messages to the teacher, ...) through `cascade="all, delete-orphan"` relationships on the models. A parent message whose resolving admin is deleted stays and only loses `resolved_by_id`. Every foreign key to `users.id` declares the same rule (`ON DELETE CASCADE`, `SET NULL` for `resolved_by_id`); the relationships do the work, so a delete does not depend on SQLite enforcing foreign keys. Deleting a classroom deletes its course instances and clears `classroom_id` on the challenges and submissions that referred to it. `backend/tests/app/models/test_user_deletion.py` and `test_classroom_deletion.py` fail when a foreign key to `users.id` or `classrooms.id` is added without a row for it in those tests.
+- **Stored files of rows**: A deleted `submissions` or `project_files` row takes its uploaded file with it, whether the row is deleted on its own (a removed or replaced project file) or through a cascade (its project, its user). The file under `UPLOAD_FOLDER` is removed once the delete is committed; a rollback keeps the row and the file. The other way round, a file written for a new row is removed again unless the transaction commits, so a failed upload leaves nothing on disk. One implementation serves both models: `backend/application/utilities/stored_files.py` (`remove_files_of_deleted_rows`, `remove_unless_committed`). The listeners see deletes made through the ORM (`db.session.delete` and relationship cascades), not a bulk `query.delete()`. The stored files of notes and project images are not covered: only their own delete routes remove them.
+- **Rules held by the database** (declared on the models and added to existing databases by migrations):
+    - `challenge_logs`: one row per `(user_id, challenge_slug, course_instance)` (unique index `uq_challenge_logs_user_slug_instance`), and one row per `(user_id, challenge_slug)` among the rows without a course instance (partial unique index `uq_challenge_logs_user_slug_no_instance`).
+    - `session_logs`: one open session (`end_time IS NULL`) per user (partial unique index `uq_session_logs_one_open_per_user`).
+    - `configuration`: a single row, with `id = 1` (CHECK constraint `ck_configuration_singleton`).
+    - `quiz_attempts`: one attempt in progress per user and quiz (partial unique index `uq_quiz_attempts_one_open_per_user_quiz`); `quiz_questions`: one `number` per quiz; `quiz_rewards`: one row per `(user_id, quiz_id)`.

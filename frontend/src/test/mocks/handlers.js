@@ -36,7 +36,7 @@ export const handlers = [
     );
   }),
 
-  http.get('*/user/logout', () => {
+  http.post('*/user/logout', () => {
     return HttpResponse.json({ status: 'success', message: 'Logged out' });
   }),
 

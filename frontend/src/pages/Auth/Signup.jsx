@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { User, Lock, UserPlus, CheckCircle, Mail, ShieldCheck, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
@@ -8,6 +8,7 @@ import './Auth.css';
 
 const Signup = () => {
     const [searchParams] = useSearchParams();
+    const location = useLocation();
     const defaultRole = searchParams.get('role') || 'student';
     
     const [selectedRole, setSelectedRole] = useState(defaultRole);
@@ -64,7 +65,9 @@ const Signup = () => {
                     const loginRes = await client.post('/api/auth/cognito/login', { email, password });
                     if (loginRes.data.success) {
                         toast.success('Account found! Logging you in...');
-                        window.location.href = '/parent/dashboard';
+                        const pendingCode = localStorage.getItem('pendingConnectionCode');
+                        const fromPath = location.state?.from || (pendingCode ? `/parent/connect?code=${pendingCode}` : null);
+                        window.location.href = fromPath || '/parent/dashboard';
                         return;
                     }
                 } catch {
@@ -98,7 +101,9 @@ const Signup = () => {
                 toast.success('Email verified! Logging you in...');
                 const loginRes = await client.post('/api/auth/cognito/login', { email, password });
                 if (loginRes.data.success) {
-                    window.location.href = '/parent/dashboard';
+                    const pendingCode = localStorage.getItem('pendingConnectionCode');
+                    const fromPath = location.state?.from || (pendingCode ? `/parent/connect?code=${pendingCode}` : null);
+                    window.location.href = fromPath || '/parent/dashboard';
                 }
             }
         } catch (error) {

@@ -34,21 +34,21 @@ const AddChildModal = ({ isOpen, onClose, onAdded }) => {
     };
 
     return (
-        <div role="presentation" className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+        <div role="presentation" className="add-child-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
             <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="add-child-modal">
-                <div className="modal-header">
+                <div className="add-child-header">
                     <h2 id={titleId}>Connect Your Child</h2>
-                    <button className="close-btn" onClick={onClose} aria-label="Close"><X size={20} /></button>
+                    <button className="add-child-close" onClick={onClose} aria-label="Close"><X size={20} /></button>
                 </div>
                 
-                <div className="modal-body">
+                <div className="add-child-body">
                     <div className="add-child-section animate-fade-in">
                         <p className="tab-desc modal-tab-desc">
                             If you received a physical card or connection code from the school, enter the 6-character code below to instantly link the student.
                         </p>
                         
                         <form onSubmit={handleCodeSubmit} className="add-child-form inline-form">
-                            <div className="form-group inline-input">
+                            <div className="add-child-form-group inline-input">
                                 <input 
                                     type="text" 
                                     placeholder="Enter connection code..." 
@@ -60,7 +60,7 @@ const AddChildModal = ({ isOpen, onClose, onAdded }) => {
                                     {isSubmittingCode ? 'Connecting...' : 'Connect'}
                                 </button>
                             </div>
-                            {codeError && <div className="error-message">{codeError}</div>}
+                            {codeError && <div className="add-child-error">{codeError}</div>}
                         </form>
                     </div>
                 </div>

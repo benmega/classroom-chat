@@ -6,10 +6,17 @@ from io import BytesIO
 from application.config import Config
 from application.decorators.api_response import api_response
 from application.extensions import csrf, db, limiter
-from application.models.project import Project
+from application.models.project import (
+    DEFAULT_PROJECT_TYPE,
+    INVALID_PROJECT_TYPE_MESSAGE,
+    Project,
+    read_project_type,
+)
+from application.models.project_file import PROJECT_FILES_DIR, ProjectFile
 from application.models.project_template import ProjectTemplate
 from application.models.skill import Skill
 from application.models.user import User, save_new_user
+from application.utilities.db_helpers import is_reserved_username
 from application.utilities.helper_functions import allowed_file, get_s3_client, utcnow_naive
 from application.utilities.image_upload import (
     AVATAR_MAX_EDGE,
@@ -18,6 +25,14 @@ from application.utilities.image_upload import (
     delete_stored_image,
     save_validated_image,
 )
+from application.utilities.project_files import (
+    ProjectFileError,
+    file_ids_to_remove,
+    served_content_type,
+    store_project_files,
+    uploads_from,
+)
+from application.utilities.stored_files import stored_file_path
 from flask import (
     Blueprint,
     abort,
@@ -26,6 +41,7 @@ from flask import (
     jsonify,
     redirect,
     request,
+    send_file,
     send_from_directory,
     session,
     url_for,
@@ -158,9 +174,17 @@ def tutorial_complete():
         return {"error": "Internal server error"}, 500
 
 
-@user.route("/logout")
+@csrf.exempt
+@user.route("/logout", methods=["GET", "POST"])
 def logout():
     user_id = session.get("user")
+    # Signing out is a POST, checked for a CSRF token here rather than by the
+    # automatic hook: a session that has already expired has no token left to
+    # validate and nothing to end, so it is answered as signed out instead of
+    # with a 400. GET is deprecated and stays accepted for one release, for a
+    # frontend bundle built before the switch.
+    if request.method == "POST" and user_id and current_app.config["WTF_CSRF_ENABLED"]:
+        csrf.protect()
     if user_id:
         # An open socket keeps the rooms and session it had at handshake time,
         # so it must not outlive this login (a different user may sign in next)
@@ -197,7 +221,9 @@ def signup():
             400,
         )
 
-    if User.query.filter_by(username=username).first():
+    # A reserved name is answered exactly like a taken one, so the reply does
+    # not reveal which names are in use.
+    if is_reserved_username(username) or User.query.filter_by(username=username).first():
         return "Username already exists.", 409
 
     try:
@@ -404,10 +430,17 @@ def new_project():
             return template_error
         if template_id is _TEMPLATE_ID_ABSENT:
             # Older clients only send the name: link when it exactly matches.
-            from application.models.project_template import ProjectTemplate
-
             matched = ProjectTemplate.query.filter_by(name=name).first()
             template_id = matched.id if matched else None
+
+        # A project sent without a type takes the type of its template
+        template = db.session.get(ProjectTemplate, template_id) if template_id else None
+        project_type = read_project_type(
+            data.get("project_type"),
+            template.project_type if template else DEFAULT_PROJECT_TYPE,
+        )
+        if project_type is None:
+            return INVALID_PROJECT_TYPE_MESSAGE, 400
 
         new_proj = Project(
             name=name,
@@ -423,6 +456,7 @@ def new_project():
             ),
             user_id=target_user.id,
             template_id=template_id,
+            project_type=project_type,
             status="pending",
         )
 
@@ -433,13 +467,19 @@ def new_project():
 
         db.session.flush()
 
+        try:
+            store_project_files(new_proj, uploads_from(request.files), file_ids_to_remove(data))
+        except ProjectFileError as e:
+            db.session.rollback()  # the new project is not kept, nor any file stored for it
+            return e.message, e.status
+
         if "project_image" in request.files:
             file = request.files["project_image"]
             if file and file.filename != "":
                 try:
                     filename = handle_project_image_upload(file)
                 except ImageUploadError as e:
-                    db.session.rollback()  # the new project is not kept
+                    db.session.rollback()  # the new project is not kept, nor the files stored for it
                     return e.message, e.status
                 new_proj.image_url = f"/user/project_images/{filename}"
 
@@ -505,6 +545,9 @@ def edit_project(project_id):
         template_id, template_error = _read_template_id(data)
         if template_error:
             return template_error
+        project_type = read_project_type(data.get("project_type"), project.project_type)
+        if project_type is None:
+            return INVALID_PROJECT_TYPE_MESSAGE, 400
 
         # Default action is save
         # Strip local paths if somehow accidentally passed
@@ -516,6 +559,7 @@ def edit_project(project_id):
         project.code_snippet = data.get("code_snippet")
         if template_id is not _TEMPLATE_ID_ABSENT:
             project.template_id = template_id
+        project.project_type = project_type
 
         if getattr(current_user, "role", "") == "admin":
             if "teacher_comment" in data:
@@ -536,6 +580,12 @@ def edit_project(project_id):
             if project.status == "rejected":
                 project.status = "pending"
 
+        try:
+            store_project_files(project, uploads_from(request.files), file_ids_to_remove(data))
+        except ProjectFileError as e:
+            db.session.rollback()  # none of the other edits is kept, nor any file stored for them
+            return e.message, e.status
+
         replaced_image_url = None
         if "project_image" in request.files:
             file = request.files["project_image"]
@@ -543,7 +593,7 @@ def edit_project(project_id):
                 try:
                     filename = handle_project_image_upload(file)
                 except ImageUploadError as e:
-                    db.session.rollback()  # none of the other edits is kept
+                    db.session.rollback()  # none of the other edits is kept, nor the files stored for them
                     return e.message, e.status
                 replaced_image_url = project.image_url
                 project.image_url = f"/user/project_images/{filename}"
@@ -740,6 +790,43 @@ def project_image(filename):
         return send_from_directory(
             os.path.join(Config.STATIC_FOLDER, "images"), "Project_placeholder.png"
         )
+
+
+# A file id always serves the same content (replacing a path creates a new file), so
+# browsers may keep what they fetched.
+_PROJECT_FILE_MAX_AGE = 24 * 60 * 60
+
+
+# The limit goes under the route decorator: above it, the limit wraps a function the
+# route has already registered, and no limit applies at all
+@user.route("/project_files/<int:file_id>/<path:filename>")
+@limiter.limit("100 per minute")
+def project_file(file_id, filename):
+    """Serves a file of a project: a 3D model, a source file or an asset.
+
+    Public, like the profiles that show it. The URL must end in the file's own name,
+    which the browser shows and saves it under. ``?download=1`` asks for a download.
+    """
+    record = db.session.get(ProjectFile, file_id)
+    if record is None or filename != record.name:
+        abort(404)
+    full_path = stored_file_path(record.stored_path, subfolder=PROJECT_FILES_DIR)
+    if full_path is None or not os.path.isfile(full_path):
+        abort(404)
+
+    content_type = served_content_type(record)
+    response = send_file(
+        full_path,
+        mimetype=content_type,
+        as_attachment=request.args.get("download") == "1",
+        download_name=record.name,
+        max_age=_PROJECT_FILE_MAX_AGE,
+    )
+    # Set again: werkzeug appends a charset to a text type that already names one
+    response.headers["Content-Type"] = content_type
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Cache-Control"] = f"public, max-age={_PROJECT_FILE_MAX_AGE}"
+    return response
 
 
 @user.route("/api/users/search", methods=["GET"])

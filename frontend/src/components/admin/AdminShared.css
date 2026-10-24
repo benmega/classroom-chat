@@ -3,7 +3,11 @@
    used by non-admin pages; generic classes are scoped to the admin layout body
    (zero specificity via :where so page rules can still override them).
    The shared Modal renders through a portal outside .admin-body, so classes that
-   are also used inside modals are scoped to .admin-modal-overlay as well. */
+   are also used inside modals are scoped to .admin-modal-overlay as well.
+
+   Admin media queries use three widths: 640px (phones), 800px (tablets, where the rail
+   becomes a drawer) and 1024px (narrow desktops). A custom property cannot be used inside
+   @media, so they are written out; adminStyles.test.js fails on any other width. */
 
 @keyframes admin-fadeIn {
     from { opacity: 0; }
@@ -86,7 +90,7 @@
 :where(.admin-body, .admin-modal-overlay) .primary-btn {
     padding: 12px 20px;
     background: var(--primary-color);
-    color: white;
+    color: var(--text-on-primary);
     border: none;
     border-radius: 12px;
     font-weight: 700;
@@ -101,6 +105,25 @@
     opacity: 0.9;
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
+}
+
+:where(.admin-body, .admin-modal-overlay) .secondary-btn {
+    padding: 10px 18px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 10px;
+    font-weight: 700;
+    color: var(--slate-700);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+:where(.admin-body, .admin-modal-overlay) .secondary-btn:hover {
+    background: var(--bg-secondary);
+}
+
+:where(.admin-body, .admin-modal-overlay) .secondary-btn:focus-visible {
+    outline: 2px solid var(--primary-color);
 }
 
 :where(.admin-body, .admin-modal-overlay) .admin-select {

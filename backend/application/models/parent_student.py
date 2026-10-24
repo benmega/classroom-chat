@@ -11,13 +11,13 @@ parent_students = db.Table(
     db.Column(
         "parent_id",
         db.Integer,
-        db.ForeignKey("users.id"),
+        db.ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     ),
     db.Column(
         "student_id",
         db.Integer,
-        db.ForeignKey("users.id"),
+        db.ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     ),
     db.UniqueConstraint("parent_id", "student_id", name="uq_parent_student"),

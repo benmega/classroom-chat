@@ -7,7 +7,7 @@ from sqlalchemy import func, select
 from sqlalchemy import inspect as sa_inspect
 
 from ..extensions import db
-from ..utilities.helper_functions import utcnow_naive
+from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 
 # ---------------------------------------------------------------------------
 # Join table — many-to-many between users and classrooms.
@@ -56,8 +56,15 @@ class Classroom(db.Model):
     sandbox_active = db.Column(db.Boolean, default=False, nullable=False)
     sandbox_activated_at = db.Column(db.DateTime, nullable=True)
 
-    # Course assignments this classroom has ever had
-    course_assignments = db.relationship("CourseInstance", backref="classroom")
+    # Course assignments this classroom has ever had. They cannot exist without
+    # it and are deleted with it.
+    course_assignments = db.relationship(
+        "CourseInstance", backref="classroom", cascade="all, delete-orphan"
+    )
+    # Declared for what happens on delete: these rows outlive the classroom and
+    # only lose their classroom_id. No code reads the collections.
+    challenges = db.relationship("Challenge")
+    submissions = db.relationship("Submission")
 
     # Students enrolled in this classroom (via user_classrooms join table)
     users = db.relationship(
@@ -147,7 +154,5 @@ class Classroom(db.Model):
             "language": self.language,
             "student_count": student_count,
             "sandbox_active": bool(self.sandbox_active),
-            "sandbox_activated_at": self.sandbox_activated_at.isoformat()
-            if self.sandbox_activated_at
-            else None,
+            "sandbox_activated_at": to_utc_iso(self.sandbox_activated_at),
         }

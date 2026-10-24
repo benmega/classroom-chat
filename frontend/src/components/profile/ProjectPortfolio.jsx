@@ -1,14 +1,53 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Code, Play, Settings, CheckCircle, ExternalLink, Layers, Clock, AlertCircle } from 'lucide-react';
+import { Plus, Code, Play, Settings, ExternalLink, Layers, Clock, AlertCircle, Box, Files, Rotate3d } from 'lucide-react';
 import SmartImage from '../common/SmartImage';
 import { formatStaticUrl } from '../../utils/formatters';
 import { safeUrl } from '../../utils/safeUrl';
+import { getFeedbackStyle } from '../../utils/projectFeedback';
+import { groupProjectFiles, primaryModelFile } from '../../utils/projectFiles';
 
 // Cut long text for the card; short or missing text gets no ellipsis.
 const truncate = (text, max = 80) => {
     if (!text) return '';
     return text.length > max ? `${text.slice(0, max)}...` : text;
+};
+
+// The teacher's note on a card, styled by the review status.
+const CardFeedback = ({ project }) => {
+    const { Icon, className } = getFeedbackStyle(project.status);
+    return (
+        <div className={`card-teacher-feedback ${className}`}>
+            <Icon size={14} /> {truncate(project.teacher_comment)}
+        </div>
+    );
+};
+
+// What a card holds besides its picture. A 3D model and source files each get a chip in the corner, and a
+// model without a video gets a quiet rotate glyph where a video gets its play button.
+const ThumbFileHints = ({ project }) => {
+    const files = project.files || [];
+    const hasModel = Boolean(primaryModelFile(files));
+    const sourceCount = groupProjectFiles(files).sources.length;
+    const fileWord = sourceCount === 1 ? 'file' : 'files';
+
+    return (
+        <>
+            {hasModel && !project.video_url && (
+                <div className="model-overlay" aria-hidden="true"><Rotate3d size={20} /></div>
+            )}
+            {(hasModel || sourceCount > 0) && (
+                <div className="project-file-chips">
+                    {hasModel && (
+                        <span className="project-file-chip" title="Has a 3D model"><Box size={12} aria-hidden="true" /> 3D</span>
+                    )}
+                    {sourceCount > 0 && (
+                        <span className="project-file-chip" title={`${sourceCount} source ${fileWord}`}><Files size={12} aria-hidden="true" /> {sourceCount} {fileWord}</span>
+                    )}
+                </div>
+            )}
+        </>
+    );
 };
 
 const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) => {
@@ -48,20 +87,17 @@ const ProjectPortfolio = ({ projects, isOwner, setSelectedProject, studentId }) 
                                         <span className="rejected-badge" title="Revision Requested">
                                             <AlertCircle size={12} /> Revision Requested
                                         </span>
-                                    ) : (!project.teacher_comment || project.status === 'pending') ? (
+                                    ) : project.status === 'pending' ? (
                                         <span className="in-progress-badge" title="Pending Admin Approval">
                                             <Clock size={12} /> In Progress
                                         </span>
                                     ) : null}
+                                    <ThumbFileHints project={project} />
                                 </div>
                                 <div className="project-content">
                                     <h3>{project.name}</h3>
                                     
-                                    {project.teacher_comment && (
-                                        <div className={`card-teacher-feedback ${project.status === 'rejected' ? 'revision-feedback' : ''}`}>
-                                            {project.status === 'rejected' ? <AlertCircle size={14} /> : <CheckCircle size={14} />} {truncate(project.teacher_comment)}
-                                        </div>
-                                    )}
+                                    {project.teacher_comment && <CardFeedback project={project} />}
 
                                     {project.description && <p>{truncate(project.description)}</p>}
                                     <div className="project-footer">
