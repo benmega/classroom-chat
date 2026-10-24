@@ -50,6 +50,7 @@ describe('MobileSidebar Component', () => {
         expect(screen.getByText(/Chat/i)).toBeInTheDocument();
         expect(screen.getByText(/Profile/i)).toBeInTheDocument();
         expect(screen.getByText(/Learning Path/i)).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Tests' })).toHaveAttribute('href', '/tests');
         expect(screen.queryByText(/Admin Panel/i)).not.toBeInTheDocument();
         expect(screen.queryByText(/My Children/i)).not.toBeInTheDocument();
     });
@@ -63,6 +64,7 @@ describe('MobileSidebar Component', () => {
 
         expect(screen.getByText(/Admin Panel/i)).toBeInTheDocument();
         expect(screen.getByText(/Chat/i)).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Tests' })).toBeInTheDocument();
     });
 
     it('renders parent navigation and fetches children correctly', async () => {
@@ -91,6 +93,7 @@ describe('MobileSidebar Component', () => {
             expect.objectContaining({ signal: expect.any(AbortSignal) })
         );
         expect(screen.queryByText(/Chat/i)).not.toBeInTheDocument();
+        expect(screen.queryByRole('link', { name: 'Tests' })).not.toBeInTheDocument();
     });
 
     it('shows unread badges correctly', () => {

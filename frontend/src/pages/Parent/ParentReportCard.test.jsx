@@ -36,18 +36,47 @@ const mockHistory = {
     has_any_activity_ever: true
 };
 
+const attempt = (overrides = {}) => ({
+    id: 5,
+    status: 'submitted',
+    quiz: { slug: 'grade-3-5', title: 'Olympiad 3-5' },
+    student: { id: 1, username: 'student1', nickname: 'Bob' },
+    started_at: '2026-03-04T10:00:00Z',
+    submitted_at: '2026-03-04T10:20:00Z',
+    elapsed_seconds: 1200,
+    correct: 24,
+    total: 30,
+    score_percent: 80,
+    ...overrides,
+});
+
+// Serves the report and history, plus the student's test attempts (none by default)
+const serve = ({ report = mockReport, history = mockHistory, attempts = [], attemptsError = null } = {}) => {
+    client.get.mockImplementation((url) => {
+        if (url.includes('/report')) return Promise.resolve({ data: { data: report } });
+        if (url.includes('/history')) return Promise.resolve({ data: { data: history } });
+        if (url.includes('/api/quizzes/students/')) {
+            return attemptsError
+                ? Promise.reject(attemptsError)
+                : Promise.resolve({ data: { data: { student: { id: 1 }, attempts } } });
+        }
+        return Promise.reject(new Error('Not found'));
+    });
+};
+
+const renderCard = () =>
+    render(
+        <MemoryRouter initialEntries={['/parent/report/1']}>
+            <Routes>
+                <Route path="/parent/report/:studentId" element={<ParentReportCard />} />
+            </Routes>
+        </MemoryRouter>
+    );
+
 describe('ParentReportCard Component', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        client.get.mockImplementation((url) => {
-            if (url.includes('/report')) {
-                return Promise.resolve({ data: { data: mockReport } });
-            }
-            if (url.includes('/history')) {
-                return Promise.resolve({ data: { data: mockHistory } });
-            }
-            return Promise.reject(new Error('Not found'));
-        });
+        serve();
     });
 
     it.skip('renders report header with accessible options button', async () => {
@@ -162,5 +191,61 @@ describe('ParentReportCard Component', () => {
 
         expect(await screen.findByText('TinkerCAD 1')).toBeInTheDocument();
         expect(screen.queryByText(/You'll be able to see your child's activity here/i)).not.toBeInTheDocument();
+    });
+
+    describe('Tests section', () => {
+        it('is hidden when the student has no attempts', async () => {
+            renderCard();
+            expect(await screen.findByText('Bob')).toBeInTheDocument();
+            await waitFor(() => expect(client.get).toHaveBeenCalledWith('/api/quizzes/students/1/attempts'));
+            expect(screen.queryByRole('heading', { name: /Tests/ })).not.toBeInTheDocument();
+        });
+
+        it('is hidden when the attempts request fails', async () => {
+            serve({ attemptsError: { response: { status: 403 } } });
+            renderCard();
+            expect(await screen.findByText('Bob')).toBeInTheDocument();
+            await waitFor(() => expect(client.get).toHaveBeenCalledWith('/api/quizzes/students/1/attempts'));
+            expect(screen.queryByRole('heading', { name: /Tests/ })).not.toBeInTheDocument();
+        });
+
+        it('lists submitted attempts with score and percent, linked to the result', async () => {
+            serve({ attempts: [attempt(), attempt({ id: 4, quiz: { slug: 'g', title: 'Olympiad 6-8' }, correct: 9, total: 30, score_percent: 30 })] });
+            renderCard();
+
+            expect(await screen.findByRole('heading', { name: /Tests/ })).toBeInTheDocument();
+            const first = screen.getByRole('link', { name: /Olympiad 3-5/ });
+            expect(first).toHaveAttribute('href', '/parent/tests/results/5');
+            expect(first).toHaveTextContent('24/30');
+            expect(first).toHaveTextContent('80%');
+            expect(first).toHaveTextContent(new Date('2026-03-04T10:20:00Z').toLocaleDateString());
+            const second = screen.getByRole('link', { name: /Olympiad 6-8/ });
+            expect(second).toHaveAttribute('href', '/parent/tests/results/4');
+            expect(second).toHaveTextContent('9/30');
+            expect(second).toHaveTextContent('30%');
+        });
+
+        it('shows an unfinished attempt as In progress, without a link', async () => {
+            serve({
+                attempts: [attempt({ id: 6, status: 'in_progress', submitted_at: null, correct: null, score_percent: null, quiz: { slug: 'g', title: 'Olympiad 9-11' } })],
+            });
+            renderCard();
+
+            expect(await screen.findByText('Olympiad 9-11')).toBeInTheDocument();
+            expect(screen.getByText('In progress')).toBeInTheDocument();
+            expect(screen.queryByRole('link', { name: /Olympiad 9-11/ })).not.toBeInTheDocument();
+        });
+
+        it('replaces the welcome state when the only activity is test attempts', async () => {
+            serve({
+                report: { ...mockReport, course_progress: {} },
+                history: { duck_history: { labels: [], data: [] }, challenge_history: { labels: [], data: [] }, recent_events: [] },
+                attempts: [attempt()],
+            });
+            renderCard();
+
+            expect(await screen.findByRole('link', { name: /Olympiad 3-5/ })).toBeInTheDocument();
+            expect(screen.queryByText(/You'll be able to see your child's activity here/i)).not.toBeInTheDocument();
+        });
     });
 });

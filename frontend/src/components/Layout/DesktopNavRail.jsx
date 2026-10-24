@@ -10,7 +10,8 @@ import {
     ShoppingCart,
     RefreshCw,
     Map,
-    Settings
+    Settings,
+    ClipboardCheck
 } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 
@@ -49,6 +50,17 @@ const DesktopNavRail = ({ user, location, handleLogout }) => {
                         data-tooltip="Learning Path"
                     >
                         <Map size={20} />
+                    </Link>
+                </div>
+
+                <div className={`nav-rail-item-container ${location.pathname.startsWith('/tests') ? 'active' : ''}`}>
+                    <div className="nav-rail-indicator" />
+                    <Link 
+                        to="/tests" 
+                        className={`nav-rail-item ${location.pathname.startsWith('/tests') ? 'active' : ''}`}
+                        data-tooltip="Tests"
+                    >
+                        <ClipboardCheck size={20} />
                     </Link>
                 </div>
 
