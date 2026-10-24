@@ -239,7 +239,6 @@ label.file-upload-btn:has(input:focus-visible) {
     color: var(--text-muted);
 }
 
-/* Not applied yet: the markup uses .with-icon / .input-icon rather than these class names */
 .with-icon-pl {
     padding-left: 40px;
 }

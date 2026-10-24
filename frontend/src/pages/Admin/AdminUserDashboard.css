@@ -897,7 +897,7 @@
     box-shadow: none; 
 }
 
-:where(.admin-user-redesign) .btn-icon {
+:where(.admin-user-redesign, .admin-modal-overlay) .btn-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -910,7 +910,7 @@
     transition: all 0.2s ease;
 }
 
-:where(.admin-user-redesign) .btn-icon:hover { 
+:where(.admin-user-redesign, .admin-modal-overlay) .btn-icon:hover { 
     background: var(--bg-primary); 
     color: var(--primary-accessible, #006D74); 
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);

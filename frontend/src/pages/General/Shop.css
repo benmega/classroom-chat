@@ -308,3 +308,13 @@
     color: var(--text-secondary);
 }
 
+:where(.shop-page) .spinner {
+    animation: spin 1s linear infinite;
+}
+
+:where(.shop-page) .form-control {
+    border: 1.5px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}

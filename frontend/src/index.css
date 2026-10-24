@@ -316,8 +316,15 @@ button:focus-visible,
   animation: fadeIn 200ms ease;
 }
 
+/* Opacity only: a transform left on the page wrapper would become the containing block of its
+   position: fixed children (claim dock, map pad) and make them scroll with the page. */
+@keyframes pageEntry {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .animate-page-entry {
-  animation: fadeIn 200ms ease forwards;
+  animation: pageEntry 200ms ease forwards;
 }
 
 /* Global Form Controls - Accessibility & Premium Feel */
