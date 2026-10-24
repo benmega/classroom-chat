@@ -134,6 +134,23 @@ describe('TakeTest', () => {
             expect(frame.getAttribute('sandbox')).toBe('allow-same-origin');
         });
 
+        it('gives each question its own diagram frame', async () => {
+            const questions = makeQuestions().map((q) => (
+                q.number === 3 ? { ...q, diagram_html: '<svg id="d3"></svg>' } : q
+            ));
+            serve({ attempt: makeAttempt({ questions }) });
+            renderTake();
+            await screen.findByText('Prompt 1');
+            const next = screen.getByRole('button', { name: 'Next' });
+            await userEvent.click(next);
+            const first = await screen.findByTitle('Question 2 diagram');
+            await userEvent.click(next);
+
+            const second = await screen.findByTitle('Question 3 diagram');
+            expect(second).not.toBe(first);
+            expect(second.getAttribute('srcdoc')).toContain('id="d3"');
+        });
+
         it('selects an answer and marks it in the palette and the progress count', async () => {
             serve();
             renderTake();
@@ -443,14 +460,80 @@ describe('TakeTest', () => {
             expect(saves[1].body.answers).toEqual({ 1: 'B' });
         });
 
-        it('locks the test when a save reports the time is up', async () => {
+        it('submits for grading when a save reports the time is up', async () => {
             const { user } = await setup({ onSave: () => failure('Expired', 409, { expired: true }) });
+
+            await user.click(optionNamed('Option A1'));
+            await act(() => vi.advanceTimersByTimeAsync(900));
+
+            await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
+            expect(submits).toHaveLength(1);
+            expect(submits[0].id).toBe('77');
+            expect(submits[0].body).toEqual({});
+            expect(saves).toHaveLength(1);
+            expect(screen.queryByText('Time expired')).not.toBeInTheDocument();
+        });
+
+        it('shows the expired line only when that submit fails too', async () => {
+            const { user } = await setup({
+                onSave: () => failure('Expired', 409, { expired: true }),
+                onSubmit: () => failure('Expired', 409, { expired: true }),
+            });
 
             await user.click(optionNamed('Option A1'));
             await act(() => vi.advanceTimersByTimeAsync(900));
 
             expect(await screen.findByText('Time expired')).toBeInTheDocument();
             expect(screen.getByRole('link', { name: 'Tests' })).toHaveAttribute('href', '/tests');
+            expect(submits).toHaveLength(1);
+        });
+
+        it('clears Not saved after a later quiet save succeeds', async () => {
+            let fail = true;
+            const { user } = await setup({
+                onSave: (body) => (fail ? failure('Down', 500) : envelope({ attempt: { id: 77, ...body } })),
+            });
+
+            await user.click(optionNamed('Option A1'));
+            await act(() => vi.advanceTimersByTimeAsync(900));
+            expect(await screen.findByText('Not saved')).toBeInTheDocument();
+
+            fail = false;
+            await act(() => vi.advanceTimersByTimeAsync(15000));
+
+            await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/^Saved$/));
+        });
+
+        it('keeps a quiet save quiet while nothing was wrong', async () => {
+            await setup();
+
+            await act(() => vi.advanceTimersByTimeAsync(15000));
+
+            await waitFor(() => expect(saves).toHaveLength(1));
+            expect(screen.queryByRole('status')).not.toBeInTheDocument();
+        });
+
+        it('shows the state of a queued save by its own quiet flag, not the first one', async () => {
+            let release;
+            const gate = new Promise((resolve) => { release = resolve; });
+            const { user } = await setup({
+                onSave: async (body) => {
+                    if (saves.length === 1) await gate;
+                    return envelope({ attempt: { id: 77, ...body } });
+                },
+            });
+
+            await act(() => vi.advanceTimersByTimeAsync(15000)); // quiet save, held on the wire
+            await waitFor(() => expect(saves).toHaveLength(1));
+            await user.click(optionNamed('Option B1'));
+            await act(() => vi.advanceTimersByTimeAsync(900)); // answer save queues behind it
+            expect(saves).toHaveLength(1);
+
+            release();
+
+            await waitFor(() => expect(saves).toHaveLength(2));
+            expect(saves[1].body.answers).toEqual({ 1: 'B' });
+            await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/^Saved$/));
         });
 
         it('goes to the result when a save finds the attempt already submitted', async () => {
@@ -518,6 +601,59 @@ describe('TakeTest', () => {
             expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
             await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
             expect(submits).toHaveLength(1);
+        });
+
+        it('retries a failed automatic submit once after a few seconds', async () => {
+            vi.useFakeTimers({ shouldAdvanceTime: true });
+            const deadline = new Date(Date.now() + 2000).toISOString();
+            let calls = 0;
+            serve({
+                attempt: makeAttempt({ deadline }),
+                onSubmit: () => {
+                    calls += 1;
+                    return calls === 1 ? HttpResponse.error() : envelope({ attempt: { id: 77 } });
+                },
+            });
+            renderTake();
+            await screen.findByText('Prompt 1');
+
+            await act(() => vi.advanceTimersByTimeAsync(3500));
+            await waitFor(() => expect(submits).toHaveLength(1));
+            await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to submit'));
+            expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
+            expect(screen.getByTestId('where')).toHaveTextContent('/tests/grades-3-5');
+
+            await act(() => vi.advanceTimersByTimeAsync(5500));
+
+            await waitFor(() => expect(submits).toHaveLength(2));
+            await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
+        });
+
+        it('leaves the Submit button working when the automatic retry fails as well', async () => {
+            vi.useFakeTimers({ shouldAdvanceTime: true });
+            const deadline = new Date(Date.now() + 2000).toISOString();
+            let fail = true;
+            serve({
+                attempt: makeAttempt({ deadline }),
+                onSubmit: () => (fail ? HttpResponse.error() : envelope({ attempt: { id: 77 } })),
+            });
+            const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+            renderTake();
+            await screen.findByText('Prompt 1');
+
+            await act(() => vi.advanceTimersByTimeAsync(3500));
+            await act(() => vi.advanceTimersByTimeAsync(5500));
+            await waitFor(() => expect(submits).toHaveLength(2));
+            await waitFor(() => expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled());
+            await act(() => vi.advanceTimersByTimeAsync(20000));
+            expect(submits).toHaveLength(2); // only one automatic retry
+
+            fail = false;
+            await user.click(screen.getByRole('button', { name: 'Submit' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Submit' }));
+
+            await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
+            expect(submits).toHaveLength(3);
         });
 
         it('submits straight away when the deadline already passed', async () => {
@@ -639,6 +775,71 @@ describe('TakeTest', () => {
 
             expect(await screen.findByText('Time expired')).toBeInTheDocument();
             expect(screen.getByRole('link', { name: 'Tests' })).toBeInTheDocument();
+        });
+
+        it('waits for a save in flight before submitting, and stops saving meanwhile', async () => {
+            vi.useFakeTimers({ shouldAdvanceTime: true });
+            let release;
+            const gate = new Promise((resolve) => { release = resolve; });
+            const order = [];
+            serve({
+                onSave: async (body) => {
+                    order.push('save-start');
+                    await gate;
+                    order.push('save-end');
+                    return envelope({ attempt: { id: 77, ...body } });
+                },
+                onSubmit: () => {
+                    order.push('submit');
+                    return envelope({ attempt: { id: 77 } });
+                },
+            });
+            const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+            renderTake();
+            await screen.findByText('Prompt 1');
+            await user.click(optionNamed('Option B1'));
+            await act(() => vi.advanceTimersByTimeAsync(900));
+            await waitFor(() => expect(saves).toHaveLength(1));
+
+            await user.click(screen.getByRole('button', { name: 'Submit' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Submit' }));
+            await act(() => vi.advanceTimersByTimeAsync(20000)); // interval ticks while submitting
+
+            expect(submits).toHaveLength(0);
+            expect(saves).toHaveLength(1);
+
+            release();
+
+            await waitFor(() => expect(submits).toHaveLength(1));
+            expect(order).toEqual(['save-start', 'save-end', 'submit']);
+            expect(saves).toHaveLength(1);
+            expect(submits[0].body.answers).toEqual({ 1: 'B' });
+            await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
+        });
+
+        it('does not submit when the save it waited for found the attempt already submitted', async () => {
+            vi.useFakeTimers({ shouldAdvanceTime: true });
+            let release;
+            const gate = new Promise((resolve) => { release = resolve; });
+            serve({
+                onSave: async () => {
+                    await gate;
+                    return failure('Already submitted', 409);
+                },
+            });
+            const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+            renderTake();
+            await screen.findByText('Prompt 1');
+            await user.click(optionNamed('Option B1'));
+            await act(() => vi.advanceTimersByTimeAsync(900));
+            await waitFor(() => expect(saves).toHaveLength(1));
+            await user.click(screen.getByRole('button', { name: 'Submit' }));
+            await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Submit' }));
+
+            release();
+
+            await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
+            expect(submits).toHaveLength(0);
         });
 
         it('opens the result when the attempt was already submitted elsewhere', async () => {

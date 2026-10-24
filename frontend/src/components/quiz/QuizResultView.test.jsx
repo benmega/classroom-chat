@@ -105,6 +105,32 @@ describe('QuizResultView', () => {
         expect(data).toHaveTextContent('0%');
     });
 
+    it('has no decorative bars in the domain table', () => {
+        const { container } = render(<QuizResultView attempt={result()} />);
+        expect(container.querySelector('.test-result-bar')).toBeNull();
+        expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(3);
+    });
+
+    it('shows the ducks earned next to the score', () => {
+        render(<QuizResultView attempt={result({ ducks_awarded: 12 })} />);
+        const score = screen.getByRole('region', { name: 'Score' });
+        const ducks = within(score).getByRole('img', { name: '12 ducks' });
+        expect(ducks).toHaveTextContent('+12');
+        expect(ducks.querySelector('svg.duck-icon')).not.toBeNull();
+    });
+
+    it('uses the singular for one duck', () => {
+        render(<QuizResultView attempt={result({ ducks_awarded: 1 })} />);
+        expect(screen.getByRole('img', { name: '1 duck' })).toHaveTextContent('+1');
+    });
+
+    it.each([0, undefined, null])('shows no ducks for %s', (value) => {
+        const { container } = render(<QuizResultView attempt={result({ ducks_awarded: value })} />);
+        expect(screen.queryByRole('img')).not.toBeInTheDocument();
+        expect(container.querySelector('.duck-icon')).toBeNull();
+        expect(container.textContent).not.toMatch(/\+\d/);
+    });
+
     it('hides the domain table when there are no domains', () => {
         render(<QuizResultView attempt={result({ domains: [] })} />);
         expect(screen.queryByRole('table')).not.toBeInTheDocument();
@@ -148,7 +174,8 @@ describe('QuizResultView', () => {
         const q2 = screen.getByTestId('review-2');
         const q2Options = within(q2).getAllByRole('listitem');
         expect(q2Options[0]).toHaveTextContent('Your answer');
-        expect(q2Options[0]).toHaveTextContent('Wrong');
+        expect(q2Options[0]).not.toHaveTextContent('Wrong');
+        expect(q2Options[0]).not.toHaveTextContent('Correct');
         expect(q2Options[1]).toHaveTextContent('Correct');
         expect(q2Options[1]).not.toHaveTextContent('Your answer');
     });

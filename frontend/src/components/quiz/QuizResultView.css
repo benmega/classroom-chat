@@ -82,6 +82,14 @@
     color: var(--text-secondary);
 }
 
+.test-result-ducks {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
 .test-result-section {
     display: flex;
     flex-direction: column;
@@ -116,27 +124,6 @@
 
 .test-result-domains tbody th {
     color: var(--text-primary);
-}
-
-.test-result-domain-percent {
-    display: inline-block;
-    min-width: 3rem;
-}
-
-.test-result-bar {
-    display: inline-block;
-    vertical-align: middle;
-    width: 5rem;
-    height: 4px;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-full);
-    overflow: hidden;
-}
-
-.test-result-bar-fill {
-    display: block;
-    height: 100%;
-    background: var(--text-muted);
 }
 
 /* Review */
@@ -280,10 +267,6 @@
     color: var(--green-800);
 }
 
-.test-result-mark--wrong {
-    color: var(--red-800);
-}
-
 .test-result-explanation {
     margin: 0;
     font-size: var(--font-sm);
@@ -298,10 +281,6 @@
 
     .test-result-question {
         padding: 0.75rem;
-    }
-
-    .test-result-bar {
-        width: 3rem;
     }
 }
 

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
-import { ArrowLeft, Printer } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { getAttempt } from '../../api/quizzes';
+import Skeleton from '../../components/common/Skeleton';
 import QuizResultView from '../../components/quiz/QuizResultView';
 import './TestResult.css';
 
@@ -62,14 +63,14 @@ const TestResult = () => {
                 <Link to={back.to} className="test-result-back" aria-label={back.label}>
                     <ArrowLeft size={16} aria-hidden="true" /> Back
                 </Link>
-                {attempt?.status === 'submitted' && (
-                    <button type="button" className="test-result-print" onClick={() => window.print()}>
-                        <Printer size={16} aria-hidden="true" /> Print
-                    </button>
-                )}
             </div>
             {error && <p className="test-result-message" role="alert">{error}</p>}
-            {!error && !attempt && <p className="test-result-message" role="status">Loading</p>}
+            {!error && !attempt && (
+                <div aria-busy="true" aria-label="Loading">
+                    <Skeleton height="28px" borderRadius="6px" />
+                    <Skeleton height="96px" borderRadius="8px" style={{ marginTop: '1rem' }} />
+                </div>
+            )}
             {attempt && <QuizResultView attempt={attempt} showStudent={viewer !== 'student'} />}
         </div>
     );

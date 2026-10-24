@@ -164,7 +164,7 @@ describe('AdminTests', () => {
 
             await userEvent.click(screen.getByRole('checkbox', { name: 'Answers shown: CS 6-8' }));
 
-            await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to save.'));
+            await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Failed to save'));
             expect(screen.getByRole('checkbox', { name: 'Answers shown: CS 6-8' })).toBeChecked();
         });
 
@@ -245,7 +245,7 @@ describe('AdminTests', () => {
             await userEvent.type(input, value);
             await userEvent.tab();
 
-            expect(toast.error).toHaveBeenCalledWith('Time limit must be 1-600.');
+            expect(toast.error).toHaveBeenCalledWith('Time limit must be 1-600');
             expect(input).toHaveValue(45);
             expect(bodies).toEqual([]);
         });
@@ -489,6 +489,24 @@ describe('AdminTests', () => {
             expect(lines[0]).toBe('Student,Username,Test,Correct,Total,Percent,Seconds,Submitted');
             expect(lines[1]).toBe('Ana B,ana,CS 6-8,21,30,70,1805,2026-10-01T10:30:00Z');
             expect(lines[2]).toBe('bo,bo,CS 9-11,,30,,65,');
+        });
+
+        it('escapes formulas in student names', async () => {
+            const evil = { id: 9, username: 'eve', nickname: '=HYPERLINK("http://x")' };
+            useServer({ results: [{ ...RESULTS[0], id: 103, student: evil }] });
+            renderPage();
+            await resultsTable();
+
+            fireEvent.click(screen.getByRole('button', { name: /CSV/ }));
+
+            const text = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.readAsText(created[0]);
+            });
+            expect(text).toContain(`"'=HYPERLINK(`);
+            expect(text).not.toMatch(/^=HYPERLINK/m);
+            expect(text).not.toMatch(/(^|,)"?=HYPERLINK/m);
         });
     });
 });

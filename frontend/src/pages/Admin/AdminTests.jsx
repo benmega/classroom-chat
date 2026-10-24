@@ -7,6 +7,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
 import { showConfirm } from '../../utils/confirm';
 import { getErrorMessage } from '../../utils/apiError';
+import { formatDuration } from '../../components/quiz/formatDuration';
 import { listAdminQuizzes, updateQuizSettings, listAdminResults, deleteAttempt } from '../../api/quizzes';
 import './AdminTests.css';
 
@@ -21,12 +22,6 @@ const STATUSES = [
     { value: 'submitted', label: 'Submitted' },
     { value: 'in_progress', label: 'In progress' },
 ];
-
-const formatDuration = (seconds) => {
-    const total = Math.max(0, Math.round(Number(seconds) || 0));
-    const secs = String(total % 60).padStart(2, '0');
-    return `${Math.floor(total / 60)}:${secs}`;
-};
 
 const formatDate = (iso) => {
     if (!iso) return '';
@@ -55,7 +50,7 @@ const TimeLimitInput = ({ quiz, onCommit }) => {
         const minutes = Number(text);
         if (!Number.isInteger(minutes) || minutes < 1 || minutes > 600) {
             setDraft(saved);
-            toast.error('Time limit must be 1-600.');
+            toast.error('Time limit must be 1-600');
             return;
         }
         onCommit(minutes);
@@ -104,7 +99,7 @@ const AdminTests = () => {
                 if (!cancelled) setQuizzes(data?.quizzes || []);
             })
             .catch((error) => {
-                if (!cancelled) toast.error(getErrorMessage(error, 'Failed to load tests.'));
+                if (!cancelled) toast.error(getErrorMessage(error, 'Failed to load tests'));
             })
             .finally(() => {
                 if (!cancelled) setQuizzesLoading(false);
@@ -123,7 +118,7 @@ const AdminTests = () => {
             const data = await listAdminResults(params);
             if (request === requestRef.current) setResults(data?.results || []);
         } catch (error) {
-            if (request === requestRef.current) toast.error(getErrorMessage(error, 'Failed to load results.'));
+            if (request === requestRef.current) toast.error(getErrorMessage(error, 'Failed to load results'));
         } finally {
             if (request === requestRef.current) setResultsLoading(false);
         }
@@ -145,7 +140,7 @@ const AdminTests = () => {
             if (data?.quiz) patchLocal(quiz.slug, data.quiz);
         } catch (error) {
             patchLocal(quiz.slug, previous);
-            toast.error(getErrorMessage(error, 'Failed to save.'));
+            toast.error(getErrorMessage(error, 'Failed to save'));
         }
     };
 
@@ -169,7 +164,7 @@ const AdminTests = () => {
                 };
             }));
         } catch (error) {
-            toast.error(getErrorMessage(error, 'Failed to delete.'));
+            toast.error(getErrorMessage(error, 'Failed to delete'));
         } finally {
             setBusyId(null);
         }
@@ -186,7 +181,7 @@ const AdminTests = () => {
             Seconds: r.elapsed_seconds ?? '',
             Submitted: r.submitted_at || '',
         }));
-        const blob = new Blob([Papa.unparse(rows)], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob([Papa.unparse(rows, { escapeFormulae: true })], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;

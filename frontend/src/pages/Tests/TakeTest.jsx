@@ -10,6 +10,7 @@ import './TakeTest.css';
 
 const SAVE_DEBOUNCE_MS = 800;
 const SAVE_INTERVAL_MS = 15000;
+const SUBMIT_RETRY_MS = 5000;
 
 const SAVE_LABELS = { saving: 'Saving', saved: 'Saved', error: 'Not saved' };
 
@@ -83,10 +84,14 @@ const TakeTest = () => {
     const lastElapsedRef = useRef(0);
     const dirtyRef = useRef(false);
     const lockedRef = useRef(false);
-    const inFlightRef = useRef(false);
+    const inFlightRef = useRef(null); // promise of the save on the wire; never rejects
     const queuedRef = useRef(false);
+    const queuedQuietRef = useRef(true);
     const debounceRef = useRef(null);
     const submittingRef = useRef(false);
+    const submitRef = useRef(null);
+    const retryTimerRef = useRef(null);
+    const autoRetriedRef = useRef(false);
 
     // Never reports less than it already has: the server rejects a decreasing value.
     const getElapsed = useCallback(() => {
@@ -112,40 +117,53 @@ const TakeTest = () => {
         [navigate]
     );
 
-    // Sends everything (answers and flags go whole, so a retry is always safe); one request at a time.
+    // Sends everything (answers and flags go whole, so a retry is always safe); one request at a time,
+    // and none once a submit has started (the submit carries the same data).
     const flush = useCallback(
-        async function run({ quiet = false } = {}) {
+        function run({ quiet = false } = {}) {
             const id = attemptIdRef.current;
-            if (!id || lockedRef.current) return;
+            if (!id || lockedRef.current || submittingRef.current) return Promise.resolve();
             clearTimeout(debounceRef.current);
             if (inFlightRef.current) {
                 queuedRef.current = true;
-                return;
+                queuedQuietRef.current = queuedQuietRef.current && quiet;
+                return inFlightRef.current;
             }
-            inFlightRef.current = true;
             dirtyRef.current = false;
             if (!quiet) setSaveState('saving');
-            try {
-                await saveAttempt(id, progress());
-                if (!quiet) setSaveState('saved');
-            } catch (error) {
-                const status = error?.response?.status;
-                if (status === 409 && error.response.data?.expired) {
-                    lockedRef.current = true;
-                    setPhase('expired');
-                } else if (status === 409) {
-                    goToResult(id);
-                } else {
-                    dirtyRef.current = true;
-                    setSaveState('error');
+            const task = (async () => {
+                let expired = false;
+                try {
+                    await saveAttempt(id, progress());
+                    // A success clears an earlier "Not saved" even when this save was quiet.
+                    setSaveState((prev) => (!quiet || prev === 'error' ? 'saved' : prev));
+                } catch (error) {
+                    const status = error?.response?.status;
+                    if (status === 409 && error.response.data?.expired) {
+                        expired = true;
+                    } else if (status === 409) {
+                        goToResult(id);
+                    } else {
+                        dirtyRef.current = true;
+                        setSaveState('error');
+                    }
+                } finally {
+                    inFlightRef.current = null;
+                    if (expired) {
+                        // Past the deadline the server still grades what it holds; send it in.
+                        queuedRef.current = false;
+                        queuedQuietRef.current = true;
+                        submitRef.current?.({ auto: true, body: {} });
+                    } else if (queuedRef.current) {
+                        const queuedQuiet = queuedQuietRef.current;
+                        queuedRef.current = false;
+                        queuedQuietRef.current = true;
+                        run({ quiet: queuedQuiet });
+                    }
                 }
-            } finally {
-                inFlightRef.current = false;
-                if (queuedRef.current) {
-                    queuedRef.current = false;
-                    run({ quiet });
-                }
-            }
+            })();
+            inFlightRef.current = task;
+            return task;
         },
         [progress, goToResult]
     );
@@ -239,29 +257,51 @@ const TakeTest = () => {
         markDirty();
     };
 
-    const doSubmit = useCallback(async () => {
-        const id = attemptIdRef.current;
-        if (!id || submittingRef.current || lockedRef.current) return;
-        submittingRef.current = true;
-        setSubmitting(true);
-        clearTimeout(debounceRef.current);
-        try {
-            await submitAttempt(id, progress());
-            goToResult(id);
-        } catch (error) {
-            const status = error?.response?.status;
-            if (status === 409 && error.response.data?.expired) {
-                lockedRef.current = true;
-                setPhase('expired');
-            } else if (status === 409) {
+    // `auto`: the clock or an expired save started this, so a failed try is retried once on its own.
+    // `body`: sent instead of the current progress (past the deadline the server ignores it anyway).
+    const doSubmit = useCallback(
+        async ({ auto = false, body } = {}) => {
+            const id = attemptIdRef.current;
+            if (!id || submittingRef.current || lockedRef.current) return;
+            submittingRef.current = true;
+            setSubmitting(true);
+            clearTimeout(debounceRef.current);
+            clearTimeout(retryTimerRef.current);
+            try {
+                // Never race a save: wait for the one on the wire, then submit what is held now.
+                if (inFlightRef.current) await inFlightRef.current;
+                if (lockedRef.current) return; // that save found the attempt already submitted
+                await submitAttempt(id, body ?? progress());
                 goToResult(id);
-            } else {
-                submittingRef.current = false;
-                setSubmitting(false);
-                toast.error(getErrorMessage(error, 'Failed to submit'));
+            } catch (error) {
+                const status = error?.response?.status;
+                if (status === 409 && error.response.data?.expired) {
+                    lockedRef.current = true;
+                    setPhase('expired');
+                } else if (status === 409) {
+                    goToResult(id);
+                } else {
+                    submittingRef.current = false;
+                    setSubmitting(false);
+                    toast.error(getErrorMessage(error, 'Failed to submit'));
+                    if (auto && !autoRetriedRef.current) {
+                        autoRetriedRef.current = true;
+                        retryTimerRef.current = setTimeout(() => submitRef.current?.({ auto: true, body }), SUBMIT_RETRY_MS);
+                    }
+                }
             }
-        }
-    }, [progress, goToResult]);
+        },
+        [progress, goToResult]
+    );
+
+    useEffect(() => {
+        submitRef.current = doSubmit;
+    }, [doSubmit]);
+
+    useEffect(() => () => clearTimeout(retryTimerRef.current), []);
+
+    // The clock hands over no arguments; its submit is an automatic one.
+    const autoSubmit = useCallback(() => doSubmit({ auto: true }), [doSubmit]);
 
     const handleSubmit = async () => {
         if (submittingRef.current) return;
@@ -302,7 +342,7 @@ const TakeTest = () => {
                             {SAVE_LABELS[saveState]}
                         </span>
                     )}
-                    <Clock baseMs={baseMsRef.current} deadlineMs={deadlineMs} onExpire={doSubmit} />
+                    <Clock baseMs={baseMsRef.current} deadlineMs={deadlineMs} onExpire={autoSubmit} />
                 </div>
             </header>
 
@@ -317,7 +357,7 @@ const TakeTest = () => {
 
                     {question.diagram_html && (
                         <div className="take-test-diagram">
-                            <DiagramFrame html={question.diagram_html} title={`Question ${question.number} diagram`} />
+                            <DiagramFrame key={question.number} html={question.diagram_html}title={`Question ${question.number} diagram`} />
                         </div>
                     )}
 

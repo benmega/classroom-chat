@@ -11,8 +11,7 @@
     margin-bottom: 1rem;
 }
 
-.test-result-back,
-.test-result-print {
+.test-result-back {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -27,8 +26,7 @@
     text-decoration: none;
 }
 
-.test-result-back:hover,
-.test-result-print:hover {
+.test-result-back:hover {
     color: var(--text-primary);
 }
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { safeDate } from '../../utils/formatters';
+import DuckIcon from '../Icons/DuckIcon';
 import DiagramFrame from './DiagramFrame';
 import { formatDuration } from './formatDuration';
 import './QuizResultView.css';
@@ -51,11 +52,6 @@ function ReviewQuestion({ question }) {
                                         <Check size={14} aria-hidden="true" /> Correct
                                     </span>
                                 )}
-                                {isSelected && !isAnswer && (
-                                    <span className="test-result-mark test-result-mark--wrong">
-                                        <X size={14} aria-hidden="true" /> Wrong
-                                    </span>
-                                )}
                             </span>
                         </li>
                     );
@@ -83,6 +79,7 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
     const correct = attempt.correct ?? 0;
     const percent = attempt.score_percent ?? percentOf(correct, total);
     const domains = attempt.domains || [];
+    const ducks = Number(attempt.ducks_awarded) || 0;
     const review = Array.isArray(attempt.review) ? attempt.review : null;
 
     const counts = review
@@ -130,6 +127,16 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
                         <p className="test-result-score-main">
                             <span className="test-result-score-value">{correct}/{total}</span>
                             <span className="test-result-score-percent">{percent}%</span>
+                            {ducks > 0 && (
+                                <span
+                                    className="test-result-ducks"
+                                    role="img"
+                                    aria-label={`${ducks} ${ducks === 1 ? 'duck' : 'ducks'}`}
+                                >
+                                    <DuckIcon size={18} color="var(--primary-color)" />
+                                    <span aria-hidden="true">+{ducks}</span>
+                                </span>
+                            )}
                         </p>
                         <dl className="test-result-counts">
                             <div>
@@ -165,12 +172,7 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
                                             <tr key={d.domain}>
                                                 <th scope="row">{d.domain}</th>
                                                 <td>{d.correct}/{d.total}</td>
-                                                <td>
-                                                    <span className="test-result-domain-percent">{pct}%</span>
-                                                    <span className="test-result-bar" aria-hidden="true">
-                                                        <span className="test-result-bar-fill" style={{ width: `${pct}%` }} />
-                                                    </span>
-                                                </td>
+                                                <td>{pct}%</td>
                                             </tr>
                                         );
                                     })}

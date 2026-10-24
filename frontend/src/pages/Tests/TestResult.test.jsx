@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { server } from '../../test/mocks/server';
 import TestResult from './TestResult';
 
@@ -58,17 +58,17 @@ const renderAt = (path) =>
         </MemoryRouter>,
     );
 
-afterEach(() => vi.unstubAllGlobals());
-
 describe('TestResult', () => {
     it('shows a loading line, then the result', async () => {
         serve(result());
         renderAt('/tests/results/12');
-        expect(screen.getByRole('status')).toHaveTextContent('Loading');
+        const loading = screen.getByLabelText('Loading');
+        expect(loading).toHaveAttribute('aria-busy', 'true');
+        expect(loading.querySelectorAll('.skeleton-loader').length).toBeGreaterThan(0);
         expect(await screen.findByRole('heading', { name: 'Olympiad 6-8' })).toBeInTheDocument();
         expect(within(screen.getByRole('region', { name: 'Score' })).getByText('2/3')).toBeInTheDocument();
         expect(screen.getByText('Pick one')).toBeInTheDocument();
-        expect(screen.queryByRole('status')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Loading')).not.toBeInTheDocument();
     });
 
     it('requests the attempt id from the route', async () => {
@@ -147,16 +147,13 @@ describe('TestResult', () => {
         renderAt('/parent/tests/results/12');
         expect(await screen.findByText('In progress')).toBeInTheDocument();
         expect(screen.queryByTestId('where')).not.toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: /print/i })).not.toBeInTheDocument();
     });
 
-    it('prints from the print button', async () => {
-        const print = vi.fn();
-        vi.stubGlobal('print', print);
+    it('has no print button', async () => {
         serve(result());
         renderAt('/tests/results/12');
-        await userEvent.click(await screen.findByRole('button', { name: /print/i }));
-        expect(print).toHaveBeenCalledTimes(1);
+        await screen.findByRole('heading', { name: 'Olympiad 6-8' });
+        expect(screen.queryByRole('button', { name: /print/i })).not.toBeInTheDocument();
     });
 
     it('does not show a previous result while the next one loads', async () => {
@@ -183,7 +180,7 @@ describe('TestResult', () => {
         expect(await screen.findByRole('heading', { name: 'Quiz 1' })).toBeInTheDocument();
         await userEvent.click(screen.getByRole('link', { name: 'next' }));
         expect(screen.queryByRole('heading', { name: 'Quiz 1' })).not.toBeInTheDocument();
-        expect(screen.getByRole('status')).toHaveTextContent('Loading');
+        expect(screen.getByLabelText('Loading')).toBeInTheDocument();
         release();
         expect(await screen.findByRole('heading', { name: 'Quiz 2' })).toBeInTheDocument();
     });
