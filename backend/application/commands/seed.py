@@ -227,6 +227,20 @@ def seed_command():
         db.session.rollback()
         click.echo(f"Error seeding 3D modeling track: {e}")
 
+    click.echo("Seeding student tests...")
+    try:
+        from application.commands.quiz_seed import seed_quizzes
+
+        stats = seed_quizzes()
+        click.echo(
+            "Student tests: "
+            f"quizzes +{stats['quizzes_inserted']}/~{stats['quizzes_updated']}, "
+            f"questions +{stats['questions_inserted']}/~{stats['questions_updated']}."
+        )
+    except Exception as e:
+        db.session.rollback()
+        click.echo(f"Error seeding student tests: {e}")
+
 
 def seed_courses(csv_path):
     """Add the courses in ``csv_path`` that the database does not have yet.

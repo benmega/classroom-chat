@@ -30,6 +30,7 @@ def setup_models():
     from .project import Project
     from .project_file import ProjectFile
     from .project_template import ProjectTemplate
+    from .quiz import Quiz, QuizAttempt, QuizQuestion, QuizReward
     from .session_log import SessionLog
     from .skill import Skill
     from .store_item import StoreItem
