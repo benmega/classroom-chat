@@ -313,7 +313,7 @@ does not match the code.
    row that already exists is never changed), course instances
    (`course_instances_seed.csv`; rows whose classroom or course does
    not exist are skipped with a warning), challenges (`level_seed_data.csv`, keyed on the slug)
-   and the standard project templates (`application/commands/projects_data.py`).
+   the standard project templates (`application/commands/projects_data.py`) and the student tests (`application/commands/quiz_data/*.json`; content follows the files, admin settings are kept; see [student_tests.md](student_tests.md#9-seed-data)).
 7. **Admin role**: `sqlite3 ... UPDATE users SET role='admin' WHERE LOWER(username)='ben'`.
 
 After that the service restarts and the health check runs; if it fails, the code is reset to the

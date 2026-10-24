@@ -70,14 +70,26 @@ All admin routes require `admin_only` (a session user whose `role` is `admin`).
 - **`POST /connect/code`, `POST /disconnect/<student_id>`**: Link/unlink via a student-provided connect code.
 - **`POST /contact-teacher`**: Send a message to the teacher/admin.
 
-## 8. Webhooks & Server Info
+## 8. Student Tests (`/api/quizzes`)
+Blueprint `quiz_bp` in `quiz_routes.py` (logic in `services/quiz_service.py`). Details: [student_tests.md](student_tests.md).
+- **`GET /api/quizzes`**: Active tests with the caller's attempts, `in_progress_attempt_id` and `can_start`.
+- **`POST /api/quizzes/<slug>/attempts`**: Start the test, or resume the attempt in progress (`201` new, `200` resumed). Parents get `403`; `403` when retakes are off after a submit; `404` for an unknown or inactive test.
+- **`GET /api/quizzes/attempts/<id>`**: An attempt: its state (owner, open), a summary (admin or linked parent, open) or the Result (submitted). The review (key, explanations) is included for admins and linked parents, and for the owner only when the test has `reveal_answers`.
+- **`PATCH /api/quizzes/attempts/<id>`**: Owner saves `answers`, `flagged`, `elapsed_seconds`. `409` when submitted, or with `expired: true` past the deadline (30 s grace).
+- **`POST /api/quizzes/attempts/<id>/submit`**: Owner submits; grades server-side and pays the first-attempt ducks. `409` when already submitted.
+- **`GET /api/quizzes/students/<student_id>/attempts`**: Attempt summaries of a student (admin or linked parent).
+- **`GET /api/quizzes/admin`**, **`PATCH /api/quizzes/admin/<slug>`**: All tests with counts; change `is_active`, `reveal_answers`, `allow_retakes`, `time_limit_minutes` (admin).
+- **`GET /api/quizzes/admin/results`**: Attempt summaries, filtered by `quiz`, `status` (`submitted` or `in_progress`), `classroom_id`; the 500 newest (admin).
+- **`DELETE /api/quizzes/admin/attempts/<id>`**: Delete an attempt so the student can retake (admin).
+
+## 9. Webhooks & Server Info
 - **`POST /api/webhooks/youtube`, `POST /api/webhooks/transcribe`**: External integrations (e.g. Lambda transcriber in `infrastructure/lambda_transcriber/`).
 - **`GET /server/health`**: Health check (used by `deploy.sh`'s post-deploy check).
 - **`GET /`, `GET /<path>`**: SPA catch-all in `general_routes.py`; renders the React `index.html` from `frontend/dist` via `application/utilities/spa.py` when a build is there, and otherwise returns a JSON 404. The deployed SPA is not served by Flask: it is hosted on S3 + CloudFront (see [infrastructure_and_devops.md](infrastructure_and_devops.md)). In development the React app runs on the Vite dev server, which proxies API paths to Flask.
 
 ---
 
-## 9. Standard JSON Response Format
+## 10. Standard JSON Response Format
 Most JSON API endpoints use a standard wrapper (`@api_response` decorator in `application/decorators/api_response.py`):
 ```json
 {
@@ -92,7 +104,7 @@ A handful of legacy/session-rendered routes (e.g. the `/api/achievements` and so
 
 ---
 
-## 10. Access Control
+## 11. Access Control
 - **`login_required`**: Requires a valid session cookie; anonymous requests get a JSON `401` (`application/decorators/login_required.py`).
 - **`admin_only`**: Requires the authenticated user to have `role == "admin"`; anonymous requests get a JSON `401` and other users a JSON `403`, whatever the client accepts (`application/decorators/admin_required.py`).
 - **CSRF**: Enforced by `flask-wtf` in production (disabled in the Development and Testing configs); the frontend reads the `csrf_token_v2` cookie and sends it back as a header on mutating requests. Routes marked `csrf.exempt` (for example `POST /challenge/submit`) skip it.

@@ -98,6 +98,18 @@ The central entity for authentication and student tracking.
     - Fields: `id`, `username`, `ip_address`, `success`, `timestamp`.
 
 
+### 2.10 Student Tests
+Defined in `models/quiz.py`; the content of `quizzes` and `quiz_questions` comes from `backend/application/commands/quiz_data/*.json` through `flask seed`. See [student_tests.md](student_tests.md).
+- **`quizzes`**: One test.
+    - Fields: `id`, `slug` (unique), `title`, `description`, `source_url`, `sort_order`, `is_active`, `reveal_answers` ("Answers shown"), `allow_retakes`, `time_limit_minutes` (nullable), `created_at`, `updated_at`. The four settings are admin-controlled and never overwritten by the seed.
+- **`quiz_questions`**: A multiple-choice question.
+    - Fields: `id`, `quiz_id` (FK to `quizzes`, `ON DELETE CASCADE`, indexed), `number`, `domain`, `prompt`, `options` (JSON `{"A": "text", ...}`), `answer` (one letter), `explanation`, `diagram_html` (HTML/SVG fragment, rendered in a sandboxed iframe). One `number` per quiz (`uq_quiz_questions_quiz_id_number`).
+- **`quiz_attempts`**: A student's attempt.
+    - Fields: `id`, `quiz_id` (FK, `ON DELETE CASCADE`), `user_id` (FK to `users`, `ON DELETE CASCADE`), `answers` (JSON `{"<number>": "<letter>"}`), `flagged` (JSON list), `started_at`, `deadline` (fixed at start from the time limit; null without one), `submitted_at` (null while in progress), `elapsed_seconds`, `correct_count`, `total_count`, `score_percent`, `graded` (JSON snapshot `{"<number>": {answer, selected, domain}}` taken at submit), `ducks_awarded`.
+    - At most one attempt in progress per user and quiz (partial unique index `uq_quiz_attempts_one_open_per_user_quiz` on `(user_id, quiz_id)` where `submitted_at IS NULL`).
+- **`quiz_rewards`**: The first submission of a quiz by a student, kept when the attempt is deleted so the ducks are paid once.
+    - Fields: `id`, `user_id` (FK, `ON DELETE CASCADE`), `quiz_id` (FK, `ON DELETE CASCADE`), `ducks`, `created_at`. Unique `(user_id, quiz_id)` (`uq_quiz_rewards_user_id_quiz_id`).
+
 ---
 
 ## 3. Relationships
@@ -106,6 +118,7 @@ The central entity for authentication and student tracking.
 - **User -> Projects**: One student can have multiple portfolio items.
 - **Project -> Project files**: A project holds its 3D models, source files and assets (deleted with the project).
 - **User -> Skills**: One student can list multiple skills.
+- **Quiz -> Questions / Attempts**: A test holds its questions and the attempts made at it (deleted with it). **User -> Quiz attempts / Quiz rewards**: a student's attempts and one reward row per test (deleted with the user).
 - **User -> Messages**: One user authors many individual messages.
 - **User -> Item Purchases**: A user can buy multiple items.
 - **Conversation -> Messages**: One thread contains many messages.
@@ -126,3 +139,4 @@ The central entity for authentication and student tracking.
     - `challenge_logs`: one row per `(user_id, challenge_slug, course_instance)` (unique index `uq_challenge_logs_user_slug_instance`), and one row per `(user_id, challenge_slug)` among the rows without a course instance (partial unique index `uq_challenge_logs_user_slug_no_instance`).
     - `session_logs`: one open session (`end_time IS NULL`) per user (partial unique index `uq_session_logs_one_open_per_user`).
     - `configuration`: a single row, with `id = 1` (CHECK constraint `ck_configuration_singleton`).
+    - `quiz_attempts`: one attempt in progress per user and quiz (partial unique index `uq_quiz_attempts_one_open_per_user_quiz`); `quiz_questions`: one `number` per quiz; `quiz_rewards`: one row per `(user_id, quiz_id)`.

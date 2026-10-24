@@ -12,11 +12,19 @@
 
 ## Economy & Shop (Duck System)
 - Ducks are awarded upon challenge completion and achievements.
+- **Test ducks**: A student's first submitted attempt at a [student test](student_tests.md) pays 1 duck per correct answer, once per test. Perks do not multiply it.
 - **Note**: The "Permanent Double Duck" store perk doubles daily and challenge duck earnings, but **does not** apply to ducks awarded via achievements.
 - Real-time updates to profile.
 - **Duck Trades**: Students can trade ducks with peers.
 - **Shop**: Students can spend ducks on virtual store items.
 - **Bit Shift (Binary-to-Decimal Duck Trade)**: An educational mini-game where students convert their "digital ducks" into "bit" and "byte" ducks by solving binary math conversions.
+
+## Student Tests
+- Multiple-choice tests at `/tests`: one question at a time, flagging, autosave, an optional time limit with automatic submit, and diagrams (HTML/SVG in a sandboxed frame). Three Computer Science tests (grades 3-5, 6-8, 9-11) ship as JSON files loaded by `flask seed`.
+- Graded on the server; the answer key is never sent before submit, and a snapshot taken at submit keeps old results fixed when questions change later.
+- Students see the review (key and explanations) only when the test's "Answers shown" is on; admins and linked parents always see it. Results never appear on the public profile, in chat or in the activity feed.
+- Admins (`/admin/tests`) switch each test active or inactive, show or hide answers, allow or stop retakes and set a time limit (1-600 min); they read results, export them as CSV and delete an attempt so the student can retake. Parents see their child's results on the report card.
+- Details: [student_tests.md](student_tests.md).
 
 ## Customizable Profiles & Portfolios
 - Users can edit their password and avatar.
