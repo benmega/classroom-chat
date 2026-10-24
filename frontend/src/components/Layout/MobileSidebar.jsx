@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, User, Shield, FileCheck, History, RefreshCw, X, LogOut, MessageSquare, ShoppingCart, Map, Award, Settings, HelpCircle } from 'lucide-react';
+import { Home, User, Shield, FileCheck, History, RefreshCw, X, LogOut, MessageSquare, ShoppingCart, Map, Award, Settings, HelpCircle, ClipboardCheck } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import { getApiUrl } from '../../utils/apiUrl';
 import useParentChildren from '../../hooks/useParentChildren';
@@ -95,6 +95,10 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
                                     <Link to={user?.slug ? `/course-progress/${user.slug}` : '/profile'} onClick={close}>
                                         <Map size={18} /> Learning Path
                                     </Link>
+                                </li>
+
+                                <li>
+                                    <Link to="/tests" onClick={close}><ClipboardCheck size={18} /> Tests</Link>
                                 </li>
 
                                 {(user?.achievement_count ?? 0) > 0 && (
