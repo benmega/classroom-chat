@@ -1018,3 +1018,38 @@
         justify-content: center;
     }
 }
+
+/* Tests section */
+.admin-user-tests-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.admin-user-tests-table th {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-user-tests-table td {
+    padding: 0.5rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.admin-user-tests-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-user-tests-link {
+    color: var(--primary-accessible);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.admin-user-tests-link:hover {
+    text-decoration: underline;
+}

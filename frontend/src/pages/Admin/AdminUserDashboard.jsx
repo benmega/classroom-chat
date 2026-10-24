@@ -13,6 +13,7 @@ import Modal from '../../components/common/Modal';
 import { getApiUrl } from '../../utils/apiUrl';
 import './AdminUserDashboard.css';
 import { useAdminUserDashboard } from '../../hooks/useAdminUserDashboard';
+import { listStudentAttempts } from '../../api/quizzes';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
 
 import codecombatLogo from '../../assets/codecombat-logo.png';
@@ -60,6 +61,23 @@ const AdminUserDashboard = () => {
     const [showAssignProjectModal, setShowAssignProjectModal] = useState(false);
     const [showAwardCertificateModal, setShowAwardCertificateModal] = useState(false);
     const [showPassChapterModal, setShowPassChapterModal] = useState(false);
+    const [testAttempts, setTestAttempts] = useState([]);
+
+    const isStudent = user?.role === 'student';
+    useEffect(() => {
+        if (!isStudent) return undefined;
+        let cancelled = false;
+        listStudentAttempts(userId)
+            .then((data) => {
+                if (!cancelled) setTestAttempts(data?.attempts || []);
+            })
+            .catch(() => {
+                if (!cancelled) setTestAttempts([]);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [isStudent, userId]);
 
     useEffect(() => {
         if (user) {
@@ -362,6 +380,42 @@ const AdminUserDashboard = () => {
                                     <span className="perk-desc">Unlock custom dashboard backgrounds</span>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {user.role === 'student' && testAttempts.length > 0 && (
+                    <div className="admin-section section-grid-inline">
+                        <div className="compact-panel full-width">
+                            <div className="panel-head">Tests</div>
+                            <table className="admin-user-tests-table" aria-label="Tests">
+                                <thead>
+                                    <tr>
+                                        <th>Test</th>
+                                        <th>Date</th>
+                                        <th>Score</th>
+                                        <th>%</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {testAttempts.map((attempt) => {
+                                        const submitted = attempt.status === 'submitted';
+                                        const date = new Date(submitted ? attempt.submitted_at : attempt.started_at);
+                                        return (
+                                            <tr key={attempt.id}>
+                                                <td>
+                                                    <Link className="admin-user-tests-link" to={`/admin/tests/results/${attempt.id}`}>
+                                                        {attempt.quiz?.title}
+                                                    </Link>
+                                                </td>
+                                                <td>{Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString()}</td>
+                                                <td>{submitted ? `${attempt.correct}/${attempt.total}` : ''}</td>
+                                                <td>{submitted ? `${attempt.score_percent}%` : 'In progress'}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 )}

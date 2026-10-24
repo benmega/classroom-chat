@@ -312,4 +312,76 @@ describe('AdminUserDashboard Component Redesign', () => {
             expect(within(dialog).getByRole('combobox', { name: selectName })).toBeInTheDocument();
         });
     });
+
+    describe('Tests section', () => {
+        const attempts = [
+            {
+                id: 11, status: 'submitted', quiz: { slug: 'cs-6-8', title: 'CS 6-8' }, student: { id: 1, username: 'johndoe', nickname: 'John D' },
+                started_at: '2026-10-01T10:00:00Z', submitted_at: '2026-10-01T10:30:00Z', elapsed_seconds: 1800, correct: 21, total: 30, score_percent: 70,
+            },
+            {
+                id: 12, status: 'in_progress', quiz: { slug: 'cs-9-11', title: 'CS 9-11' }, student: { id: 1, username: 'johndoe', nickname: 'John D' },
+                started_at: '2026-10-02T10:00:00Z', submitted_at: null, elapsed_seconds: 60, correct: null, total: 30, score_percent: null,
+            },
+        ];
+
+        const serveAttempts = (list) => {
+            const base = client.get.getMockImplementation();
+            client.get.mockImplementation((url, ...rest) => {
+                if (url === '/api/quizzes/students/1/attempts') return Promise.resolve({ data: { data: { attempts: list } } });
+                return base(url, ...rest);
+            });
+        };
+
+        const renderPage = () => render(<BrowserRouter><AdminUserDashboard /></BrowserRouter>);
+
+        it('lists the attempts with score and percent, linking each to its result', async () => {
+            serveAttempts(attempts);
+            renderPage();
+
+            const table = await screen.findByRole('table', { name: 'Tests' });
+            expect(within(table).getByRole('link', { name: 'CS 6-8' })).toHaveAttribute('href', '/admin/tests/results/11');
+            expect(within(table).getByRole('link', { name: 'CS 9-11' })).toHaveAttribute('href', '/admin/tests/results/12');
+            expect(within(table).getByText('21/30')).toBeInTheDocument();
+            expect(within(table).getByText('70%')).toBeInTheDocument();
+            expect(within(table).getByText('In progress')).toBeInTheDocument();
+            expect(client.get).toHaveBeenCalledWith('/api/quizzes/students/1/attempts');
+        });
+
+        it('is hidden when the student has no attempts', async () => {
+            serveAttempts([]);
+            renderPage();
+
+            await screen.findByText('John D');
+            await waitFor(() => expect(client.get).toHaveBeenCalledWith('/api/quizzes/students/1/attempts'));
+            expect(screen.queryByRole('table', { name: 'Tests' })).not.toBeInTheDocument();
+        });
+
+        it('is hidden when the request fails', async () => {
+            const base = client.get.getMockImplementation();
+            client.get.mockImplementation((url, ...rest) => {
+                if (url === '/api/quizzes/students/1/attempts') return Promise.reject(new Error('boom'));
+                return base(url, ...rest);
+            });
+            renderPage();
+
+            await screen.findByText('John D');
+            await waitFor(() => expect(client.get).toHaveBeenCalledWith('/api/quizzes/students/1/attempts'));
+            expect(screen.queryByRole('table', { name: 'Tests' })).not.toBeInTheDocument();
+        });
+
+        it('is not requested for a parent', async () => {
+            const base = client.get.getMockImplementation();
+            client.get.mockImplementation((url, ...rest) => {
+                if (url.includes('/api/admin/user/1') && !url.includes('connection_card')) {
+                    return Promise.resolve({ data: { user: { ...mockStudent, role: 'parent' } } });
+                }
+                return base(url, ...rest);
+            });
+            renderPage();
+
+            await screen.findByText('John D');
+            expect(client.get).not.toHaveBeenCalledWith('/api/quizzes/students/1/attempts');
+        });
+    });
 });

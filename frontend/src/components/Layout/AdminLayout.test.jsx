@@ -39,6 +39,12 @@ describe('AdminLayout Component', () => {
         expect(screen.getByText('Admin Page Content')).toBeInTheDocument();
     });
 
+    it('links to the Tests page in the rail', () => {
+        renderLayout(<div>Admin Page Content</div>);
+
+        expect(screen.getByRole('link', { name: 'Tests' })).toHaveAttribute('href', '/admin/tests');
+    });
+
     it('shows Access Denied instead of the children for a non-admin', () => {
         useAuthStore.setState({ user: { role: 'student', username: 'student1' } });
 
