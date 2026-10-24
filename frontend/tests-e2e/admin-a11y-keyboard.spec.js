@@ -74,12 +74,12 @@ test.describe('Admin keyboard-only access', () => {
     const current = page.getByRole('link', { name: 'Admin Dashboard' });
     await expect(current).toHaveAttribute('aria-current', 'page');
 
-    const library = page.getByRole('link', { name: 'Content Library' });
+    const tests = page.getByRole('link', { name: 'Tests', exact: true });
     const advanced = page.getByRole('link', { name: 'Advanced System CRUD' });
     await tabTo(page, advanced);
     // Shift+Tab walks back through the same list, one link at a time.
     await page.keyboard.press('Shift+Tab');
-    await expect(library).toBeFocused();
+    await expect(tests).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(advanced).toBeFocused();
 

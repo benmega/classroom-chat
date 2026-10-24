@@ -18,7 +18,7 @@ const signIn = async (playwright, role) => {
         const token = cookies.find((cookie) => cookie.name === 'csrf_token_v2')?.value ?? '';
         const response = await context.fetch(url, {
             method,
-            headers: { 'X-CSRFToken': token, 'X-Requested-With': 'XMLHttpRequest' },
+            headers: { 'X-CSRFToken': token, 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
             ...(data === undefined ? {} : { data }),
         });
         const text = await response.text();
@@ -304,9 +304,11 @@ test.describe('Student tests', () => {
             const title = result.quiz.title;
 
             // Public profile JSON: no quiz data at all.
+            const me = await student.call('GET', '/user/profile');
+            const { slug: profileSlug, nickname } = (me.data ?? me.body).target;
             const profile = await playwright.request.newContext({ baseURL: BACKEND });
             try {
-                const response = await profile.get('/user/profile/phu', { headers: { Accept: 'application/json' } });
+                const response = await profile.get(`/user/profile/${profileSlug}`, { headers: { Accept: 'application/json' } });
                 expect(response.status()).toBe(200);
                 const text = await response.text();
                 // Names of lessons ("Pet Quiz") are values: look at the keys, and for the test itself.
@@ -331,8 +333,8 @@ test.describe('Student tests', () => {
 
             // The student's own profile page shows no test results either.
             await page.goto('/api/dev-login?role=student');
-            await page.goto('/profile/phu');
-            await expect(page.getByRole('heading', { name: 'Phu' }).first()).toBeVisible({ timeout: 15000 });
+            await page.goto(`/profile/${profileSlug}`);
+            await expect(page.getByRole('heading', { name: nickname }).first()).toBeVisible({ timeout: 15000 });
             await expect(page.getByText(/olympiad/i)).toHaveCount(0);
             await expect(page.getByRole('heading', { name: /^Tests?$/ })).toHaveCount(0);
 

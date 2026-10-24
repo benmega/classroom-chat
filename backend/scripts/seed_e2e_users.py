@@ -3,6 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from application import create_app
+from application.commands.quiz_seed import seed_quizzes
 from application.extensions import db
 from application.models.user import User
 
@@ -25,3 +26,4 @@ with app.app_context():
             print(f"User {u['username']} already exists")
     db.session.commit()
     print("Test users seeded.")
+    print(f"Quizzes seeded: {seed_quizzes()}")
