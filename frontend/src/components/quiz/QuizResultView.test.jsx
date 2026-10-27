@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import QuizResultView from './QuizResultView';
 import { formatDuration } from './formatDuration';
 
@@ -237,5 +237,236 @@ describe('QuizResultView', () => {
         const { container } = render(<QuizResultView attempt={result({ score_percent: 100, correct: 3, wrong: 0, skipped: 0 })} />);
         expect(container.textContent).not.toMatch(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u);
         expect(container.textContent).not.toMatch(/medal|grade [A-F]|congrat|great job/i);
+    });
+});
+
+describe('QuizResultView answers grid', () => {
+    const flaggedReview = review.map((q) => (q.number === 2 || q.number === 3 ? { ...q, flagged: true } : q));
+    const grid = () => within(screen.getByRole('region', { name: 'Answers' })).getByRole('list');
+    const tiles = () => within(grid()).getAllByRole('button');
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+        delete Element.prototype.scrollIntoView;
+    });
+
+    it('lists one tile per question in order, in an ordered list', () => {
+        render(<QuizResultView attempt={result()} />);
+
+        expect(screen.getByRole('heading', { level: 2, name: 'Answers' })).toBeInTheDocument();
+        expect(grid().tagName).toBe('OL');
+        expect(within(grid()).getAllByRole('listitem')).toHaveLength(3);
+        expect(tiles().map((t) => t.getAttribute('aria-label'))).toEqual([
+            'Q1: Correct, chose A, key A',
+            'Q2: Wrong, chose A, key B',
+            'Q3: Skipped, none, key B',
+        ]);
+    });
+
+    it('shows the chosen letter, and the key when not correct', () => {
+        render(<QuizResultView attempt={result()} />);
+
+        expect(tiles().map((t) => t.textContent)).toEqual(['1A', '2A→B', '3-→B']);
+    });
+
+    it('marks each tile with its state', () => {
+        render(<QuizResultView attempt={result()} />);
+
+        expect(tiles().map((t) => t.className)).toEqual([
+            expect.stringContaining('test-result-tile--correct'),
+            expect.stringContaining('test-result-tile--wrong'),
+            expect.stringContaining('test-result-tile--skipped'),
+        ]);
+    });
+
+    it('adds flagged to the label and a flag icon on flagged tiles only', () => {
+        render(<QuizResultView attempt={result({ review: flaggedReview })} />);
+
+        expect(tiles().map((t) => t.getAttribute('aria-label'))).toEqual([
+            'Q1: Correct, chose A, key A',
+            'Q2: Wrong, chose A, key B, flagged',
+            'Q3: Skipped, none, key B, flagged',
+        ]);
+        expect(tiles().map((t) => t.querySelector('svg') !== null)).toEqual([false, true, true]);
+    });
+
+    it('is hidden without a review or with an empty one', () => {
+        const { rerender } = render(<QuizResultView attempt={result({ review: null })} />);
+        expect(screen.queryByRole('region', { name: 'Answers' })).not.toBeInTheDocument();
+
+        rerender(<QuizResultView attempt={result({ review: [] })} />);
+        expect(screen.queryByRole('region', { name: 'Answers' })).not.toBeInTheDocument();
+        expect(screen.queryByRole('heading', { name: 'Answers' })).not.toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Review' })).toBeInTheDocument();
+    });
+
+    it('is not shown for an unfinished attempt', () => {
+        render(<QuizResultView attempt={result({ status: 'in_progress', review: undefined })} />);
+
+        expect(screen.queryByRole('region', { name: 'Answers' })).not.toBeInTheDocument();
+    });
+
+    it('has no bars', () => {
+        const { container } = render(<QuizResultView attempt={result()} />);
+
+        expect(container.querySelector('.test-result-bar')).toBeNull();
+    });
+
+    it('keeps every tile when the review is filtered', async () => {
+        render(<QuizResultView attempt={result()} />);
+
+        await userEvent.click(screen.getByRole('button', { name: 'Correct 1' }));
+
+        expect(tiles()).toHaveLength(3);
+        expect(screen.getAllByTestId(/^review-/)).toHaveLength(1);
+    });
+
+    it('jumps to the question: filter back to All, scroll and focus', async () => {
+        const frames = [];
+        vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => frames.push(cb));
+        const scrolled = [];
+        Element.prototype.scrollIntoView = vi.fn(function scrollIntoView(options) {
+            scrolled.push({ id: this.id, options });
+        });
+        render(<QuizResultView attempt={result()} />);
+        await userEvent.click(screen.getByRole('button', { name: 'Incorrect 2' }));
+        expect(screen.queryByTestId('review-1')).not.toBeInTheDocument();
+
+        await userEvent.click(within(grid()).getByRole('button', { name: /^Q1:/ }));
+        expect(frames).toHaveLength(1);
+        expect(scrolled).toEqual([]);
+        act(() => frames.forEach((frame) => frame(0)));
+
+        expect(screen.getByRole('button', { name: 'All 3' })).toHaveAttribute('aria-pressed', 'true');
+        const target = screen.getByTestId('review-1');
+        expect(target).toHaveAttribute('id', 'test-result-q1');
+        expect(scrolled).toEqual([{ id: 'test-result-q1', options: { behavior: 'smooth', block: 'start' } }]);
+        expect(target).toHaveFocus();
+    });
+
+    it('jumps to a question that is already shown', async () => {
+        vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+            cb(0);
+            return 0;
+        });
+        Element.prototype.scrollIntoView = vi.fn();
+        render(<QuizResultView attempt={result()} />);
+
+        await userEvent.click(within(grid()).getByRole('button', { name: /^Q3:/ }));
+
+        expect(screen.getByTestId('review-3')).toHaveFocus();
+        expect(Element.prototype.scrollIntoView).toHaveBeenCalledTimes(1);
+    });
+
+    it('still focuses the question where scrollIntoView is missing', async () => {
+        vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+            cb(0);
+            return 0;
+        });
+        render(<QuizResultView attempt={result()} />);
+
+        await userEvent.click(within(grid()).getByRole('button', { name: /^Q2:/ }));
+
+        expect(screen.getByTestId('review-2')).toHaveFocus();
+    });
+
+    it('focuses the question after the next frame', async () => {
+        render(<QuizResultView attempt={result()} />);
+
+        await userEvent.click(within(grid()).getByRole('button', { name: /^Q2:/ }));
+
+        await waitFor(() => expect(screen.getByTestId('review-2')).toHaveFocus());
+    });
+});
+
+describe('QuizResultView flags and viewer', () => {
+    it('shows Flagged on flagged questions only', () => {
+        const flagged = review.map((q) => (q.number === 2 ? { ...q, flagged: true } : q));
+        render(<QuizResultView attempt={result({ review: flagged })} />);
+
+        expect(within(screen.getByTestId('review-2')).getByText('Flagged')).toBeInTheDocument();
+        expect(within(screen.getByTestId('review-1')).queryByText('Flagged')).not.toBeInTheDocument();
+        expect(within(screen.getByTestId('review-3')).queryByText('Flagged')).not.toBeInTheDocument();
+    });
+
+    it('labels the chosen option Your answer for the student and Chosen for viewers', () => {
+        const { rerender } = render(<QuizResultView attempt={result()} />);
+        const mark = () => within(screen.getByTestId('review-2')).getAllByRole('listitem')[0];
+        expect(mark()).toHaveTextContent('Your answer');
+
+        rerender(<QuizResultView attempt={result()} showStudent />);
+        expect(mark()).toHaveTextContent('Chosen');
+        expect(mark()).not.toHaveTextContent('Your answer');
+        expect(screen.queryByText('Your answer')).not.toBeInTheDocument();
+    });
+});
+
+describe('QuizResultView meta', () => {
+    const meta = (label) => {
+        const term = screen.queryByText(label, { selector: 'dt' });
+        return term ? term.nextElementSibling.textContent : null;
+    };
+
+    it('shows Class and Attempt to viewers when present', () => {
+        render(
+            <QuizResultView
+                showStudent
+                attempt={result({ classrooms: ['Period 1', 'Period 2'], attempt_number: 2, attempt_count: 3 })}
+            />,
+        );
+
+        expect(meta('Class')).toBe('Period 1, Period 2');
+        expect(meta('Attempt')).toBe('2/3');
+    });
+
+    it('hides Class and Attempt from the student view', () => {
+        render(<QuizResultView attempt={result({ classrooms: ['Period 1'], attempt_number: 2, attempt_count: 3 })} />);
+
+        expect(meta('Class')).toBeNull();
+        expect(meta('Attempt')).toBeNull();
+    });
+
+    it.each([
+        ['missing', undefined],
+        ['empty', []],
+        ['not a list', 'Period 1'],
+    ])('hides Class when classrooms is %s', (_name, classrooms) => {
+        render(<QuizResultView showStudent attempt={result({ classrooms })} />);
+
+        expect(meta('Class')).toBeNull();
+    });
+
+    it.each([undefined, null])('hides Attempt when attempt_number is %s', (value) => {
+        render(<QuizResultView showStudent attempt={result({ attempt_number: value, attempt_count: 3 })} />);
+
+        expect(meta('Attempt')).toBeNull();
+    });
+
+    it('adds the time limit to the time', () => {
+        render(<QuizResultView attempt={result({ time_limit_minutes: 45 })} />);
+
+        expect(meta('Time')).toBe('20:34 / 45 min');
+    });
+
+    it.each([undefined, null, 0])('shows only the time without a limit of %s', (limit) => {
+        render(<QuizResultView attempt={result({ time_limit_minutes: limit })} />);
+
+        expect(meta('Time')).toBe('20:34');
+    });
+
+    it('shows no time or class for an unfinished attempt, but still the attempt', () => {
+        render(
+            <QuizResultView
+                showStudent
+                attempt={result({
+                    status: 'in_progress', submitted_at: null, classrooms: ['Period 1'],
+                    attempt_number: 1, attempt_count: 1, time_limit_minutes: 30,
+                })}
+            />,
+        );
+
+        expect(meta('Time')).toBeNull();
+        expect(meta('Class')).toBe('Period 1');
+        expect(meta('Attempt')).toBe('1/1');
     });
 });

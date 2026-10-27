@@ -11,6 +11,7 @@ from application.models.challenge import Challenge
 from application.models.classroom import Classroom
 from application.models.course_instance import CourseInstance
 from application.models.message import Message
+from application.models.quiz import Quiz, QuizAssignment
 from application.models.submission import Submission
 from application.models.user import User
 from sqlalchemy import func, select
@@ -59,7 +60,9 @@ def _fill(classroom, student, course):
         stored_path=f"submissions/{classroom.id}.pdf",
         file_size=1,
     )
-    db.session.add_all([message, submission])
+    quiz = Quiz(slug=f"deletion-{classroom.id}", title="Deletion test")
+    quiz.assignments.append(QuizAssignment(classroom_id=classroom.id))
+    db.session.add_all([message, submission, quiz])
     message.target_classrooms.append(classroom)
     classroom.users.append(student)
     db.session.commit()

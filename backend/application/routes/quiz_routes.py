@@ -2,14 +2,15 @@
 File: quiz_routes.py
 Type: py
 Summary: Student tests API: list, start, save and submit attempts; results for the
-         student, their linked parents and admins; admin settings and results.
+         student, their linked parents and admins; admin settings, results, new tests
+         and who a test is assigned to.
 """
 
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.extensions import db, limiter
 from application.models.classroom import Classroom
-from application.models.quiz import Quiz, QuizAttempt, QuizQuestion
+from application.models.quiz import Quiz, QuizAssignment, QuizAttempt, QuizQuestion
 from application.models.user import User
 from application.services import quiz_service
 from application.services.quiz_service import QuizValidationError
@@ -60,6 +61,14 @@ def _can_review(viewer, student):
     return viewer.role == "parent" and student in viewer.children
 
 
+def _open_check(user):
+    """quiz_id -> bool: whether the quiz is open to ``user``. Admins see every quiz, a
+    parent those open to any of their children."""
+    if user.role == "admin":
+        return lambda _quiz_id: True
+    return quiz_service.open_check(list(user.children) if user.role == "parent" else [user])
+
+
 def _payload():
     """The JSON body as given: None when there is none."""
     return request.get_json(silent=True)
@@ -96,10 +105,14 @@ def list_quizzes():
     by_quiz = {}
     for attempt in attempts:
         by_quiz.setdefault(attempt.quiz_id, []).append(attempt)
+    is_open = _open_check(user)
 
     rows = []
     for quiz in quizzes:
         own = by_quiz.get(quiz.id, [])
+        # A test no longer open to the user still lists the attempts they made at it
+        if not is_open(quiz.id) and not own:
+            continue
         in_progress = next((a for a in own if not a.is_submitted), None)
         submitted = sorted(
             (a for a in own if a.is_submitted),
@@ -107,7 +120,9 @@ def list_quizzes():
             reverse=True,
         )
         can_start = in_progress is not None or (
-            user.role != "parent" and (quiz.allow_retakes or not submitted)
+            user.role != "parent"
+            and is_open(quiz.id)
+            and (quiz.allow_retakes or not submitted)
         )
         rows.append(
             {
@@ -154,6 +169,8 @@ def start_attempt(slug):
     ).first()
     if attempt:
         return {"attempt": quiz_service.serialize_state(attempt, questions)}
+    if not _open_check(user)(quiz.id):
+        return {"error": "Test not found"}, 404
 
     if not quiz.allow_retakes and QuizAttempt.query.filter(
         QuizAttempt.user_id == user.id,
@@ -210,7 +227,31 @@ def get_attempt(attempt_id):
         return {"attempt": quiz_service.serialize_summary(attempt, len(questions))}
 
     include_review = reviewer or bool(attempt.quiz.reveal_answers)
-    return {"attempt": quiz_service.serialize_result(attempt, questions, include_review)}
+    result = quiz_service.serialize_result(attempt, questions, include_review)
+    if reviewer:
+        result.update(_reviewer_details(attempt))
+    return {"attempt": result}
+
+
+def _reviewer_details(attempt):
+    """For admins and parents: the student's classrooms and which submitted attempt
+    at the quiz this is (attempt_number of attempt_count, oldest first)."""
+    submitted = (
+        db.session.query(QuizAttempt.id)
+        .filter(
+            QuizAttempt.user_id == attempt.user_id,
+            QuizAttempt.quiz_id == attempt.quiz_id,
+            QuizAttempt.submitted_at.isnot(None),
+        )
+        .order_by(QuizAttempt.submitted_at, QuizAttempt.id)
+        .all()
+    )
+    ids = [row.id for row in submitted]
+    return {
+        "classrooms": sorted(c.name for c in attempt.user.classrooms),
+        "attempt_number": ids.index(attempt.id) + 1 if attempt.id in ids else None,
+        "attempt_count": len(ids),
+    }
 
 
 def _own_open_attempt(attempt_id, user):
@@ -358,6 +399,85 @@ def admin_list_quizzes():
         return refusal
     quizzes = Quiz.query.order_by(Quiz.sort_order, Quiz.id).all()
     return {"quizzes": [_admin_quiz_row(quiz) for quiz in quizzes]}
+
+
+@quiz_bp.route("/admin", methods=["POST"])
+@require_login
+@api_response
+def admin_create_quiz():
+    refusal = _not_admin()
+    if refusal:
+        return refusal
+    try:
+        quiz = quiz_service.build_quiz(_payload())
+    except QuizValidationError as exc:
+        return {"error": str(exc)}, 400
+    db.session.add(quiz)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        # Another request took the same slug first
+        db.session.rollback()
+        return {"error": "A test with this title was just added. Try again."}, 409
+    return {"quiz": _admin_quiz_row(quiz)}, 201
+
+
+@quiz_bp.route("/admin/<slug>/assignments", methods=["PUT"])
+@require_login
+@api_response
+def admin_set_assignments(slug):
+    """Replace who the test is assigned to: {classroom_ids: [...], student_ids: [...]}.
+    Both empty opens it to everyone."""
+    refusal = _not_admin()
+    if refusal:
+        return refusal
+    quiz = Quiz.query.filter_by(slug=slug).first()
+    if not quiz:
+        return {"error": "Test not found"}, 404
+
+    body = _payload()
+    if not isinstance(body, dict):
+        return {"error": "Invalid body"}, 400
+    classroom_ids = body.get("classroom_ids", [])
+    student_ids = body.get("student_ids", [])
+    if not isinstance(classroom_ids, list) or not all(
+        isinstance(i, str) for i in classroom_ids
+    ):
+        return {"error": "classroom_ids must be a list of ids"}, 400
+    if not isinstance(student_ids, list) or not all(
+        isinstance(i, int) and not isinstance(i, bool) for i in student_ids
+    ):
+        return {"error": "student_ids must be a list of ids"}, 400
+    classroom_ids, student_ids = set(classroom_ids), set(student_ids)
+
+    classrooms = Classroom.query.filter(Classroom.id.in_(classroom_ids)).all() if classroom_ids else []
+    if len(classrooms) != len(classroom_ids):
+        return {"error": "Unknown classroom"}, 400
+    students = User.query.filter(User.id.in_(student_ids)).all() if student_ids else []
+    if len(students) != len(student_ids):
+        return {"error": "Unknown student"}, 400
+    if any(student.role != "student" for student in students):
+        return {"error": "Only students can be assigned"}, 400
+
+    # Keep the rows that stay, so their created_at survives
+    keep = []
+    for assignment in quiz.assignments:
+        if assignment.classroom_id in classroom_ids:
+            classroom_ids.discard(assignment.classroom_id)
+            keep.append(assignment)
+        elif assignment.user_id in student_ids:
+            student_ids.discard(assignment.user_id)
+            keep.append(assignment)
+    quiz.assignments = keep + [
+        QuizAssignment(classroom_id=c.id) for c in classrooms if c.id in classroom_ids
+    ] + [QuizAssignment(user_id=s.id) for s in students if s.id in student_ids]
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return {"error": "Assignments changed meanwhile. Try again."}, 409
+    db.session.refresh(quiz)
+    return {"quiz": _admin_quiz_row(quiz)}
 
 
 @quiz_bp.route("/admin/results", methods=["GET"])

@@ -20,3 +20,8 @@ export const updateQuizSettings = (slug, settings) =>
   client.patch(`/api/quizzes/admin/${encodeURIComponent(slug)}`, settings).then(unwrap);
 export const listAdminResults = (params = {}) => client.get('/api/quizzes/admin/results', { params }).then(unwrap);
 export const deleteAttempt = (attemptId) => client.delete(`/api/quizzes/admin/attempts/${attemptId}`).then(unwrap);
+export const createQuiz = (quiz) => client.post('/api/quizzes/admin', quiz).then(unwrap);
+// Replaces who the test is assigned to; both lists empty opens it to everyone.
+export const setQuizAssignments = (slug, assignments) =>
+  client.put(`/api/quizzes/admin/${encodeURIComponent(slug)}/assignments`, assignments).then(unwrap);
+export const listAdminClassrooms = () => client.get('/api/admin/classrooms').then(unwrap);

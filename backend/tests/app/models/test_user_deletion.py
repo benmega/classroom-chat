@@ -18,7 +18,7 @@ from application.models.message import Message
 from application.models.note import Note
 from application.models.parent_message import ParentMessage
 from application.models.project import Project
-from application.models.quiz import Quiz, QuizAttempt, QuizReward
+from application.models.quiz import Quiz, QuizAssignment, QuizAttempt, QuizReward
 from application.models.session_log import SessionLog
 from application.models.skill import Skill
 from application.models.store_item import StoreItem
@@ -106,6 +106,7 @@ def _give_everything_a_student_has(student, classroom, achievement, item):
         [
             QuizAttempt(quiz=quiz, user=student, answers={"1": "A"}, submitted_at=utcnow_naive()),
             QuizReward(quiz_id=quiz.id, user_id=student.id, ducks=1),
+            QuizAssignment(quiz_id=quiz.id, user_id=student.id),
         ]
     )
     classroom.users.append(student)
@@ -221,6 +222,7 @@ def test_deleting_a_student_deletes_what_belonged_to_it(world):
     assert QuizAttempt.query.count() == 1
     assert QuizAttempt.query.one().user_id == world["bystanders"][0]
     assert QuizReward.query.count() == 1
+    assert QuizAssignment.query.one().user_id == world["bystanders"][0]
     assert Quiz.query.count() == 1
     # The parent stays, without the child
     parent = db.session.get(User, world["parent"])

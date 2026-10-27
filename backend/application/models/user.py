@@ -100,6 +100,9 @@ class User(db.Model):
         "QuizAttempt", back_populates="user", cascade="all, delete-orphan"
     )
     quiz_rewards = db.relationship("QuizReward", cascade="all, delete-orphan")
+    quiz_assignments = db.relationship(
+        "QuizAssignment", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # Many-to-many classroom enrollment via user_classrooms join table
     classrooms = db.relationship(

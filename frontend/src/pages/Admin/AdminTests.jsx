@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Trash2 } from 'lucide-react';
+import { Download, Plus, Trash2 } from 'lucide-react';
 import Papa from 'papaparse';
 import toast from 'react-hot-toast';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import AssignTestDialog from './AssignTestDialog';
 import Skeleton from '../../components/common/Skeleton';
 import { showConfirm } from '../../utils/confirm';
 import { getErrorMessage } from '../../utils/apiError';
@@ -31,6 +32,17 @@ const formatDate = (iso) => {
 };
 
 const studentName = (student) => student?.nickname || student?.username || '';
+
+// "Everyone", or the first two classes/students and how many more
+const assignedLabel = (assignments) => {
+    const names = [
+        ...(assignments?.classrooms || []).map((c) => c.name),
+        ...(assignments?.students || []).map(studentName),
+    ];
+    if (names.length === 0) return 'Everyone';
+    const shown = names.slice(0, 2).join(', ');
+    return names.length > 2 ? `${shown} +${names.length - 2}` : shown;
+};
 
 const TimeLimitInput = ({ quiz, onCommit }) => {
     const saved = quiz.time_limit_minutes == null ? '' : String(quiz.time_limit_minutes);
@@ -90,6 +102,7 @@ const AdminTests = () => {
     const [quizFilter, setQuizFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [busyId, setBusyId] = useState(null);
+    const [assigning, setAssigning] = useState(null);
     const requestRef = useRef(0);
 
     useEffect(() => {
@@ -194,7 +207,11 @@ const AdminTests = () => {
 
     return (
         <div className="admin-tests-page">
-            <AdminPageHeader title="Tests" />
+            <AdminPageHeader title="Tests">
+                <Link className="admin-tests-btn" to="/admin/tests/new">
+                    <Plus size={16} aria-hidden="true" /> New
+                </Link>
+            </AdminPageHeader>
 
             <div className="admin-tests-card">
                 {quizzesLoading ? <LoadingRows /> : (
@@ -206,19 +223,30 @@ const AdminTests = () => {
                                     <th>Questions</th>
                                     <th>Submitted</th>
                                     <th>Avg %</th>
+                                    <th>Assigned</th>
                                     {TOGGLES.map((t) => <th key={t.key}>{t.label}</th>)}
                                     <th>Time limit (min)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {quizzes.length === 0 ? (
-                                    <tr><td colSpan={8} className="admin-tests-empty">None</td></tr>
+                                    <tr><td colSpan={9} className="admin-tests-empty">None</td></tr>
                                 ) : quizzes.map((quiz) => (
                                     <tr key={quiz.slug}>
                                         <td>{quiz.title}</td>
                                         <td>{quiz.question_count}</td>
                                         <td>{quiz.submitted_count}</td>
                                         <td>{quiz.average_percent == null ? '-' : `${quiz.average_percent}%`}</td>
+                                        <td>
+                                            <button
+                                                type="button"
+                                                className="admin-tests-assigned"
+                                                aria-label={`Assigned: ${quiz.title}`}
+                                                onClick={() => setAssigning(quiz)}
+                                            >
+                                                {assignedLabel(quiz.assignments)}
+                                            </button>
+                                        </td>
                                         {TOGGLES.map((t) => (
                                             <td key={t.key}>
                                                 <input
@@ -334,6 +362,14 @@ const AdminTests = () => {
                     </div>
                 )}
             </div>
+
+            {assigning && (
+                <AssignTestDialog
+                    quiz={assigning}
+                    onClose={() => setAssigning(null)}
+                    onSaved={(row) => patchLocal(row.slug, row)}
+                />
+            )}
         </div>
     );
 };

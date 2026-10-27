@@ -1,16 +1,19 @@
 """
 File: quiz_service.py
 Type: py
-Summary: Grading, progress validation and serialization for student tests. The answer
-         key and explanations are only ever serialized into a Result.
+Summary: Grading, progress validation and serialization for student tests, who a test
+         is open to, and building a test from the admin form. The answer key and
+         explanations are only ever serialized into a Result.
 """
 
+import re
 from datetime import timedelta
 
 from application.extensions import db
-from application.models.quiz import QuizAttempt, QuizReward
+from application.models.classroom import user_classrooms
+from application.models.quiz import Quiz, QuizAssignment, QuizAttempt, QuizQuestion, QuizReward
 from application.utilities.helper_functions import to_utc_iso, utcnow_naive
-from sqlalchemy import case, update
+from sqlalchemy import case, func, select, update
 from sqlalchemy.exc import IntegrityError
 
 # A save or submit this long after the deadline still counts: the clock of the
@@ -44,6 +47,15 @@ def percent(correct, total):
     if not total:
         return 0
     return (correct * 100 + total // 2) // total
+
+
+# Bounds of a test built in the admin form
+MAX_QUESTIONS = 200
+MAX_OPTIONS = 8
+MIN_OPTIONS = 2
+DEFAULT_DOMAIN = "General"
+_TEXT_LIMITS = {"title": 150, "description": 255, "slug": 100, "domain": 100, "option": 500}
+_LONG_TEXT = 5000
 
 
 # --- deadline ---------------------------------------------------------------
@@ -298,6 +310,154 @@ def award_ducks(user, attempt):
     return attempt.ducks_awarded
 
 
+# --- assignments ------------------------------------------------------------
+
+
+def open_check(users):
+    """A function quiz_id -> bool: whether the quiz is open to any of ``users``.
+
+    A quiz without assignments is open to everyone; one with assignments only to the
+    students it names and to those enrolled in the classrooms it names.
+    """
+    user_ids = {user.id for user in users}
+    classroom_ids = set()
+    if user_ids:
+        classroom_ids = set(
+            db.session.scalars(
+                select(user_classrooms.c.classroom_id).where(
+                    user_classrooms.c.user_id.in_(user_ids)
+                )
+            )
+        )
+    open_to = {}
+    rows = db.session.execute(
+        select(QuizAssignment.quiz_id, QuizAssignment.user_id, QuizAssignment.classroom_id)
+    )
+    for quiz_id, user_id, classroom_id in rows:
+        hit = user_id in user_ids or classroom_id in classroom_ids
+        open_to[quiz_id] = open_to.get(quiz_id, False) or hit
+    return lambda quiz_id: open_to.get(quiz_id, True)
+
+
+def serialize_assignments(assignments):
+    """{classrooms: [{id, name}], students: [StudentRef]}, each sorted by name."""
+    classrooms = sorted(
+        (a.classroom for a in assignments if a.classroom is not None),
+        key=lambda c: (c.name or "").lower(),
+    )
+    students = sorted(
+        (a.user for a in assignments if a.user is not None),
+        key=lambda u: (u.nickname or u.username or "").lower(),
+    )
+    return {
+        "classrooms": [{"id": c.id, "name": c.name} for c in classrooms],
+        "students": [student_ref(u) for u in students],
+    }
+
+
+# --- building a test --------------------------------------------------------
+
+
+def _clean_text(value, label, limit, required=False):
+    """``value`` stripped, None when empty and optional; QuizValidationError otherwise."""
+    if value is None:
+        value = ""
+    if not isinstance(value, str):
+        raise QuizValidationError(f"{label} must be text")
+    value = value.strip()
+    if not value:
+        if required:
+            raise QuizValidationError(f"{label} is required")
+        return None
+    if len(value) > limit:
+        raise QuizValidationError(f"{label} is longer than {limit} characters")
+    return value
+
+
+def slug_for(title):
+    """A free slug made from ``title``: -2, -3... appended when it is taken."""
+    base = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[: _TEXT_LIMITS["slug"] - 4]
+    base = base.strip("-") or "test"
+    taken = set(
+        db.session.scalars(
+            select(Quiz.slug).where((Quiz.slug == base) | Quiz.slug.like(f"{base}-%"))
+        )
+    )
+    slug, n = base, 1
+    while slug in taken:
+        n += 1
+        slug = f"{base}-{n}"
+    return slug
+
+
+def _build_question(number, row):
+    label = f"Question {number}"
+    if not isinstance(row, dict):
+        raise QuizValidationError(f"{label} must be an object")
+    prompt = _clean_text(row.get("prompt"), f"{label}: prompt", _LONG_TEXT, required=True)
+    domain = (
+        _clean_text(row.get("domain"), f"{label}: topic", _TEXT_LIMITS["domain"])
+        or DEFAULT_DOMAIN
+    )
+    options = row.get("options")
+    if not isinstance(options, dict):
+        raise QuizValidationError(f"{label}: options must be an object")
+    if not MIN_OPTIONS <= len(options) <= MAX_OPTIONS:
+        raise QuizValidationError(f"{label}: {MIN_OPTIONS} to {MAX_OPTIONS} options")
+    cleaned = {}
+    for letter, text in options.items():
+        if not (isinstance(letter, str) and len(letter) == 1 and "A" <= letter <= "Z"):
+            raise QuizValidationError(f"{label}: option letters must be A to Z")
+        cleaned[letter] = _clean_text(
+            text, f"{label}: option {letter}", _TEXT_LIMITS["option"], required=True
+        )
+    answer = row.get("answer")
+    if not isinstance(answer, str) or answer not in cleaned:
+        raise QuizValidationError(f"{label}: answer must be one of the options")
+    return QuizQuestion(
+        number=number,
+        domain=domain,
+        prompt=prompt,
+        options=cleaned,
+        answer=answer,
+        explanation=_clean_text(row.get("explanation"), f"{label}: explanation", _LONG_TEXT),
+    )
+
+
+def build_quiz(payload):
+    """A new, inactive Quiz with its questions from the admin form, not yet added.
+
+    ``payload``: {title, description?, questions: [{prompt, options: {letter: text},
+    answer, domain?, explanation?}]}. Questions are numbered in the order given and a
+    missing topic becomes "General". The slug is made from the title. Raises
+    QuizValidationError.
+    """
+    if not isinstance(payload, dict):
+        raise QuizValidationError("Invalid body")
+    title = _clean_text(payload.get("title"), "Title", _TEXT_LIMITS["title"], required=True)
+    description = _clean_text(
+        payload.get("description"), "Description", _TEXT_LIMITS["description"]
+    )
+    rows = payload.get("questions")
+    if not isinstance(rows, list) or not rows:
+        raise QuizValidationError("Add at least one question")
+    if len(rows) > MAX_QUESTIONS:
+        raise QuizValidationError(f"At most {MAX_QUESTIONS} questions")
+    questions = [_build_question(number, row) for number, row in enumerate(rows, start=1)]
+
+    last = db.session.scalar(select(func.max(Quiz.sort_order)))
+    quiz = Quiz(
+        slug=slug_for(title),
+        title=title,
+        description=description,
+        sort_order=(last or 0) + 1,
+        # Off until the admin has assigned it and switched it on
+        is_active=False,
+    )
+    quiz.questions.extend(questions)
+    return quiz
+
+
 # --- serialization ----------------------------------------------------------
 
 
@@ -367,12 +527,14 @@ def serialize_summary(attempt, question_count=None):
 def serialize_result(attempt, questions, include_review):
     """Result: a submitted attempt, with the review only when ``include_review``."""
     graded = grade(attempt, questions)
+    flagged = set(attempt.flagged or [])
     result = serialize_summary(attempt)
     result.update(
         {
             "wrong": graded["wrong"],
             "skipped": graded["skipped"],
             "domains": graded["domains"],
+            "time_limit_minutes": time_limit_minutes(attempt),
             "review": None,
         }
     )
@@ -387,6 +549,7 @@ def serialize_result(attempt, questions, include_review):
                 "selected": row["selected"],
                 "answer": row["answer"],
                 "is_correct": row["is_correct"],
+                "flagged": row["number"] in flagged,
                 "explanation": row["question"].explanation,
             }
             # A question deleted since has no text left to show; it still counts above
@@ -398,6 +561,7 @@ def serialize_result(attempt, questions, include_review):
 
 def serialize_admin_quiz(quiz, question_count, attempt_count, submitted_count, average_percent):
     return {
+        "assignments": serialize_assignments(quiz.assignments),
         "slug": quiz.slug,
         "title": quiz.title,
         "description": quiz.description,

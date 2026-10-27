@@ -39,4 +39,23 @@
     .test-result-bar-top {
         display: none;
     }
+
+    /* Only the result on paper, not the layout around it. :has keeps the rule to this page. */
+    body:has(.test-result-page) * {
+        visibility: hidden;
+    }
+
+    .test-result-page,
+    .test-result-page * {
+        visibility: visible;
+    }
+
+    .test-result-page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        max-width: none;
+        padding: 0;
+    }
 }

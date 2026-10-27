@@ -84,18 +84,18 @@ describe('AdminTests', () => {
 
             const table = await testsTable();
             expect(within(table).getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
-                'Title', 'Questions', 'Submitted', 'Avg %', 'Active', 'Answers shown', 'Retakes', 'Time limit (min)',
+                'Title', 'Questions', 'Submitted', 'Avg %', 'Assigned', 'Active', 'Answers shown', 'Retakes', 'Time limit (min)',
             ]);
 
             const first = within(rowFor(table, 'CS 6-8')).getAllByRole('cell').map((c) => c.textContent);
-            expect(first.slice(0, 4)).toEqual(['CS 6-8', '30', '2', '71%']);
+            expect(first.slice(0, 5)).toEqual(['CS 6-8', '30', '2', '71%', 'Everyone']);
             expect(screen.getByRole('checkbox', { name: 'Active: CS 6-8' })).toBeChecked();
             expect(screen.getByRole('checkbox', { name: 'Answers shown: CS 6-8' })).toBeChecked();
             expect(screen.getByRole('checkbox', { name: 'Retakes: CS 6-8' })).not.toBeChecked();
             expect(screen.getByRole('spinbutton', { name: 'Time limit (min): CS 6-8' })).toHaveValue(45);
 
             const second = within(rowFor(table, 'CS 9-11')).getAllByRole('cell').map((c) => c.textContent);
-            expect(second.slice(0, 4)).toEqual(['CS 9-11', '30', '0', '-']);
+            expect(second.slice(0, 5)).toEqual(['CS 9-11', '30', '0', '-', 'Everyone']);
             expect(screen.getByRole('checkbox', { name: 'Active: CS 9-11' })).not.toBeChecked();
             expect(screen.getByRole('checkbox', { name: 'Retakes: CS 9-11' })).toBeChecked();
             expect(screen.getByRole('spinbutton', { name: 'Time limit (min): CS 9-11' })).toHaveValue(null);
@@ -263,6 +263,122 @@ describe('AdminTests', () => {
 
             await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Bad limit'));
             await waitFor(() => expect(input).toHaveValue(45));
+        });
+    });
+
+    describe('assignments', () => {
+        const room = (id, name) => ({ id, name });
+        const assignedButton = (title) => screen.getByRole('button', { name: `Assigned: ${title}` });
+
+        it('links to the new test page', async () => {
+            useServer();
+            renderPage();
+            await testsTable();
+
+            expect(screen.getByRole('link', { name: 'New' })).toHaveAttribute('href', '/admin/tests/new');
+        });
+
+        it.each([
+            ['no assignments key', undefined, 'Everyone'],
+            ['empty lists', { classrooms: [], students: [] }, 'Everyone'],
+            ['one class', { classrooms: [room('c1', 'Period 1')], students: [] }, 'Period 1'],
+            ['two classes', { classrooms: [room('c1', 'Period 1'), room('c2', 'Period 2')], students: [] }, 'Period 1, Period 2'],
+            ['one student by nickname', { classrooms: [], students: [ana] }, 'Ana B'],
+            ['one student by username', { classrooms: [], students: [bo] }, 'bo'],
+            ['class then student', { classrooms: [room('c1', 'Period 1')], students: [ana] }, 'Period 1, Ana B'],
+            ['three names', { classrooms: [room('c1', 'Period 1')], students: [ana, bo] }, 'Period 1, Ana B +1'],
+            [
+                'five names',
+                {
+                    classrooms: [room('c1', 'Period 1'), room('c2', 'Period 2')],
+                    students: [ana, bo, { id: 9, username: 'cy', nickname: '' }],
+                },
+                'Period 1, Period 2 +3',
+            ],
+        ])('labels %s', async (_name, assignments, label) => {
+            useServer({ quizzes: [makeQuiz({ assignments })] });
+            renderPage();
+            await testsTable();
+
+            expect(assignedButton('CS 6-8').textContent).toBe(label);
+        });
+
+        it('opens the dialog for the clicked test', async () => {
+            useServer();
+            server.use(http.get('*/api/admin/classrooms', () => envelope({ classrooms: [room('c1', 'Period 1')] })));
+            renderPage();
+            await testsTable();
+
+            await userEvent.click(assignedButton('CS 9-11'));
+
+            const dialog = await screen.findByRole('dialog', { name: 'Assign: CS 9-11' });
+            expect(await within(dialog).findByRole('checkbox', { name: 'Period 1' })).toBeInTheDocument();
+        });
+
+        it('closes the dialog on Cancel without saving', async () => {
+            useServer();
+            const puts = [];
+            server.use(
+                http.get('*/api/admin/classrooms', () => envelope({ classrooms: [] })),
+                http.put('*/api/quizzes/admin/:slug/assignments', async ({ request }) => {
+                    puts.push(await request.json());
+                    return envelope({ quiz: makeQuiz() });
+                }),
+            );
+            renderPage();
+            await testsTable();
+
+            await userEvent.click(assignedButton('CS 6-8'));
+            await userEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            expect(puts).toEqual([]);
+            expect(assignedButton('CS 6-8').textContent).toBe('Everyone');
+        });
+
+        it('updates the row with the saved assignments and closes the dialog', async () => {
+            useServer();
+            const puts = [];
+            server.use(
+                http.get('*/api/admin/classrooms', () => envelope({ classrooms: [room('c1', 'Period 1'), room('c2', 'Period 2')] })),
+                http.put('*/api/quizzes/admin/:slug/assignments', async ({ request, params }) => {
+                    puts.push({ slug: params.slug, ...(await request.json()) });
+                    return envelope({
+                        quiz: makeQuiz({ attempt_count: 5, assignments: { classrooms: [room('c2', 'Period 2')], students: [] } }),
+                    });
+                }),
+            );
+            renderPage();
+            await testsTable();
+
+            await userEvent.click(assignedButton('CS 6-8'));
+            const dialog = await screen.findByRole('dialog', { name: 'Assign: CS 6-8' });
+            await userEvent.click(await within(dialog).findByRole('checkbox', { name: 'Period 2' }));
+            await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+            await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+            expect(puts).toEqual([{ slug: 'cs-6-8', classroom_ids: ['c2'], student_ids: [] }]);
+            expect(assignedButton('CS 6-8').textContent).toBe('Period 2');
+            expect(assignedButton('CS 9-11').textContent).toBe('Everyone');
+        });
+
+        it('keeps the row and the dialog when the save fails', async () => {
+            useServer();
+            server.use(
+                http.get('*/api/admin/classrooms', () => envelope({ classrooms: [room('c1', 'Period 1')] })),
+                http.put('*/api/quizzes/admin/:slug/assignments', () => failure('No such class', 404)),
+            );
+            renderPage();
+            await testsTable();
+
+            await userEvent.click(assignedButton('CS 6-8'));
+            const dialog = await screen.findByRole('dialog');
+            await userEvent.click(await within(dialog).findByRole('checkbox', { name: 'Period 1' }));
+            await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+            await waitFor(() => expect(toast.error).toHaveBeenCalledWith('No such class'));
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+            expect(assignedButton('CS 6-8').textContent).toBe('Everyone');
         });
     });
 

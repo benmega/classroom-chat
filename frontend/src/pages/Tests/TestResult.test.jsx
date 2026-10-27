@@ -3,7 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { Link, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { server } from '../../test/mocks/server';
 import TestResult from './TestResult';
 
@@ -149,11 +149,84 @@ describe('TestResult', () => {
         expect(screen.queryByTestId('where')).not.toBeInTheDocument();
     });
 
-    it('has no print button', async () => {
+    it('has no print button for the student', async () => {
         serve(result());
         renderAt('/tests/results/12');
         await screen.findByRole('heading', { name: 'Olympiad 6-8' });
         expect(screen.queryByRole('button', { name: /print/i })).not.toBeInTheDocument();
+    });
+
+    describe('print', () => {
+        const inProgress = {
+            id: 12, status: 'in_progress', quiz: { slug: 'grade-6-8', title: 'Olympiad 6-8' },
+            student: { id: 33, username: 'sam', nickname: 'Sammy' },
+            started_at: '2026-03-04T10:00:00Z', submitted_at: null, elapsed_seconds: 5,
+            correct: null, total: 3, score_percent: null,
+        };
+
+        let originalPrint;
+
+        beforeEach(() => {
+            originalPrint = window.print;
+            window.print = vi.fn();
+        });
+
+        afterEach(() => {
+            window.print = originalPrint;
+        });
+
+        it.each(['/admin/tests/results/12', '/parent/tests/results/12'])('prints from %s', async (path) => {
+            serve(result());
+            renderAt(path);
+            await screen.findByRole('heading', { name: 'Olympiad 6-8' });
+
+            await userEvent.click(screen.getByRole('button', { name: 'Print' }));
+
+            expect(window.print).toHaveBeenCalledTimes(1);
+        });
+
+        it('does not print until the button is clicked', async () => {
+            serve(result());
+            renderAt('/admin/tests/results/12');
+            await screen.findByRole('heading', { name: 'Olympiad 6-8' });
+
+            expect(window.print).not.toHaveBeenCalled();
+        });
+
+        it('is not offered to the student even when submitted', async () => {
+            serve(result());
+            renderAt('/tests/results/12');
+            await screen.findByRole('heading', { name: 'Olympiad 6-8' });
+
+            expect(screen.queryByRole('button', { name: 'Print' })).not.toBeInTheDocument();
+        });
+
+        it.each(['/admin/tests/results/12', '/parent/tests/results/12'])('is not offered for an unfinished attempt on %s', async (path) => {
+            serve(inProgress);
+            renderAt(path);
+            await screen.findByText('In progress');
+
+            expect(screen.queryByRole('button', { name: 'Print' })).not.toBeInTheDocument();
+        });
+
+        it('is not offered while loading or when the result is unavailable', async () => {
+            serve(null, 404);
+            renderAt('/admin/tests/results/12');
+            expect(screen.queryByRole('button', { name: 'Print' })).not.toBeInTheDocument();
+
+            await screen.findByRole('alert');
+            expect(screen.queryByRole('button', { name: 'Print' })).not.toBeInTheDocument();
+        });
+    });
+
+    it('shows the answers grid with the chosen letters on the admin route', async () => {
+        serve(result());
+        renderAt('/admin/tests/results/12');
+        await screen.findByRole('heading', { name: 'Olympiad 6-8' });
+
+        const grid = within(screen.getByRole('region', { name: 'Answers' }));
+        expect(grid.getByRole('button', { name: 'Q1: Correct, chose A, key A' })).toBeInTheDocument();
+        expect(screen.getByText('Chosen')).toBeInTheDocument();
     });
 
     it('does not show a previous result while the next one loads', async () => {
