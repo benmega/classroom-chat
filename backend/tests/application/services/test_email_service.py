@@ -75,3 +75,23 @@ def test_send_email_multiple_addresses(mock_config, mock_boto3_client):
     assert kwargs['Destination']['ToAddresses'] == ["user1@example.com", "user2@example.com"]
     assert kwargs['Message']['Subject']['Data'] == "Test Subject 2"
     assert kwargs['Source'] == "sender@example.com"
+
+
+@patch('application.services.email_service.Thread.start', synchronous_thread_start)
+@patch('application.services.email_service.boto3.client')
+@patch('application.services.email_service.Config')
+def test_ses_refusal_is_logged(mock_config, mock_boto3_client, caplog):
+    from botocore.exceptions import ClientError
+
+    mock_config.SES_SENDER_EMAIL = "sender@example.com"
+    mock_config.SES_REGION = "us-east-1"
+    mock_boto3_client.return_value.send_email.side_effect = ClientError(
+        {"Error": {"Code": "MessageRejected", "Message": "Email address is not verified."}},
+        "SendEmail",
+    )
+
+    with caplog.at_level("ERROR", logger="application.services.email_service"):
+        send_email("Refused", "Body", "user@example.com")
+
+    assert "Email address is not verified." in caplog.text
+    assert "user@example.com" in caplog.text

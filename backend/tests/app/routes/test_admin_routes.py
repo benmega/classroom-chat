@@ -842,6 +842,48 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
         assert updated_user3.packets == initial_packets
 
 
+def test_project_approval_email_links_the_profile_on_the_frontend(
+    client, sample_admin, sample_user, test_app, monkeypatch
+):
+    from application.models.project import Project
+
+    monkeypatch.setitem(test_app.config, "FRONTEND_URL", "https://spa.example.test/")
+    project = Project(name="Email Project", description="desc", user_id=sample_user.id)
+    db.session.add(project)
+    db.session.commit()
+    login_as_admin(client, sample_admin)
+
+    with patch("application.routes.admin.project_routes.send_admin_email") as send_admin_email:
+        response = client.post(
+            f"/api/admin/handle-project-review/{project.id}", json={"action": "approve"}
+        )
+
+    assert response.status_code == 200
+    send_admin_email.assert_called_once()
+    subject, body = send_admin_email.call_args.args
+    assert subject == "Project Approved: Email Project"
+    # The profile is a React page, so the link comes from FRONTEND_URL
+    assert f"https://spa.example.test/profile/{sample_user.slug}" in body
+    assert "blossom.benmega.com" not in body
+
+
+def test_project_rejection_sends_no_email(client, sample_admin, sample_user, test_app):
+    from application.models.project import Project
+
+    project = Project(name="Rejected Project", description="desc", user_id=sample_user.id)
+    db.session.add(project)
+    db.session.commit()
+    login_as_admin(client, sample_admin)
+
+    with patch("application.routes.admin.project_routes.send_admin_email") as send_admin_email:
+        response = client.post(
+            f"/api/admin/handle-project-review/{project.id}", json={"action": "reject"}
+        )
+
+    assert response.status_code == 200
+    send_admin_email.assert_not_called()
+
+
 def test_project_rejection_and_resubmission_lifecycle(client, sample_admin, sample_user, test_app):
     """Test that rejecting a project removes it from the pending queue until the student resubmits."""
     from application.models.project import Project

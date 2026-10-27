@@ -635,7 +635,7 @@ def admin_certificates():
 
 
 def _send_certificate_approval_email(cert):
-    from application.services.email_service import send_email
+    from application.services.email_service import send_admin_email
 
     # We want absolute URLs. The download is an API endpoint, so it is built from the
     # host that received the request (mark_reviewed is in request context); the
@@ -656,8 +656,7 @@ Download Certificate:
 View Student Profile:
 {profile_link}
 """
-    to_addresses = ["me@benmega.com", "benmega@gmail.com"]
-    send_email(subject, body, to_addresses)
+    send_admin_email(subject, body)
 
 
 @achievements.route("/admin/certificates/reviewed/<int:cert_id>", methods=["POST"])

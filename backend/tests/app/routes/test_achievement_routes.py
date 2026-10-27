@@ -1056,11 +1056,11 @@ def test_approval_email_links_the_profile_on_the_frontend_and_the_download_on_th
     with client.session_transaction() as sess:
         sess["user"] = test_admin.id
 
-    with patch("application.services.email_service.send_email") as send_email:
+    with patch("application.services.email_service.send_admin_email") as send_admin_email:
         response = client.post(f"/api/achievements/admin/certificates/reviewed/{cert.id}")
 
     assert response.status_code == 200
-    body = send_email.call_args.args[1]
+    body = send_admin_email.call_args.args[1]
     # The profile is a React page: the API host would not serve it
     assert f"https://spa.example.test/profile/{test_user.slug}" in body
     assert f"http://localhost:8000/profile/{test_user.slug}" not in body
