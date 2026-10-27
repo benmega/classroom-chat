@@ -319,6 +319,10 @@ describe('TakeTest', () => {
             const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
             const view = renderTake();
             await screen.findByText('Prompt 1');
+            // The question shows before the effect that adds the save listeners has run: React
+            // schedules it on setImmediate, which is faked here. Run it now, or an event sent
+            // next can find no listener when the machine is busy.
+            await act(() => vi.advanceTimersByTimeAsync(0));
             return { user, ...view };
         };
 
