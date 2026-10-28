@@ -17,7 +17,10 @@ from application.models.configuration import Configuration
 from application.models.user import User
 from application.routes import register_blueprints
 from application.utilities.helper_functions import format_number
-from application.utilities.schema_check import check_for_schema_drift
+from application.utilities.schema_check import (
+    check_for_schema_drift,
+    log_schema_drift_summary,
+)
 from flask import Flask, g, jsonify, request, session
 from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
@@ -226,6 +229,10 @@ def create_app(config_class=None):
                 logger.warning(
                     "The database has no schema yet: skipping the default configuration."
                 )
+            if issubclass(config_class, ProductionConfig):
+                # Development gets the full report above. Production only says whether
+                # the migrations left the database matching the models (read-only).
+                log_schema_drift_summary(app)
 
         if _should_start_scheduler(app):
             try:
