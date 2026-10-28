@@ -50,9 +50,11 @@ NOT_IMPORTED = {
 # runtime requirement must not allow anything older.
 ADVISORY_FLOORS = {
     "flask": "3.1.3",
-    "werkzeug": "3.1.6",
+    "werkzeug": "3.1.9",
     "flask-cors": "6.0.2",
     "cryptography": "50.0.0",
+    "pillow": "13.0.0",
+    "python-dotenv": "1.2.2",
 }
 
 # Test and lint tooling that must never ship in the production requirements.
