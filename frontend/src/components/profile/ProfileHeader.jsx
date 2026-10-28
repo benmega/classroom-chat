@@ -40,6 +40,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink, on
                         alt={target.username} 
                         className="avatar-img"
                         fallbackType="avatar"
+                        eager
                     />
                     {isOwner && (
                         <>
