@@ -47,7 +47,7 @@ describe('EditProfile', () => {
                 profile_picture: 'pic.jpg',
                 
             },
-            checkAuth: vi.fn(),
+            refreshUser: vi.fn(),
             isAuthenticated: true,
             isChecking: false
         });
@@ -152,8 +152,8 @@ describe('EditProfile', () => {
         // response for the page instead of failing the test.
         let body;
         const user = useAuthStore.getState().user;
-        const checkAuth = vi.fn(async () => useAuthStore.setState({ user: { ...user, bio: 'New Bio' } }));
-        useAuthStore.setState({ checkAuth });
+        const refreshUser = vi.fn(async () => useAuthStore.setState({ user: { ...user, bio: 'New Bio' } }));
+        useAuthStore.setState({ refreshUser });
         server.use(
             http.post('*/user/edit_profile', async ({ request }) => {
                 body = await request.json();
@@ -175,7 +175,7 @@ describe('EditProfile', () => {
         expect(body).not.toHaveProperty('skills');
         expect(body).not.toHaveProperty('password');
         // The user is reloaded in the background, and with nothing left to save the buttons go away
-        await waitFor(() => expect(checkAuth).toHaveBeenCalledWith(true));
+        await waitFor(() => expect(refreshUser).toHaveBeenCalledTimes(1));
         await waitFor(() => expect(screen.getByPlaceholderText(/Tell us about yourself\.\.\./i).value).toBe('New Bio'));
         expect(screen.queryByRole('button', { name: /Save Changes/i })).not.toBeInTheDocument();
         expect(toast.error).not.toHaveBeenCalled();
@@ -225,14 +225,14 @@ describe('EditProfile', () => {
                 role: 'parent',
                 profile_picture: 'pic.jpg',
             },
-            checkAuth: vi.fn(),
+            refreshUser: vi.fn(),
             isAuthenticated: true,
             isChecking: false
         });
 
         let body;
-        const checkAuth = vi.fn();
-        useAuthStore.setState({ checkAuth });
+        const refreshUser = vi.fn();
+        useAuthStore.setState({ refreshUser });
         server.use(
             http.post('*/user/edit_profile', async ({ request }) => {
                 body = await request.json();
@@ -251,7 +251,7 @@ describe('EditProfile', () => {
         await waitFor(() => expect(body).toBeDefined());
         expect(body.nickname).toBe('New Parent Nick');
         expect(body).not.toHaveProperty('skills');
-        await waitFor(() => expect(checkAuth).toHaveBeenCalledWith(true));
+        await waitFor(() => expect(refreshUser).toHaveBeenCalledTimes(1));
         expect(toast.error).not.toHaveBeenCalled();
     });
 
@@ -270,8 +270,8 @@ describe('EditProfile', () => {
     it('handles successful profile picture update and info update together', async () => {
         let infoBody;
         let pictureFile;
-        const checkAuth = vi.fn();
-        useAuthStore.setState({ checkAuth });
+        const refreshUser = vi.fn();
+        useAuthStore.setState({ refreshUser });
         server.use(
             http.post('*/user/api/profile-picture', async ({ request }) => {
                 pictureFile = (await request.formData()).get('profile_picture');
@@ -295,7 +295,7 @@ describe('EditProfile', () => {
         expect(pictureFile.name).toBe('test.png');
         expect(infoBody.bio).toBe('This is my bio');
         expect(infoBody).not.toHaveProperty('skills');
-        await waitFor(() => expect(checkAuth).toHaveBeenCalledWith(true));
+        await waitFor(() => expect(refreshUser).toHaveBeenCalledTimes(1));
         expect(toast.error).not.toHaveBeenCalled();
     });
 
@@ -333,7 +333,7 @@ describe('EditProfile', () => {
             const previewBefore = screen.getByAltText('Profile Preview').getAttribute('src');
             expect(previewBefore).toMatch(/^blob:/);
 
-            // What every background checkAuth() does: a brand-new user object, same account.
+            // What every refreshUser() does: a brand-new user object, same account.
             act(() => {
             });
 
@@ -379,7 +379,7 @@ describe('EditProfile', () => {
                 id: 1, username: 'testuser', nickname: 'Test Nick', bio: 'Saved bio', role: 'student',
                 profile_picture: 'new-pic.png',
             };
-            useAuthStore.setState({ checkAuth: vi.fn(async () => useAuthStore.setState({ user: refreshed })) });
+            useAuthStore.setState({ refreshUser: vi.fn(async () => useAuthStore.setState({ user: refreshed })) });
             server.use(
                 http.post('*/user/edit_profile', () => HttpResponse.json({ status: 'success', data: { message: 'ok' } })),
                 http.post('*/user/api/profile-picture', () => HttpResponse.json({ status: 'success', data: { filename: 'new-pic.png' } }))

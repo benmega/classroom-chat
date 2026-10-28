@@ -682,7 +682,7 @@ describe('TakeTest', () => {
 
     describe('submit', () => {
         it('refreshes the user after submitting so the duck balance is current', async () => {
-            const checkAuth = vi.spyOn(useAuthStore.getState(), 'checkAuth').mockResolvedValue(undefined);
+            const refreshUser = vi.spyOn(useAuthStore.getState(), 'refreshUser').mockResolvedValue(undefined);
             try {
                 serve();
                 renderTake();
@@ -693,9 +693,9 @@ describe('TakeTest', () => {
                 await userEvent.click(within(dialog).getByRole('button', { name: 'Submit' }));
 
                 await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
-                expect(checkAuth).toHaveBeenCalledWith(true);
+                expect(refreshUser).toHaveBeenCalledTimes(1);
             } finally {
-                checkAuth.mockRestore();
+                refreshUser.mockRestore();
             }
         });
 

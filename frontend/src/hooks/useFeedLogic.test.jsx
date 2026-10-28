@@ -713,6 +713,32 @@ describe('useFeedLogic', () => {
     });
   });
 
+  describe('when the same user is handed over as a new object', () => {
+    it('does not reload the feed or flash the skeleton', async () => {
+      serveFeed({ pages: [[msg(2), msg(1)]] });
+      const { result, rerender } = await mountFeed();
+      const callsBefore = client.get.mock.calls.length;
+
+      // What refreshUser() does after a purchase: same account, brand-new object
+      authState.user = { ...student, duck_balance: 99 };
+      rerender();
+      rerender();
+
+      expect(result.current.loading).toBe(false);
+      expect(client.get.mock.calls).toHaveLength(callsBefore);
+    });
+
+    it('reloads the feed for a different user', async () => {
+      serveFeed({ pages: [[msg(2), msg(1)]] });
+      const { rerender } = await mountFeed();
+
+      authState.user = { ...student, id: 2 };
+      rerender();
+
+      await waitFor(() => expect(feedUrls()).toHaveLength(2));
+    });
+  });
+
   describe('the message box', () => {
     it('sends on Enter and leaves Shift+Enter for a new line', async () => {
       const { result } = await mountFeed();

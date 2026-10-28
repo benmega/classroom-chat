@@ -9,6 +9,9 @@ import { GLOBAL_CLASSROOM_ID } from '../utils/constants';
 
 export const useFeedLogic = (filterClassroomId = null) => {
   const { user } = useAuthStore();
+  // The effects below depend on the id, not on the user object: refreshUser() replaces the object
+  // after every purchase or upload, and the same person must not refetch the feed (or flash the skeleton).
+  const userId = user?.id;
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -107,7 +110,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
   });
 
   const fetchFeed = useCallback(async (beforeId = null, refresh = false) => {
-    if (!user?.id) {
+    if (!userId) {
       setLoading(false);
       return;
     }
@@ -149,7 +152,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
       setLoading(false);
       setIsLoadingMore(false);
     }
-  }, [user, filterClassroomId]);
+  }, [userId, filterClassroomId]);
 
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore || messages.length === 0) return;
@@ -173,7 +176,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
 
   useEffect(() => {
     const initFeed = async () => {
-      if (!user?.id) {
+      if (!userId) {
         setLoading(false);
         return;
       }
@@ -200,7 +203,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
     };
 
     initFeed();
-  }, [user, fetchFeed, filterClassroomId]);
+  }, [userId, fetchFeed, filterClassroomId]);
 
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();

@@ -114,7 +114,7 @@ const TakeTest = () => {
         (id) => {
             lockedRef.current = true;
             // A first attempt pays ducks: refresh the user so the header balance shows them.
-            useAuthStore.getState().checkAuth(true);
+            useAuthStore.getState().refreshUser();
             navigate(`/tests/results/${id}`, { replace: true });
         },
         [navigate]
