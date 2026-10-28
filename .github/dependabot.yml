@@ -1,0 +1,45 @@
+# Weekly dependency update PRs. Minor and patch updates arrive as one grouped PR per
+# ecosystem; a major version gets its own PR so it can be reviewed (and held back) on its own.
+# Security advisories are raised by Dependabot alerts and pip-audit.yml, not by this file.
+version: 2
+updates:
+  # Covers every requirements*.txt in backend/ (runtime, dev, lint and tools).
+  - package-ecosystem: pip
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      pip-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # The uses: lines in .github/workflows/.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(ci)"
+    groups:
+      actions-minor-and-patch:
+        update-types:
+          - minor
+          - patch
