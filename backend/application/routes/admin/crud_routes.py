@@ -3,9 +3,11 @@ from datetime import date, datetime, timezone
 from application.decorators.admin_required import admin_only
 from application.extensions import db
 from application.models.banned_words import BannedWords
+from application.models.challenge import Challenge
 from application.models.classroom import Classroom
 from application.models.user import User
 from application.services import moderation_service
+from application.services.challenge_slug import SlugRenameError, rename_challenge_slug
 from application.utilities.db_helpers import (
     banned_word_exists,
     log_user_removal,
@@ -389,7 +391,18 @@ def update(resource, id):
 
     previous_role = item.role if isinstance(item, User) else None
     previous_word = item.word if isinstance(item, BannedWords) else None
-    for key, value in _coerce_values(columns, values).items():
+    coerced = _coerce_values(columns, values)
+    if isinstance(item, Challenge) and "slug" in coerced and coerced["slug"] != item.slug:
+        new_slug = coerced.pop("slug")
+        if not isinstance(new_slug, str) or not new_slug.strip():
+            raise _ApiError("slug must be a non-empty string")
+        # Logs, project templates and level games refer to it by slug: move them too
+        try:
+            rename_challenge_slug(item, new_slug)
+        except SlugRenameError as exc:
+            db.session.rollback()
+            raise _ApiError(exc.message, exc.status) from exc
+    for key, value in coerced.items():
         setattr(item, key, value)
 
     if (
