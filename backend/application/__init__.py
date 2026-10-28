@@ -1,4 +1,3 @@
-import contextlib
 import logging
 import os
 import sys
@@ -69,6 +68,23 @@ def _configure_logging():
     logging.getLogger("application").setLevel(logging.INFO)
     for noisy in ("werkzeug", "sqlalchemy.engine", "engineio", "socketio"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
+
+
+def _init_extension(app, name, init_app):
+    """
+    Run ``init_app()`` for the extension ``name``.
+
+    A failure is logged with its traceback and, outside the tests, stops the start-up:
+    an app that came up without websockets or without its scheduler would pass the
+    health check and run half broken. The test apps are built many times over, so
+    there (``TESTING``) the failure is logged and the app starts without the extension.
+    """
+    try:
+        init_app()
+    except Exception:
+        logging.getLogger(__name__).exception("Could not initialise %s", name)
+        if not app.config.get("TESTING"):
+            raise
 
 
 def create_app(config_class=None):
@@ -149,14 +165,16 @@ def create_app(config_class=None):
     # cors_allowed_origins must match cors_origins exactly — using "*" alongside
     # withCredentials:true on the client causes browsers to block the handshake.
     limiter.init_app(app)
-    with contextlib.suppress(Exception):
-        socketio.init_app(
+    _init_extension(
+        app,
+        "Socket.IO",
+        lambda: socketio.init_app(
             app,
             cors_allowed_origins=cors_origins,
             async_mode=app.config.get("SOCKETIO_ASYNC_MODE"),
-        )
-    with contextlib.suppress(Exception):
-        scheduler.init_app(app)
+        ),
+    )
+    _init_extension(app, "the scheduler", lambda: scheduler.init_app(app))
 
     from . import socket_events as socket_events
 
