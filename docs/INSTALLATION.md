@@ -43,6 +43,12 @@
    npm install
    ```
 
+6. Enable the git hooks (once per clone; it also covers every worktree of that clone):
+   ```powershell
+   powershell scripts/install-hooks.ps1
+   ```
+   This runs `git config core.hooksPath scripts/hooks`, so the tracked `pre-push` hook lints before each push: `ruff check .` over `backend/` and ESLint over `frontend/`, the same checks as `lint.yml`. It needs the backend dev requirements installed and `npm install` done in `frontend/`. `git push --no-verify` skips it in an emergency.
+
 ## Getting Started
 
 The database (SQLite, at `backend/instance/dev_users.db`) is created automatically on first run in development — `flask db` migrations are only required in production. Schema changes are still made as Alembic migrations (`flask db migrate`), never as ad hoc scripts; production applies them through `deploy.sh` (see [infrastructure_and_devops.md](infrastructure_and_devops.md#8-database-migrations)). To run locally:

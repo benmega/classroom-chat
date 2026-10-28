@@ -72,6 +72,15 @@ classroom-chat/
 
 ---
 
+## Development Setup
+
+[`INSTALLATION.md`](INSTALLATION.md) has the full first-run walkthrough (virtualenv, `.env`, running both servers). Two things keep your checkout in line with CI:
+
+- **Git hooks** (once per clone): `powershell scripts/install-hooks.ps1`. It runs `git config core.hooksPath scripts/hooks`, so the tracked `pre-push` hook (Ruff over `backend/`, ESLint over `frontend/`, the same as `lint.yml`) runs before every push, in every worktree of the clone. `git push --no-verify` skips it.
+- **Before opening a PR**: `powershell scripts/preflight.ps1` runs what CI runs (Ruff, mypy, the admin-auth and migration checks, pytest with the coverage floor, ESLint, Vitest with coverage, the production build, Playwright) plus a warning for images over 1 MB under `frontend/public/images`.
+
+---
+
 ## Coding Standards
 
 - Python: PEP 8, enforced by `ruff` (run `ruff check .` from `backend/`) and type-checked with `mypy` (CI runs `python -m mypy .`).
