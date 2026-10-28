@@ -65,6 +65,15 @@ jobs:
           fi
           echo "Alembic heads check passed. Only one head detected."
 
+      # Static checks over the route and migration files (plain AST/text scans; no app or
+      # database is started, so no environment is needed). `flask db check` is deliberately not
+      # run here: it cannot pass until the migration chain is repaired (#60).
+      - name: Check admin route guards and migrations
+        run: |
+          python scripts/check_admin_auth.py
+          python scripts/lint_migrations.py
+          python scripts/validate_migrations.py
+
       - name: Run Pytest
         env:
           FLASK_ENV: testing
