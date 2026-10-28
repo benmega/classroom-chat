@@ -13,8 +13,9 @@ on:
 permissions:
   contents: read
 
-# A newer push to a pull request supersedes the run in flight. Runs on main, working
-# and the deploy gate are never cancelled, so every pushed commit keeps a result.
+# A newer push to a pull request cancels the run in flight. A run on main, working or the
+# deploy gate is never cancelled once it has started (a newer push only replaces a run that
+# is still queued behind it).
 # github.workflow is the calling workflow's name when this file is reused, so the two
 # deploy workflows (which both call it for the same ref) do not queue behind each other.
 concurrency:
