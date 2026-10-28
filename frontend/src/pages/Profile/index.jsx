@@ -17,6 +17,7 @@ import NoteSlideshow from '../../components/profile/NoteSlideshow';
 import PfpCropModal from '../../components/profile/PfpCropModal';
 import JoinClassroom from '../General/JoinClassroom';
 import Modal from '../../components/common/Modal';
+import Loading from '../../components/common/Loading';
 
 import { useProfile } from '../../hooks/useProfile';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
@@ -50,7 +51,7 @@ const Profile = () => {
     } = useProfile();
 
 
-    if (isLoading) return <div className="profile-loading">Loading Profile...</div>;
+    if (isLoading) return <div className="profile-loading"><Loading label="Loading Profile..." showLabel /></div>;
     if (!profileData) {
         if (loadError) {
             return (

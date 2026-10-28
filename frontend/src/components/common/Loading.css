@@ -1,0 +1,37 @@
+/* <Loading/>: a spinner plus a label that a screen reader announces. The class names carry a ui- prefix because the
+   app has many unrelated .loading-* and .spinner rules, and a shared name would restyle them. */
+.ui-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: inherit;
+}
+
+.ui-loading--inline {
+    display: inline-flex;
+    vertical-align: middle;
+}
+
+.ui-loading--block {
+    flex-direction: column;
+    width: 100%;
+    padding: 2rem 1rem;
+}
+
+.ui-loading--fullpage {
+    flex-direction: column;
+    width: 100%;
+    min-height: 100dvh;
+}
+
+.ui-loading__spinner {
+    flex-shrink: 0;
+    color: var(--loading-color, var(--primary-accessible));
+    animation: spin 1s linear infinite;
+}
+
+.ui-loading__label {
+    font-size: var(--font-sm);
+    font-weight: 500;
+}

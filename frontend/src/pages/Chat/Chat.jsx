@@ -17,7 +17,7 @@ import './Chat.css';
 
 import ChatMessage from '../../components/chat/ChatMessage';
 import MultiSelectDropdown from '../../components/chat/MultiSelectDropdown';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import { useFeedLogic } from '../../hooks/useFeedLogic';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 
@@ -152,8 +152,7 @@ const Chat = ({ filterClassroomId = null }) => {
   }, [filterClassroomId, targetClassroomIds]);
 
   if (loading) return (
-    <div className="feed-loading-skeleton-container p-2rem">
-      <span className="d-none">Loading Feed...</span>
+    <SkeletonGroup className="feed-loading-skeleton-container p-2rem" label="Loading Feed...">
       <div className="feed-main w-100">
         <div className="feed-messages-list d-flex flex-col gap-1-5rem">
           {[1, 2, 3].map(i => (
@@ -180,7 +179,7 @@ const Chat = ({ filterClassroomId = null }) => {
           </div>
         </div>
       </div>
-    </div>
+    </SkeletonGroup>
   );
 
   return (

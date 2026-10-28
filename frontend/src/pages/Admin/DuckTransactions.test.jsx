@@ -78,6 +78,16 @@ describe('DuckTransactions', () => {
     expect(screen.getByText(/Loading transactions/i)).toBeInTheDocument();
   });
 
+  it('announces the loading state to screen readers instead of hiding it', () => {
+    client.get.mockImplementation(() => new Promise(() => {}));
+    renderComponent();
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-busy', 'true');
+    expect(status).toHaveTextContent('Loading transactions...');
+    expect(status.querySelector('.d-none')).toBeNull();
+  });
+
   it('renders page title after loading', async () => {
     client.get.mockResolvedValue(successResponse);
     renderComponent();

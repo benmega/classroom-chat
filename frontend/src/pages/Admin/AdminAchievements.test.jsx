@@ -297,3 +297,12 @@ describe('AdminAchievements', () => {
     });
   });
 });
+describe('AdminAchievements loading state', () => {
+  it('announces that achievements are loading', () => {
+    client.get.mockReturnValue(new Promise(() => {}));
+
+    render(<AdminAchievements />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('Loading achievements...');
+  });
+});
