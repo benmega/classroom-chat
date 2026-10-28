@@ -37,6 +37,7 @@ from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.course import Course
 from application.models.course_instance import CourseInstance
+from application.models.project import Project
 from application.models.project_template import ProjectTemplate
 from application.utilities.spa import frontend_url
 from flask import Flask, request, session
@@ -464,6 +465,24 @@ def test_seed_global_data_updates_template_chapter(test_app):
 
         updated_tpl = ProjectTemplate.query.filter_by(name="Text-Based Adventure").first()
         assert updated_tpl.chapter == "Computer Science 2"
+
+
+def test_seed_global_data_repoints_converted_project_images(init_db, sample_user):
+    """Rows saved before proj_16-23 became WebP must not keep pointing at the deleted PNGs."""
+    old_url = "/images/standard_projects/proj_16.png"
+    new_url = "/images/standard_projects/proj_16.webp"
+    uploaded_url = "/user/project_images/" + "a" * 32 + ".png"
+    db.session.add(ProjectTemplate(name="Legacy PNG template", description="d", image_url=old_url))
+    db.session.add(Project(name="Legacy PNG project", user_id=sample_user.id, image_url=old_url))
+    db.session.add(Project(name="Uploaded cover", user_id=sample_user.id, image_url=uploaded_url))
+    db.session.commit()
+
+    seed_global_data()
+
+    assert ProjectTemplate.query.filter_by(name="Legacy PNG template").one().image_url == new_url
+    assert Project.query.filter_by(name="Legacy PNG project").one().image_url == new_url
+    assert Project.query.filter_by(name="Uploaded cover").one().image_url == uploaded_url
+    assert ProjectTemplate.query.filter_by(name="Game Dev 3").one().image_url == new_url
 
 
 def test_seed_global_data_operational_error(test_app):
