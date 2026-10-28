@@ -27,6 +27,7 @@ import { getApiUrl } from '../../utils/apiUrl';
 import { getSocket } from '../../hooks/useChatSocket';
 import { BulkConnectionCardsModal, AddCourseModal, EnrollStudentModal } from '../../components/admin/AdminModals';
 import './AdminClassDashboard.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const getLanguageIconUrl = (language) => {
     const lang = (language || '').toLowerCase();
@@ -39,6 +40,7 @@ const getLanguageIconUrl = (language) => {
 };
 
 const AdminClassDashboard = () => {
+    useDocumentTitle('Class · Admin');
     const { classId } = useParams();
     const navigate = useNavigate();
     const [classroom, setClassroom] = useState(null);

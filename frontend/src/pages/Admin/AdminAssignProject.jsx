@@ -9,8 +9,10 @@ import { formatStaticUrl } from '../../utils/formatters';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import '../User/ManageProject.css'; // Reuse ManageProject styles for the split layout
 import './AdminAssignProject.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const AdminAssignProject = () => {
+    useDocumentTitle('Assign project · Admin');
     const navigate = useNavigate();
     
     const [activeTab, setActiveTab] = useState('core');

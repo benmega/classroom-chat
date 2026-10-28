@@ -4,8 +4,10 @@ import client from '../../api/client';
 import './AdminStudentActivity.css';
 import Skeleton from '../../components/common/Skeleton';
 import { getApiUrl } from '../../utils/apiUrl';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const AdminStudentActivity = () => {
+    useDocumentTitle('Student activity · Admin');
     const [students, setStudents] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);

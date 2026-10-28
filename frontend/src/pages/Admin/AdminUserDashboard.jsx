@@ -18,6 +18,7 @@ import { ALIGNED_NODES } from '../../constants/courseProgress';
 
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const TRACKS = [
     { id: 'cs', label: 'Computer Science', short: 'CS', type: 'image', logo: codecombatLogo, desc: 'Core Programming & Algorithms' },
@@ -28,6 +29,7 @@ const TRACKS = [
 ];
 
 const AdminUserDashboard = () => {
+    useDocumentTitle('User · Admin');
     const { userId } = useParams();
     const navigate = useNavigate();
 

@@ -4,8 +4,10 @@ import useAuthStore from '../../store/useAuthStore';
 import useViewport from '../../hooks/useViewport';
 import LandingDesktop from './LandingDesktop';
 import LandingMobile from './LandingMobile';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const Landing = () => {
+    useDocumentTitle();
     const navigate = useNavigate();
     const { isAuthenticated, user } = useAuthStore();
     const { isMobile } = useViewport();

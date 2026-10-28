@@ -19,8 +19,10 @@ import ChatMessage from '../../components/chat/ChatMessage';
 import MultiSelectDropdown from '../../components/chat/MultiSelectDropdown';
 import Skeleton from '../../components/common/Skeleton';
 import { useFeedLogic } from '../../hooks/useFeedLogic';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const Chat = ({ filterClassroomId = null }) => {
+  useDocumentTitle('Chat', !filterClassroomId);
   const {
     user,
     messages,

@@ -6,6 +6,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { getErrorMessage } from '../../utils/apiError';
 import { createQuiz } from '../../api/quizzes';
 import './AdminTests.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const MAX_OPTIONS = 8;
 const MIN_OPTIONS = 2;
@@ -140,6 +141,7 @@ const QuestionEditor = ({ question, number, onChange, onRemove, canRemove }) => 
 };
 
 const AdminTestNew = () => {
+    useDocumentTitle('New test · Admin');
     const navigate = useNavigate();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');

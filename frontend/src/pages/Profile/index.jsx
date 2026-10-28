@@ -19,8 +19,10 @@ import JoinClassroom from '../General/JoinClassroom';
 import Modal from '../../components/common/Modal';
 
 import { useProfile } from '../../hooks/useProfile';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const Profile = () => {
+    useDocumentTitle('Profile');
     const navigate = useNavigate();
     const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
     const {

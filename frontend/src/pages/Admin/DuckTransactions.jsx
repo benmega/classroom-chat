@@ -15,8 +15,10 @@ import { getErrorMessage } from '../../utils/apiError';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import './DuckTransactions.css';
 import Skeleton from '../../components/common/Skeleton';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const DuckTransactions = () => {
+    useDocumentTitle('Duck transactions · Admin');
     const [searchParams, setSearchParams] = useSearchParams();
     
     const typeParam = searchParams.get('type') || 'all';

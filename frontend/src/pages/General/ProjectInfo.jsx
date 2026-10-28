@@ -7,6 +7,7 @@ import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import { cssUrl } from '../../utils/formatters';
 import './ProjectInfo.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 
 
@@ -17,6 +18,7 @@ const findAssigned = (projects, template) => (
 );
 
 const ProjectInfo = () => {
+    useDocumentTitle('Project');
     const { projectId } = useParams();
     const { state } = useLocation();
     const navigate = useNavigate();

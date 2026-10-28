@@ -9,6 +9,7 @@ import { getAbsoluteApiBaseUrl, getApiUrl } from '../../utils/apiUrl';
 import './Shop.css'; // Let's use a standard CSS file
 import WallpaperCropModal from '../../components/profile/WallpaperCropModal';
 import Skeleton from '../../components/common/Skeleton';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const hexToRgb = (hex) => {
     if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length !== 7) return {r:250, g:204, b:21};
@@ -27,6 +28,7 @@ const rgbToHex = (r, g, b) => {
 };
 
 const Shop = () => {
+    useDocumentTitle('Reward shop');
     const { user, checkAuth } = useAuthStore();
     const [items, setItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);

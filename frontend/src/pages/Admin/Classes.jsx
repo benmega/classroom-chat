@@ -10,6 +10,7 @@ import Skeleton from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import useModalA11y from '../../hooks/useModalA11y';
 import './Classes.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 // The classroom order is a per-browser preference kept in localStorage; classrooms missing from it go last.
 const applySavedOrder = (items) => {
@@ -111,6 +112,7 @@ const ClassCardMenu = ({ classroom, onDelete }) => {
 };
 
 const Classes = () => {
+    useDocumentTitle('Classes · Admin');
     const navigate = useNavigate();
     const cachedClassrooms = adminCache.get('admin_classes');
     const [classrooms, setClassrooms] = useState(() => cachedClassrooms ? applySavedOrder(cachedClassrooms) : []);

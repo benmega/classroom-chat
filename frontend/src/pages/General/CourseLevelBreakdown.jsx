@@ -8,6 +8,7 @@ import {
     ALIGNED_NODES, matchCourse, getDomainConfig, findProjectForLevel,
     findStudentProjectForTemplate, getStudentProjectStatus
 } from '../../constants/courseProgress';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const COURSE_CONCEPTS = {
     'cc-junior': {
@@ -130,6 +131,7 @@ const TRACK_NAMES = {
 };
 
 const CourseLevelBreakdown = () => {
+    useDocumentTitle('Level breakdown');
     const location = useLocation();
     const navigate = useNavigate();
     const { slug } = useParams();
