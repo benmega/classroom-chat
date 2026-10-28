@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import LandingSlideshow from './LandingSlideshow';
 import './Landing.css';
 
 const LandingMobile = () => {
@@ -25,16 +26,7 @@ const LandingMobile = () => {
                         </p>
                         
                         <div className="hero-visual animate-float" style={{ margin: '1rem 0' }}>
-                            <div className="slideshow-window glass-panel" style={{ width: '100%', maxWidth: '100%', borderRadius: '16px' }}>
-                                {/* RULE: All slideshow images below must be close to a 16:9 aspect ratio (e.g. 1024x576) to avoid awkward cropping */}
-                                <div className="slideshow-track">
-                                    <img src="/images/code_combat.png" alt="Code Combat" className="slide object-cover" />
-                                    <img src="/images/ozaria.png" alt="Ozaria" className="slide object-cover" />
-                                    <img src="/images/pycharm.png" alt="PyCharm IDE" className="slide object-cover" />
-                                    <img src="/images/turtle_code.png" alt="Turtle Code" className="slide object-cover" />
-                                    <img src="/images/printed_ducks.png" alt="3D Printed Ducks" className="slide object-cover" />
-                                </div>
-                            </div>
+                            <LandingSlideshow style={{ width: '100%', maxWidth: '100%', borderRadius: '16px' }} />
                         </div>
 
                         <div className="hero-cta animate-fade-in" style={{ animationDelay: '0.2s', display: 'flex', flexDirection: 'row', justifyContent: 'center', gap: '1rem', width: '100%', maxWidth: '360px' }}>

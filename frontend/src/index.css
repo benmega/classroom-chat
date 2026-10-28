@@ -342,6 +342,17 @@ main:focus-visible {
   animation: fadeIn 200ms ease;
 }
 
+/* Spinning loader icon (Loader2 in Activity and ProjectInfo). The class was used but never defined. */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Used by the landing hero and the BitShift logo. Plays once on mount (an endless float would need a pause control,
+   WCAG 2.2.2) and, like every animation, is cut short by the reduced-motion block at the end of this file. */
+.animate-float {
+  animation: fadeIn 400ms ease;
+}
+
 /* Opacity only: a transform left on the page wrapper would become the containing block of its
    position: fixed children (claim dock, map pad) and make them scroll with the page. */
 @keyframes pageEntry {
@@ -615,3 +626,26 @@ button:disabled {
 
 .p-1-5rem { padding: 1.5rem; }
 @media (max-width: 800px) { button, select, [role="button"], .profile-toggle, .btn-icon, .btn-small, .btn-primary, .btn-secondary, .btn-outline { min-height: 44px !important; min-width: 44px !important; } }
+
+/* --- Reduced motion (WCAG 2.2.2 / 2.3.3) ---
+   One switch for the whole app. Animations and transitions drop to a near-zero duration instead of being removed, so
+   animationend/transitionend handlers still fire and an element still ends in its final state; an endless animation
+   runs once. !important is what lets the universal selector beat the component rules (page sheets load after this
+   one and are more specific). Canvas confetti has its own switch: disableForReducedMotion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* This rule's animation shorthand is !important and more specific than the block above */
+  .perk-animated-border {
+    animation: none !important;
+  }
+}

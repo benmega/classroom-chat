@@ -103,6 +103,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                         particleCount: 200,
                         spread: 100,
                         origin: { y: 0.6 },
+                        disableForReducedMotion: true,
                         zIndex: 9999
                     });
                     resetForm();
@@ -127,6 +128,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                         particleCount: pCount,
                         spread: Math.min(70 + (duckReward * 2), 160),
                         origin: { y: 0.6 },
+                        disableForReducedMotion: true,
                         zIndex: 9999
                     });
 

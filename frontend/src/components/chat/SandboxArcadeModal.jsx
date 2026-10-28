@@ -45,6 +45,7 @@ const SandboxArcadeModal = ({ isOpen, onClose, classId }) => {
           particleCount: 120,
           spread: 80,
           origin: { y: 0.6 },
+          disableForReducedMotion: true,
           zIndex: 99999,
         });
       } catch (err) {
