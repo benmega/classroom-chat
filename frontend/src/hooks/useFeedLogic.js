@@ -7,6 +7,20 @@ import useChatSocket from './useChatSocket';
 import { showConfirm } from '../utils/confirm';
 import { GLOBAL_CLASSROOM_ID } from '../utils/constants';
 
+const FEED_PAGE_SIZE = 20;
+const SEND_COOLDOWN_SECONDS = 30;
+
+const feedUrl = (classroomId, beforeId = null) => {
+  let url = `/message/api/feed?limit=${FEED_PAGE_SIZE}`;
+  if (beforeId) {
+    url += `&before_id=${beforeId}`;
+  }
+  if (classroomId) {
+    url += `&classroom_id=${classroomId}`;
+  }
+  return url;
+};
+
 export const useFeedLogic = (filterClassroomId = null) => {
   const { user } = useAuthStore();
   // The effects below depend on the id, not on the user object: refreshUser() replaces the object
@@ -105,7 +119,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
     setMessages(prev => prev.filter(m => m.id !== data.message_id));
   }, []);
 
-  const { sendMessage } = useChatSocket(onMessageReceived, () => {}, {
+  const { sendMessage, isConnected } = useChatSocket(onMessageReceived, () => {}, {
     onMessageDeleted
   });
 
@@ -121,16 +135,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
       setLoading(true);
     }
     try {
-      const limit = 20;
-      let url = `/message/api/feed?limit=${limit}`;
-      if (beforeId) {
-        url += `&before_id=${beforeId}`;
-      }
-      if (filterClassroomId) {
-        url += `&classroom_id=${filterClassroomId}`;
-      }
-      
-      const response = await client.get(url);
+      const response = await client.get(feedUrl(filterClassroomId, beforeId));
       const feedData = response.data.messages || [];
       
       setMessages(prev => {
@@ -144,7 +149,7 @@ export const useFeedLogic = (filterClassroomId = null) => {
         return merged;
       });
 
-      setHasMore(feedData.length === limit);
+      setHasMore(feedData.length === FEED_PAGE_SIZE);
     } catch (err) {
       console.error('Failed to load feed', err);
       toast.error('Failed to load feed');
@@ -153,6 +158,48 @@ export const useFeedLogic = (filterClassroomId = null) => {
       setIsLoadingMore(false);
     }
   }, [userId, filterClassroomId]);
+
+  // Messages that were sent while the socket was down never arrive over it. After a reconnect, fetch
+  // the newest page and fold it into what is shown: no skeleton, and the reader keeps their place.
+  const catchUp = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const response = await client.get(feedUrl(filterClassroomId));
+      const latest = response.data.messages || [];
+      if (latest.length === 0) return;
+
+      // lastReadMessageId follows the newest message this feed shows. A page that stops short of it
+      // means more than a page was missed: what is shown no longer joins up with the new messages, so
+      // start over from the newest page and let the older ones load on scroll as usual.
+      const oldestFetched = latest[latest.length - 1].id;
+      const lastReadId = useAuthStore.getState().lastReadMessageId;
+      const joinsUp = latest.length < FEED_PAGE_SIZE || (lastReadId != null && oldestFetched <= lastReadId);
+
+      // The fetched page replaces its own id range (so a message deleted meanwhile disappears too);
+      // everything older than it stays as it is.
+      setMessages((prev) => (joinsUp ? [...latest, ...prev.filter((m) => m.id < oldestFetched)] : latest));
+      if (!joinsUp) setHasMore(true);
+    } catch (err) {
+      // No toast: the connection is the likely reason and the user already sees that it is shaky
+      console.error('Failed to fetch the messages missed while offline', err);
+    }
+  }, [userId, filterClassroomId]);
+
+  // isConnected drives the catch-up: the first connect needs none (the feed was just fetched), a
+  // connect after a drop does.
+  const hasConnectedRef = useRef(false);
+  const droppedRef = useRef(false);
+  useEffect(() => {
+    if (isConnected) {
+      if (droppedRef.current) {
+        droppedRef.current = false;
+        catchUp();
+      }
+      hasConnectedRef.current = true;
+    } else if (hasConnectedRef.current) {
+      droppedRef.current = true;
+    }
+  }, [isConnected, catchUp]);
 
   const handleLoadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore || messages.length === 0) return;
@@ -205,9 +252,17 @@ export const useFeedLogic = (filterClassroomId = null) => {
     initFeed();
   }, [userId, fetchFeed, filterClassroomId]);
 
+  // The text in the box right now, for an acknowledgement that arrives after the user typed on
+  const draftRef = useRef('');
+  useEffect(() => {
+    draftRef.current = newMessage;
+  }, [newMessage]);
+  // True from the moment a message goes out until the server answers (or the wait runs out)
+  const isSendingRef = useRef(false);
+
   const handleSendMessage = async (e) => {
     if (e) e.preventDefault();
-    if ((!newMessage.trim() && !file) || cooldown > 0) return;
+    if ((!newMessage.trim() && !file) || cooldown > 0 || isSendingRef.current) return;
 
     if (file) {
       const formData = new FormData();
@@ -235,16 +290,11 @@ export const useFeedLogic = (filterClassroomId = null) => {
 
     const messageToSend = newMessage.trim();
 
-    setNewMessage('');
     setShowEmojiPicker(false);
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
+    isSendingRef.current = true;
 
-    if (user?.role !== 'admin') {
-      setCooldown(30);
-    }
-
+    // The text stays in the box and the cooldown waits until the server confirms the message: a lost
+    // acknowledgement (or a refusal) must not eat what the user wrote.
     sendMessage({
       content: messageToSend,
       is_global: isGlobal,
@@ -252,10 +302,21 @@ export const useFeedLogic = (filterClassroomId = null) => {
       target_classrooms: targetClassrooms,
       target_users: targetUsers
     }, (response) => {
+      isSendingRef.current = false;
       if (response && !response.success) {
         toast.error(response.error || 'Failed to send message.');
-        setNewMessage(messageToSend);
-        setCooldown(0);
+        return;
+      }
+
+      // Not if they have started on something else while they waited
+      if (draftRef.current.trim() === messageToSend) {
+        setNewMessage('');
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
+      }
+      if (user?.role !== 'admin') {
+        setCooldown(SEND_COOLDOWN_SECONDS);
       }
     });
   };

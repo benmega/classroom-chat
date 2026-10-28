@@ -12,6 +12,7 @@ import {
 const EmojiPicker = React.lazy(() => import('emoji-picker-react'));
 import client from '../../api/client';
 import { getSocket } from '../../hooks/useChatSocket';
+import { SOCKET_EVENTS } from '../../constants/socketEvents';
 import SandboxArcadeModal from '../../components/chat/SandboxArcadeModal';
 import './Chat.css';
 
@@ -143,9 +144,9 @@ const Chat = ({ filterClassroomId = null }) => {
       }
     };
 
-    socket.on('sandbox_status_changed', handleSandboxStatusChanged);
+    socket.on(SOCKET_EVENTS.SANDBOX_STATUS_CHANGED, handleSandboxStatusChanged);
     return () => {
-      socket.off('sandbox_status_changed', handleSandboxStatusChanged);
+      socket.off(SOCKET_EVENTS.SANDBOX_STATUS_CHANGED, handleSandboxStatusChanged);
     };
   }, [filterClassroomId, targetClassroomIds]);
 

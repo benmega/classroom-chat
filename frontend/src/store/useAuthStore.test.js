@@ -384,6 +384,22 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
   });
 
+  it('discards the chat socket on login too, so a socket refused while anonymous is never reused', async () => {
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+
+    await useAuthStore.getState().login('testuser', 'password123');
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(resetSocket).toHaveBeenCalledTimes(1);
+  });
+
+  it('discards the chat socket when an auth check signs a user in', async () => {
+    await useAuthStore.getState().checkAuth();
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(resetSocket).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the chat socket while the session lives', async () => {
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
     useAuthStore.setState({ unreadCount: 3 });

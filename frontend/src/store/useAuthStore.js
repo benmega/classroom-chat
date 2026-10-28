@@ -179,7 +179,7 @@ const useAuthStore = create((set, get) => ({
 // failed auth check, a login), the old socket must go: after a login the next one is opened with the
 // new cookies, and a socket the server refused while the visitor was anonymous is never reused.
 useAuthStore.subscribe((state, prev) => {
-  if (prev.isAuthenticated && !state.isAuthenticated) resetSocket();
+  if (prev.isAuthenticated !== state.isAuthenticated) resetSocket();
 });
 
 export default useAuthStore;
