@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Mic, MicOff, Settings, Monitor, Play, Pause, Square } from 'lucide-react';
+import { X, Mic, MicOff, Settings, Monitor, Play, Pause, Square, Video } from 'lucide-react';
+import SetupTestRecorder from './SetupTestRecorder';
 import './ScreenRecorder.css';
 
 class ScreenRecorderCore {
@@ -228,7 +229,7 @@ class ScreenRecorderCore {
 }
 
 const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
-  const [stage, setStage] = useState('setup'); // 'setup' | 'recording'
+  const [stage, setStage] = useState('setup'); // 'setup' | 'test' | 'recording'
   const [settings, setSettings] = useState({
     overlayPosition: 'bottom-left',
     overlaySize: 40,
@@ -381,7 +382,9 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
         aria-labelledby="screen-recorder-title"
       >
         <header>
-          <h1 id="screen-recorder-title">{stage === 'setup' ? 'Screen + Camera Setup' : status || 'Recording...'}</h1>
+          <h1 id="screen-recorder-title">
+            {stage === 'setup' ? 'Screen + Camera Setup' : stage === 'test' ? 'Test Camera + Mic' : status || 'Recording...'}
+          </h1>
           <button className="screen-recorder-close-btn" onClick={onClose} aria-label="Close recorder"><X size={32} /></button>
         </header>
 
@@ -446,8 +449,13 @@ const ScreenRecorder = ({ isOpen, onClose, onRecordingComplete }) => {
               </div>
               
               <button onClick={handleStartRecording} className="btn-record">RECORD</button>
+              <button type="button" onClick={() => setStage('test')} className="btn-test-setup">
+                <Video size={18} /> Test camera + mic first
+              </button>
             </div>
           </div>
+        ) : stage === 'test' ? (
+          <SetupTestRecorder includeMicrophone={settings.includeMicrophone} onBack={() => setStage('setup')} />
         ) : (
           <div className="screen-recorder-page">
             <div className="video-container">
