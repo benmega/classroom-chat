@@ -359,7 +359,11 @@
 .admin-rail-item[data-tooltip]:hover::after,
 .admin-rail-item[data-tooltip]:hover::before,
 .admin-rail-logo[data-tooltip]:hover::after,
-.admin-rail-logo[data-tooltip]:hover::before {
+.admin-rail-logo[data-tooltip]:hover::before,
+.admin-rail-item[data-tooltip]:focus-visible::after,
+.admin-rail-item[data-tooltip]:focus-visible::before,
+.admin-rail-logo[data-tooltip]:focus-visible::after,
+.admin-rail-logo[data-tooltip]:focus-visible::before {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
 }

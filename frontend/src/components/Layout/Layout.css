@@ -1024,12 +1024,15 @@ footer {
     z-index: 1200;
 }
 
-.nav-rail-item[data-tooltip]:hover::after {
+/* Keyboard focus shows the label too, not only the pointer (WCAG 1.4.13: no information that only a hover reveals) */
+.nav-rail-item[data-tooltip]:hover::after,
+.nav-rail-item[data-tooltip]:focus-visible::after {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
 }
 
-.nav-rail-item[data-tooltip]:hover::before {
+.nav-rail-item[data-tooltip]:hover::before,
+.nav-rail-item[data-tooltip]:focus-visible::before {
     opacity: 1;
     transform: translateY(-50%) translateX(0);
 }
