@@ -593,6 +593,11 @@ footer {
 .mobile-overlay {
     position: fixed;
     inset: 0;
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    cursor: default;
     background: rgba(15, 23, 42, 0.5);
     z-index: var(--z-dropdown);
     opacity: 0;

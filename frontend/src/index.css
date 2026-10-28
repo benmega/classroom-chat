@@ -113,6 +113,32 @@ button:focus-visible,
   border-radius: var(--radius-sm);
 }
 
+/* The skip link (WCAG 2.4.1) is the first control in both shells. It sits above the viewport and drops in while it
+   has focus; a transform keeps it focusable, which display:none would not. */
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: var(--z-modal);
+  padding: 0.6rem 1rem;
+  background: var(--bg-primary);
+  color: var(--primary-accessible);
+  border: 2px solid var(--primary-accessible);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  transform: translateY(-250%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+/* <main> takes focus from the skip link and after a route change (tabIndex -1). It is a landmark, not a control,
+   so no ring is painted around the whole page; the transparent outline still shows in forced-colors mode. */
+main:focus-visible {
+  outline: 2px solid transparent;
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;

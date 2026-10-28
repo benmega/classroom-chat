@@ -417,6 +417,10 @@
     display: none;
     position: fixed;
     inset: 0;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    cursor: default;
     background: rgba(0, 0, 0, 0.65);
     z-index: var(--z-dropdown);
 }

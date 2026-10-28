@@ -1,9 +1,14 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Home, User, Shield, FileCheck, History, RefreshCw, X, LogOut, MessageSquare, ShoppingCart, Map, Award, Settings, HelpCircle, ClipboardCheck } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import { getApiUrl } from '../../utils/apiUrl';
 import useParentChildren from '../../hooks/useParentChildren';
+import useModalA11y from '../../hooks/useModalA11y';
+import { MOBILE_SIDEBAR_ID } from './layoutIds';
+
+// Above this width the sidebar is display:none (the nav rail takes over), see Layout.css.
+const DESKTOP_QUERY = '(min-width: 801px)';
 
 const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLogout, onContactTeacher }) => {
     const { unreadCount, activityUnreadCount } = useAuthStore();
@@ -11,19 +16,41 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
 
     const close = () => setSidebarOpen(false);
 
+    // While open: Escape closes, Tab stays inside, focus moves in and returns to the hamburger on close.
+    const asideRef = useRef(null);
+    useModalA11y({ isOpen: isSidebarOpen, onClose: close, containerRef: asideRef });
+
+    // Widening the window past the breakpoint hides the sidebar for good; close it so a trapped Tab cannot
+    // outlive the drawer it belonged to.
+    const closeRef = useRef(close);
+    useEffect(() => {
+        closeRef.current = close;
+    });
+    useEffect(() => {
+        if (!isSidebarOpen || typeof window.matchMedia !== 'function') return undefined;
+        const desktop = window.matchMedia(DESKTOP_QUERY);
+        const onChange = (e) => { if (e.matches) closeRef.current(); };
+        desktop.addEventListener('change', onChange);
+        return () => desktop.removeEventListener('change', onChange);
+    }, [isSidebarOpen]);
+
     return (
         <>
-            <div role="button" tabIndex={0} 
-                className={`mobile-overlay ${isSidebarOpen ? 'show' : ''}`} 
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={close}
-            ></div>
-            
-            <aside className={`mobile-sidebar ${isSidebarOpen ? 'open' : ''}`} aria-label="Navigation">
+            {/* A real button so assistive tech can find "Close menu". Out of the tab order on purpose: the close
+                button inside the sidebar and Escape do the same for a keyboard user. */}
+            <button type="button" tabIndex={-1} aria-label="Close menu" inert={!isSidebarOpen}
+                className={`mobile-overlay ${isSidebarOpen ? 'show' : ''}`}
+                onClick={close}
+            ></button>
+
+            {/* inert while closed: the links are slid off-screen, not removed, so without it Tab walks through them */}
+            <aside id={MOBILE_SIDEBAR_ID} ref={asideRef} tabIndex={-1} inert={!isSidebarOpen}
+                className={`mobile-sidebar ${isSidebarOpen ? 'open' : ''}`} aria-label="Navigation">
                 <div className="sidebar-header">
                     <div className="sidebar-logo">
                         <img src="/images/logo.png" alt="Logo" />
                     </div>
-                    <button className="sidebar-close" onClick={close} aria-label="Close navigation">
+                    <button className="sidebar-close" onClick={close} aria-label="Close navigation" data-autofocus>
                         <X size={24} />
                     </button>
                 </div>
