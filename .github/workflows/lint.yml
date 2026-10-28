@@ -9,10 +9,14 @@ on:
   # Allow other workflows (e.g. deploy) to require this as a gate.
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   backend-lint:
     name: Backend Lint (Ruff)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: backend
@@ -39,6 +43,7 @@ jobs:
   frontend-lint:
     name: Frontend Lint (ESLint)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend

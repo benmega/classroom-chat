@@ -1,17 +1,31 @@
 name: Tests
 
 on:
+  # Pushes run on the long-lived branches only; every other branch is tested by its
+  # pull_request run, so a push to a PR branch is not tested twice. Pull requests are
+  # tested whatever their base branch is (feature branches get stacked on each other).
   push:
-    branches: [ main ]
+    branches: [ main, working ]
   pull_request:
-    branches: [ main ]
   # Allow other workflows (e.g. deploy) to require this as a gate.
   workflow_call:
+
+permissions:
+  contents: read
+
+# A newer push to a pull request supersedes the run in flight. Runs on main, working
+# and the deploy gate are never cancelled, so every pushed commit keeps a result.
+# github.workflow is the calling workflow's name when this file is reused, so the two
+# deploy workflows (which both call it for the same ref) do not queue behind each other.
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   backend-tests:
     name: Backend Tests (Pytest)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: backend
@@ -59,6 +73,7 @@ jobs:
   frontend-tests:
     name: Frontend Tests (Vitest)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: frontend
