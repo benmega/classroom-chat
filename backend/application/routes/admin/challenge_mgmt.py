@@ -4,7 +4,9 @@ from application.decorators.admin_required import admin_only
 from application.decorators.api_response import api_response
 from application.extensions import db
 from application.models.challenge import Challenge
+from application.services.challenge_slug import SlugRenameError, rename_challenge_slug
 from flask import request
+from sqlalchemy.exc import IntegrityError
 
 from .blueprint import admin_bp
 
@@ -229,11 +231,19 @@ def edit_challenge(id):
             return "value must be a number", 400
 
     slug = data.get("slug")
+    renamed = bool(slug) and slug != c.slug
+    logs_moved = 0
     if slug:
         existing = Challenge.query.filter(Challenge.slug == slug, Challenge.id != id).first()
         if existing:
             return "Challenge with this slug already exists", 400
-        c.slug = slug
+        # Logs, project templates and level games refer to a challenge by its slug
+        # as text, so they move with it in this transaction (or the rename is refused).
+        try:
+            logs_moved = rename_challenge_slug(c, slug)
+        except SlugRenameError as e:
+            db.session.rollback()
+            return e.message, e.status
 
     if "name" in data: c.name = data["name"]
     if "course_id" in data: c.course_id = data["course_id"]
@@ -243,8 +253,19 @@ def edit_challenge(id):
     if "sequence" in data: c.sequence = data["sequence"]
     if "description" in data: c.description = data["description"]
 
-    db.session.commit()
-    return {"message": "Challenge updated successfully"}
+    try:
+        db.session.commit()
+    except IntegrityError:
+        # Only a rename can collide here: a log or another challenge took the new
+        # slug between the checks above and the commit.
+        db.session.rollback()
+        if not renamed:
+            raise
+        return "The slug was taken while the rename was saved. Nothing was changed.", 409
+    result = {"message": "Challenge updated successfully"}
+    if renamed:
+        result["logs_moved"] = logs_moved
+    return result
 
 
 @admin_bp.route("/challenges/<int:id>", methods=["DELETE"])

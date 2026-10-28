@@ -3,8 +3,11 @@ from unittest.mock import patch
 import pytest
 from application.extensions import db
 from application.models.challenge import Challenge
+from application.models.challenge_log import ChallengeLog
 from application.models.classroom import Classroom
+from application.models.level_game import LevelGame
 from application.models.message import Message, message_classrooms, message_users
+from application.models.project_template import ProjectTemplate
 from application.models.user import User
 from application.routes.admin import advanced_ops
 from sqlalchemy import func, select
@@ -230,6 +233,240 @@ def test_add_and_edit_challenge_reject_a_value_that_is_not_a_number(
     assert (kept.name, kept.value) == ("Kept", 2)
 
 
+# ---------------------------------------------------------------- slug renames
+# Logs, project templates and level games refer to a challenge by its slug as plain
+# text. A rename has to move them, or refuse to leave them pointing at nothing.
+
+
+def _challenge_with_references(slug="old-slug"):
+    """A challenge plus a template and a level game that point at its slug."""
+    challenge = Challenge(name="Original", slug=slug, domain="domain", value=1)
+    db.session.add_all(
+        [
+            challenge,
+            ProjectTemplate(name=f"Template {slug}", description="d", challenge_slug=slug),
+            LevelGame(
+                assigned_lesson="1.1",
+                progression_order=1,
+                game_name="Game",
+                game_url="https://example.com/game",
+                challenge_slug=slug,
+            ),
+        ]
+    )
+    db.session.commit()
+    return challenge
+
+
+def _log(user, slug, instance="inst-1"):
+    db.session.add(
+        ChallengeLog(
+            user_id=user.id,
+            domain="domain",
+            challenge_slug=slug,
+            course_instance=instance,
+        )
+    )
+    db.session.commit()
+
+
+def _logs():
+    """Every log as (username, slug, course instance), whatever order they were made in."""
+    db.session.expire_all()
+    return sorted(
+        (
+            (db.session.get(User, log.user_id).username, log.challenge_slug, log.course_instance)
+            for log in ChallengeLog.query.all()
+        ),
+        key=str,
+    )
+
+
+def _rename(client, challenge, slug, **fields):
+    return client.put(
+        f"/api/admin/challenges/edit/{challenge.id}", json={"slug": slug, **fields}
+    )
+
+
+def test_renaming_a_challenge_moves_its_logs_templates_and_level_games(
+    client, sample_admin
+):
+    login_as_admin(client, sample_admin)
+    challenge = _challenge_with_references()
+    other = _challenge_with_references("other-slug")
+    first, second = UserFactory(username="first"), UserFactory(username="second")
+    db.session.commit()
+    _log(first, "old-slug", "inst-1")
+    _log(first, "old-slug", "inst-2")
+    _log(second, "old-slug", None)
+    _log(first, "other-slug", "inst-1")
+
+    resp = _rename(client, challenge, "new-slug", name="Renamed")
+
+    assert resp.status_code == 200
+    assert resp.json["data"] == {
+        "message": "Challenge updated successfully",
+        "logs_moved": 3,
+    }
+    db.session.expire_all()
+    assert (challenge.slug, challenge.name) == ("new-slug", "Renamed")
+    assert _logs() == [
+        ("first", "new-slug", "inst-1"),
+        ("first", "new-slug", "inst-2"),
+        ("first", "other-slug", "inst-1"),
+        ("second", "new-slug", None),
+    ]
+    assert ProjectTemplate.query.filter_by(challenge_slug="new-slug").count() == 1
+    assert LevelGame.query.filter_by(challenge_slug="new-slug").count() == 1
+    assert ProjectTemplate.query.filter_by(challenge_slug="old-slug").count() == 0
+    assert LevelGame.query.filter_by(challenge_slug="old-slug").count() == 0
+    # The other challenge's references stay where they were
+    assert other.slug == "other-slug"
+    assert ProjectTemplate.query.filter_by(challenge_slug="other-slug").count() == 1
+    assert LevelGame.query.filter_by(challenge_slug="other-slug").count() == 1
+
+
+def test_a_rename_that_would_duplicate_a_log_is_refused_and_changes_nothing(
+    client, sample_admin
+):
+    login_as_admin(client, sample_admin)
+    challenge = _challenge_with_references()
+    student = UserFactory(username="student")
+    db.session.commit()
+    # Logs under the new slug can exist without a challenge of that slug
+    _log(student, "old-slug", "inst-1")
+    _log(student, "new-slug", "inst-1")
+
+    resp = _rename(client, challenge, "new-slug", name="Renamed", value=9)
+
+    assert resp.status_code == 409
+    assert resp.json["status"] == "error"
+    assert "Cannot rename 'old-slug' to 'new-slug'" in resp.json["error"]
+    assert "1 completion log under the old slug would duplicate" in resp.json["error"]
+    db.session.expire_all()
+    # The other fields of the same request were not applied either
+    assert (challenge.slug, challenge.name, challenge.value) == ("old-slug", "Original", 1)
+    assert _logs() == [
+        ("student", "new-slug", "inst-1"),
+        ("student", "old-slug", "inst-1"),
+    ]
+    assert ProjectTemplate.query.filter_by(challenge_slug="old-slug").count() == 1
+    assert LevelGame.query.filter_by(challenge_slug="old-slug").count() == 1
+
+
+def test_a_rename_is_refused_when_two_logs_without_a_course_instance_would_meet(
+    client, sample_admin
+):
+    login_as_admin(client, sample_admin)
+    challenge = _challenge_with_references()
+    student = UserFactory(username="student")
+    db.session.commit()
+    _log(student, "old-slug", None)
+    _log(student, "new-slug", None)
+
+    resp = _rename(client, challenge, "new-slug")
+
+    assert resp.status_code == 409
+    db.session.expire_all()
+    assert challenge.slug == "old-slug"
+    assert _logs() == [("student", "new-slug", None), ("student", "old-slug", None)]
+
+
+def test_a_rename_goes_through_when_the_logs_do_not_overlap(client, sample_admin):
+    login_as_admin(client, sample_admin)
+    challenge = _challenge_with_references()
+    first, second = UserFactory(username="first"), UserFactory(username="second")
+    db.session.commit()
+    # Same student in another course instance, another student in the same one, and a
+    # log without an instance next to one with an instance: none of them is a duplicate
+    _log(first, "old-slug", "inst-1")
+    _log(first, "new-slug", "inst-2")
+    _log(second, "new-slug", "inst-1")
+    _log(second, "old-slug", None)
+    _log(first, "new-slug", None)
+
+    resp = _rename(client, challenge, "new-slug")
+
+    assert resp.status_code == 200
+    assert resp.json["data"]["logs_moved"] == 2
+    assert _logs() == [
+        ("first", "new-slug", "inst-1"),
+        ("first", "new-slug", "inst-2"),
+        ("first", "new-slug", None),
+        ("second", "new-slug", "inst-1"),
+        ("second", "new-slug", None),
+    ]
+
+
+def test_saving_a_challenge_with_its_own_slug_moves_nothing(client, sample_admin):
+    login_as_admin(client, sample_admin)
+    challenge = _challenge_with_references()
+    student = UserFactory(username="student")
+    db.session.commit()
+    _log(student, "old-slug")
+
+    resp = _rename(client, challenge, "old-slug", value=3)
+
+    assert resp.status_code == 200
+    assert resp.json["data"] == {"message": "Challenge updated successfully"}
+    assert _logs() == [("student", "old-slug", "inst-1")]
+
+
+def test_a_slug_that_another_challenge_has_cannot_be_taken(client, sample_admin):
+    login_as_admin(client, sample_admin)
+    challenge = _challenge_with_references()
+    _challenge_with_references("taken")
+    student = UserFactory(username="student")
+    db.session.commit()
+    _log(student, "old-slug")
+
+    resp = _rename(client, challenge, "taken")
+
+    assert resp.status_code == 400
+    assert resp.json["error"] == "Challenge with this slug already exists"
+    assert _logs() == [("student", "old-slug", "inst-1")]
+
+
+def test_the_generic_admin_editor_moves_logs_on_a_rename_too(client, sample_admin):
+    login_as_admin(client, sample_admin)
+    challenge = _challenge_with_references()
+    clashing = _challenge_with_references("clash-old")
+    student = UserFactory(username="student")
+    db.session.commit()
+    _log(student, "old-slug")
+    _log(student, "clash-old")
+    _log(student, "clash-new")
+
+    resp = client.put(f"/api/admin/crud/challenge/{challenge.id}", json={"slug": "new-slug"})
+
+    assert resp.status_code == 200
+    assert resp.json["data"]["slug"] == "new-slug"
+    assert ("student", "new-slug", "inst-1") in _logs()
+    assert ProjectTemplate.query.filter_by(challenge_slug="new-slug").count() == 1
+    assert LevelGame.query.filter_by(challenge_slug="new-slug").count() == 1
+
+    # The same refusal as the challenge page, in the editor's error format
+    resp = client.put(
+        f"/api/admin/crud/challenge/{clashing.id}",
+        json={"slug": "clash-new", "name": "Renamed"},
+    )
+    assert resp.status_code == 409
+    assert "Cannot rename 'clash-old' to 'clash-new'" in resp.json["error"]
+    db.session.expire_all()
+    assert (clashing.slug, clashing.name) == ("clash-old", "Original")
+
+    # react-admin sends the whole record back: an unchanged slug is not a rename
+    resp = client.put(
+        f"/api/admin/crud/challenge/{challenge.id}",
+        json={"slug": "new-slug", "name": "Edited"},
+    )
+    assert resp.status_code == 200
+    assert ("student", "new-slug", "inst-1") in _logs()
+
+    resp = client.put(f"/api/admin/crud/challenge/{challenge.id}", json={"slug": ""})
+    assert resp.status_code == 400
+
+
 def _add_messages(user, count, **kwargs):
     messages = [Message(user_id=user.id, content=f"m{i}", **kwargs) for i in range(count)]
     db.session.add_all(messages)
@@ -263,7 +500,7 @@ def test_purge_history_deletes_every_message(client, sample_admin, sample_user):
 
 
 def test_purge_history_leaves_users_and_classrooms_alone(
-    client, sample_admin, sample_user
+    client, sample_admin, sample_user
 ):
     classroom = ClassroomFactory()
     _add_messages(sample_user, 2, is_global=True)
@@ -288,7 +525,7 @@ def _targeted_message(author, classroom, recipient):
 
 
 def test_purge_history_removes_the_targets_of_the_purged_messages(
-    client, sample_admin, sample_user
+    client, sample_admin, sample_user
 ):
     _targeted_message(sample_user, ClassroomFactory(), UserFactory())
     login_as_admin(client, sample_admin)
@@ -302,7 +539,7 @@ def test_purge_history_removes_the_targets_of_the_purged_messages(
 
 
 def test_message_created_after_a_purge_does_not_inherit_the_old_audience(
-    client, sample_admin, sample_user
+    client, sample_admin, sample_user
 ):
     _targeted_message(sample_user, ClassroomFactory(), UserFactory())
     login_as_admin(client, sample_admin)
@@ -319,7 +556,7 @@ def test_message_created_after_a_purge_does_not_inherit_the_old_audience(
 
 
 def test_purge_history_rolls_back_and_hides_nothing_when_the_delete_fails(
-    client, sample_admin, sample_user
+    client, sample_admin, sample_user
 ):
     _add_messages(sample_user, 2, is_global=True)
     login_as_admin(client, sample_admin)
@@ -335,7 +572,7 @@ def test_purge_history_rolls_back_and_hides_nothing_when_the_delete_fails(
 
 @pytest.mark.parametrize("who", ["anonymous", "student"])
 def test_purge_history_is_refused_to_non_admins_and_deletes_nothing(
-    client, sample_user, who
+    client, sample_user, who
 ):
     _add_messages(sample_user, 2, is_global=True)
     if who == "student":

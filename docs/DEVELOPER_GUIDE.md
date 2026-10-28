@@ -82,6 +82,16 @@ classroom-chat/
 
 ---
 
+## Seeding the database
+
+`flask seed` (run from `backend/` with `FLASK_APP=main.py`) loads the data that lives in files under version control; `deploy.sh` runs it on every deploy, so it must be safe to run repeatedly.
+
+- **Insert-only**: courses, achievements, course instances, challenges (`backend/instance/migration/level_seed_data.csv`, matched by slug) and the standard project templates (`application/commands/projects_data.py`, matched by name) are only created when missing. A row that already exists is never changed, so a challenge value or a template description edited in the admin UI survives every deploy. The output counts what was inserted, updated and left unchanged, for example `Successfully inserted 1 and updated 0 challenges (41 unchanged).`
+- **`flask seed --overwrite`**: use it when the files are the source of truth and the database should follow them again. It rewrites the existing challenges (name, domain, difficulty, value, description, course) and project templates (chapter, description) from the files, which **discards any edit made in the admin UI** to those fields. Rows it has no file for are never deleted, and `deploy.sh` never passes it. The flag does not touch courses, achievements, course instances, the 3D modeling track or the student tests; those follow their own rules, see [`infrastructure_and_devops.md`](infrastructure_and_devops.md#8-database-migrations) and [`student_tests.md`](student_tests.md).
+- **Renaming a challenge slug**: an admin can change a slug in the UI. The completion logs, project templates and level games that use the old slug move to the new one in the same transaction, and the rename is refused with a 409 when a student would end up with two logs for the same challenge. The seed file is not edited by that: if `level_seed_data.csv` still lists the old slug, the next `flask seed` adds a challenge with that slug again. Change the slug in the CSV in the same commit.
+
+---
+
 ## Branching Strategy
 
 - Feature branches off `main` (e.g. `feature/ducks`); PRs merge into `main`.
