@@ -5,6 +5,7 @@ Summary: Background scheduler tasks for periodic session cleanup.
 """
 
 import logging
+import re
 
 from application.extensions import db, scheduler
 from application.utilities.session_cleanup import close_stale_sessions
@@ -13,6 +14,15 @@ from sqlalchemy.exc import OperationalError, ProgrammingError
 logger = logging.getLogger(__name__)
 
 _app_instance = None
+
+# What the database says when a table does not exist yet: SQLite, PostgreSQL, MySQL.
+_MISSING_TABLE = re.compile(r"no such table|relation .* does not exist|table .* doesn't exist")
+
+
+def _is_missing_table(error):
+    """True when ``error`` only says that a table is not there (yet), as opposed to
+    a locked database or any other failure that must be reported."""
+    return bool(_MISSING_TABLE.search(str(getattr(error, "orig", None) or error).lower()))
 
 
 def set_app_instance(app):
@@ -44,9 +54,14 @@ def scheduled_cleanup():
                 logger.debug("No stale sessions found")
 
     except (OperationalError, ProgrammingError) as e:
-        # Tables are missing or mid-migration (e.g. during 'flask db upgrade'): skip
-        # this tick instead of logging a traceback every minute until the schema exists.
-        logger.warning(f"Session cleanup skipped (schema not ready): {e!s}")
+        if _is_missing_table(e):
+            # Tables are missing or mid-migration (e.g. during 'flask db upgrade'): skip
+            # this tick instead of logging a traceback every minute until the schema exists.
+            logger.warning(f"Session cleanup skipped (schema not ready): {e!s}")
+        else:
+            # "database is locked" and the like are real problems: name them. The next
+            # tick tries again, so there is nothing to re-raise.
+            logger.exception(f"Session cleanup failed ({type(e).__name__}): {e!s}")
     except Exception as e:
         logger.exception(f"Error in scheduled cleanup: {e!s}")
         raise
