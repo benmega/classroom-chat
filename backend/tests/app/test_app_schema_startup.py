@@ -19,6 +19,7 @@ from application.constants import GLOBAL_CLASSROOM_ID
 from application.extensions import db, scheduler, socketio
 from application.models.classroom import Classroom
 from application.models.configuration import Configuration
+from application.routes.server_info_routes import VERSION_TABLE, migration_heads
 
 
 @pytest.fixture
@@ -77,7 +78,36 @@ def test_production_start_fills_in_the_defaults_once_the_schema_exists(start_app
         assert Configuration.query.count() == 1
         assert db.session.get(Classroom, GLOBAL_CLASSROOM_ID) is not None
         assert db.session.get(Classroom, "archive") is not None
+
+
+def test_production_health_fails_until_deploy_sh_has_stamped_the_schema(start_app):
+    """create_all built the tables but nothing stamped them: the deploy gate must not pass."""
+    with start_app(ProductionConfig).app_context():
+        db.create_all()
+    app = start_app(ProductionConfig)
+
+    unstamped = app.test_client().get("/server/health")
+
+    assert unstamped.status_code == 503
+    assert unstamped.get_json()["failed"] == ["migrations"]
+
+    with app.app_context():
+        db.session.execute(sa.text(f"CREATE TABLE {VERSION_TABLE} (version_num VARCHAR(32) NOT NULL PRIMARY KEY)"))
+        for head in migration_heads():
+            db.session.execute(sa.text(f"INSERT INTO {VERSION_TABLE} VALUES (:head)"), {"head": head})
+        db.session.commit()
+
     assert app.test_client().get("/server/health").status_code == 200
+
+
+@pytest.mark.parametrize("config_class", [DevelopmentConfig, TestingConfig])
+def test_health_outside_production_accepts_a_database_without_a_stamp(start_app, config_class):
+    app = start_app(config_class)
+
+    response = app.test_client().get("/server/health")
+
+    assert response.status_code == 200
+    assert response.get_json()["checks"]["migrations"]["ok"] is True
 
 
 @pytest.mark.parametrize("config_class", [DevelopmentConfig, TestingConfig])

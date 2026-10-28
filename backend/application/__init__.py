@@ -159,6 +159,11 @@ def create_app(config_class=None):
         )
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
+    # Where Alembic alone owns the schema (production), /server/health fails a database
+    # that has no alembic_version table; elsewhere create_all builds the tables without one.
+    app.config.setdefault(
+        "HEALTH_REQUIRES_MIGRATION_STAMP", issubclass(config_class, ProductionConfig)
+    )
 
     db.init_app(app)
     migrate.init_app(app, db)
