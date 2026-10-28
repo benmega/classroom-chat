@@ -110,5 +110,11 @@ describe('ProfileHeader Component', () => {
 
             expect(screen.getByRole('img', { name: 'testuser' })).toBeInTheDocument();
         });
+
+        it('loads eagerly, because it is in the first screen of the page', () => {
+            renderHeader({ isOwner: false });
+
+            expect(screen.getByRole('img', { name: 'testuser' })).toHaveAttribute('loading', 'eager');
+        });
     });
 });

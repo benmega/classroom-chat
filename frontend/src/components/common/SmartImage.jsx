@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { User, Code } from 'lucide-react';
 
+// Images load lazily and decode off the main thread by default, so a page of avatars or project
+// covers does not fetch everything up front. Pass `eager` for an image that is on screen as soon
+// as the page opens (a profile header avatar, a hero picture): lazy-loading those delays the first
+// paint. A `loading` or `decoding` prop still wins over both defaults.
 const SmartImage = ({ 
   src, 
   alt = '', 
   fallbackType = 'avatar', 
   className = '', 
   style = {},
+  eager = false,
   ...props 
 }) => {
   const [errorState, setErrorState] = useState({ src, count: 0 });
@@ -63,6 +68,8 @@ const SmartImage = ({
         objectFit: 'cover',
         ...style
       }}
+      loading={eager ? 'eager' : 'lazy'}
+      decoding="async"
       onError={handleError}
       {...props}
     />
