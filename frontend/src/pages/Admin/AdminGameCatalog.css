@@ -164,7 +164,7 @@
   gap: 0.3rem;
   font-weight: 700;
   font-size: 0.8rem;
-  color: var(--warning-color);
+  color: var(--warning-text);
 }
 
 .badge-account-required {
@@ -188,7 +188,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  color: var(--success-dark, #059669);
+  color: var(--success-text);
   font-size: 0.8rem;
   font-weight: 600;
 }

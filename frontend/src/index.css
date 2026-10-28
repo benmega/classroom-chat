@@ -338,7 +338,7 @@ select {
   width: 100%;
   padding: 0.75rem 1.25rem;
   border-radius: var(--radius-md);
-  border: 2px solid var(--border-rich);
+  border: 2px solid var(--input-border);
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: inherit;

@@ -42,7 +42,7 @@
 }
 
 :where(.connect-child-page) .icon-success {
-    color: var(--success-color, var(--success-color));
+    color: var(--success-text);
     margin: 0 auto;
 }
 
