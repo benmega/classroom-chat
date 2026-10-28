@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { getCourseHeaderImage, COURSE_IMAGES, DOMAIN_DEFAULT_IMAGES } from './courseImages';
 
@@ -63,5 +66,38 @@ describe('getCourseHeaderImage', () => {
 
     it('returns null if no matches', () => {
         expect(getCourseHeaderImage('random', 'random', 'random')).toBeNull();
+    });
+});
+
+describe('course image files', () => {
+    const DEFAULT_IMAGE = '/images/courses/course-default.webp';
+    const PUBLIC_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../public');
+    const publicFile = (urlPath) => path.join(PUBLIC_DIR, urlPath);
+
+    it('points every code.org, CodeAI and 3D alias at the one shared default banner', () => {
+        const sharedKeys = [
+            '3d-1', '3d1', '3d-2', '3d2',
+            'code-org', 'codeorg', 'codeai', 'code-ai', 'express-course', 'cs-discoveries', 'ai-for-oceans',
+            'coursea-2024', 'courseb-2024', 'coursec-2024', 'coursed-2024', 'coursee-2024', 'coursef-2024',
+        ];
+        for (const key of sharedKeys) {
+            expect(COURSE_IMAGES[key]).toBe(DEFAULT_IMAGE);
+        }
+        for (const key of ['studio.code.org', 'code.org', 'codeai', '3d-modeling']) {
+            expect(DOMAIN_DEFAULT_IMAGES[key]).toBe(DEFAULT_IMAGE);
+        }
+    });
+
+    it('resolves the Code.org course ids, names and domain to the default banner', () => {
+        expect(getCourseHeaderImage('coursea-2024')).toBe(DEFAULT_IMAGE);
+        expect(getCourseHeaderImage('coursef-2024')).toBe(DEFAULT_IMAGE);
+        expect(getCourseHeaderImage('unknown', 'Code.org express')).toBe(DEFAULT_IMAGE);
+        expect(getCourseHeaderImage('unknown', 'unknown', 'studio.code.org')).toBe(DEFAULT_IMAGE);
+    });
+
+    it('only references files that exist in public/', () => {
+        const paths = new Set([...Object.values(COURSE_IMAGES), ...Object.values(DOMAIN_DEFAULT_IMAGES)]);
+        const missing = [...paths].filter((urlPath) => !existsSync(publicFile(urlPath)));
+        expect(missing).toEqual([]);
     });
 });
