@@ -51,6 +51,53 @@ def test_deploy_sh_keeps_its_app_processes_from_starting_the_scheduler():
     assert "\n)\n" in script[seed:service_restart]
 
 
+def test_deploy_sh_checks_the_migrated_schema_before_it_restarts_the_service():
+    """'flask db check' fails when the migrations leave the database different from the models."""
+    script = _text(DEPLOY_SH)
+
+    upgrade = script.index("-m flask db upgrade")
+    check = script.index("-m flask db check")
+    seed = script.index("-m flask seed")
+    service_restart = script.rindex('systemctl restart "$SERVICE_NAME"')
+
+    assert upgrade < check < seed < service_restart
+    # A failed check undoes the deploy (code and database) instead of leaving it half done
+    failure_branch = script[check : script.index("    fi", check)]
+    assert "rollback " in failure_branch
+
+
+def test_deploy_sh_rollback_clears_the_wal_files_of_the_database_it_replaces():
+    """The database runs in WAL mode: a restored file must not be read with the old -wal and -shm."""
+    script = _text(DEPLOY_SH)
+    rollback = script[script.index("rollback() {") : script.index("# Preflight checks")]
+
+    stop = rollback.index('systemctl stop "$SERVICE_NAME"')
+    sidecars = rollback.index('rm -f "$DB_FILE-wal" "$DB_FILE-shm"')
+    restore = rollback.index('cp "$DB_BACKUP_FILE" "$DB_FILE"')
+    restart = rollback.index('systemctl restart "$SERVICE_NAME"')
+
+    assert stop < sidecars < restore < restart
+
+
+def test_deploy_sh_backs_the_database_up_with_the_online_backup_api():
+    """A plain cp of a WAL-mode database misses what is still in the -wal file."""
+    script = _text(DEPLOY_SH)
+    backup = script[script.index("# Database backup") : script.index("# Migrations & Database Initialization")]
+
+    assert "s.backup(d)" in backup
+    # cp is only the fallback for a failed backup
+    assert backup.index("s.backup(d)") < backup.index('run cp "$DB_FILE"')
+
+
+def test_deploy_sh_health_gate_treats_an_http_error_as_a_failure():
+    """/server/health answers 503 for a broken schema: curl -f turns that into a failed attempt."""
+    script = _text(DEPLOY_SH)
+    gate = script[script.index("until curl") : script.index("Health check passed")]
+
+    assert "until curl -fsS" in gate
+    assert 'rollback "Health check failed"' in gate
+
+
 @pytest.mark.skipif(not DEPLOY_WORKFLOW.exists(), reason="deploy workflow is not present")
 def test_deploy_workflow_restricts_the_env_file_before_writing_secrets():
     """backend/.env holds the production secrets: owner-only, set before they are written."""
