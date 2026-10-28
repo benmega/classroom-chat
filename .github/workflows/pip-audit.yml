@@ -1,8 +1,13 @@
 name: Dependency Audit
 
-# Advisory only, like the npm audit step in lint.yml: it lists known vulnerabilities in the
-# backend runtime dependencies in the run log without failing anything. It is a separate workflow
-# (not a lint.yml step) so it never lengthens the lint gate that deploy.yml waits for.
+# Fails the run when pip-audit finds a known vulnerability in the backend runtime dependencies,
+# so the weekly run, and a pull request that touches a requirements file, go red instead of
+# passing with a list nobody reads. It is a separate workflow (not a lint.yml step) so it never
+# lengthens the lint gate that deploy.yml waits for, and a new advisory cannot block a deploy.
+#
+# A finding that has no fixed release yet is not hidden by loosening this step: add
+# `--ignore-vuln <ID>` to the command below with a comment naming the package, the advisory and
+# why it cannot be fixed, and remove it once a fix ships. There are none today.
 on:
   pull_request:
     paths:
@@ -23,7 +28,7 @@ permissions:
 
 jobs:
   pip-audit:
-    name: pip-audit (advisory)
+    name: pip-audit
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -47,6 +52,5 @@ jobs:
 
       # The runtime requirements are what deploy.sh installs; the test tooling in
       # requirements-dev.txt never reaches the server.
-      - name: Audit runtime dependencies (advisory)
+      - name: Audit runtime dependencies
         run: pip-audit -r requirements.txt --progress-spinner off
-        continue-on-error: true
