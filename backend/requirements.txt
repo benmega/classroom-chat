@@ -21,5 +21,4 @@ flask_apscheduler~=1.13.1
 boto3~=1.42.21
 flask_wtf~=1.2.2
 Flask-Migrate~=4.1.0
-python-jose==3.5.0
 requests==2.33.0
