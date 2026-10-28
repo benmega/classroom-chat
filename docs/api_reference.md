@@ -84,7 +84,8 @@ Blueprint `quiz_bp` in `quiz_routes.py` (logic in `services/quiz_service.py`). D
 
 ## 9. Webhooks & Server Info
 - **`POST /api/webhooks/youtube`, `POST /api/webhooks/transcribe`**: External integrations (e.g. Lambda transcriber in `infrastructure/lambda_transcriber/`).
-- **`GET /server/health`**: Health check (used by `deploy.sh`'s post-deploy check).
+- **`GET /server/health`**: Health check (used by `deploy.sh`'s post-deploy check and Route 53). Runs `SELECT 1` and compares `alembic_version` with the migration head; `200` with the list of checks, or `503` naming the failing check (`database`, `migrations`). See [infrastructure_and_devops.md](infrastructure_and_devops.md#7-route-53-health-check).
+- **`GET /server/live`**: Liveness only, no database access (`200 SystemHealthy`).
 - **`GET /`, `GET /<path>`**: SPA catch-all in `general_routes.py`; renders the React `index.html` from `frontend/dist` via `application/utilities/spa.py` when a build is there, and otherwise returns a JSON 404. The deployed SPA is not served by Flask: it is hosted on S3 + CloudFront (see [infrastructure_and_devops.md](infrastructure_and_devops.md)). In development the React app runs on the Vite dev server, which proxies API paths to Flask.
 
 ---
