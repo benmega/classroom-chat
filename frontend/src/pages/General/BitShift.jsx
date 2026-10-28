@@ -9,7 +9,7 @@ import confetti from 'canvas-confetti';
 import './BitShift.css';
 
 const BitShift = () => {
-    const { user, checkAuth } = useAuthStore();
+    const { user, refreshUser } = useAuthStore();
     const [digitalDucks, setDigitalDucks] = useState(0);
     const [bitDuckCounts, setBitDuckCounts] = useState(Array(7).fill(0));
     const [byteDuckCounts, setByteDuckCounts] = useState(Array(5).fill(0));
@@ -131,7 +131,7 @@ const BitShift = () => {
                 setBitDuckCounts(Array(7).fill(0));
                 setByteDuckCounts(Array(5).fill(0));
                 setHasAttemptedSubmit(false);
-                checkAuth();
+                refreshUser();
 
                 if (response.data.new_awards?.length) {
                     response.data.new_awards.forEach((award) => {

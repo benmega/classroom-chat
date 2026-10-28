@@ -41,7 +41,10 @@ Routing is managed by `react-router-dom` (v7). The admin UI also uses `react-adm
 
 ### 3.1 Global State (Zustand)
 We use **Zustand** for lightweight, high-performance global state. The primary store is:
-- **`useAuthStore`**: Manages user session, authentication status, and auth-related actions (`checkAuth`, `login`, `logout`).
+- **`useAuthStore`**: Manages user session, authentication status, and auth-related actions (`checkAuth`, `refreshUser`, `login`, `logout`).
+  - `checkAuth()` is the session check (App on mount, the dev login, the server-offline page): it shows the full-page loader and, when the request fails, signs the user out and flags the server as offline.
+  - `refreshUser()` re-reads the signed-in user after something changed it (a purchase, an upload, a test result). It never shows the loader and leaves the session untouched when the request fails, so call it from pages, never `checkAuth()`.
+  - Effects that should run once per person key on `user?.id`, not on the `user` object: every refresh replaces the object.
 
 ### 3.2 Context API
 The **Context API** is used for UI-specific global state that needs to be consumed deep in the tree without the overhead of a dedicated store:
@@ -62,7 +65,9 @@ Centralized configuration in `src/api/client.js` handles:
 
 ### 4.2 Real-time Messaging
 Real-time features, primarily the Chat system, are implemented using **Socket.io**.
-- **`useChatSocket.js`**: A custom hook that manages socket connection, joins rooms (conversations), and listens for incoming messages, updating the UI in real-time.
+- **`useChatSocket.js`**: A custom hook that manages socket connection, joins rooms (conversations), and listens for incoming messages, updating the UI in real-time. The socket is opened only while a user is signed in (the server refuses anonymous handshakes, and socket.io never retries a refusal) and is discarded on every sign-in and sign-out. `sendMessage` waits at most 5 seconds for the acknowledgement of the server.
+- **`src/constants/socketEvents.js`**: The event names used by the frontend. Use these instead of string literals.
+- On a reconnect, `useFeedLogic` fetches the newest page of the feed again so messages missed while offline appear.
 
 ---
 

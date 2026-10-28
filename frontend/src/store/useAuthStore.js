@@ -25,6 +25,22 @@ const endServerSession = async () => {
   }
 };
 
+// What /user/api/auth/status says about the session, as the store state it implies
+const sessionFromStatus = ({ logged_in: loggedIn, user }) => {
+  if (!loggedIn) {
+    return { user: null, isAuthenticated: false, isServerOffline: false, hamburgerProgress: 0 };
+  }
+  const completedChallenges = user.completed_challenges_count ?? 0;
+  const savedOverride = getHamburgerOverride(user.username);
+  const progress = savedOverride !== null ? savedOverride : Math.min(completedChallenges / 10, 1.0);
+  return { user, isAuthenticated: true, isServerOffline: false, hamburgerProgress: progress };
+};
+
+const fetchAuthStatus = async () => {
+  const response = await client.get('/user/api/auth/status', { timeout: 10000 });
+  return response.data.data;
+};
+
 const useAuthStore = create((set, get) => ({
   user: null,
   isAuthenticated: false,
@@ -48,30 +64,33 @@ const useAuthStore = create((set, get) => ({
     return { hamburgerProgress: progress };
   }),
   
+  // The session check: App on mount, the dev login and the server-offline page. It is the only call
+  // that may declare the server unreachable, and (unless background) it puts the app behind the loader.
   checkAuth: async (background = false) => {
     if (!background) set({ isLoading: true });
     try {
-      const response = await client.get('/user/api/auth/status', { timeout: 10000 });
-      if (response.data.data.logged_in) {
-        const user = response.data.data.user;
-        const completedChallenges = user.completed_challenges_count ?? 0;
-        const savedOverride = getHamburgerOverride(user.username);
-        const progress = savedOverride !== null ? savedOverride : Math.min(completedChallenges / 10, 1.0);
-        
-        set({ 
-          user, 
-          isAuthenticated: true, 
-          isServerOffline: false,
-          hamburgerProgress: progress 
-        });
-      } else {
-        set({ user: null, isAuthenticated: false, isServerOffline: false, hamburgerProgress: 0 });
-      }
+      set(sessionFromStatus(await fetchAuthStatus()));
     } catch (error) {
       const isOffline = !error.response || [502, 503, 504].includes(error.response.status);
       set({ user: null, isAuthenticated: false, isServerOffline: isOffline, hamburgerProgress: 0 });
     } finally {
       if (!background) set({ isLoading: false });
+    }
+  },
+
+  // Re-reads the signed-in user (duck balance, profile, perks) after something changed it. Unlike
+  // checkAuth it never shows the loader and a failure changes nothing: a blip or a timeout says nothing
+  // about the session, and a session that really ended is already cleared by the 401 interceptor.
+  // A server that answers "not logged in" is a real answer, so that one still signs the user out.
+  refreshUser: async () => {
+    const wasAuthenticated = get().isAuthenticated;
+    try {
+      const session = sessionFromStatus(await fetchAuthStatus());
+      // The session changed while the request was out (a logout, a login): this answer is about the old one
+      if (get().isAuthenticated !== wasAuthenticated) return;
+      set(session);
+    } catch (error) {
+      console.warn('Could not refresh the user; keeping the current session', error);
     }
   },
   
@@ -156,9 +175,11 @@ const useAuthStore = create((set, get) => ({
   },
 }));
 
-// However the session ends (logout, a 401, a failed auth check), the chat socket it opened must go too
+// The chat socket is bound to the session it handshook with. However that changes (logout, a 401, a
+// failed auth check, a login), the old socket must go: after a login the next one is opened with the
+// new cookies, and a socket the server refused while the visitor was anonymous is never reused.
 useAuthStore.subscribe((state, prev) => {
-  if (prev.isAuthenticated && !state.isAuthenticated) resetSocket();
+  if (prev.isAuthenticated !== state.isAuthenticated) resetSocket();
 });
 
 export default useAuthStore;

@@ -23,30 +23,37 @@ export const useLayout = () => {
     const isChatRoute = location.pathname === '/chat';
     const isActivityRoute = location.pathname === '/activity';
 
+    // Only what the effects below read of the user. They are keyed on these, not on the user object:
+    // refreshUser() replaces the object after every purchase or upload, and a new object for the same
+    // person must not restart the heartbeat or refetch the unread count.
+    const userId = user?.id;
+    const userRole = user?.role;
+    const countsUnread = Boolean(user) && userRole !== 'parent';
+
     // Hook to listen to new messages and update unread count
     useChatSocket(
         useCallback((_data) => {
-            if (!isChatRoute && user && user.role !== 'parent') {
+            if (!isChatRoute && countsUnread) {
                 setUnreadCount(useAuthStore.getState().unreadCount + 1);
             }
-        }, [isChatRoute, user, setUnreadCount]),
+        }, [isChatRoute, countsUnread, setUnreadCount]),
         () => {},
         {},
         useCallback((_data) => {
-            if (!isActivityRoute && user && user.role !== 'parent') {
+            if (!isActivityRoute && countsUnread) {
                 setActivityUnreadCount(useAuthStore.getState().activityUnreadCount + 1);
             }
-        }, [isActivityRoute, user, setActivityUnreadCount])
+        }, [isActivityRoute, countsUnread, setActivityUnreadCount])
     );
 
     // Fetch initial unread count on login/load
     useEffect(() => {
-        if (!isAuthenticated || !user || user.role === 'parent') return;
+        if (!isAuthenticated || !userId || userRole === 'parent') return;
         const controller = new AbortController();
 
         const fetchInitialUnread = async () => {
             try {
-                const key = `last_read_message_id_${user.id}`;
+                const key = `last_read_message_id_${userId}`;
                 const lastReadIdVal = localStorage.getItem(key);
                 const lastReadId = lastReadIdVal ? parseInt(lastReadIdVal, 10) : null;
 
@@ -78,7 +85,7 @@ export const useLayout = () => {
 
         fetchInitialUnread();
         return () => controller.abort();
-    }, [isAuthenticated, user, setUnreadCount, setLastReadMessageId]);
+    }, [isAuthenticated, userId, userRole, setUnreadCount, setLastReadMessageId]);
 
     // ============================================================================
     // 🦆🦆🦆 CRITICAL DUCK QUACK SOUND FEATURE 🦆🦆🦆
@@ -132,7 +139,7 @@ export const useLayout = () => {
 
     // --- Heartbeat ---
     useEffect(() => {
-        if (!isAuthenticated || !user) return;
+        if (!isAuthenticated || !userId) return;
 
         const HEARTBEAT_INTERVAL = 30000; // 30 seconds
         
@@ -148,7 +155,7 @@ export const useLayout = () => {
 
         const interval = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
         return () => clearInterval(interval);
-    }, [isAuthenticated, user]);
+    }, [isAuthenticated, userId]);
 
 
     const isGuestPage = ['/login', '/signup'].includes(location.pathname);

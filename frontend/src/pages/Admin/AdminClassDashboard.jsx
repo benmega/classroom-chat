@@ -25,6 +25,7 @@ import Skeleton from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
 import { getSocket } from '../../hooks/useChatSocket';
+import { SOCKET_EVENTS } from '../../constants/socketEvents';
 import { BulkConnectionCardsModal, AddCourseModal, EnrollStudentModal } from '../../components/admin/AdminModals';
 import './AdminClassDashboard.css';
 
@@ -92,9 +93,9 @@ const AdminClassDashboard = () => {
                 setClassroom(prev => prev ? ({ ...prev, sandbox_active: Boolean(data.sandbox_active) }) : prev);
             }
         };
-        socket.on('sandbox_status_changed', handleStatusChanged);
+        socket.on(SOCKET_EVENTS.SANDBOX_STATUS_CHANGED, handleStatusChanged);
         return () => {
-            socket.off('sandbox_status_changed', handleStatusChanged);
+            socket.off(SOCKET_EVENTS.SANDBOX_STATUS_CHANGED, handleStatusChanged);
         };
     }, [classId]);
 

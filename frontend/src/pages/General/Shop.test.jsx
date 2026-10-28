@@ -19,7 +19,7 @@ vi.mock('react-hot-toast', () => ({
   },
 }));
 
-const mockCheckAuth = vi.fn().mockResolvedValue();
+const mockRefreshUser = vi.fn().mockResolvedValue();
 
 // Stand-in for Cropper.js: records how the wallpaper cropper is built.
 const croppers = [];
@@ -48,7 +48,7 @@ describe('Shop', () => {
         chat_font_color: '#ff0000',
         animated_border_speed: 'normal'
       },
-      checkAuth: mockCheckAuth
+      refreshUser: mockRefreshUser
     });
 
     server.use(
@@ -164,7 +164,7 @@ describe('Shop', () => {
     fireEvent.blur(actionColorInput); // trigger handleColorSubmit
 
     await waitFor(() => {
-      expect(mockCheckAuth).toHaveBeenCalled();
+      expect(mockRefreshUser).toHaveBeenCalled();
     });
   });
 
@@ -193,7 +193,7 @@ describe('Shop', () => {
     }
 
     await waitFor(() => {
-      expect(mockCheckAuth).toHaveBeenCalled();
+      expect(mockRefreshUser).toHaveBeenCalled();
     });
   });
 
@@ -331,7 +331,7 @@ describe('Shop', () => {
       fireEvent.click(screen.getByText('Save Changes'));
 
       await waitFor(() => expect(screen.queryByText('Adjust Wallpaper')).not.toBeInTheDocument());
-      expect(mockCheckAuth).toHaveBeenCalledWith(true);
+      expect(mockRefreshUser).toHaveBeenCalledTimes(1);
     });
 
     it('shows the server error when the wallpaper upload is rejected', async () => {

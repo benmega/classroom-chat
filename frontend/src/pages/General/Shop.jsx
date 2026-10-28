@@ -27,7 +27,7 @@ const rgbToHex = (r, g, b) => {
 };
 
 const Shop = () => {
-    const { user, checkAuth } = useAuthStore();
+    const { user, refreshUser } = useAuthStore();
     const [items, setItems] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [purchasingId, setPurchasingId] = useState(null);
@@ -94,7 +94,7 @@ const Shop = () => {
         try {
             await client.post(`/api/shop/purchase/${itemId}`);
             
-            await checkAuth(); 
+            await refreshUser();
             await fetchItems(); 
         } catch (error) {
             toast.error(getErrorMessage(error, `Failed to purchase ${itemName}`));
@@ -113,7 +113,7 @@ const Shop = () => {
                 perk_name: "chat_font_color",
                 value: chatColor
             });
-            await checkAuth(true); // Sync user state globally in background
+            await refreshUser(); // Sync user state globally
         } catch {
             toast.error("Failed to save color configuration.");
         }
@@ -137,7 +137,7 @@ const Shop = () => {
                 perk_name: "animated_border_color",
                 value: borderColorRef.current
             });
-            await checkAuth(true);
+            await refreshUser();
         } catch {
             toast.error("Failed to save border color.");
         }
@@ -189,7 +189,7 @@ const Shop = () => {
                     await client.post('/user/api/profile-wallpaper', formData);
                     
                     setIsCropping(false);
-                    await checkAuth(true);
+                    await refreshUser();
                 } catch (error) {
                     toast.error(getErrorMessage(error, "Failed to upload wallpaper."));
                 } finally {

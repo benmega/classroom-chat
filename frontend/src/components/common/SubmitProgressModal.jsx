@@ -13,7 +13,7 @@ import './SubmitProgressModal.css';
 const CERT_URL_PATTERN = /^https:\/\/(?:www\.)?(?:codecombat|ozaria)\.com\/certificates\/[\w\d]+\?.*course=[\w\d-]+.*$/;
 
 const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
-    const { checkAuth } = useAuthStore();
+    const { refreshUser } = useAuthStore();
     const popoverRef = useRef(null);
     
     const [url, setUrl] = useState('');
@@ -131,7 +131,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                     });
 
                     resetForm();
-                    checkAuth();
+                    refreshUser();
 
                     if (response.data.new_awards?.length) {
                         response.data.new_awards.forEach((award) => {

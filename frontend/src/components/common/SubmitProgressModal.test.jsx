@@ -16,7 +16,7 @@ vi.mock('react-hot-toast', () => ({
 }));
 
 const CERT_URL = 'https://codecombat.com/certificates/abc123?course=cs1';
-const mockCheckAuth = vi.fn();
+const mockRefreshUser = vi.fn();
 
 const renderModal = (props = {}) => render(<SubmitProgressModal isOpen onClose={vi.fn()} {...props} />);
 const typeUrl = (value) => fireEvent.change(document.getElementById('url'), { target: { value } });
@@ -25,7 +25,7 @@ const submit = () => fireEvent.submit(document.querySelector('form.challenge-for
 describe('SubmitProgressModal', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        useAuthStore.setState({ checkAuth: mockCheckAuth });
+        useAuthStore.setState({ refreshUser: mockRefreshUser });
     });
 
     it('renders nothing when closed', () => {
@@ -49,7 +49,7 @@ describe('SubmitProgressModal', () => {
                 { url: 'https://codecombat.com/play/level/x', helpers: '' },
                 expect.any(Object)
             );
-            expect(mockCheckAuth).toHaveBeenCalled();
+            expect(mockRefreshUser).toHaveBeenCalled();
             expect(toast.success).toHaveBeenCalledWith('Achievement Unlocked: First Steps!', expect.any(Object));
             expect(document.getElementById('url').value).toBe('');
         });
@@ -287,7 +287,7 @@ describe('SubmitProgressModal', () => {
             expect(body.get('certificate_file').name).toBe('certificate.pdf');
             // A certificate is not a challenge: no helper, no balance refresh
             expect(client.post).not.toHaveBeenCalledWith('/challenge/submit', expect.anything(), expect.anything());
-            expect(mockCheckAuth).not.toHaveBeenCalled();
+            expect(mockRefreshUser).not.toHaveBeenCalled();
         });
 
         it('shows how much of the upload is done and that it is uploading', async () => {

@@ -38,7 +38,7 @@ describe('EditProfile keyboard and screen reader access', () => {
                 profile_picture: 'pic.jpg',
                 
             },
-            checkAuth: vi.fn(),
+            refreshUser: vi.fn(),
             isAuthenticated: true,
             isChecking: false
         });
