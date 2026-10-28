@@ -81,8 +81,10 @@ npm run build:strict ; Assert-Success
 # which would swamp the figure and make the warning fire on every run.
 $distSize = (Get-ChildItem -Path dist/assets -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB
 Write-Host (" -> Frontend Bundle Size (dist/assets): {0:N2} MB" -f $distSize) -ForegroundColor DarkGray
-if ($distSize -gt 3.0) {
-    Write-Warning "Frontend bundle size ($("{0:N2}" -f $distSize) MB) is getting large. Consider debloating."
+# 5.15 MB on 2026-10-28 (three.js, MUI and react-admin are the big chunks); warn about 15% above that.
+$bundleWarnMB = 6.0
+if ($distSize -gt $bundleWarnMB) {
+    Write-Warning "Frontend bundle size ($("{0:N2}" -f $distSize) MB) is over $bundleWarnMB MB. Consider debloating."
 }
 
 # ---------------------------------------------------------
