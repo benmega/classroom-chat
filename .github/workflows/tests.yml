@@ -25,7 +25,7 @@ jobs:
   backend-tests:
     name: Backend Tests (Pytest)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: backend
@@ -74,10 +74,14 @@ jobs:
           python scripts/lint_migrations.py
           python scripts/validate_migrations.py
 
+      # The coverage flags live here, not in pytest.ini addopts, so local runs stay fast.
+      # The floor is about two points under the measured 94.3% (backend/.coveragerc lists the
+      # files left out); raise it when the suite's coverage goes up, and keep
+      # scripts/preflight.ps1 in step.
       - name: Run Pytest
         env:
           FLASK_ENV: testing
-        run: pytest
+        run: pytest --cov=application --cov-fail-under=92
 
   frontend-tests:
     name: Frontend Tests (Vitest)
