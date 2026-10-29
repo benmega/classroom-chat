@@ -1,17 +1,32 @@
 name: Tests
 
 on:
+  # Pushes run on the long-lived branches only; every other branch is tested by its
+  # pull_request run, so a push to a PR branch is not tested twice. Pull requests are
+  # tested whatever their base branch is (feature branches get stacked on each other).
   push:
-    branches: [ main ]
+    branches: [ main, working ]
   pull_request:
-    branches: [ main ]
   # Allow other workflows (e.g. deploy) to require this as a gate.
   workflow_call:
+
+permissions:
+  contents: read
+
+# A newer push to a pull request cancels the run in flight. A run on main, working or the
+# deploy gate is never cancelled once it has started (a newer push only replaces a run that
+# is still queued behind it).
+# github.workflow is the calling workflow's name when this file is reused, so the two
+# deploy workflows (which both call it for the same ref) do not queue behind each other.
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   backend-tests:
     name: Backend Tests (Pytest)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: backend
@@ -21,11 +36,12 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version-file: .python-version
           cache: 'pip'
           cache-dependency-path: |
             backend/requirements.txt
             backend/requirements-dev.txt
+            backend/requirements-lint.txt
             .github/scripts/requirements.txt
 
       - name: Install dependencies
@@ -51,40 +67,100 @@ jobs:
           fi
           echo "Alembic heads check passed. Only one head detected."
 
+      # Static checks over the route and migration files (plain AST/text scans; no app or
+      # database is started, so no environment is needed). `flask db check` is deliberately not
+      # run here: it cannot pass until the migration chain is repaired (#60).
+      - name: Check admin route guards and migrations
+        run: |
+          python scripts/check_admin_auth.py
+          python scripts/lint_migrations.py
+          python scripts/validate_migrations.py
+
+      # The coverage flags live here, not in pytest.ini addopts, so local runs stay fast.
+      # The floor is about two points under the measured 94.3% (backend/.coveragerc lists the
+      # files left out); raise it when the suite's coverage goes up, and keep
+      # scripts/preflight.ps1 in step.
       - name: Run Pytest
         env:
           FLASK_ENV: testing
-        run: pytest
+        run: pytest --cov=application --cov-fail-under=92
 
   frontend-tests:
     name: Frontend Tests (Vitest)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: frontend/.nvmrc
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Run Vitest
         run: npm run test -- --coverage
+
+  # deploy-frontend.yml builds the site; this makes a pull request fail on a broken build
+  # instead of the first deploy after the merge.
+  frontend-build:
+    name: Frontend Build (Vite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  # A separate job so a failing unit test no longer hides the E2E result (and the other way round).
+  frontend-e2e:
+    name: Frontend E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version-file: .python-version
           cache: 'pip'
           cache-dependency-path: backend/requirements.txt
-          
+
       - name: Install Backend Dependencies
         # Runtime only: this job just starts `python main.py` for the E2E run.
         working-directory: backend
@@ -95,25 +171,24 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Seed E2E test users
+        working-directory: backend
+        env:
+          FLASK_ENV: development
+        run: python scripts/seed_e2e_users.py
+
+      # playwright.config.js starts the backend (waiting on /server/health) and the Vite dev
+      # server itself, and stops both when the run ends.
       - name: Run Playwright Tests
-        run: |
-          # Seed E2E test users
-          cd ../backend
-          export FLASK_ENV="development"
-          python scripts/seed_e2e_users.py
-          
-          # Start backend in the background
-          export FLASK_USE_RELOADER="False"
-          export FLASK_DEBUG="True"
-          python main.py &
-          BACKEND_PID=$!
-          
-          # Wait for backend to be ready
-          sleep 5
-          
-          # Run frontend tests
-          cd ../frontend
-          npm run test:e2e
-          
-          # Tear down backend
-          kill $BACKEND_PID
+        run: npm run test:e2e
+
+      - name: Upload Playwright report and traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          if-no-files-found: ignore
+          retention-days: 14

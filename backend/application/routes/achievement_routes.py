@@ -302,8 +302,12 @@ def _certificate_download_name(cert, with_id=False):
 def get_achievements_json():
     """API endpoint to get all achievements and user's earned ones"""
     user_id = session.get("user")
+    # db.relationship() is typed RelationshipProperty rather than Mapped, which the loader
+    # options reject; they accept the attribute at runtime.
     current_user = (
-        User.query.options(joinedload(User.achievements)).filter_by(id=user_id).first()
+        User.query.options(joinedload(User.achievements))  # type: ignore[arg-type]
+        .filter_by(id=user_id)
+        .first()
     )
 
     if not current_user:
@@ -629,7 +633,7 @@ def admin_certificates():
         .join(Achievement)
         .options(
             contains_eager(UserCertificate.user),
-            contains_eager(UserCertificate.achievement),
+            contains_eager(UserCertificate.achievement),  # type: ignore[arg-type]  # see joinedload above
         )
         .order_by(UserCertificate.submitted_at, UserCertificate.id)
         .all()

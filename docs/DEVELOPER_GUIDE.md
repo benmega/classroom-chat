@@ -24,7 +24,8 @@ classroom-chat/
 │   ├── tools/                  # Manual maintenance helpers: scrape/asset scripts (none run by deploy.sh)
 │   ├── main.py                  # WSGI entrypoint (`gunicorn -w 1 main:app`)
 │   ├── requirements.txt        # Runtime dependencies (what deploy.sh installs)
-│   ├── requirements-dev.txt    # Runtime + test/lint tooling (pytest, ruff, mypy)
+│   ├── requirements-dev.txt    # Runtime + test tooling (pytest); includes requirements-lint.txt
+│   ├── requirements-lint.txt   # Pinned ruff and mypy (lint.yml installs this file on its own)
 │   └── requirements-tools.txt  # Runtime + extras for the manual scripts (reportlab, qrcode, playwright)
 ├── frontend/
 │   ├── src/                    # React 19 + Vite SPA (current UI)
@@ -41,7 +42,8 @@ classroom-chat/
 ├── infrastructure/              # nginx config, Cognito CFN template, Lambda transcriber, DNS/db-sync scripts
 ├── docs/                        # This documentation
 ├── .agents/                     # AI-agent rules and skills (see docs/agentic_workflows.md)
-├── .github/workflows/           # CI: tests.yml, lint.yml, deploy.yml, deploy-frontend.yml, ai-*.yml
+├── .github/workflows/           # CI: tests.yml, lint.yml, pip-audit.yml, deploy.yml, deploy-frontend.yml, ai-coder.yml
+├── .github/dependabot.yml       # Weekly grouped dependency PRs (pip, npm, github-actions)
 ├── userData/                    # Uploaded user assets (profile pictures, project images, project_files/, submissions, certificates)
 └── deploy.sh                    # Production deploy script (migrations, health check, rollback)
 ```
@@ -69,6 +71,17 @@ classroom-chat/
 - Data fetching via `axios` (`src/api/client.js`) and `@tanstack/react-query` in places; real-time chat via `socket.io-client` (`src/hooks/useChatSocket.js`).
 - Admin has two surfaces: a hand-built admin UI (`src/pages/Admin/*`, `src/admin/AdminPanel.css`) and a generic `react-admin`-powered CRUD/debug panel (`src/admin/AdminPanel.jsx`, mounted at `/admin/advanced-crud`) backed by `routes/admin/crud_routes.py`.
 - The legacy Jinja2 templates, JS and CSS from before the React migration were removed; `backend/application/templates/dev_login.html` is the only Jinja template left (the app factory adds that folder to the template search path next to `frontend/dist`). Where Flask hands a browser navigation over to the SPA it goes through `application/utilities/spa.py` (`serve_spa_index`): it renders `index.html` from `frontend/dist` when a build exists there (the deployed SPA is built and hosted by `deploy-frontend.yml` on S3 + CloudFront, and `deploy.sh` does not build it); otherwise, as in development, it returns a JSON 404 pointing at the Vite server on port 5173. New UI work should always go in `frontend/src/`.
+
+---
+
+## Development Setup
+
+[`INSTALLATION.md`](INSTALLATION.md) has the full first-run walkthrough (virtualenv, `.env`, running both servers). These keep your checkout in line with CI:
+
+- **Backend**: `pip install -r requirements-dev.txt` from `backend/` on Python 3.11 (`.python-version`). The ruff and mypy versions CI uses are pinned in `requirements-lint.txt`.
+- **Frontend**: Node 22 (`frontend/.nvmrc`), then `npm ci` from `frontend/` (not `npm install`, which can rewrite the lockfile).
+- **Git hooks** (once per clone): `powershell scripts/install-hooks.ps1`. It runs `git config core.hooksPath scripts/hooks`, so the tracked `pre-push` hook (Ruff over `backend/`, ESLint over `frontend/`, the same as `lint.yml`) runs before every push, in every worktree of the clone. `git push --no-verify` skips it.
+- **Before opening a PR**: `powershell scripts/preflight.ps1` runs what CI runs (Ruff, mypy, the admin-auth and migration checks, pytest with the coverage floor, ESLint, Vitest with coverage, the production build, Playwright) plus a warning for images over 1 MB under `frontend/public/images`.
 
 ---
 

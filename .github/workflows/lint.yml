@@ -9,10 +9,14 @@ on:
   # Allow other workflows (e.g. deploy) to require this as a gate.
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   backend-lint:
     name: Backend Lint (Ruff)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: backend
@@ -24,13 +28,15 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.x'
+        python-version-file: .python-version
         cache: 'pip'
+        cache-dependency-path: backend/requirements-lint.txt
 
     - name: Install dependencies
+      # Pinned in requirements-lint.txt so a ruff release cannot turn CI red by itself.
       run: |
         python -m pip install --upgrade pip
-        pip install ruff
+        pip install -r requirements-lint.txt
 
     - name: Run ruff
       run: |
@@ -39,6 +45,7 @@ jobs:
   frontend-lint:
     name: Frontend Lint (ESLint)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -50,7 +57,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version-file: frontend/.nvmrc
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
 
@@ -60,11 +67,17 @@ jobs:
     - name: Run ESLint
       run: npm run lint
 
-    # Advisory only: surfaces vulnerable / outdated packages in the log without
-    # failing the lint gate that the deploy workflows depend on.
-    - name: Audit dependencies (advisory)
+    # Fails on a high or critical advisory. Ten moderate ones remain and stay below this level:
+    #  - decode-uri-component (denial of service on malformed input), reached only through
+    #    react-admin > ra-core > query-string. npm's only "fix" is react-admin 3.0.2, a downgrade
+    #    from 5.x, so it cannot be fixed without a major change.
+    #  - @vitest/mocker, vitest and @vitest/coverage-v8 4.x (test tooling only); the fix is the
+    #    vitest 5 major.
+    # Revisit both when react-admin or vitest ships a fix inside the current major. If a new high
+    # advisory has no fix outside a major bump, deal with it in package.json (an override or the
+    # upgrade) rather than by loosening this step.
+    - name: Audit dependencies
       run: npm audit --audit-level=high
-      continue-on-error: true
 
     - name: List outdated dependencies (advisory)
       run: npm outdated || true

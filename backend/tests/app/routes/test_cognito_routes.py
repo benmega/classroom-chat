@@ -1,3 +1,5 @@
+import base64
+import json
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -75,7 +77,7 @@ def test_verify_failure(client, mock_boto_client):
     assert "Code expired" in resp.json["error"]
 
 
-@patch("application.routes.cognito_routes.jwt.get_unverified_claims")
+@patch("application.routes.cognito_routes.get_unverified_claims")
 def test_login_success(mock_get_claims, client, mock_boto_client, init_db):
     mock_boto_client.initiate_auth.return_value = {
         "AuthenticationResult": {"IdToken": "dummy_token"}
@@ -99,6 +101,25 @@ def test_login_success(mock_get_claims, client, mock_boto_client, init_db):
     user = User.query.filter_by(email="parent@example.com").first()
     assert user is not None
     assert user.cognito_sub == "test-sub-123"
+
+
+def test_login_reads_the_sub_and_email_from_the_real_id_token(client, mock_boto_client, init_db):
+    # No patch on the claims reader: a JWT-shaped id token goes through the real decoder.
+    def segment(data):
+        return base64.urlsafe_b64encode(json.dumps(data).encode()).rstrip(b"=").decode()
+
+    id_token = ".".join([segment({"alg": "RS256"}), segment({"sub": "real-sub-1", "email": "real@example.com"}), "sig"])
+    mock_boto_client.initiate_auth.return_value = {"AuthenticationResult": {"IdToken": id_token}}
+
+    resp = client.post(
+        "/api/auth/cognito/login",
+        json={"email": "typed@example.com", "password": "Password123!"},
+    )
+
+    assert resp.status_code == 200
+    user = User.query.filter_by(email="real@example.com").one()
+    assert user.cognito_sub == "real-sub-1"
+    assert User.query.filter_by(email="typed@example.com").first() is None
 
 
 def test_login_failure(client, mock_boto_client):
@@ -142,7 +163,7 @@ def test_confirm_forgot_password_success(client, mock_boto_client):
     assert resp.json["success"] is True
 
 
-@patch("application.routes.cognito_routes.jwt.get_unverified_claims")
+@patch("application.routes.cognito_routes.get_unverified_claims")
 def test_repeat_login_does_not_open_a_second_session(
     mock_get_claims, client, mock_boto_client, init_db
 ):
@@ -175,7 +196,7 @@ def test_repeat_login_does_not_open_a_second_session(
         for variant in (name, name.upper(), name.title())
     ],
 )
-@patch("application.routes.cognito_routes.jwt.get_unverified_claims")
+@patch("application.routes.cognito_routes.get_unverified_claims")
 def test_login_never_names_a_new_parent_after_a_reserved_username(
     mock_get_claims, local_part, client, mock_boto_client, init_db
 ):
@@ -197,7 +218,7 @@ def test_login_never_names_a_new_parent_after_a_reserved_username(
     assert resp.json["username"] == user.username
 
 
-@patch("application.routes.cognito_routes.jwt.get_unverified_claims")
+@patch("application.routes.cognito_routes.get_unverified_claims")
 def test_login_keeps_counting_past_taken_names_for_a_reserved_local_part(
     mock_get_claims, client, mock_boto_client, init_db
 ):
