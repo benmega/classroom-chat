@@ -1170,6 +1170,71 @@ def test_export_transactions(client, sample_admin, test_app, sample_user):
     assert "Export Test" in data
 
 
+def test_export_transactions_pages_through_every_row_newest_first(
+    client, sample_admin, test_app, sample_user, monkeypatch, count_queries
+):
+    """The export loads a page of rows per query, not one cursor held open across the response."""
+    import csv
+    import io
+
+    from application.models.duck_transaction import DuckTransaction
+
+    login_as_admin(client, sample_admin)
+    monkeypatch.setattr("application.routes.admin.dashboard_routes.CSV_EXPORT_PAGE_SIZE", 2)
+    with test_app.app_context():
+        db.session.add_all(
+            DuckTransaction(user_id=sample_user.id, amount=float(n), reason=f"Row {n}") for n in range(1, 6)
+        )
+        db.session.commit()
+
+    with count_queries() as statements:
+        resp = client.get("/api/admin/export/transactions")
+        body = resp.data.decode("utf-8")
+
+    rows = list(csv.reader(io.StringIO(body)))
+    assert rows[0] == ["ID", "User", "Amount", "Reason", "Timestamp"]
+    reasons = [row[3] for row in rows[1:]]
+    assert reasons == ["Row 5", "Row 4", "Row 3", "Row 2", "Row 1"]
+    assert {row[1] for row in rows[1:]} == {sample_user.username}
+    ids = [int(row[0]) for row in rows[1:]]
+    assert ids == sorted(ids, reverse=True)
+    # Pages of 2, 2 and 1 rows: the users come with each page (joinedload), none one by one
+    exports = [sql for sql in statements if "duck_transactions" in sql]
+    assert len(exports) == 3
+    assert all("JOIN users" in sql for sql in exports)
+
+
+def test_export_transactions_with_a_row_count_that_fills_the_last_page(
+    client, sample_admin, test_app, sample_user, monkeypatch
+):
+    from application.models.duck_transaction import DuckTransaction
+
+    login_as_admin(client, sample_admin)
+    monkeypatch.setattr("application.routes.admin.dashboard_routes.CSV_EXPORT_PAGE_SIZE", 2)
+    with test_app.app_context():
+        db.session.add_all(
+            DuckTransaction(user_id=sample_user.id, amount=1.0, reason=f"Row {n}") for n in range(1, 5)
+        )
+        db.session.commit()
+
+    lines = client.get("/api/admin/export/transactions").data.decode("utf-8").splitlines()
+
+    assert [line.split(",")[3] for line in lines[1:]] == ["Row 4", "Row 3", "Row 2", "Row 1"]
+
+
+def test_export_transactions_of_an_empty_table_is_only_the_header(client, sample_admin, test_app):
+    from application.models.duck_transaction import DuckTransaction
+
+    login_as_admin(client, sample_admin)
+    with test_app.app_context():
+        DuckTransaction.query.delete()
+        db.session.commit()
+
+    resp = client.get("/api/admin/export/transactions")
+
+    assert resp.data.decode("utf-8").strip() == "ID,User,Amount,Reason,Timestamp"
+
+
 def test_manage_projects(client, sample_admin, sample_user, test_app):
     """Test the /manage-projects endpoint."""
     from application.models.project import Project

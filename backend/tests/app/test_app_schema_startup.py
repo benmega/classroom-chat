@@ -19,6 +19,7 @@ from application.constants import GLOBAL_CLASSROOM_ID
 from application.extensions import db, scheduler, socketio
 from application.models.classroom import Classroom
 from application.models.configuration import Configuration
+from application.routes.server_info_routes import VERSION_TABLE, migration_heads
 
 
 @pytest.fixture
@@ -52,6 +53,8 @@ def test_production_start_leaves_an_empty_database_empty(start_app, caplog):
 
     assert _tables(app) == set()
     assert "The database has no schema yet" in caplog.text
+    # Nothing to compare yet: the drift summary stays quiet
+    assert "Database schema drift" not in caplog.text
 
 
 def test_production_start_does_not_add_a_missing_table(start_app):
@@ -77,7 +80,36 @@ def test_production_start_fills_in_the_defaults_once_the_schema_exists(start_app
         assert Configuration.query.count() == 1
         assert db.session.get(Classroom, GLOBAL_CLASSROOM_ID) is not None
         assert db.session.get(Classroom, "archive") is not None
+
+
+def test_production_health_fails_until_deploy_sh_has_stamped_the_schema(start_app):
+    """create_all built the tables but nothing stamped them: the deploy gate must not pass."""
+    with start_app(ProductionConfig).app_context():
+        db.create_all()
+    app = start_app(ProductionConfig)
+
+    unstamped = app.test_client().get("/server/health")
+
+    assert unstamped.status_code == 503
+    assert unstamped.get_json()["failed"] == ["migrations"]
+
+    with app.app_context():
+        db.session.execute(sa.text(f"CREATE TABLE {VERSION_TABLE} (version_num VARCHAR(32) NOT NULL PRIMARY KEY)"))
+        for head in migration_heads():
+            db.session.execute(sa.text(f"INSERT INTO {VERSION_TABLE} VALUES (:head)"), {"head": head})
+        db.session.commit()
+
     assert app.test_client().get("/server/health").status_code == 200
+
+
+@pytest.mark.parametrize("config_class", [DevelopmentConfig, TestingConfig])
+def test_health_outside_production_accepts_a_database_without_a_stamp(start_app, config_class):
+    app = start_app(config_class)
+
+    response = app.test_client().get("/server/health")
+
+    assert response.status_code == 200
+    assert response.get_json()["checks"]["migrations"]["ok"] is True
 
 
 @pytest.mark.parametrize("config_class", [DevelopmentConfig, TestingConfig])
@@ -109,6 +141,62 @@ def test_only_development_checks_the_schema_for_drift(start_app, config_class):
         start_app(config_class)
 
     check.assert_not_called()
+
+
+def test_production_start_summarises_the_schema_drift(start_app):
+    with patch("application.log_schema_drift_summary") as summary:
+        app = start_app(ProductionConfig)
+
+    summary.assert_called_once_with(app)
+
+
+@pytest.mark.parametrize("config_class", [DevelopmentConfig, TestingConfig])
+def test_only_production_logs_the_drift_summary(start_app, config_class):
+    with patch("application.log_schema_drift_summary") as summary:
+        start_app(config_class)
+
+    summary.assert_not_called()
+
+
+def test_production_start_reports_a_column_the_database_lacks(start_app, caplog):
+    start_app(TestingConfig)
+    with start_app(TestingConfig).app_context():
+        db.session.execute(sa.text("ALTER TABLE skills DROP COLUMN proficiency"))
+        db.session.commit()
+
+    with caplog.at_level("INFO", logger="application"):
+        app = start_app(ProductionConfig)
+
+    assert "Database schema drift: 1 difference(s)" in caplog.text
+    assert "proficiency" in caplog.text
+    assert "flask db check" in caplog.text
+    # The summary, not the developer's report: it must not tell anyone to delete the database
+    assert "DATABASE SCHEMA DRIFT DETECTED" not in caplog.text
+    assert "delete the database file" not in caplog.text
+    # Read-only, and the app started
+    assert "alembic_version" not in _tables(app)
+    assert app.test_client().get("/server/live").status_code == 200
+
+
+def test_production_start_says_when_the_schema_matches_the_models(start_app, caplog):
+    start_app(TestingConfig)
+
+    with caplog.at_level("INFO", logger="application"):
+        start_app(ProductionConfig)
+
+    assert "The database schema matches the models." in caplog.text
+    assert "schema drift" not in caplog.text.lower()
+
+
+def test_production_start_survives_a_schema_check_that_breaks(start_app, caplog):
+    start_app(TestingConfig)
+
+    with caplog.at_level("ERROR", logger="application"):
+        with patch("application.utilities.schema_check.compare_metadata", side_effect=RuntimeError("boom")):
+            app = start_app(ProductionConfig)
+
+    assert "Failed to check for schema drift: boom" in caplog.text
+    assert app.test_client().get("/server/live").status_code == 200
 
 
 def test_development_start_reports_a_column_the_database_lacks(start_app, caplog):

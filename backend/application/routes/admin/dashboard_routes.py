@@ -18,6 +18,8 @@ from .blueprint import admin_bp
 MAX_CHART_DAYS = 365
 # Rows in the "high value earners" list
 TOP_EARNERS_COUNT = 5
+# Transactions the CSV export loads per query
+CSV_EXPORT_PAGE_SIZE = 1000
 
 
 @admin_bp.route("/dashboard", methods=["GET"])
@@ -211,26 +213,36 @@ def export_transactions():
         data.seek(0)
         data.truncate(0)
 
-        # Fix N+1 and OOM by using joinedload and yield_per
-        transactions = (
-            DuckTransaction.query.options(joinedload(DuckTransaction.user))
-            .order_by(DuckTransaction.timestamp.desc())
-            .yield_per(100)
-        )
-
-        for tx in transactions:
-            writer.writerow(
-                [
-                    tx.id,
-                    tx.user.username if tx.user else "System",
-                    tx.amount,
-                    tx.reason,
-                    tx.timestamp.isoformat() if tx.timestamp else "",
-                ]
+        # Newest first, a page of rows per query (keyed on the id, which grows with time),
+        # so no database cursor stays open while the response is being sent: an open
+        # reader would hold up the writers, and the page lands in memory in one go.
+        # joinedload fetches each user with the page, not one query per row.
+        last_id = None
+        while True:
+            query = DuckTransaction.query.options(joinedload(DuckTransaction.user)).order_by(
+                DuckTransaction.id.desc()
             )
-            yield data.getvalue()
-            data.seek(0)
-            data.truncate(0)
+            if last_id is not None:
+                query = query.filter(DuckTransaction.id < last_id)
+            page = query.limit(CSV_EXPORT_PAGE_SIZE).all()
+
+            for tx in page:
+                writer.writerow(
+                    [
+                        tx.id,
+                        tx.user.username if tx.user else "System",
+                        tx.amount,
+                        tx.reason,
+                        tx.timestamp.isoformat() if tx.timestamp else "",
+                    ]
+                )
+                yield data.getvalue()
+                data.seek(0)
+                data.truncate(0)
+
+            if len(page) < CSV_EXPORT_PAGE_SIZE:
+                return
+            last_id = page[-1].id
 
     response = Response(stream_with_context(generate()), mimetype="text/csv")
     response.headers.set(

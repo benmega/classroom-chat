@@ -1,4 +1,3 @@
-import contextlib
 import logging
 import os
 import sys
@@ -18,7 +17,10 @@ from application.models.configuration import Configuration
 from application.models.user import User
 from application.routes import register_blueprints
 from application.utilities.helper_functions import format_number
-from application.utilities.schema_check import check_for_schema_drift
+from application.utilities.schema_check import (
+    check_for_schema_drift,
+    log_schema_drift_summary,
+)
 from flask import Flask, g, jsonify, request, session
 from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
@@ -69,6 +71,23 @@ def _configure_logging():
     logging.getLogger("application").setLevel(logging.INFO)
     for noisy in ("werkzeug", "sqlalchemy.engine", "engineio", "socketio"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
+
+
+def _init_extension(app, name, init_app):
+    """
+    Run ``init_app()`` for the extension ``name``.
+
+    A failure is logged with its traceback and, outside the tests, stops the start-up:
+    an app that came up without websockets or without its scheduler would pass the
+    health check and run half broken. The test apps are built many times over, so
+    there (``TESTING``) the failure is logged and the app starts without the extension.
+    """
+    try:
+        init_app()
+    except Exception:
+        logging.getLogger(__name__).exception("Could not initialise %s", name)
+        if not app.config.get("TESTING"):
+            raise
 
 
 def create_app(config_class=None):
@@ -143,20 +162,27 @@ def create_app(config_class=None):
         )
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
+    # Where Alembic alone owns the schema (production), /server/health fails a database
+    # that has no alembic_version table; elsewhere create_all builds the tables without one.
+    app.config.setdefault(
+        "HEALTH_REQUIRES_MIGRATION_STAMP", issubclass(config_class, ProductionConfig)
+    )
 
     db.init_app(app)
     migrate.init_app(app, db)
     # cors_allowed_origins must match cors_origins exactly — using "*" alongside
     # withCredentials:true on the client causes browsers to block the handshake.
     limiter.init_app(app)
-    with contextlib.suppress(Exception):
-        socketio.init_app(
+    _init_extension(
+        app,
+        "Socket.IO",
+        lambda: socketio.init_app(
             app,
             cors_allowed_origins=cors_origins,
             async_mode=app.config.get("SOCKETIO_ASYNC_MODE"),
-        )
-    with contextlib.suppress(Exception):
-        scheduler.init_app(app)
+        ),
+    )
+    _init_extension(app, "the scheduler", lambda: scheduler.init_app(app))
 
     from . import socket_events as socket_events
 
@@ -203,6 +229,10 @@ def create_app(config_class=None):
                 logger.warning(
                     "The database has no schema yet: skipping the default configuration."
                 )
+            if issubclass(config_class, ProductionConfig):
+                # Development gets the full report above. Production only says whether
+                # the migrations left the database matching the models (read-only).
+                log_schema_drift_summary(app)
 
         if _should_start_scheduler(app):
             try:

@@ -2,7 +2,8 @@
 #
 # File: deploy.sh
 # Location: ~/classroom-chat/deploy.sh
-# Summary: Production deployment with automated rollback on health-check failure.
+# Summary: Production deployment with automated rollback when the migrated schema does
+#          not match the models or the health check fails.
 #
 # Prerequisites (one-time server setup):
 #   - venv at ~/classroom-chat/venv  (pip install -r backend/requirements.txt)
@@ -49,12 +50,20 @@ run() {
     fi
 }
 
+# rollback "<reason>": put the previous code and the pre-deploy database back, restart
+# the service and fail the deploy. It also works from inside the database subshell below
+# (its "exit 1" ends that subshell, and set -e then ends the script).
 rollback() {
-    echo "CRITICAL: Health check failed. Rolling back to $PREVIOUS_COMMIT..."
+    echo "CRITICAL: ${1:-Health check failed}. Rolling back to $PREVIOUS_COMMIT..."
     run git -C "$APP_DIR" reset --hard "$PREVIOUS_COMMIT"
 
     if [[ -f "$DB_BACKUP_FILE" ]]; then
         echo "Restoring database from backup at $DB_BACKUP_FILE..."
+        # The database runs in WAL mode: next to it live the -wal and -shm files, which
+        # belong to the file being replaced and must not be read together with the restored
+        # one. Stop the service first so that nothing has the database open.
+        run sudo systemctl stop "$SERVICE_NAME" || echo "WARNING: could not stop $SERVICE_NAME before restoring the database."
+        run rm -f "$DB_FILE-wal" "$DB_FILE-shm"
         run cp "$DB_BACKUP_FILE" "$DB_FILE"
     else
         echo "WARNING: No DB backup found at $DB_BACKUP_FILE; skipping database restore."
@@ -139,9 +148,11 @@ if [[ -f "$DB_FILE" ]]; then
     echo "Backing up database..."
     run mkdir -p "$BACKUP_DIR"
     # Online backup: gunicorn is still serving, so a plain cp of the live file can be torn.
+    # The online backup API also reads what is still in the WAL (-wal) file, which a plain
+    # cp of the main file would miss.
     # If the backup API fails for any reason, fall back to cp so a backup always exists.
     if ! run "$PYTHON_BIN" -c "import sqlite3,sys; s=sqlite3.connect(sys.argv[1]); d=sqlite3.connect(sys.argv[2]); s.backup(d); d.close(); s.close()" "$DB_FILE" "$DB_BACKUP_FILE"; then
-        echo "WARNING: SQLite online backup failed; falling back to a plain file copy."
+        echo "WARNING: SQLite online backup failed; falling back to a plain file copy (it can miss the newest writes, which may still be in the -wal file)."
         run cp "$DB_FILE" "$DB_BACKUP_FILE"
     fi
     echo "Backup stored at $DB_BACKUP_FILE"
@@ -247,6 +258,15 @@ PYEOF
     echo "Applying migrations..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db upgrade
 
+    # The migrations must leave the database matching the models: 'flask db check' exits
+    # non-zero when Alembic still finds a difference (a model changed without its
+    # migration, or a migration that does not do what the model says). The service has not
+    # been restarted yet, so the rollback only has to put the code and the database back.
+    echo "Checking that the migrated schema matches the models..."
+    if ! run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask db check; then
+        rollback "Schema check failed: the migrations do not leave the database matching the models"
+    fi
+
     echo "Running standard data seeds (projects, challenges, instances)..."
     run env FLASK_APP=main.py FLASK_ENV=production "$PYTHON_BIN" -m flask seed
 
@@ -266,9 +286,16 @@ run sudo systemctl restart "$SERVICE_NAME"
 echo "Waiting for health check..."
 
 ATTEMPT=1
+# curl -f makes any HTTP status of 400 or more a failure, so the 503 that /server/health
+# answers for an unreachable database or a schema that is not at the migration head
+# counts like a connection error.
 until curl -fsS --max-time "$HEALTHCHECK_TIMEOUT" "$HEALTHCHECK_URL" > /dev/null; do
     if [[ "$ATTEMPT" -ge "$HEALTHCHECK_RETRIES" ]]; then
-        rollback
+        # A 503 body names the failing check: show it before the deploy is undone.
+        echo "Last health check response:"
+        curl -sS --max-time "$HEALTHCHECK_TIMEOUT" "$HEALTHCHECK_URL" || true
+        echo
+        rollback "Health check failed"
     fi
 
     echo "Attempt $ATTEMPT/$HEALTHCHECK_RETRIES failed. Retrying..."

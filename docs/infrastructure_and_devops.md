@@ -202,6 +202,34 @@ Moving to several workers (or hosts) is a separate piece of work: it needs the r
 shared store and a Socket.IO `message_queue` with presence moved out of `_active_sessions`. The
 gevent-websocket worker class the live unit already uses is suitable.
 
+### SQLite runtime settings
+
+`application/extensions.py` registers a SQLAlchemy `connect` listener (on the `Engine` class, so it
+reaches every engine, Alembic's and the tests' included) that runs these pragmas on every new
+SQLite connection, in this order. `SQLITE_PRAGMAS` is the list to extend.
+
+| Pragma | Value | Why |
+| :--- | :--- | :--- |
+| `busy_timeout` | `2000` | SQLite waits for a lock in C, which cannot yield to gevent, so while one request waits the whole single worker stands still. pysqlite's default wait is 5 s. It comes first so that the journal-mode switch below waits instead of failing at once. |
+| `journal_mode` | `WAL` | Readers and the writer no longer block each other (an open reader used to hold up a commit). The mode is stored in the database file. An in-memory database answers `memory`, which is fine. |
+| `synchronous` | `NORMAL` | The usual companion of WAL: a commit no longer waits for the disk. A power cut can lose the last commits but cannot corrupt the file. |
+
+`foreign_keys` is not set here; it is tracked in issue #61. A pragma that fails (for example the
+journal-mode switch while another process holds the file open) is logged as a warning and does not
+stop the connection; the next connection tries again.
+
+WAL puts two files next to `prod_users.db`: `prod_users.db-wal` and `prod_users.db-shm`. They are
+part of the database while the service runs. Do not copy `prod_users.db` alone to back it up (use the
+SQLite online backup API, as `deploy.sh` does, or `sqlite3 prod_users.db ".backup 'copy.db'"`), and
+when you replace the database file, stop the service and delete both files first. `deploy.sh`'s
+rollback does exactly that.
+
+Two code paths used to hold a SQLite lock for a long time, and no longer do: the achievement badge
+save (`_commit_with_badge` writes the badge files and rebuilds the sprite sheet, a subprocess that
+may run for a minute, before it writes the row, so the write transaction is short) and the
+transaction CSV export (it loads one page of rows per query instead of holding a cursor open while
+the response streams).
+
 ---
 
 ## 5. Nginx Configuration (Backend API Proxy)
@@ -279,6 +307,31 @@ The Route 53 health check hits `/server/health` via the bare IP (`54.x.x.x:443`)
 Since the EC2 uses a dynamic IP (no Elastic IP), this check will fail on instance restart.
 The health check endpoint is proxied through nginx to gunicorn.
 
+`/server/health` is also the gate at the end of `deploy.sh`. It is not a constant: it opens a
+connection of its own and runs two checks, answering `200` with a JSON list of the checks or `503`
+naming the ones that failed (`curl -f` in `deploy.sh`, and Route 53, treat any status of 400 or more
+as a failure):
+
+| Check | Passes when | Fails when |
+| :--- | :--- | :--- |
+| `database` | `SELECT 1` succeeds | the connection or the query fails (the error goes to the log, not the response) |
+| `migrations` | the revision in `alembic_version` is the head of `backend/migrations` (the head is read once per process) | the revision differs, the table is empty, or the migration scripts cannot be read. A database **with no `alembic_version` table** (one `create_all` built: development, the tests) **passes outside production and fails in production**, where `deploy.sh` always stamps the schema. |
+
+```json
+{"status": "ok", "checks": {"database": {"ok": true}, "migrations": {"ok": true, "detail": "the database is at the migration head"}}}
+{"status": "unhealthy", "failed": ["migrations"], "checks": {"database": {"ok": true}, "migrations": {"ok": false, "detail": "the database is not at the migration head"}}}
+```
+
+It does not probe the scheduler or the sockets, and costs two or three small queries per call.
+`/server/live` is the variant with no database access (always `200 SystemHealthy` while the process
+serves requests), for anything that polls often and must not depend on the database. Neither
+route is rate limited. Point the Route 53 check at `/server/live` if a database problem should not
+mark the host unhealthy in DNS.
+
+At start-up the app also fails to boot, instead of coming up half working, when Socket.IO or the
+scheduler cannot be initialised (for example a mistyped `SOCKETIO_ASYNC_MODE`); the traceback is in
+the log. Under pytest (`TESTING`) the failure is only logged.
+
 > Note: A static Elastic IP would make this reliable but adds cost.
 
 ---
@@ -298,8 +351,9 @@ scripts, `run_migrations.py`, `backend/instance/utilities/`) has been removed. D
 does not match the code.
 
 1. **Backup**: take an online SQLite backup of `prod_users.db` (plain file copy as a fallback) into
-   `backend/instance/backups/pre_deploy_<timestamp>.db`. The automatic rollback restores this copy
-   if the health check fails.
+   `backend/instance/backups/pre_deploy_<timestamp>.db`. The online backup API also includes what is
+   still in the WAL file; the plain-copy fallback can miss it. The automatic rollback restores this
+   copy if the schema check or the health check fails.
 2. **Heal `last_daily_duck`**: a small inline `sqlite3` snippet that repairs integer values in
    `users.last_daily_duck`, run before the app is imported.
 3. **Bootstrap check**: with no `alembic_version` table this is a fresh install, so
@@ -307,7 +361,11 @@ does not match the code.
    Otherwise it is an existing install: Alembic owns the schema and `create_all` is not called.
 4. **Dangling-stamp purge**: if `flask db current` fails because `alembic_version` points at a
    revision that no longer exists, `flask db stamp base --purge` clears the stamp.
-5. **`flask db upgrade`**: applies the pending migrations (a no-op on a fresh install).
+5. **`flask db upgrade`**: applies the pending migrations (a no-op on a fresh install). It is
+   followed by **`flask db check`**, which exits non-zero when Alembic still finds a difference
+   between the models and the migrated database. That rolls the deploy back (below) before the
+   service is restarted, so a model change that came without its migration never reaches the
+   running service.
 6. **`flask seed`**: seed data that is backed by files in the repo: courses and achievements
    (`backend/instance/migration/courses_seed.csv` and `achievements_seed.csv`; insert-only, a
    row that already exists is never changed), course instances
@@ -319,8 +377,11 @@ does not match the code.
    [Developer Guide](DEVELOPER_GUIDE.md#seeding-the-database)) rewrites them from the files, and the student tests (`application/commands/quiz_data/*.json`; content follows the files, admin settings are kept; see [student_tests.md](student_tests.md#9-seed-data)).
 7. **Admin role**: `sqlite3 ... UPDATE users SET role='admin' WHERE LOWER(username)='ben'`.
 
-After that the service restarts and the health check runs; if it fails, the code is reset to the
-previous commit and the step 1 backup is restored.
+After that the service restarts and the health check runs (a `503` counts as a failure; the last
+response, which names the failing check, is printed before the rollback). If `flask db check` or the
+health check fails, the code is reset to the previous commit and the step 1 backup is restored: the
+rollback stops the service, deletes the database's `-wal` and `-shm` files, copies the backup over
+`prod_users.db` and restarts the service. A failed `flask db upgrade` still just aborts the deploy.
 
 The reserved `global` and `archive` classrooms are not a deploy step: `seed_global_data()` in
 `application/__init__.py` creates them whenever the app starts, which includes `flask seed`.
@@ -351,7 +412,10 @@ blank database fails with `NoSuchTableError: users`).
   app factory only calls it outside production; `deploy.sh` uses it once to bootstrap a brand-new
   database before stamping it to head. A new model table therefore needs a `create_table`
   migration like any other change. In development the factory also compares the database with the
-  models at startup and logs a schema-drift report (`application/utilities/schema_check.py`).
+  models at startup and logs a schema-drift report (`application/utilities/schema_check.py`). In
+  production the same module logs a one-line summary at startup (`log_schema_drift_summary`: how
+  many differences, the Alembic revision, the first ten differences, and `flask db check` to list
+  them all). It only reads the schema, never raises and never blocks the start.
 
 ### Development databases
 
