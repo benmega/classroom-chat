@@ -168,7 +168,7 @@
 
 :where(.admin-achievements-page) .reward-tag {
     background: var(--amber-50);
-    color: var(--warning-color);
+    color: var(--warning-text);
     padding: 4px 12px;
     border-radius: 20px;
     font-weight: 800;

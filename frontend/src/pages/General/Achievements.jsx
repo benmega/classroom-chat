@@ -8,9 +8,11 @@ import toast from 'react-hot-toast';
 import './Achievements.css';
 import '../../assets/css/sprite.css'; 
 import Skeleton from '../../components/common/Skeleton';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 
 const Achievements = () => {
+    useDocumentTitle('Achievements');
     const [achievements, setAchievements] = useState([]);
     const [userAchievements, setUserAchievements] = useState([]);
     const [isLoading, setIsLoading] = useState(true);

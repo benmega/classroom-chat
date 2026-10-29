@@ -141,7 +141,7 @@
 .activity-item-reward {
     font-size: 0.78rem;
     font-weight: 700;
-    color: var(--success-color);
+    color: var(--success-text);
 }
 
 :where(.activity-page) .status-pill {
@@ -156,18 +156,18 @@
 }
 
 .status-pill-pending {
-    background: rgba(217, 119, 6, 0.12);
-    color: var(--warning-color);
+    background: rgba(217, 119, 6, 0.08); /* 0.12 left --warning-text at 4.42:1 on the tint */
+    color: var(--warning-text);
 }
 
 .status-pill-success {
     background: rgba(16, 185, 129, 0.12);
-    color: var(--success-color);
+    color: var(--success-text);
 }
 
 .status-pill-rejected {
     background: rgba(220, 38, 38, 0.12);
-    color: var(--error-color);
+    color: var(--red-700); /* --error-color is only 4.01:1 on its own 12% tint */
 }
 
 .activity-empty-state {

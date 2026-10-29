@@ -14,9 +14,11 @@ import toast from 'react-hot-toast';
 import { getErrorMessage } from '../../utils/apiError';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import './DuckTransactions.css';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const DuckTransactions = () => {
+    useDocumentTitle('Duck transactions · Admin');
     const [searchParams, setSearchParams] = useSearchParams();
     
     const typeParam = searchParams.get('type') || 'all';
@@ -215,8 +217,7 @@ const DuckTransactions = () => {
 
             <div className="transactions-table-container card">
                 {isLoading ? (
-                    <div className="transactions-skeleton p-1rem">
-                        <span className="d-none">Loading transactions...</span>
+                    <SkeletonGroup className="transactions-skeleton p-1rem" label="Loading transactions...">
                         {[1, 2, 3, 4, 5].map(i => (
                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid var(--border-subtle)' }}>
                                 <div className="d-flex align-center gap-12">
@@ -228,7 +229,7 @@ const DuckTransactions = () => {
                                 <Skeleton height="18px" width="100px" />
                             </div>
                         ))}
-                    </div>
+                    </SkeletonGroup>
                 ) : (
                     <>
                         <table className="transactions-table">

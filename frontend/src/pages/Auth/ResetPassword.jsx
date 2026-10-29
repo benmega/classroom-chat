@@ -5,8 +5,10 @@ import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import './Auth.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const ResetPassword = () => {
+    useDocumentTitle('Reset password');
     const [searchParams] = useSearchParams();
     const email = searchParams.get('email');
     

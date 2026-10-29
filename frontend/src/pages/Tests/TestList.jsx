@@ -5,6 +5,7 @@ import { listQuizzes } from '../../api/quizzes';
 import { getErrorMessage } from '../../utils/apiError';
 import Skeleton from '../../components/common/Skeleton';
 import './TestList.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const actionFor = (quiz) => {
     if (quiz.in_progress_attempt_id) return { label: 'Resume', className: 'btn-primary' };
@@ -62,6 +63,7 @@ const TestRow = ({ quiz }) => {
 };
 
 const TestList = () => {
+    useDocumentTitle('Tests');
     const [quizzes, setQuizzes] = useState(null);
     const [failed, setFailed] = useState(false);
 

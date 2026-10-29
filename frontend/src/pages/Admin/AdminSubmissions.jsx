@@ -19,6 +19,7 @@ import { getApiUrl } from '../../utils/apiUrl';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Skeleton from '../../components/common/Skeleton';
 import './AdminSubmissions.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const formatFileSize = (bytes) => {
     if (bytes === null || bytes === undefined || isNaN(bytes)) return '';
@@ -34,6 +35,7 @@ const formatFileSize = (bytes) => {
 };
 
 const AdminSubmissions = () => {
+    useDocumentTitle('Inbox · Admin');
     const [statusFilter, setStatusFilter] = useState('pending');
     const cacheKey = `admin_submissions_${statusFilter}`;
     const cached = adminCache.get(cacheKey);

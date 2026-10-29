@@ -5,8 +5,10 @@ import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import './Auth.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const ForgotPassword = () => {
+    useDocumentTitle('Forgot password');
     const [selectedRole, setSelectedRole] = useState('student');
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);

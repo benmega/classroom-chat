@@ -5,6 +5,7 @@ import { getAttempt } from '../../api/quizzes';
 import Skeleton from '../../components/common/Skeleton';
 import QuizResultView from '../../components/quiz/QuizResultView';
 import './TestResult.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 /** Which of the three result routes this is, from the URL prefix. */
 const viewerOf = (pathname) => {
@@ -19,6 +20,7 @@ const errorLine = (err) => {
 };
 
 const TestResult = () => {
+    useDocumentTitle('Test result');
     const { attemptId } = useParams();
     const { pathname } = useLocation();
     const viewer = viewerOf(pathname);

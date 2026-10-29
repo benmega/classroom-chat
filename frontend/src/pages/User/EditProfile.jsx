@@ -10,12 +10,14 @@ import { getApiUrl } from '../../utils/apiUrl';
 import { getErrorMessage } from '../../utils/apiError';
 import { PROFILE_PICTURE_TYPES, validateProfilePicture } from '../../utils/profilePicture';
 import { ConnectionCardModal } from '../../components/admin/AdminModals';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const serverPreviewUrl = (u) => (
     u?.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : getApiUrl('/static/images/Default_pfp.jpg')
 );
 
 const EditProfile = () => {
+    useDocumentTitle('Settings');
     const { user, refreshUser } = useAuthStore();
     
     const [nickname, setNickname] = useState('');

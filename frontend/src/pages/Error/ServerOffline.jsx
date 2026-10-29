@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import useAuthStore from '../../store/useAuthStore';
 import './ServerOffline.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const FUN_MESSAGES = [
   "🔌 Plugging in...",
@@ -21,6 +22,7 @@ const WAKEUP_REQUEST_TIMEOUT_MS = 10000; // give up on a hung wake-up request
 const TOTAL_TIME = 300; // 5 minutes
 
 const ServerOffline = () => {
+  useDocumentTitle('Server offline');
   const { checkAuth } = useAuthStore();
   const [isWakingUp, setIsWakingUp] = useState(false);
   const [progress, setProgress] = useState(0);

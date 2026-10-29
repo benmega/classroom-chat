@@ -20,8 +20,10 @@ import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
 import useAuthStore from '../../store/useAuthStore';
 import './DevLogin.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const DevLogin = () => {
+    useDocumentTitle('Dev login');
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { checkAuth } = useAuthStore();

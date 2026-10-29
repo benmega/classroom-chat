@@ -5,8 +5,10 @@ import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import '../Parent/ConnectChild.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const JoinClassroomLink = () => {
+    useDocumentTitle('Join a class');
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const location = useLocation();
