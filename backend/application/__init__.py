@@ -577,9 +577,11 @@ def seed_global_data():
                 db.session.add(ProjectTemplate(**template_data))
                 logger.info(f"Seeded project template '{template_data['name']}'.")
             else:
-                if template.chapter != template_data.get("chapter"):
+                # Backfill only: an admin's edits to a template survive restarts and
+                # deploys (flask seed --overwrite is the explicit way to reset them).
+                if not template.chapter and template_data.get("chapter"):
                     template.chapter = template_data.get("chapter")
-                    logger.info(f"Updated chapter for project template '{template_data['name']}'.")
+                    logger.info(f"Backfilled chapter for project template '{template_data['name']}'.")
                 if not template.image_url and template_data.get("image_url"):
                     template.image_url = template_data["image_url"]
                     logger.info(f"Backfilled image for project template '{template_data['name']}'.")

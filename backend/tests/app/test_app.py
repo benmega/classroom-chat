@@ -451,7 +451,8 @@ def test_seed_global_data_sys_argv_db(test_app):
         seed_global_data()
 
 
-def test_seed_global_data_updates_template_chapter(test_app):
+def test_seed_global_data_keeps_an_edited_template_chapter(test_app):
+    """Start-up seeding backfills an empty chapter but never overwrites an admin's edit."""
     with test_app.app_context():
         tpl = ProjectTemplate.query.filter_by(name="Text-Based Adventure").first()
         if not tpl:
@@ -463,8 +464,15 @@ def test_seed_global_data_updates_template_chapter(test_app):
 
         seed_global_data()
 
-        updated_tpl = ProjectTemplate.query.filter_by(name="Text-Based Adventure").first()
-        assert updated_tpl.chapter == "Computer Science 2"
+        assert ProjectTemplate.query.filter_by(name="Text-Based Adventure").first().chapter == "Old Chapter"
+
+        tpl = ProjectTemplate.query.filter_by(name="Text-Based Adventure").first()
+        tpl.chapter = None
+        db.session.commit()
+
+        seed_global_data()
+
+        assert ProjectTemplate.query.filter_by(name="Text-Based Adventure").first().chapter == "Computer Science 2"
 
 
 def test_seed_global_data_repoints_converted_project_images(init_db, sample_user):
