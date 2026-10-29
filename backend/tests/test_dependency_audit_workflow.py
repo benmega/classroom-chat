@@ -1,7 +1,7 @@
-"""Keep the pip-audit workflow advisory.
+"""Keep the pip-audit workflow enforcing but out of the deploy path.
 
-The audit lists known vulnerabilities in the backend runtime requirements, but it must never fail a
-build or sit in front of a deploy. GitHub runs the workflow, so these checks read the files as text.
+The audit fails its own run on a known vulnerability in the backend runtime requirements, but it must
+never sit in front of a deploy. GitHub runs the workflow, so these checks read the files as text.
 """
 
 import re
@@ -22,14 +22,14 @@ def _text(path):
     return path.read_text(encoding="utf-8").replace("\r\n", "\n")
 
 
-def test_audit_checks_the_runtime_requirements_and_never_fails_the_run():
+def test_audit_checks_the_runtime_requirements_and_fails_on_findings():
     text = _text(AUDIT_WORKFLOW)
 
-    step = re.search(r"- name: Audit runtime dependencies \(advisory\)\n(?P<body>(?:        .*\n)+)", text)
+    step = re.search(r"- name: Audit runtime dependencies\n(?P<body>(?:        .*\n)+)", text)
 
     assert step, "audit step not found"
     assert "pip-audit -r requirements.txt" in step["body"]
-    assert "continue-on-error: true" in step["body"]
+    assert "continue-on-error" not in step["body"]
     assert "working-directory: backend" in text
 
 
