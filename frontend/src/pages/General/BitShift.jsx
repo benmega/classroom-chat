@@ -6,9 +6,11 @@ import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import confetti from 'canvas-confetti';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import './BitShift.css';
 
 const BitShift = () => {
+    useDocumentTitle('Bit Shift');
     const { user, refreshUser } = useAuthStore();
     const [digitalDucks, setDigitalDucks] = useState(0);
     const [bitDuckCounts, setBitDuckCounts] = useState(Array(7).fill(0));

@@ -15,7 +15,7 @@ const routed = [...app.matchAll(/(?:import\(|from )'\.\/(pages\/[^']+)'/g)]
 
 // Not covered yet: BitShift.jsx is also being edited by the auth-store change (checkAuth), so its two lines go in
 // after that merges. Remove it from this list then.
-const NOT_YET = new Set(['pages/General/BitShift.jsx'])
+const NOT_YET = new Set([])
 
 describe('page titles', () => {
   it('finds the routed pages', () => {
