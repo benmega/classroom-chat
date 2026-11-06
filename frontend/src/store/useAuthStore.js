@@ -124,9 +124,12 @@ const useAuthStore = create((set, get) => ({
     try {
       const response = await client.post('/api/auth/cognito/login', { email, password });
       if (response.data.success) {
-        // Since cognito login sets the session cookie, we checkAuth to populate the user
-        await useAuthStore.getState().checkAuth();
-        return { 
+        // The Cognito login set the session cookie; read the user it belongs to without the app loader
+        await useAuthStore.getState().refreshUser();
+        if (!useAuthStore.getState().isAuthenticated) {
+          return { success: false, error: 'Signed in, but your account could not be loaded. Please try again.' };
+        }
+        return {
           success: true,
           role: response.data.role
         };

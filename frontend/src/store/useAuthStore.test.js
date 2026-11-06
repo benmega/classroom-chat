@@ -145,14 +145,67 @@ describe('useAuthStore', () => {
     expect(result).toEqual({ success: false, error: 'Login failed' });
   });
 
-  it('loginParentCognito updates state on success', async () => {
-    server.use(
-      http.post('*/api/auth/cognito/login', () => {
-        return HttpResponse.json({ success: true, role: 'parent' });
-      })
-    );
-    const result = await useAuthStore.getState().loginParentCognito('parent@test.com', 'password');
-    expect(result.success).toBe(true);
+  describe('loginParentCognito reads the user without the loader', () => {
+    const cognitoLogin = () => useAuthStore.getState().loginParentCognito('parent@test.com', 'password');
+
+    beforeEach(() => {
+      // An override saved by an earlier test would win over the progress computed from the challenges
+      localStorage.removeItem('hamburger_override_testuser');
+      useAuthStore.setState({ user: null, isAuthenticated: false, isLoading: false, hamburgerProgress: 0 });
+      server.use(
+        http.post('*/api/auth/cognito/login', () => HttpResponse.json({ success: true, role: 'parent' }))
+      );
+    });
+
+    afterEach(() => {
+      localStorage.removeItem('hamburger_override_testuser');
+    });
+
+    it('sets the user and session when the sign-in and the user read both succeed, never showing the loader', async () => {
+      const seen = [];
+      const unsubscribe = useAuthStore.subscribe((state) => seen.push(state.isLoading));
+
+      const result = await cognitoLogin();
+      unsubscribe();
+
+      expect(result).toEqual({ success: true, role: 'parent' });
+      const state = useAuthStore.getState();
+      expect(state.user.username).toBe('testuser');
+      expect(state.isAuthenticated).toBe(true);
+      expect(seen.length).toBeGreaterThan(0);
+      expect(seen).not.toContain(true);
+    });
+
+    it('reports that the account could not be loaded when the user read fails, without marking the server offline', async () => {
+      server.use(http.get('*/user/api/auth/status', () => HttpResponse.error()));
+
+      const result = await cognitoLogin();
+
+      expect(result).toEqual({
+        success: false,
+        error: 'Signed in, but your account could not be loaded. Please try again.',
+      });
+      const state = useAuthStore.getState();
+      expect(state.isAuthenticated).toBe(false);
+      expect(state.user).toBeNull();
+      expect(state.isServerOffline).toBe(false);
+      expect(state.isLoading).toBe(false);
+    });
+
+    it('does not read the user when the sign-in is refused', async () => {
+      server.use(
+        http.post('*/api/auth/cognito/login', () => HttpResponse.json({ success: false }))
+      );
+      const getSpy = vi.spyOn(client, 'get');
+
+      const result = await cognitoLogin();
+      const readUser = getSpy.mock.calls.length;
+      getSpy.mockRestore();
+
+      expect(result).toEqual({ success: false, error: 'Login failed' });
+      expect(readUser).toBe(0);
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
   });
 
   describe('loginParentCognito failures', () => {
