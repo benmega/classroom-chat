@@ -12,6 +12,11 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  # github.workflow is the caller's name under workflow_call, so a deploy's lint gate never queues behind a push run
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   backend-lint:
     name: Backend Lint (Ruff)
@@ -67,17 +72,18 @@ jobs:
     - name: Run ESLint
       run: npm run lint
 
-    # Fails on a high or critical advisory. Ten moderate ones remain and stay below this level:
-    #  - decode-uri-component (denial of service on malformed input), reached only through
-    #    react-admin > ra-core > query-string. npm's only "fix" is react-admin 3.0.2, a downgrade
-    #    from 5.x, so it cannot be fixed without a major change.
-    #  - @vitest/mocker, vitest and @vitest/coverage-v8 4.x (test tooling only); the fix is the
-    #    vitest 5 major.
-    # Revisit both when react-admin or vitest ships a fix inside the current major. If a new high
-    # advisory has no fix outside a major bump, deal with it in package.json (an override or the
-    # upgrade) rather than by loosening this step.
+    # Fails on any high or critical advisory, except those listed with a reason in
+    # scripts/npm_audit_gate.mjs. The one current entry is GHSA-qr28-fpjm-wq7f
+    # (decode-uri-component, reached only through react-admin > ra-core > query-string@7). Its
+    # patched release is ESM-only and query-string 7 cannot load it, so it stays allowed until
+    # react-admin moves off query-string 7. Three moderate advisories remain in vitest,
+    # @vitest/coverage-v8 and @vitest/mocker (test tooling only); they are below this gate.
+    # For a new high, upgrade or override the package in frontend/package.json rather than
+    # loosening this gate.
     - name: Audit dependencies
-      run: npm audit --audit-level=high
+      run: |
+        npm audit --json > "$RUNNER_TEMP/npm-audit.json" || true
+        node ../scripts/npm_audit_gate.mjs "$RUNNER_TEMP/npm-audit.json"
 
     - name: List outdated dependencies (advisory)
       run: npm outdated || true
