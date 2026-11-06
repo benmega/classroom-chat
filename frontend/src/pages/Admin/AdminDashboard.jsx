@@ -26,7 +26,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import '../../components/admin/AdminShared.css';
 import './AdminDashboard.css';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 
 import AdminStats from '../../components/admin/AdminStats';
 import {
@@ -113,7 +113,7 @@ const AdminDashboard = () => {
     };
 
     if (isLoading) return (
-        <div className="admin-dashboard">
+        <SkeletonGroup label="Loading dashboard…" className="admin-dashboard">
             <div className="dashboard-header">
                 <Skeleton height="40px" width="300px" data-testid="skeleton-title" className="skeleton-title" />
             </div>
@@ -127,7 +127,7 @@ const AdminDashboard = () => {
                     <Skeleton height="250px" className="skeleton-card skeleton-card-mt" />
                 </div>
             </div>
-        </div>
+        </SkeletonGroup>
     );
     
     if (!dashboardData) return (

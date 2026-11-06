@@ -60,6 +60,7 @@ describe('Classes Admin Page', () => {
 
         renderWithRouter(<Classes />);
         expect(screen.getByTestId("admin-classes-page")).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent(/Loading classes/);
         await waitFor(() => {
             expect(screen.getByText('Classroom Directory')).toBeInTheDocument();
         });

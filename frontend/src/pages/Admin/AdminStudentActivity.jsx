@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2, Activity, User } from 'lucide-react';
 import client from '../../api/client';
 import './AdminStudentActivity.css';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import { getApiUrl } from '../../utils/apiUrl';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 
@@ -53,7 +53,7 @@ const AdminStudentActivity = () => {
 
             <main className="admin-content">
                 {isLoading ? (
-                    <div className="activity-list skeleton-list">
+                    <SkeletonGroup label="Loading student activity…" className="activity-list skeleton-list">
                         {[1, 2, 3, 4].map(i => (
                             <div key={i} className="student-activity-card card skeleton-card">
                                 <div className="skeleton-card-left">
@@ -69,7 +69,7 @@ const AdminStudentActivity = () => {
                                 </div>
                             </div>
                         ))}
-                    </div>
+                    </SkeletonGroup>
                 ) : students.length === 0 ? (
                     <div className="admin-empty">
                         <User size={48} />

@@ -6,7 +6,7 @@ import client from '../../api/client';
 import toast from 'react-hot-toast';
 import adminCache from '../../utils/adminCache';
 import { getErrorMessage } from '../../utils/apiError';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import useModalA11y from '../../hooks/useModalA11y';
 import './Classes.css';
@@ -245,7 +245,7 @@ const Classes = () => {
     };
 
     if (isLoading) return (
-        <div data-testid="admin-classes-page" className="admin-classes-page">
+        <SkeletonGroup label="Loading classes…" data-testid="admin-classes-page" className="admin-classes-page">
             <header className="page-header">
                 <Skeleton height="40px" width="300px" className="skeleton-title" />
                 <Skeleton height="20px" width="500px" />
@@ -263,7 +263,7 @@ const Classes = () => {
                     ))}
                 </div>
             </div>
-        </div>
+        </SkeletonGroup>
     );
 
     return (

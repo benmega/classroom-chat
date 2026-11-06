@@ -19,6 +19,12 @@ describe('AdminStudentActivity', () => {
         vi.unstubAllEnvs();
     });
 
+    it('announces the loading skeletons through a status region until the activity loads', () => {
+        client.get.mockImplementation(() => new Promise(() => {})); // Never resolves
+        render(<AdminStudentActivity />);
+        expect(screen.getByRole('status')).toHaveTextContent(/Loading student activity/);
+    });
+
     it('says in words, not only in colour, whether each student is online', async () => {
         client.get.mockResolvedValue({
             data: {

@@ -93,6 +93,7 @@ describe('AdminClassDashboard', () => {
         client.get.mockImplementation(() => new Promise(() => {})); // Never resolves
         renderWithRouter(<AdminClassDashboard />);
         expect(screen.getAllByTestId("skeleton-title")[0]).toBeInTheDocument();
+        expect(screen.getByRole('status')).toHaveTextContent(/Loading class/);
     });
 
     it('fetches and displays classroom details and students', async () => {
