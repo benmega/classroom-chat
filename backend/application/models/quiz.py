@@ -38,9 +38,57 @@ class Quiz(db.Model):
         back_populates="quiz",
         cascade="all, delete-orphan",
     )
+    # None: open to everyone. Any: open only to the students and classrooms named.
+    assignments = db.relationship(
+        "QuizAssignment",
+        back_populates="quiz",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<Quiz {self.slug}>"
+
+
+class QuizAssignment(db.Model):
+    """A quiz assigned to one student or one classroom; exactly one of the two is set."""
+
+    __tablename__ = "quiz_assignments"
+    __table_args__ = (
+        db.UniqueConstraint("quiz_id", "user_id", name="uq_quiz_assignments_quiz_id_user_id"),
+        db.UniqueConstraint(
+            "quiz_id", "classroom_id", name="uq_quiz_assignments_quiz_id_classroom_id"
+        ),
+        db.CheckConstraint("(user_id IS NULL) <> (classroom_id IS NULL)", name="one_target"),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    quiz_id = db.Column(
+        db.Integer,
+        db.ForeignKey("quizzes.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    classroom_id = db.Column(
+        db.String(64),
+        db.ForeignKey("classrooms.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+
+    quiz = db.relationship("Quiz", back_populates="assignments")
+    user = db.relationship("User", back_populates="quiz_assignments")
+    classroom = db.relationship("Classroom", back_populates="quiz_assignments")
+
+    def __repr__(self):
+        target = f"user={self.user_id}" if self.user_id else f"classroom={self.classroom_id}"
+        return f"<QuizAssignment quiz={self.quiz_id} {target}>"
 
 
 class QuizQuestion(db.Model):

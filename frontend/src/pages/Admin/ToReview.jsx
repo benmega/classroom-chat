@@ -41,6 +41,7 @@ import SmartImage from '../../components/common/SmartImage';
 import ModelViewer from '../../components/common/ModelViewer';
 import ProjectFileBrowser from '../../components/common/ProjectFileBrowser';
 import AssetGallery from '../../components/common/AssetGallery';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 // A timestamp can be missing (submitted_at is nullable on certificates); new Date(null/undefined) would show a bogus date.
 const formatSubmittedAt = (value) => (value ? new Date(value).toLocaleString() : 'Unknown date');
@@ -106,6 +107,7 @@ const ReviewSection = ({ label, isOpen, onToggle, children }) => (
 );
 
 const ToReview = () => {
+    useDocumentTitle('To review · Admin');
     const cachedReview = adminCache.get('admin_to_review');
 
     const [projects, setProjects] = useState(() => cachedReview?.projects || []);

@@ -54,6 +54,7 @@ const AdminStudentActivity = React.lazy(() => import('./pages/Admin/AdminStudent
 const AdminCRUD = React.lazy(() => import('./admin/AdminPanel'));
 const KioskUpload = React.lazy(() => import('./pages/Admin/KioskUpload'));
 const AdminTests = React.lazy(() => import('./pages/Admin/AdminTests'));
+const AdminTestNew = React.lazy(() => import('./pages/Admin/AdminTestNew'));
 
 // --- Parent pages: lazily loaded (students never need these) ---
 const ParentDashboard = React.lazy(() => import('./pages/Parent/ParentDashboard'));
@@ -334,6 +335,7 @@ function App() {
                 <Route path="transactions" element={<DuckTransactions />} />
                 <Route path="student-activity" element={<AdminStudentActivity />} />
                 <Route path="tests" element={<AdminTests />} />
+                <Route path="tests/new" element={<AdminTestNew />} />
                 <Route path="tests/results/:attemptId" element={<TestResult />} />
                 <Route path="review" element={<Navigate to="/admin/to-review" replace />} />
                 <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />

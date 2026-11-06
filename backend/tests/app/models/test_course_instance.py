@@ -1,10 +1,3 @@
-"""
-File: test_course_instance.py
-Type: py
-Summary: Unit tests for course instance model.
-"""
-
-
 def test_course_instance_relationship(sample_course_instance, sample_classroom):
     """Test the one-to-many relationship between Classroom and CourseInstance."""
     assert sample_course_instance.classroom_id == sample_classroom.id

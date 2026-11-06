@@ -115,6 +115,16 @@ describe('Chat Component', () => {
     expect(screen.getByText(/loading feed/i)).toBeInTheDocument();
   });
 
+  it('announces the loading state to screen readers instead of hiding it', () => {
+    useFeedLogic.mockReturnValue(buildFeedLogic({ loading: true }));
+    renderWithProviders(<Chat />);
+
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-busy', 'true');
+    expect(status).toHaveTextContent('Loading Feed...');
+    expect(status.querySelector('.d-none')).toBeNull();
+  });
+
   it('does not render the feed container while loading', () => {
     useFeedLogic.mockReturnValue(buildFeedLogic({ loading: true }));
     renderWithProviders(<Chat />);

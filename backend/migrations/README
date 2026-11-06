@@ -7,19 +7,11 @@ Run these from the `backend/` directory with `FLASK_APP=main.py`:
 
 Do not run `flask db init`; this directory already exists.
 
-A development database that `create_all` built has no Alembic revision, and neither command works
-on it as it is: delete it, or stamp it first. See "Development databases" in
-docs/infrastructure_and_devops.md.
-
-This is the only supported way to change the schema. Production is upgraded by deploy.sh in this
-order: backup, bootstrap/stamp check, `flask db upgrade`, `flask seed`. The root revision is an
-empty placeholder, so the history cannot build a database from scratch; a brand-new database is
-created from the models and stamped to head by deploy.sh.
-
 Rules:
-- Schema changes only via `flask db migrate`; there must be a single head (`flask db heads`).
-- No raw-SQL or one-off database scripts.
-- Data fixes go in an Alembic data migration; data every install needs is an idempotent upsert in
-  `flask seed`. tools/migrate_classroom.py is retired and must not gain new steps.
+- Schema changes only through Alembic, with a single head (`flask db heads`).
+- No raw-SQL or one-off database scripts. A data fix is an Alembic data migration; data every install
+  needs is an idempotent upsert in `flask seed`.
+- A development database built by `create_all` has no Alembic revision: delete it, or stamp it first.
 
-See the "Database upgrade path" in docs/infrastructure_and_devops.md.
+The production upgrade order and the development-database recipe are in
+docs/infrastructure_and_devops.md, section 8.

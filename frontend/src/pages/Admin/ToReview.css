@@ -188,7 +188,7 @@
 
 .badge-certificate {
     background: var(--amber-100);
-    color: var(--warning-color);
+    color: var(--warning-text);
 }
 
 .badge-user {
@@ -604,7 +604,7 @@
 .reward-value {
     font-size: var(--font-sm);
     font-weight: 700;
-    color: var(--warning-color);
+    color: var(--warning-text);
 }
 
 .slider-container {

@@ -1,9 +1,3 @@
-"""
-File: parent_message.py
-Type: py
-Summary: Model for storing messages/inquiries sent from parents to teachers/admin.
-"""
-
 from ..extensions import db
 from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 

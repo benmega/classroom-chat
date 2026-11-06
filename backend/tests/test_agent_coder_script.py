@@ -1,9 +1,7 @@
 """
-File: test_agent_coder_script.py
-Type: py
-Summary: Tests for the AI agent helper script (.github/scripts/agent_coder.py) that the
-         ai-coder workflow runs: how it runs the backend tests, the issue text and plan it
-         hands the model and how it reads the discussion from GitHub.
+Tests for the AI agent helper script (.github/scripts/agent_coder.py) that the
+ai-coder workflow runs: how it runs the backend tests, the issue text and plan it
+hands the model and how it reads the discussion from GitHub.
 """
 
 import importlib.util

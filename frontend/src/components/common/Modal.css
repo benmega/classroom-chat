@@ -148,7 +148,7 @@
 }
 
 .admin-form .btn-warning {
-    background: var(--gradient-warning);
+    background: var(--warning-text); /* white on --gradient-warning is only 3.19:1 at its start */
     color: var(--text-on-primary);
 }
 

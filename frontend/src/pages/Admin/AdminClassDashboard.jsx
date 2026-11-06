@@ -21,12 +21,14 @@ const getCourseIcon = (courseName, courseId) => {
 
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Chat from '../Chat/Chat';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
 import { getSocket } from '../../hooks/useChatSocket';
+import { SOCKET_EVENTS } from '../../constants/socketEvents';
 import { BulkConnectionCardsModal, AddCourseModal, EnrollStudentModal } from '../../components/admin/AdminModals';
 import './AdminClassDashboard.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const getLanguageIconUrl = (language) => {
     const lang = (language || '').toLowerCase();
@@ -39,6 +41,7 @@ const getLanguageIconUrl = (language) => {
 };
 
 const AdminClassDashboard = () => {
+    useDocumentTitle('Class · Admin');
     const { classId } = useParams();
     const navigate = useNavigate();
     const [classroom, setClassroom] = useState(null);
@@ -92,9 +95,9 @@ const AdminClassDashboard = () => {
                 setClassroom(prev => prev ? ({ ...prev, sandbox_active: Boolean(data.sandbox_active) }) : prev);
             }
         };
-        socket.on('sandbox_status_changed', handleStatusChanged);
+        socket.on(SOCKET_EVENTS.SANDBOX_STATUS_CHANGED, handleStatusChanged);
         return () => {
-            socket.off('sandbox_status_changed', handleStatusChanged);
+            socket.off(SOCKET_EVENTS.SANDBOX_STATUS_CHANGED, handleStatusChanged);
         };
     }, [classId]);
 
@@ -304,7 +307,7 @@ const AdminClassDashboard = () => {
 
     if (isLoading || !classroom) {
         return (
-            <div className="admin-class-dashboard">
+            <SkeletonGroup label="Loading class…" className="admin-class-dashboard">
                 <div className="dashboard-header">
                     <Skeleton height="40px" width="300px" data-testid="skeleton-title" className="skeleton-title" />
                 </div>
@@ -313,7 +316,7 @@ const AdminClassDashboard = () => {
                         <Skeleton height="300px" className="skeleton-card" />
                     </div>
                 </div>
-            </div>
+            </SkeletonGroup>
         );
     }
 

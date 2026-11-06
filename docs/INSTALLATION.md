@@ -1,8 +1,8 @@
 # Installation - Classroom Chat and Duck System
 
 ## Prerequisites
-- Python 3.11 (matches CI; 3.10 is the minimum the pinned dependencies support)
-- Node.js 20.19+ or 22.12+ and npm (for the Vite/React frontend)
+- Python 3.11 (matches CI and the root `.python-version`; 3.10 is the minimum the pinned dependencies support)
+- Node.js 22.12+ and npm (for the Vite/React frontend). CI and `frontend/.nvmrc` use Node 22; `package.json` still accepts 20.19+
 - SQLite (bundled with Python — no separate database server needed for local dev)
 
 ## Installation Steps
@@ -27,7 +27,7 @@
    ```bash
    pip install -r requirements-dev.txt
    ```
-   `requirements-dev.txt` is `requirements.txt` (what the app needs to run, and the only file `deploy.sh` installs on the server) plus the test and lint tooling (pytest, pytest-cov, ruff, mypy, factory_boy). If you only want to run the app, `pip install -r requirements.txt` is enough. The one-off scripts that generate student cards (`reports/student_cards/generate_cards.py`), QR codes (`tools/generate_user_qr_codes.py`) and screenshots (`screenshot.py`, `scripts/capture_*.py`) need a few more packages: `pip install -r requirements-tools.txt` (then `playwright install chromium` for the screenshot scripts).
+   `requirements-dev.txt` is `requirements.txt` (what the app needs to run, and the only file `deploy.sh` installs on the server) plus the test and lint tooling (pytest, pytest-cov, factory_boy, and ruff and mypy at the versions pinned in `requirements-lint.txt`, which `requirements-dev.txt` includes and `lint.yml` installs on its own). If you only want to run the app, `pip install -r requirements.txt` is enough. The one-off scripts that generate student cards (`reports/student_cards/generate_cards.py`), QR codes (`tools/generate_user_qr_codes.py`) and screenshots (`screenshot.py`, `scripts/capture_*.py`) need a few more packages: `pip install -r requirements-tools.txt` (then `playwright install chromium` for the screenshot scripts).
 
 4. Create `backend/.env` with at least:
    ```env
@@ -40,8 +40,15 @@
 5. Install frontend dependencies:
    ```bash
    cd ../frontend
-   npm install
+   npm ci
    ```
+   `npm ci` installs exactly what `package-lock.json` pins, which is what CI and the deploy build do (use `npm install` only when you are changing dependencies). `frontend/.nvmrc` names the Node major CI uses (`nvm use` / `fnm use` pick it up).
+
+6. Enable the git hooks (once per clone; it also covers every worktree of that clone):
+   ```powershell
+   powershell scripts/install-hooks.ps1
+   ```
+   This runs `git config core.hooksPath scripts/hooks`, so the tracked `pre-push` hook lints before each push: `ruff check .` over `backend/` and ESLint over `frontend/`, the same checks as `lint.yml`. It needs the backend dev requirements installed and `npm ci` done in `frontend/`. `git push --no-verify` skips it in an emergency.
 
 ## Getting Started
 

@@ -109,7 +109,7 @@
 
 .balance-info-inline {
     font-size: 0.85rem;
-    color: var(--primary-darker); /* Darkened from primary-dark for contrast */
+    color: var(--primary-darker);
     background: var(--primary-light);
     padding: 0.4rem 1rem;
     font-weight: 700;
@@ -588,7 +588,7 @@
     font-size: 0.9rem;
     font-weight: 700;
     color: var(--text-on-primary);
-    background: linear-gradient(135deg, var(--warning-color), var(--warning-color)); /* end stop was #d97706, the same value */
+    background: linear-gradient(135deg, var(--warning-color), var(--warning-color));
     border: none;
     border-radius: var(--radius-full);
     cursor: pointer;

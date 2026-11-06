@@ -6,8 +6,10 @@ import AdminGameCatalog from './AdminGameCatalog';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { BookMarked, Award, Swords, Library, Gamepad2 } from 'lucide-react';
 import './AdminLibrary.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const AdminLibrary = () => {
+    useDocumentTitle('Content library · Admin');
     const [activeTab, setActiveTab] = useState('projects');
 
     const tabs = [

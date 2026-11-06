@@ -1,14 +1,8 @@
-"""
-File: __init__.py
-Type: py
-Summary: Model import helper to register all SQLAlchemy models.
-"""
-
+"""Model import helper to register all SQLAlchemy models."""
 
 
 def setup_models():
-    # Import all models to register them with SQLAlchemy
-    # These imports are needed for side effects (model registration)
+    # Imported only so every model registers with SQLAlchemy.
     from .achievements import Achievement
     from .banned_words import BannedWords
     from .challenge import Challenge
@@ -30,7 +24,7 @@ def setup_models():
     from .project import Project
     from .project_file import ProjectFile
     from .project_template import ProjectTemplate
-    from .quiz import Quiz, QuizAttempt, QuizQuestion, QuizReward
+    from .quiz import Quiz, QuizAssignment, QuizAttempt, QuizQuestion, QuizReward
     from .session_log import SessionLog
     from .skill import Skill
     from .store_item import StoreItem
@@ -38,6 +32,3 @@ def setup_models():
     from .user import User
     from .user_certificate import UserCertificate
     from .user_item_purchase import UserItemPurchase
-
-
-# setup_models() is called by create_app() within app_context

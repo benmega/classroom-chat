@@ -607,7 +607,7 @@
     align-items: center;
     gap: 4px;
     background: var(--bg-tertiary);
-    color: var(--warning-color, #d97706);
+    color: var(--warning-text);
     border: 1px solid var(--warning-color, #d97706);
     font-size: 0.65rem;
     font-weight: 700;
@@ -643,7 +643,7 @@
     padding: 8px 10px;
     margin-bottom: 12px;
     font-size: 0.8rem;
-    color: var(--success-color);
+    color: var(--success-text);
     font-style: italic;
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     display: flex;
@@ -1402,7 +1402,7 @@ a.cert-item:hover {
     display: flex;
     align-items: center;
     gap: 5px;
-    color: var(--success-color);
+    color: var(--success-text);
 }
 .teacher-feedback.revision-feedback {
     border-left: 4px solid var(--error-color, #ef4444);
@@ -1554,7 +1554,7 @@ a.cert-item:hover {
 }
 
 .label-hamburger {
-    color: var(--warning-color); /* Hamburger golden amber */
+    color: var(--warning-text); /* Hamburger golden amber */
 }
 
 .label-menu {

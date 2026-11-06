@@ -12,8 +12,9 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 ### 2.1 Backend Testing
 - **Framework**: [Pytest](https://pytest.org/)
 - **Extensions**: `pytest-cov`
-- **Setup**: `pip install -r requirements-dev.txt` from `backend/` (the runtime `requirements.txt` plus pytest, pytest-cov, mypy, ruff and factory_boy; production only installs `requirements.txt`).
+- **Setup**: `pip install -r requirements-dev.txt` from `backend/` (the runtime `requirements.txt` plus pytest, pytest-cov, factory_boy and the pinned ruff and mypy from `requirements-lint.txt`; production only installs `requirements.txt`).
 - **Type checking**: `mypy` runs in CI (`python -m mypy .` from `backend/`) alongside the test job.
+- **Coverage**: CI runs `pytest --cov=application --cov-fail-under=92` (the omit list is `backend/.coveragerc`); plain `pytest` stays fast. The frontend thresholds live in `frontend/vite.config.js`.
 - **Key Files**:
     - `backend/tests/conftest.py`: Defines fixtures for the app instance, database, and authenticated clients.
     - `backend/tests/app/routes/`: Functional tests for each blueprint (auth, admin subroutes, message, achievements, shop, cognito, ...).
@@ -48,8 +49,8 @@ Classroom Chat employs a multi-layered testing strategy to ensure application st
 ## 3. Automation (CI)
 Tests run automatically via GitHub Actions (`.github/workflows/`).
 
-- **`tests.yml`**: On push and pull request to `main`/`master`: runs the backend job (installs `requirements-dev.txt`, then mypy + pytest) and the frontend job (`npm run test -- --coverage`, then the E2E run against a backend started from the runtime-only `requirements.txt`) in parallel. Reusable via `workflow_call` so deploy workflows can gate on it.
-- **`lint.yml`**: On every pull request and on pushes to `main`/`master`/`working`: runs Ruff over the backend and ESLint (`npm run lint`) over the frontend as two separate jobs. Reusable via `workflow_call` so deploy workflows can gate on it. It is still worth running `npm run lint` locally before pushing frontend changes.
+- **`tests.yml`**: On pushes to `main`/`working` and on every pull request: runs four jobs in parallel. Backend (installs `requirements-dev.txt`, then mypy, the Alembic head check, `check_admin_auth.py`, `lint_migrations.py`, `validate_migrations.py` and pytest with the coverage floor); frontend unit tests (`npm run test -- --coverage`); frontend build (`npm run build`); and frontend E2E (Playwright, with a backend installed from the runtime-only `requirements.txt` and started by the config's `webServer` entry; the Playwright report and traces are uploaded as an artifact when it fails). Reusable via `workflow_call` so deploy workflows can gate on it. `scripts/preflight.ps1` runs the same checks locally.
+- **`lint.yml`**: On every pull request and on pushes to `main`/`working`: runs Ruff over the backend and ESLint (`npm run lint`) over the frontend as two separate jobs. Reusable via `workflow_call` so deploy workflows can gate on it. It is still worth running `npm run lint` locally before pushing frontend changes.
 - **`deploy.yml` / `deploy-frontend.yml`**: Deploy to EC2 / S3+CloudFront on pushes to the `deploy` branch, gated on `tests.yml` and `lint.yml` passing first.
 
 ---

@@ -1,8 +1,6 @@
 """
-File: test_migration_challenge_slug_only_unique.py
-Type: py
-Summary: The 1d9eb679a601 migration leaves the slug as the only unique key of a
-         challenge and declares its value as a float, without changing a stored value.
+The 1d9eb679a601 migration leaves the slug as the only unique key of a
+challenge and declares its value as a float, without changing a stored value.
 """
 
 import importlib.util

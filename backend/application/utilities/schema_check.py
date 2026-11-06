@@ -3,8 +3,12 @@ import logging
 from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
 from application.extensions import db
+from sqlalchemy import inspect
 
 logger = logging.getLogger(__name__)
+
+# Differences the production start-up summary lists before it points to 'flask db check'
+SUMMARY_MAX_DIFFS = 10
 
 _NEW_MIGRATION = [
     '        flask db migrate -m "describe the change"',
@@ -53,6 +57,56 @@ def _remedy(revisions):
     ]
 
 
+def _compare_with_models(connection):
+    """What differs between the database and the models, and the Alembic revisions
+    the database is stamped with (only looked up when something differs)."""
+    context = MigrationContext.configure(connection)
+    diff = compare_metadata(context, db.metadata)
+    revisions = context.get_current_heads() if diff else ()
+    return diff, revisions
+
+
+def log_schema_drift_summary(app):
+    """
+    Logs, once, whether the database matches the models. For the production start-up,
+    where the full report of check_for_schema_drift would be wrong: it tells a
+    developer to delete the database or stamp it, and in production Alembic owns the
+    schema. This says how many differences there are, shows the first few and names the
+    command that lists them all.
+
+    Read-only (it only reflects the schema), never raises and never blocks the start-up.
+    A database with no tables yet (deploy.sh has not built it) is left to create_app's
+    own warning.
+    """
+    try:
+        with app.app_context():
+            # Closed on exit, including when the comparison raises
+            with db.engine.connect() as connection:
+                if not inspect(connection).get_table_names():
+                    return
+                diff, revisions = _compare_with_models(connection)
+
+        if not diff:
+            logger.info("The database schema matches the models.")
+            return
+
+        stamp = ", ".join(revisions) if revisions else "none"
+        shown = [str(d)[:200] for d in diff[:SUMMARY_MAX_DIFFS]]
+        more = len(diff) - len(shown)
+        logger.error(
+            "Database schema drift: %d difference(s) between the database (Alembic revision: %s) "
+            "and the models. Run 'flask db check' to list them and 'flask db upgrade' to apply "
+            "the pending migrations. First differences: %s%s",
+            len(diff),
+            stamp,
+            "; ".join(shown),
+            f"; ... and {more} more" if more > 0 else "",
+        )
+    except Exception as e:
+        # A broken check must never keep the app from starting
+        logger.exception(f"Failed to check for schema drift: {e}")
+
+
 def check_for_schema_drift(app):
     """
     Compares the database schema with the models and logs a loud warning
@@ -62,9 +116,7 @@ def check_for_schema_drift(app):
         with app.app_context():
             # Closed on exit, including when the comparison raises
             with db.engine.connect() as connection:
-                context = MigrationContext.configure(connection)
-                diff = compare_metadata(context, db.metadata)
-                revisions = context.get_current_heads() if diff else ()
+                diff, revisions = _compare_with_models(connection)
 
             if diff:
                 banner = "!" * 80
@@ -88,7 +140,6 @@ def check_for_schema_drift(app):
                 ]
                 logger.error("\n".join(lines))
 
-                # We don't crash the app, just warn loudly
                 logger.warning(
                     "Database schema drift detected. The report above says how to sync."
                 )

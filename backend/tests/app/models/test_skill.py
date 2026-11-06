@@ -1,9 +1,3 @@
-"""
-File: test_skill.py
-Type: py
-Summary: Unit tests for skill model.
-"""
-
 import pytest
 from application import User, db
 from application.models.skill import Skill

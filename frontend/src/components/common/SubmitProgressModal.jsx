@@ -13,7 +13,7 @@ import './SubmitProgressModal.css';
 const CERT_URL_PATTERN = /^https:\/\/(?:www\.)?(?:codecombat|ozaria)\.com\/certificates\/[\w\d]+\?.*course=[\w\d-]+.*$/;
 
 const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
-    const { checkAuth } = useAuthStore();
+    const { refreshUser } = useAuthStore();
     const popoverRef = useRef(null);
     
     const [url, setUrl] = useState('');
@@ -103,6 +103,7 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                         particleCount: 200,
                         spread: 100,
                         origin: { y: 0.6 },
+                        disableForReducedMotion: true,
                         zIndex: 9999
                     });
                     resetForm();
@@ -127,11 +128,12 @@ const SubmitProgressModal = ({ isOpen, onClose, onUrlChange }) => {
                         particleCount: pCount,
                         spread: Math.min(70 + (duckReward * 2), 160),
                         origin: { y: 0.6 },
+                        disableForReducedMotion: true,
                         zIndex: 9999
                     });
 
                     resetForm();
-                    checkAuth();
+                    refreshUser();
 
                     if (response.data.new_awards?.length) {
                         response.data.new_awards.forEach((award) => {

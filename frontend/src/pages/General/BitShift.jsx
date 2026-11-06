@@ -6,10 +6,12 @@ import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../store/useAuthStore';
 import confetti from 'canvas-confetti';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 import './BitShift.css';
 
 const BitShift = () => {
-    const { user, checkAuth } = useAuthStore();
+    useDocumentTitle('Bit Shift');
+    const { user, refreshUser } = useAuthStore();
     const [digitalDucks, setDigitalDucks] = useState(0);
     const [bitDuckCounts, setBitDuckCounts] = useState(Array(7).fill(0));
     const [byteDuckCounts, setByteDuckCounts] = useState(Array(5).fill(0));
@@ -125,13 +127,14 @@ const BitShift = () => {
                     particleCount: 100,
                     spread: 70,
                     origin: { y: 0.6 },
+                    disableForReducedMotion: true,
                     zIndex: 9999
                 });
                 setDigitalDucks(0);
                 setBitDuckCounts(Array(7).fill(0));
                 setByteDuckCounts(Array(5).fill(0));
                 setHasAttemptedSubmit(false);
-                checkAuth();
+                refreshUser();
 
                 if (response.data.new_awards?.length) {
                     response.data.new_awards.forEach((award) => {

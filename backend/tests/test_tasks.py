@@ -158,6 +158,51 @@ def test_scheduled_cleanup_skips_when_schema_not_ready(app, error):
     mock_logger.exception.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        OperationalError("SELECT 1", {}, Exception("database is locked")),
+        OperationalError("SELECT 1", {}, Exception("disk I/O error")),
+        OperationalError("SELECT 1", {}, Exception("no such column: session_logs.ended")),
+        ProgrammingError("SELECT 1", {}, Exception("permission denied for table session_logs")),
+    ],
+    ids=["locked", "disk", "missing-column", "permission"],
+)
+def test_scheduled_cleanup_names_database_errors_that_are_not_a_missing_table(app, error):
+    set_app_instance(app)
+
+    with (
+        patch("application.tasks.close_stale_sessions", side_effect=error),
+        patch.object(db.session, "rollback") as mock_rollback,
+        patch("application.tasks.logger") as mock_logger,
+    ):
+        # Swallowed like a missing table: the next tick tries again
+        assert scheduled_cleanup() is None
+
+    mock_rollback.assert_called_once()
+    mock_logger.warning.assert_not_called()
+    mock_logger.exception.assert_called_once()
+    message = mock_logger.exception.call_args.args[0]
+    assert "Session cleanup failed" in message
+    assert str(error.orig) in message
+
+
+def test_scheduled_cleanup_logs_a_locked_database_as_an_error(app, caplog):
+    set_app_instance(app)
+    locked = OperationalError("UPDATE session_logs", {}, Exception("database is locked"))
+
+    with (
+        patch("application.tasks.close_stale_sessions", side_effect=locked),
+        caplog.at_level(logging.INFO, logger="application.tasks"),
+    ):
+        scheduled_cleanup()
+
+    [record] = [r for r in caplog.records if r.name == "application.tasks"]
+    assert record.levelno == logging.ERROR
+    assert "database is locked" in record.getMessage()
+    assert "schema not ready" not in caplog.text
+
+
 def test_scheduled_cleanup_survives_a_missing_schema(app, caplog):
     set_app_instance(app)
     db.session.execute(text("DROP TABLE session_logs"))

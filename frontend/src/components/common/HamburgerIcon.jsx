@@ -1,11 +1,9 @@
 import React from 'react';
 import './HamburgerIcon.css';
 
-// Helper to interpolate between two hex colors
 const interpolateColor = (color1, color2, factor) => {
     const f = Math.max(0, Math.min(1, factor));
     
-    // Parse hex colors (assuming #RRGGBB format)
     const r1 = parseInt(color1.substring(1, 3), 16);
     const g1 = parseInt(color1.substring(3, 5), 16);
     const b1 = parseInt(color1.substring(5, 7), 16);
@@ -18,16 +16,13 @@ const interpolateColor = (color1, color2, factor) => {
     const g = Math.round(g1 + f * (g2 - g1));
     const b = Math.round(b1 + f * (b2 - b1));
 
-    // Convert back to hex
     const toHex = (c) => c.toString(16).padStart(2, '0');
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 };
 
 const HamburgerIcon = ({ progress = 0, size = 24, className = "" }) => {
-    // Ensure progress is within [0, 1]
     const p = Math.max(0, Math.min(1, progress));
 
-    // Colors
     // Target color is --text-secondary (#334155)
     const targetColor = "#334155";
     
@@ -36,7 +31,6 @@ const HamburgerIcon = ({ progress = 0, size = 24, className = "" }) => {
     const lettuceColor = "#22C55E";
     const cheeseColor = "#FACC15";
 
-    // Hamburger parts coordinates
     // Top Bun (morphs into line 1)
     const topBunY = 3 + 2 * p;
     const topBunH = 6 - 4 * p;
@@ -64,7 +58,6 @@ const HamburgerIcon = ({ progress = 0, size = 24, className = "" }) => {
     const bottomBunH = 5 - 3 * p;
     const bottomBunRx = 2.5 - 1.5 * p;
 
-    // Sesame seeds opacity
     const sesameOpacity = 1 - p;
 
     return (

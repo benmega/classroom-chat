@@ -1,48 +1,30 @@
 ---
 name: login
-description: Automated Login Procedure
+description: Log in to the local app as an admin, student or parent with the dev-login shortcut.
 ---
 
 > [!IMPORTANT]
-> **DEFAULT**: Use `/dev-login` for all normal agent authentication tasks.
+> **DEFAULT**: Use the dev-login shortcut for all normal agent authentication tasks.
 > Only use the standard `/login` form when the task is **explicitly about testing login or signup behaviour**.
 
-## When to Use Each Path
+The app must be running: backend `cd backend && python main.py` (port 8000) and frontend `cd frontend && npm run dev` (port 5173). If the database is empty, seed the test users first with `python scripts/seed_e2e_users.py` from `backend/`.
 
-| Situation | Path to Use |
+## Roles
+
+| `role` | Account |
 | :--- | :--- |
-| Agent needs to be authenticated for a task (e.g. UI testing, issue solving) | `/dev-login` — this workflow |
-| Task goal is to **verify the login form works correctly** | `/login` — standard flow |
-| Task goal is to **verify signup works correctly** | `/signup` — standard flow |
+| `admin` | `ben` |
+| `student` | `blossomstudent01` |
+| `parent` | `test_parent` |
 
----
+## Path A: dev-login (default)
 
-## Path A — `/dev-login` (Default for All Agent Tasks)
+1. Open the browser at `http://localhost:8000/dev-login?role=<admin|student|parent>`. The backend logs the session in and shows a helper page that forwards to the frontend. (From a script, `POST /api/dev-login` with `{"role": "admin"}` returns JSON; `/api/dev-login?role=...` also works through port 5173.)
+2. Open `http://localhost:5173/` and confirm the dashboard or chat is visible, not the login page. Cookies are per host, not per port, so the session from step 1 carries over.
 
-### Step 1 — Authenticate via the backend shortcut
+dev-login refuses (403) in a production environment, from a non-localhost caller, or with `DEBUG` off, and reports an error for an unknown role or an account that is not seeded.
 
-Use `browser_subagent` to navigate to:
-```
-http://localhost:8000/dev-login?role=admin
-```
-or for a student session:
-```
-http://localhost:8000/dev-login?role=student
-```
-
-The backend will authenticate the session and return a JSON response like:
-```json
-{ "success": true, "user": { ... }, "role": "admin" }
-```
-
-> [!NOTE]
-> Port **8000** is the Flask backend. This is a direct GET request — no form filling required.
-
-### Step 2 — Navigate to the app
-
-After the `/dev-login` request succeeds, navigate to `http://localhost:5173/` and confirm the chat or dashboard is visible (not the login page). The session cookie from step 1 is shared across both ports.
-
-### If `/dev-login` Fails
+### If dev-login fails
 
 **Stop and report the failure to the user.** Do not:
 - Try the standard `/login` form
@@ -52,14 +34,6 @@ After the `/dev-login` request succeeds, navigate to `http://localhost:5173/` an
 > [!CAUTION]
 > **NEVER guess passwords. NEVER invent credentials. NEVER fall back to the standard `/login` form unless the task explicitly requires testing that feature.**
 
----
+## Path B: standard `/login` (login and signup testing only)
 
-## Path B — Standard `/login` (Only for Login/Signup Feature Testing)
-
-Use this **only** when the task explicitly asks you to test login or signup behaviour.
-
-1. Refer to the `Login Automation` skill in `../login_automation/SKILL.md` for credentials.
-2. Use the `browser_subagent` to navigate to `http://localhost:5173/login`.
-3. Fill in the username and password as specified in the skill.
-4. Click the submit button (`#login-submit-btn`).
-5. Confirm successful login by checking for the presence of the dashboard or a success toast notification.
+Open `http://localhost:5173/login`, fill the username or email field `#usernameOrEmail` and the password field `#password`, and submit with `#login-submit-btn`. Ask the user for credentials; never guess or invent them. Confirm success by the dashboard or a success toast. Signup is at `/signup`.

@@ -1,7 +1,5 @@
 """
-File: generate_user_qr_codes.py
-Type: py
-Summary: Generate QR codes for approved students linking to their profile pages.
+Generate QR codes for approved students linking to their profile pages.
 Requires: the optional qrcode package (pip install -r requirements-tools.txt).
 """
 
@@ -58,12 +56,10 @@ def generate_qr_codes(
 
         generated = 0
         for user in users:
-            # Use slug for profile URL
             if not user.slug:
                 print(f"Warning: User '{user.username}' has no slug. Skipping...")
                 continue
 
-            # Generate profile URL
             profile_url = build_profile_url(user.slug, base_url)
 
             qr = qrcode.QRCode(
@@ -75,10 +71,8 @@ def generate_qr_codes(
             qr.add_data(profile_url)
             qr.make(fit=True)
 
-            # Generate image
             img = qr.make_image(fill_color="black", back_color="white")
 
-            # Save QR code
             filename = f"{user.slug}_qr.png"
             filepath = os.path.join(output_dir, filename)
             img.save(filepath)

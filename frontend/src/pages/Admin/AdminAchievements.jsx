@@ -7,6 +7,7 @@ import '../../components/admin/AdminShared.css';
 import './AdminAchievements.css';
 import '../../assets/css/sprite.css';
 import { hasBadgeSprite } from './badgeSprite';
+import Loading from '../../components/common/Loading';
 
 // Mirrors SLUG_RE in backend/application/routes/achievement_routes.py (the slug names the badge file).
 // The hyphen is escaped so the pattern also compiles under the browser's unicode-sets (v) flag.
@@ -155,7 +156,7 @@ const AdminAchievements = () => {
                 </div>
 
                 {isLoading ? (
-                    <div className="card p-2rem text-center text-muted">Loading achievements...</div>
+                    <div className="card p-2rem text-center text-muted"><Loading label="Loading achievements..." showLabel /></div>
                 ) : (
                     <div className="card" style={{ padding: '24px' }}>
                         <div className="projects-grid">

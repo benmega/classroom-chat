@@ -7,7 +7,7 @@ import threading
 import uuid
 from contextlib import contextmanager
 from io import BytesIO
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from application import create_app
@@ -100,6 +100,14 @@ def isolated_certificate_templates_dir(test_app, tmp_path_factory, monkeypatch):
     templates_dir = tmp_path_factory.mktemp("certificate_templates")
     monkeypatch.setitem(test_app.config, "CERTIFICATE_TEMPLATES_DIR", str(templates_dir))
     return templates_dir
+
+
+@pytest.fixture(autouse=True)
+def no_real_email(monkeypatch):
+    """Keep tests away from SES: a developer's .env holds real SES credentials and
+    addresses, and every approval a test makes would otherwise send real mail.
+    Tests of the email service patch boto3.client themselves."""
+    monkeypatch.setattr("application.services.email_service.boto3.client", MagicMock())
 
 
 @pytest.fixture(autouse=True)

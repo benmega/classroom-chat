@@ -199,6 +199,40 @@ def test_feed_names_each_author(client, init_db, sample_admin):
     assert [m["user_name"] for m in messages] == ["Bob", "Alice"]
 
 
+def test_feed_page_is_the_newest_visible_ids_across_every_branch(client, init_db, sample_user):
+    other = UserFactory()
+    mine = ClassroomFactory()
+    theirs = ClassroomFactory()
+    enroll(sample_user, mine)
+    visible = []
+    for _ in range(12):
+        visible.append(MessageFactory(user_id=other.id, is_global=True).id)
+        visible.append(MessageFactory(user_id=other.id, target_classrooms=[mine]).id)
+        visible.append(MessageFactory(user_id=other.id, target_users=[sample_user]).id)
+        visible.append(MessageFactory(user_id=sample_user.id).id)
+        MessageFactory(user_id=other.id, target_classrooms=[theirs])  # never visible
+    log_in(client, sample_user)
+
+    response = client.get("/message/api/feed?limit=7")
+
+    assert response.status_code == 200
+    assert [m["id"] for m in response.json["messages"]] == sorted(visible, reverse=True)[:7]
+
+
+def test_direct_message_beyond_the_newest_page_comes_on_the_next_page(client, init_db, sample_user):
+    other = UserFactory()
+    old_direct = MessageFactory(user_id=other.id, target_users=[sample_user]).id
+    globals_ = [MessageFactory(user_id=other.id, is_global=True).id for _ in range(4)]
+    log_in(client, sample_user)
+
+    first = [m["id"] for m in client.get("/message/api/feed?limit=3").json["messages"]]
+    assert first == sorted(globals_, reverse=True)[:3]
+    assert old_direct not in first
+
+    second = client.get(f"/message/api/feed?limit=3&before_id={first[-1]}").json["messages"]
+    assert [m["id"] for m in second] == [globals_[0], old_direct]
+
+
 # --------------------------------------------------------------------------- #
 # /message/api/me/context
 # --------------------------------------------------------------------------- #

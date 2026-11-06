@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 export const useProfile = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const { checkAuth } = useAuthStore();
+    const { refreshUser } = useAuthStore();
     const [profileData, setProfileData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState(false);
@@ -141,7 +141,7 @@ export const useProfile = () => {
                         setIsCropping(false);
                         fetchProfile();
                         if (profileData.viewer?.id === profileData.target?.id) {
-                            checkAuth();
+                            refreshUser();
                         }
                     } else {
                         toast.error(getErrorMessage({ response }, 'Upload failed.'));

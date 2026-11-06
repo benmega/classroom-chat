@@ -319,6 +319,10 @@ describe('TakeTest', () => {
             const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
             const view = renderTake();
             await screen.findByText('Prompt 1');
+            // The question shows before the effect that adds the save listeners has run: React
+            // schedules it on setImmediate, which is faked here. Run it now, or an event sent
+            // next can find no listener when the machine is busy.
+            await act(() => vi.advanceTimersByTimeAsync(0));
             return { user, ...view };
         };
 
@@ -678,7 +682,7 @@ describe('TakeTest', () => {
 
     describe('submit', () => {
         it('refreshes the user after submitting so the duck balance is current', async () => {
-            const checkAuth = vi.spyOn(useAuthStore.getState(), 'checkAuth').mockResolvedValue(undefined);
+            const refreshUser = vi.spyOn(useAuthStore.getState(), 'refreshUser').mockResolvedValue(undefined);
             try {
                 serve();
                 renderTake();
@@ -689,9 +693,9 @@ describe('TakeTest', () => {
                 await userEvent.click(within(dialog).getByRole('button', { name: 'Submit' }));
 
                 await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/tests/results/77'));
-                expect(checkAuth).toHaveBeenCalledWith(true);
+                expect(refreshUser).toHaveBeenCalledTimes(1);
             } finally {
-                checkAuth.mockRestore();
+                refreshUser.mockRestore();
             }
         });
 

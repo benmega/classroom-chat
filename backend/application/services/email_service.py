@@ -1,3 +1,4 @@
+import logging
 import os
 from threading import Thread
 
@@ -5,9 +6,12 @@ import boto3
 from application.config import Config
 from botocore.exceptions import ClientError
 
+logger = logging.getLogger(__name__)
+
 
 def _send_async_email(subject, body, to_address, from_address, region):
     """Internal function to actually send the email via Boto3 in a separate thread."""
+    to_addresses = [addr.strip() for addr in to_address.split(',')]
     try:
         # Create a new SES client for this thread
         kwargs = {"region_name": region}
@@ -17,11 +21,7 @@ def _send_async_email(subject, body, to_address, from_address, region):
 
         client = boto3.client('ses', **kwargs)
 
-        to_addresses = [addr.strip() for addr in to_address.split(',')]
-
-        print(f"DEBUG SEND EMAIL: Source={from_address}, ToAddresses={to_addresses}")
-
-        client.send_email(
+        response = client.send_email(
             Destination={
                 'ToAddresses': to_addresses,
             },
@@ -39,10 +39,16 @@ def _send_async_email(subject, body, to_address, from_address, region):
             },
             Source=from_address,
         )
+        logger.info(
+            "Email sent: %r to %s (SES message %s)",
+            subject, to_addresses, response.get("MessageId"),
+        )
     except ClientError as e:
-        print(f"AWS SES ClientError: {e.response['Error']['Message']}")
-    except Exception as e:
-        print(f"Error sending email: {e}")
+        logger.exception(
+            "SES refused email %r to %s: %s", subject, to_addresses, e.response['Error']['Message']
+        )
+    except Exception:
+        logger.exception("Error sending email %r to %s", subject, to_addresses)
 
 def send_admin_email(subject, body):
     """
@@ -54,7 +60,10 @@ def send_admin_email(subject, body):
     region = Config.SES_REGION
 
     if not to_address or not from_address:
-        print("Skipping admin email: ADMIN_EMAIL_ADDRESS or SES_SENDER_EMAIL not configured.")
+        logger.warning(
+            "Skipping admin email %r: ADMIN_EMAIL_ADDRESS or SES_SENDER_EMAIL not configured.",
+            subject,
+        )
         return
 
     # Run in background to avoid blocking the API response
@@ -73,7 +82,7 @@ def send_email(subject, body, to_addresses):
     region = Config.SES_REGION
 
     if not to_addresses or not from_address:
-        print("Skipping email: to_addresses or SES_SENDER_EMAIL not provided.")
+        logger.warning("Skipping email %r: to_addresses or SES_SENDER_EMAIL not provided.", subject)
         return
 
     # Run in background to avoid blocking the API response

@@ -20,9 +20,9 @@ vi.mock('react-hot-toast', () => ({
     default: { success: vi.fn(), error: vi.fn() },
 }));
 
-const mockCheckAuth = vi.fn();
+const mockRefreshUser = vi.fn();
 vi.mock('../store/useAuthStore', () => ({
-    default: () => ({ checkAuth: mockCheckAuth }),
+    default: () => ({ refreshUser: mockRefreshUser }),
 }));
 
 vi.mock('../utils/confirm', () => ({
@@ -322,7 +322,7 @@ describe('useProfile', () => {
 
             expect(client.post).toHaveBeenCalledWith('/user/api/profile-picture', expect.any(FormData));
             await waitFor(() => expect(hook.result.current.isCropping).toBe(false));
-            expect(mockCheckAuth).toHaveBeenCalledTimes(1);
+            expect(mockRefreshUser).toHaveBeenCalledTimes(1);
             expect(client.get).toHaveBeenCalledTimes(2);
         });
 
@@ -340,7 +340,7 @@ describe('useProfile', () => {
 
             await save(hook);
 
-            expect(mockCheckAuth).not.toHaveBeenCalled();
+            expect(mockRefreshUser).not.toHaveBeenCalled();
         });
 
         it('shows the server\'s message when the upload is rejected in the response body', async () => {

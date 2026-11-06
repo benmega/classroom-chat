@@ -2,6 +2,8 @@ import { renderHook, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import toast from 'react-hot-toast';
 import useChatSocket, { getSocket, resetSocket } from './useChatSocket';
+import useAuthStore from '../store/useAuthStore';
+import { SOCKET_EVENTS } from '../constants/socketEvents';
 import { getAbsoluteApiBaseUrl } from '../utils/apiUrl';
 import * as socketIoClient from 'socket.io-client';
 
@@ -24,6 +26,8 @@ const { createMockSocket } = vi.hoisted(() => ({
         return socket;
       }),
       emit: vi.fn(),
+      // socket.timeout(ms) returns the socket itself with the wait remembered for the next emit
+      timeout: vi.fn(() => socket),
       connect: vi.fn(),
       disconnect: vi.fn(),
       removeAllListeners: vi.fn(() => {
@@ -40,17 +44,42 @@ vi.mock('socket.io-client', () => ({
   io: vi.fn(() => createMockSocket()),
 }));
 
+const signIn = () => useAuthStore.setState({ isAuthenticated: true, user: { id: 1, username: 'student' } });
+const signOut = () => useAuthStore.setState({ isAuthenticated: false, user: null });
+
 describe('useChatSocket Hook', () => {
   beforeEach(() => {
+    // The chat socket only opens for a signed-in user
+    signIn();
     // The socket is a module-level singleton: drop the one a previous test left behind
     resetSocket();
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    signOut();
+    resetSocket();
+  });
+
   it('should initialize socket connection', () => {
     const { result } = renderHook(() => useChatSocket());
     expect(socketIoClient.io).toHaveBeenCalledTimes(1);
+    // Still connecting
+    expect(result.current.isConnected).toBe(false);
+
+    act(() => getSocket().trigger('connect'));
+
     expect(result.current.isConnected).toBe(true);
+  });
+
+  it('starts out connected when another hook has already opened a connected socket', () => {
+    getSocket();
+    socketIoClient.io.mockClear();
+
+    const { result } = renderHook(() => useChatSocket());
+
+    expect(result.current.isConnected).toBe(true);
+    expect(socketIoClient.io).not.toHaveBeenCalled();
   });
 
   it('should attach and detach event listeners', () => {
@@ -62,21 +91,6 @@ describe('useChatSocket Hook', () => {
     expect(socket.off).toHaveBeenCalledWith('message_received', expect.any(Function));
     // Every handler that was registered is gone again
     expect(Object.values(socket.handlers).every((set) => set.size === 0)).toBe(true);
-  });
-
-  it('should call sendMessage properly', () => {
-    const { result } = renderHook(() => useChatSocket());
-
-    result.current.sendMessage({ text: 'Hello' });
-    expect(getSocket().emit).toHaveBeenCalledWith('send_message', { text: 'Hello' });
-  });
-
-  it('should call sendMessage with callback', () => {
-    const { result } = renderHook(() => useChatSocket());
-    const cb = vi.fn();
-
-    result.current.sendMessage({ text: 'Hello' }, cb);
-    expect(getSocket().emit).toHaveBeenCalledWith('send_message', { text: 'Hello' }, cb);
   });
 
   it('should handle sendMessage when not connected', () => {
@@ -98,9 +112,6 @@ describe('useChatSocket Hook', () => {
     const onMessageReceived = vi.fn();
     const onClassroomEnrolled = vi.fn();
     const lifecycleCallbacks = {
-      onConversationCreated: vi.fn(),
-      onConversationUpdated: vi.fn(),
-      onConversationDeleted: vi.fn(),
       onMessageDeleted: vi.fn()
     };
     const onActivityResolved = vi.fn();
@@ -128,15 +139,6 @@ describe('useChatSocket Hook', () => {
 
     socket.trigger('classroom_enrolled', { id: 2 });
     expect(onClassroomEnrolled).toHaveBeenCalledWith({ id: 2 });
-
-    socket.trigger('conversation_created', { id: 3 });
-    expect(lifecycleCallbacks.onConversationCreated).toHaveBeenCalledWith({ id: 3 });
-
-    socket.trigger('conversation_updated', { id: 4 });
-    expect(lifecycleCallbacks.onConversationUpdated).toHaveBeenCalledWith({ id: 4 });
-
-    socket.trigger('conversation_deleted', { id: 5 });
-    expect(lifecycleCallbacks.onConversationDeleted).toHaveBeenCalledWith({ id: 5 });
 
     socket.trigger('message_deleted', { id: 6 });
     expect(lifecycleCallbacks.onMessageDeleted).toHaveBeenCalledWith({ id: 6 });
@@ -271,6 +273,7 @@ describe('useChatSocket Hook', () => {
     it('shares one socket between hooks and getSocket() callers', () => {
       const first = renderHook(() => useChatSocket());
       const second = renderHook(() => useChatSocket());
+      act(() => getSocket().trigger('connect'));
 
       expect(socketIoClient.io).toHaveBeenCalledTimes(1);
       expect(getSocket()).toBe(getSocket());
@@ -289,6 +292,7 @@ describe('useChatSocket Hook', () => {
     it('follows the socket through a lost connection and the reconnect that follows', () => {
       const { result } = renderHook(() => useChatSocket());
       const socket = getSocket();
+      act(() => socket.trigger('connect'));
       expect(result.current.isConnected).toBe(true);
 
       act(() => socket.trigger('disconnect', 'transport close'));
@@ -321,6 +325,192 @@ describe('useChatSocket Hook', () => {
       result.current.sendMessage({ text: 'back' });
       expect(socket.emit).toHaveBeenCalledWith('send_message', { text: 'back' });
       warn.mockRestore();
+    });
+  });
+
+  describe('sending a message', () => {
+    it('emits without waiting for an answer when no callback is given', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const socket = getSocket();
+
+      result.current.sendMessage({ text: 'Hello' });
+
+      expect(socket.emit).toHaveBeenCalledWith(SOCKET_EVENTS.SEND_MESSAGE, { text: 'Hello' });
+      expect(socket.timeout).not.toHaveBeenCalled();
+    });
+
+    it('waits at most 5 seconds for the acknowledgement', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const socket = getSocket();
+
+      result.current.sendMessage({ text: 'Hello' }, vi.fn());
+
+      expect(socket.timeout).toHaveBeenCalledWith(5000);
+      expect(socket.emit).toHaveBeenCalledWith(SOCKET_EVENTS.SEND_MESSAGE, { text: 'Hello' }, expect.any(Function));
+    });
+
+    it('hands the answer of the server to the callback unchanged', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const socket = getSocket();
+      const cb = vi.fn();
+      result.current.sendMessage({ text: 'Hello' }, cb);
+      const acknowledge = socket.emit.mock.calls[0][2];
+
+      acknowledge(null, { success: false, error: 'You are currently muted' });
+
+      expect(cb).toHaveBeenCalledTimes(1);
+      expect(cb).toHaveBeenCalledWith({ success: false, error: 'You are currently muted' });
+    });
+
+    it('answers a success with the success of the server', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const socket = getSocket();
+      const cb = vi.fn();
+      result.current.sendMessage({ text: 'Hello' }, cb);
+
+      socket.emit.mock.calls[0][2](undefined, { success: true, new_awards: [] });
+
+      expect(cb).toHaveBeenCalledWith({ success: true, new_awards: [] });
+    });
+
+    it('fails the send when the acknowledgement does not arrive in time', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const socket = getSocket();
+      const cb = vi.fn();
+      result.current.sendMessage({ text: 'Hello' }, cb);
+
+      // What socket.io does when the wait runs out
+      socket.emit.mock.calls[0][2](new Error('operation has timed out'));
+
+      expect(cb).toHaveBeenCalledTimes(1);
+      expect(cb).toHaveBeenCalledWith({ success: false, error: expect.stringContaining('did not confirm') });
+    });
+
+    it('fails the send when the connection drops before the answer', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const socket = getSocket();
+      const cb = vi.fn();
+      result.current.sendMessage({ text: 'Hello' }, cb);
+
+      socket.emit.mock.calls[0][2](new Error('socket has been disconnected'));
+
+      expect(cb).toHaveBeenCalledWith({ success: false, error: expect.stringContaining('did not confirm') });
+    });
+  });
+
+  describe('when nobody is signed in', () => {
+    beforeEach(() => {
+      signOut();
+    });
+
+    it('opens no socket and reports not connected', () => {
+      const { result } = renderHook(() => useChatSocket());
+
+      expect(socketIoClient.io).not.toHaveBeenCalled();
+      expect(result.current.isConnected).toBe(false);
+      expect(result.current.socket).toBeNull();
+    });
+
+    it('still opens none when the page re-renders or several hooks mount', () => {
+      const first = renderHook(() => useChatSocket());
+      renderHook(() => useChatSocket());
+
+      first.rerender();
+
+      expect(socketIoClient.io).not.toHaveBeenCalled();
+    });
+
+    it('refuses to send, with the same answer as a socket that is down', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const cb = vi.fn();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      result.current.sendMessage({ text: 'Hello' }, cb);
+
+      expect(cb).toHaveBeenCalledWith({ success: false, error: 'Socket not connected.' });
+      expect(socketIoClient.io).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it('opens the socket once the user signs in', () => {
+      const { result } = renderHook(() => useChatSocket());
+      expect(socketIoClient.io).not.toHaveBeenCalled();
+
+      act(() => signIn());
+      act(() => getSocket().trigger('connect'));
+
+      expect(socketIoClient.io).toHaveBeenCalledTimes(1);
+      expect(result.current.socket).toBe(getSocket());
+      expect(result.current.isConnected).toBe(true);
+    });
+
+    it('never reuses a socket that was open while nobody was signed in', () => {
+      // Whoever opened it (any caller of getSocket()), the server refused its handshake
+      const refused = getSocket();
+      const { result } = renderHook(() => useChatSocket());
+
+      act(() => signIn());
+      act(() => getSocket().trigger('connect'));
+
+      expect(refused.disconnect).toHaveBeenCalledTimes(1);
+      expect(result.current.socket).not.toBe(refused);
+      expect(result.current.socket).toBe(getSocket());
+    });
+  });
+
+  describe('across sign-ins and sign-outs', () => {
+    it('closes the socket on sign-out and drops its listeners', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const socket = getSocket();
+      act(() => socket.trigger('connect'));
+      expect(result.current.isConnected).toBe(true);
+
+      act(() => signOut());
+
+      expect(socket.disconnect).toHaveBeenCalledTimes(1);
+      expect(socket.removeAllListeners).toHaveBeenCalledTimes(1);
+      expect(result.current.socket).toBeNull();
+      expect(result.current.isConnected).toBe(false);
+    });
+
+    it('opens a fresh socket for the next user, never the one of the previous session', () => {
+      const { result } = renderHook(() => useChatSocket());
+      const previous = getSocket();
+
+      act(() => signOut());
+      act(() => signIn());
+      act(() => getSocket().trigger('connect'));
+
+      expect(socketIoClient.io).toHaveBeenCalledTimes(2);
+      expect(result.current.socket).not.toBe(previous);
+      expect(result.current.socket).toBe(getSocket());
+      expect(result.current.isConnected).toBe(true);
+    });
+
+    it('hears events on the new socket and no longer on the old one', () => {
+      const onMessageReceived = vi.fn();
+      renderHook(() => useChatSocket(onMessageReceived));
+      const previous = getSocket();
+
+      act(() => signOut());
+      act(() => signIn());
+      previous.trigger('message_received', { id: 1 });
+      getSocket().trigger('message_received', { id: 2 });
+
+      expect(onMessageReceived).toHaveBeenCalledTimes(1);
+      expect(onMessageReceived).toHaveBeenCalledWith({ id: 2 });
+    });
+
+    it('does not touch the socket when something else in the store changes', () => {
+      renderHook(() => useChatSocket());
+      const socket = getSocket();
+      socketIoClient.io.mockClear();
+
+      act(() => useAuthStore.setState({ unreadCount: 4, user: { id: 1, username: 'student', duck_balance: 9 } }));
+
+      expect(socket.disconnect).not.toHaveBeenCalled();
+      expect(socketIoClient.io).not.toHaveBeenCalled();
+      expect(getSocket()).toBe(socket);
     });
   });
 

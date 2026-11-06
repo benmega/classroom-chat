@@ -12,5 +12,4 @@ from .admin import (
 from .admin.blueprint import admin_bp
 from .admin.crud_routes import crud_bp
 
-# React-Admin standalone CRUD blueprint (still nested/prefixed)
 admin_bp.register_blueprint(crud_bp, url_prefix="/crud")

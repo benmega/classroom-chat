@@ -21,20 +21,23 @@ const socket = vi.hoisted(() => ({
   onMessageReceived: null,
   lifecycle: null,
   sendMessage: vi.fn(),
+  // What the socket reports, read on every render: a test flips it to play a drop and a reconnect
+  isConnected: true,
 }));
 vi.mock('./useChatSocket', () => ({
   default: (onMessageReceived, _onClassroomEnrolled, lifecycle) => {
     socket.onMessageReceived = onMessageReceived;
     socket.lifecycle = lifecycle;
-    return { sendMessage: socket.sendMessage };
+    return { sendMessage: socket.sendMessage, isConnected: socket.isConnected };
   },
 }));
 
 // The hook reads the user with the hook form and the unread-count setters from getState()
 const authState = vi.hoisted(() => ({
   user: null,
+  lastReadMessageId: null,
   setUnreadCount: vi.fn(),
-  setLastReadMessageId: vi.fn(),
+  setLastReadMessageId: vi.fn((id) => { authState.lastReadMessageId = id; }),
 }));
 vi.mock('../store/useAuthStore', () => {
   const store = () => ({ user: authState.user });
@@ -81,6 +84,8 @@ describe('useFeedLogic', () => {
     vi.clearAllMocks();
     localStorage.clear();
     authState.user = student;
+    authState.lastReadMessageId = null;
+    socket.isConnected = true;
     serveFeed();
     client.post.mockResolvedValue({ data: {} });
     client.delete.mockResolvedValue({ data: {} });
@@ -466,6 +471,8 @@ describe('useFeedLogic', () => {
     const send = (result, event) => act(async () => {
       await result.current.handleSendMessage(event);
     });
+    // The server answering the latest message that went out
+    const acknowledge = (response) => act(() => socket.sendMessage.mock.calls.at(-1)[1](response));
 
     it('sends the typed text with the default targeting', async () => {
       const { result } = await mountFeed();
@@ -484,7 +491,8 @@ describe('useFeedLogic', () => {
         },
         expect.any(Function)
       );
-      expect(result.current.newMessage).toBe('');
+      // Not cleared yet: that waits for the server
+      expect(result.current.newMessage).toBe('  hello class  ');
     });
 
     it('prevents the form from reloading the page', async () => {
@@ -543,12 +551,25 @@ describe('useFeedLogic', () => {
       expect(result.current.cooldown).toBe(0);
     });
 
-    it('puts a student on a 30 second cooldown', async () => {
+    it('keeps the text in the box until the server has answered', async () => {
+      const { result } = await mountFeed();
+      typeMessage(result, 'hello');
+
+      await send(result);
+      expect(result.current.newMessage).toBe('hello');
+
+      acknowledge({ success: true });
+      expect(result.current.newMessage).toBe('');
+    });
+
+    it('starts the 30 second cooldown for a student only once the server has confirmed', async () => {
       const { result } = await mountFeed();
       typeMessage(result, 'hi');
 
       await send(result);
+      expect(result.current.cooldown).toBe(0);
 
+      acknowledge({ success: true });
       expect(result.current.cooldown).toBe(30);
     });
 
@@ -558,8 +579,10 @@ describe('useFeedLogic', () => {
       typeMessage(result, 'hi');
 
       await send(result);
+      acknowledge({ success: true });
 
       expect(socket.sendMessage).toHaveBeenCalledTimes(1);
+      expect(result.current.newMessage).toBe('');
       expect(result.current.cooldown).toBe(0);
     });
 
@@ -567,6 +590,7 @@ describe('useFeedLogic', () => {
       const { result } = await mountFeed();
       typeMessage(result, 'first');
       await send(result);
+      acknowledge({ success: true });
       typeMessage(result, 'second');
 
       await send(result);
@@ -575,12 +599,38 @@ describe('useFeedLogic', () => {
       expect(result.current.newMessage).toBe('second');
     });
 
+    it('does not send the same message twice while it waits for the server', async () => {
+      authState.user = admin;
+      const { result } = await mountFeed();
+      typeMessage(result, 'once');
+
+      await send(result);
+      await send(result);
+
+      expect(socket.sendMessage).toHaveBeenCalledTimes(1);
+    });
+
+    it('can send again once the server has answered', async () => {
+      authState.user = admin;
+      const { result } = await mountFeed();
+      typeMessage(result, 'one');
+      await send(result);
+      acknowledge({ success: true });
+      typeMessage(result, 'two');
+
+      await send(result);
+
+      expect(socket.sendMessage).toHaveBeenCalledTimes(2);
+      expect(socket.sendMessage.mock.calls[1][0].content).toBe('two');
+    });
+
     it('counts the cooldown down once a second', async () => {
       const { result } = await mountFeed();
       typeMessage(result, 'hi');
       vi.useFakeTimers();
 
       await send(result);
+      acknowledge({ success: true });
       expect(result.current.cooldown).toBe(30);
       act(() => vi.advanceTimersByTime(3000));
 
@@ -592,14 +642,11 @@ describe('useFeedLogic', () => {
         const { result } = await mountFeed();
         typeMessage(result, 'oops');
         await send(result);
-        expect(result.current.newMessage).toBe('');
-        expect(result.current.cooldown).toBe(30);
-        const acknowledge = socket.sendMessage.mock.calls[0][1];
-        act(() => acknowledge(response));
+        acknowledge(response);
         return result;
       };
 
-      it('gives the text back, clears the cooldown and shows the reason', async () => {
+      it('keeps the text, starts no cooldown and shows the reason', async () => {
         const result = await refuse({ success: false, error: 'You are muted.' });
 
         expect(toast.error).toHaveBeenCalledWith('You are muted.');
@@ -612,31 +659,93 @@ describe('useFeedLogic', () => {
 
         expect(toast.error).toHaveBeenCalledWith('Failed to send message.');
       });
+
+      it('lets the user send again straight away', async () => {
+        const result = await refuse({ success: false, error: 'Chat is currently disabled' });
+
+        await send(result);
+
+        expect(socket.sendMessage).toHaveBeenCalledTimes(2);
+        expect(socket.sendMessage.mock.calls[1][0].content).toBe('oops');
+      });
+    });
+
+    describe('when no answer comes back', () => {
+      // What useChatSocket hands over once its 5 second wait for the acknowledgement has run out
+      const unconfirmed = { success: false, error: 'The server did not confirm your message. Check your connection and try again.' };
+
+      it('keeps the draft, shows a toast and starts no cooldown', async () => {
+        const { result } = await mountFeed();
+        typeMessage(result, 'did that go through?');
+        await send(result);
+
+        acknowledge(unconfirmed);
+
+        expect(toast.error).toHaveBeenCalledWith(unconfirmed.error);
+        expect(result.current.newMessage).toBe('did that go through?');
+        expect(result.current.cooldown).toBe(0);
+      });
+
+      it('allows a retry with the same text', async () => {
+        const { result } = await mountFeed();
+        typeMessage(result, 'try again');
+        await send(result);
+        acknowledge(unconfirmed);
+
+        await send(result);
+
+        expect(socket.sendMessage).toHaveBeenCalledTimes(2);
+        expect(socket.sendMessage.mock.calls[1][0].content).toBe('try again');
+      });
+
+      it('keeps the text, too, when the socket was down and nothing could be sent', async () => {
+        const { result } = await mountFeed();
+        typeMessage(result, 'offline');
+        await send(result);
+        acknowledge({ success: false, error: 'Socket not connected.' });
+
+        expect(toast.error).toHaveBeenCalledWith('Socket not connected.');
+        expect(result.current.newMessage).toBe('offline');
+      });
     });
 
     describe('when the server accepts the message', () => {
       it.each([
         ['a success acknowledgement', { success: true }],
         ['no acknowledgement body', undefined],
-      ])('leaves the cooldown running on %s', async (_name, response) => {
+      ])('clears the box and starts the cooldown on %s', async (_name, response) => {
         const { result } = await mountFeed();
         typeMessage(result, 'fine');
         await send(result);
 
-        act(() => socket.sendMessage.mock.calls[0][1](response));
+        acknowledge(response);
 
         expect(toast.error).not.toHaveBeenCalled();
         expect(result.current.newMessage).toBe('');
         expect(result.current.cooldown).toBe(30);
       });
+
+      it('keeps what the user has typed in the meantime', async () => {
+        const { result } = await mountFeed();
+        typeMessage(result, 'first');
+        await send(result);
+        typeMessage(result, 'first, and something else');
+
+        acknowledge({ success: true });
+
+        expect(result.current.newMessage).toBe('first, and something else');
+        expect(result.current.cooldown).toBe(30);
+      });
     });
 
-    it('resets the height of the message box after sending', async () => {
+    it('resets the height of the message box once the message is confirmed', async () => {
       const { result } = await mountFeed();
       result.current.textareaRef.current = { style: { height: '120px' } };
       typeMessage(result, 'hi');
 
       await send(result);
+      expect(result.current.textareaRef.current.style.height).toBe('120px');
+      acknowledge({ success: true });
 
       expect(result.current.textareaRef.current.style.height).toBe('auto');
     });
@@ -710,6 +819,200 @@ describe('useFeedLogic', () => {
         expect(result.current.file).toBe(file);
         expect(result.current.newMessage).toBe('my homework');
       });
+    });
+  });
+
+  describe('after the socket reconnects', () => {
+    const drop = (rerender) => {
+      socket.isConnected = false;
+      rerender();
+    };
+    const reconnect = async (rerender) => {
+      socket.isConnected = true;
+      await act(async () => rerender());
+    };
+
+    it('does not fetch again when the socket connects for the first time', async () => {
+      socket.isConnected = false;
+      serveFeed({ pages: [[msg(2), msg(1)]] });
+      const { rerender } = await mountFeed();
+      expect(feedUrls()).toHaveLength(1);
+
+      await reconnect(rerender);
+
+      expect(feedUrls()).toHaveLength(1);
+    });
+
+    it('does not fetch again while the socket stays up', async () => {
+      serveFeed({ pages: [[msg(2), msg(1)]] });
+      const { rerender } = await mountFeed();
+
+      rerender();
+      rerender();
+
+      expect(feedUrls()).toHaveLength(1);
+    });
+
+    it('fetches the newest page once the connection is back and shows what was missed', async () => {
+      serveFeed({ pages: [[msg(3), msg(2), msg(1)], [msg(5), msg(4), msg(3), msg(2), msg(1)]] });
+      const { result, rerender } = await mountFeed();
+      expect(result.current.messages.map((m) => m.id)).toEqual([3, 2, 1]);
+
+      drop(rerender);
+      expect(feedUrls()).toHaveLength(1);
+      await reconnect(rerender);
+
+      await waitFor(() => expect(result.current.messages.map((m) => m.id)).toEqual([5, 4, 3, 2, 1]));
+      expect(feedUrls()).toEqual([FEED_URL, FEED_URL]);
+    });
+
+    it('keeps the feed on screen while it catches up: no skeleton', async () => {
+      serveFeed({ pages: [[msg(2), msg(1)]] });
+      const { result, rerender } = await mountFeed();
+      let answer;
+      client.get.mockImplementation(() => new Promise((resolve) => { answer = resolve; }));
+
+      drop(rerender);
+      await reconnect(rerender);
+      await waitFor(() => expect(answer).toBeDefined());
+
+      // The request is still out
+      expect(result.current.loading).toBe(false);
+      expect(result.current.messages.map((m) => m.id)).toEqual([2, 1]);
+
+      await act(async () => answer({ data: { messages: [msg(3), msg(2), msg(1)] } }));
+      expect(result.current.messages.map((m) => m.id)).toEqual([3, 2, 1]);
+      expect(result.current.loading).toBe(false);
+    });
+
+    it('does not load the classroom context again', async () => {
+      serveFeed({ pages: [[msg(1)], [msg(2), msg(1)]] });
+      const { result, rerender } = await mountFeed();
+
+      drop(rerender);
+      await reconnect(rerender);
+      await waitFor(() => expect(result.current.messages).toHaveLength(2));
+
+      expect(client.get.mock.calls.filter(([url]) => url === CONTEXT_URL)).toHaveLength(1);
+    });
+
+    it('asks only for the classroom being viewed', async () => {
+      serveFeed({ pages: [[msg(1)], [msg(2), msg(1)]] });
+      const { result, rerender } = await mountFeed('class-7');
+
+      drop(rerender);
+      await reconnect(rerender);
+      await waitFor(() => expect(result.current.messages).toHaveLength(2));
+
+      expect(feedUrls()).toEqual([`${FEED_URL}&classroom_id=class-7`, `${FEED_URL}&classroom_id=class-7`]);
+    });
+
+    it('fetches again after every further drop', async () => {
+      serveFeed({ pages: [[msg(1)], [msg(2), msg(1)], [msg(3), msg(2), msg(1)]] });
+      const { result, rerender } = await mountFeed();
+
+      drop(rerender);
+      await reconnect(rerender);
+      await waitFor(() => expect(result.current.messages).toHaveLength(2));
+      drop(rerender);
+      await reconnect(rerender);
+      await waitFor(() => expect(result.current.messages).toHaveLength(3));
+
+      expect(feedUrls()).toHaveLength(3);
+    });
+
+    it('keeps the older messages the reader has already scrolled to', async () => {
+      const firstPage = range(40, 21);
+      const olderPage = range(20, 1);
+      const newestPage = [msg(41), ...range(40, 22)];
+      serveFeed({ pages: [firstPage, olderPage, newestPage] });
+      const { result, rerender } = await mountFeed();
+      await act(async () => result.current.handleLoadMore());
+      expect(result.current.messages).toHaveLength(40);
+
+      drop(rerender);
+      await reconnect(rerender);
+
+      await waitFor(() => expect(result.current.messages[0].id).toBe(41));
+      expect(result.current.messages.map((m) => m.id)).toEqual(Array.from({ length: 41 }, (_, i) => 41 - i));
+    });
+
+    it('drops a message that was deleted while the socket was down', async () => {
+      serveFeed({ pages: [[msg(3), msg(2), msg(1)], [msg(3), msg(1)]] });
+      const { result, rerender } = await mountFeed();
+
+      drop(rerender);
+      await reconnect(rerender);
+
+      await waitFor(() => expect(result.current.messages.map((m) => m.id)).toEqual([3, 1]));
+    });
+
+    it('starts over from the newest page when more than a page was missed', async () => {
+      const held = range(10, 6);
+      const missed = range(60, 41);
+      serveFeed({ pages: [held, missed] });
+      const { result, rerender } = await mountFeed();
+      expect(result.current.hasMore).toBe(false);
+      expect(authState.lastReadMessageId).toBe(10);
+
+      drop(rerender);
+      await reconnect(rerender);
+
+      await waitFor(() => expect(result.current.messages[0].id).toBe(60));
+      // Nothing joins the gap 11 to 40 to what was shown before: only the page that was fetched stays
+      expect(result.current.messages.map((m) => m.id)).toEqual(missed.map((m) => m.id));
+      // and the older messages can still be scrolled to
+      expect(result.current.hasMore).toBe(true);
+    });
+
+    it('leaves the feed alone and says nothing when the catch-up request fails', async () => {
+      serveFeed({ pages: [[msg(2), msg(1)]] });
+      const { result, rerender } = await mountFeed();
+      client.get.mockRejectedValue(new Error('still flaky'));
+
+      drop(rerender);
+      await reconnect(rerender);
+
+      await waitFor(() => expect(console.error).toHaveBeenCalled());
+      expect(result.current.messages.map((m) => m.id)).toEqual([2, 1]);
+      expect(toast.error).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the feed has nothing to show', async () => {
+      serveFeed({ pages: [[msg(1)], []] });
+      const { result, rerender } = await mountFeed();
+
+      drop(rerender);
+      await reconnect(rerender);
+      await waitFor(() => expect(feedUrls()).toHaveLength(2));
+
+      expect(result.current.messages.map((m) => m.id)).toEqual([1]);
+    });
+  });
+
+  describe('when the same user is handed over as a new object', () => {
+    it('does not reload the feed or flash the skeleton', async () => {
+      serveFeed({ pages: [[msg(2), msg(1)]] });
+      const { result, rerender } = await mountFeed();
+      const callsBefore = client.get.mock.calls.length;
+
+      // What refreshUser() does after a purchase: same account, brand-new object
+      authState.user = { ...student, duck_balance: 99 };
+      rerender();
+      rerender();
+
+      expect(result.current.loading).toBe(false);
+      expect(client.get.mock.calls).toHaveLength(callsBefore);
+    });
+
+    it('reloads the feed for a different user', async () => {
+      serveFeed({ pages: [[msg(2), msg(1)]] });
+      const { rerender } = await mountFeed();
+
+      authState.user = { ...student, id: 2 };
+      rerender();
+
+      await waitFor(() => expect(feedUrls()).toHaveLength(2));
     });
   });
 

@@ -3,8 +3,9 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { contrast } from '../../test/colorContrast.js'
 
-// Guards for the admin stylesheets (issues #76 and #78): custom properties must resolve, colours come from tokens,
+// Guards for the admin stylesheets: custom properties must resolve, colours come from tokens,
 // the admin layers keep their order on the shared z-index scale, and the dark log console stays readable.
 // Read from disk: vitest swaps imported CSS (even ?raw) for an empty string.
 const srcDir = fileURLToPath(new URL('../../', import.meta.url))
@@ -114,18 +115,6 @@ const declaration = (body, prop) => {
   return value.trim()
 }
 
-const luminance = (hex) => {
-  const [r, g, b] = [1, 3, 5].map((i) => {
-    const c = parseInt(hex.slice(i, i + 2), 16) / 255
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-  })
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b
-}
-const contrast = (a, b) => {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x)
-  return (hi + 0.05) / (lo + 0.05)
-}
-
 describe('admin stylesheets', () => {
   it('only use custom properties that are defined, or give a fallback', () => {
     const adminSheets = Object.keys(css).filter(isAdminSheet)
@@ -144,7 +133,7 @@ describe('admin stylesheets', () => {
     const layout = '/src/components/Layout/AdminLayout.css'
     const zRule = (path, selector) => declaration(ruleBody(sheet(path), selector), 'z-index')
 
-    // Declared with the scale tokens, not literals (a literal here is what issue #76 removed)
+    // Declared with the scale tokens, not literals
     expect(zRule(layout, '.admin-sidebar')).toBe('var(--z-sidebar)')
     expect(zRule(layout, '.admin-mobile-overlay')).toBe('var(--z-dropdown)')
 

@@ -1,0 +1,32 @@
+/* <EmptyState/>: flat, centred and quiet. The ui- prefix keeps it clear of the page-specific .empty-* rules. */
+.ui-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.ui-empty__icon {
+    display: inline-flex;
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+}
+
+.ui-empty__title {
+    margin: 0;
+    font-size: var(--font-lg);
+    color: var(--text-primary);
+}
+
+.ui-empty__description {
+    max-width: 36rem;
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.ui-empty__action {
+    margin-top: 0.75rem;
+}

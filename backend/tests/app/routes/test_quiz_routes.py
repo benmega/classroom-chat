@@ -11,7 +11,7 @@ from datetime import timedelta
 import pytest
 from application.extensions import db
 from application.models.duck_transaction import DuckTransaction
-from application.models.quiz import Quiz, QuizAttempt, QuizQuestion, QuizReward
+from application.models.quiz import Quiz, QuizAssignment, QuizAttempt, QuizQuestion, QuizReward
 from application.utilities.helper_functions import utcnow_naive
 from tests.factories import AdminFactory, ClassroomFactory, ParentFactory, UserFactory
 
@@ -104,6 +104,8 @@ def submitted_attempt(client, student, answers):
         ("post", "/api/quizzes/attempts/1/submit"),
         ("get", "/api/quizzes/students/1/attempts"),
         ("get", "/api/quizzes/admin"),
+        ("post", "/api/quizzes/admin"),
+        ("put", "/api/quizzes/admin/quiz-one/assignments"),
         ("patch", "/api/quizzes/admin/quiz-one"),
         ("get", "/api/quizzes/admin/results"),
         ("delete", "/api/quizzes/admin/attempts/1"),
@@ -717,10 +719,59 @@ def test_the_owner_sees_the_review_when_answers_are_revealed(client, student, qu
         "selected": "A",
         "answer": "A",
         "is_correct": True,
+        "flagged": False,
         "explanation": "Because 1",
     }
     assert (review[1]["selected"], review[1]["answer"], review[1]["is_correct"]) == ("C", "B", False)
     assert (review[2]["selected"], review[2]["is_correct"]) == (None, False)
+    # Reviewer details are for admins and parents only
+    assert "attempt_number" not in attempt
+    assert "classrooms" not in attempt
+
+
+def test_the_review_marks_the_questions_the_student_flagged(client, student, quiz):
+    login(client, student)
+    attempt_id = data(start(client))["attempt"]["id"]
+    client.patch(f"/api/quizzes/attempts/{attempt_id}", json={"flagged": [2, 4]})
+    client.post(f"/api/quizzes/attempts/{attempt_id}/submit", json={"answers": {"1": "A"}})
+
+    review = review_of(client.get(f"/api/quizzes/attempts/{attempt_id}"))
+
+    assert [r["number"] for r in review if r["flagged"]] == [2, 4]
+
+
+def test_the_result_carries_the_time_limit_the_attempt_started_with(client, student):
+    make_quiz(time_limit_minutes=20)
+    attempt_id = submitted_attempt(client, student, {"1": "A"})
+
+    attempt = data(client.get(f"/api/quizzes/attempts/{attempt_id}"))["attempt"]
+
+    assert attempt["time_limit_minutes"] == 20
+
+
+def test_an_admin_sees_the_classrooms_and_which_attempt_it_is(client, student, admin, quiz):
+    classrooms = [ClassroomFactory(name=name) for name in ("Zeta", "Alpha")]
+    student.classrooms.extend(classrooms)
+    db.session.commit()
+    first = submitted_attempt(client, student, {"1": "A"})
+    second = submitted_attempt(client, student, {"1": "B"})
+    login(client, admin)
+
+    one = data(client.get(f"/api/quizzes/attempts/{first}"))["attempt"]
+    two = data(client.get(f"/api/quizzes/attempts/{second}"))["attempt"]
+
+    assert one["classrooms"] == ["Alpha", "Zeta"]
+    assert (one["attempt_number"], one["attempt_count"]) == (1, 2)
+    assert (two["attempt_number"], two["attempt_count"]) == (2, 2)
+
+
+def test_a_linked_parent_sees_which_attempt_it_is(client, student, parent_of, quiz):
+    attempt_id = submitted_attempt(client, student, {"1": "A"})
+    login(client, parent_of(student))
+
+    attempt = data(client.get(f"/api/quizzes/attempts/{attempt_id}"))["attempt"]
+
+    assert (attempt["attempt_number"], attempt["attempt_count"], attempt["classrooms"]) == (1, 1, [])
 
 
 def test_the_owner_gets_no_review_when_answers_are_hidden(client, student):
@@ -889,6 +940,7 @@ def test_admin_list_includes_inactive_quizzes_with_counts(client, student, admin
     assert response.status_code == 200
     first, old = data(response)["quizzes"]
     assert first == {
+        "assignments": {"classrooms": [], "students": []},
         "slug": "quiz-one",
         "title": "Title quiz-one",
         "description": "d",
@@ -1039,6 +1091,515 @@ def test_admin_deletes_an_attempt_so_the_student_can_retake(client, student, adm
     assert start(client).status_code == 201
     login(client, admin)
     assert client.delete("/api/quizzes/admin/attempts/9999").status_code == 404
+
+
+# --- assignments -------------------------------------------------------------
+
+
+def assign(quiz, students=(), classrooms=()):
+    quiz.assignments.extend(
+        [QuizAssignment(user_id=s.id) for s in students]
+        + [QuizAssignment(classroom_id=c.id) for c in classrooms]
+    )
+    db.session.commit()
+
+
+def put_assignments(client, body, slug="quiz-one"):
+    return client.put(f"/api/quizzes/admin/{slug}/assignments", json=body)
+
+
+def listed_slugs(client):
+    return [row["slug"] for row in data(client.get("/api/quizzes"))["quizzes"]]
+
+
+def test_a_quiz_without_assignments_is_open_to_everyone(client, student, quiz):
+    login(client, student)
+
+    assert listed_slugs(client) == ["quiz-one"]
+    assert start(client).status_code == 201
+
+
+def test_a_quiz_assigned_to_others_is_hidden_from_a_student(client, student, quiz):
+    assign(quiz, students=[UserFactory()])
+    login(client, student)
+
+    assert listed_slugs(client) == []
+
+
+def test_a_quiz_assigned_to_a_student_lists_for_them(client, student, quiz):
+    assign(quiz, students=[student, UserFactory()])
+    login(client, student)
+
+    assert listed_slugs(client) == ["quiz-one"]
+
+
+def test_a_quiz_assigned_to_a_classroom_lists_for_its_students(client, student, quiz):
+    classroom = ClassroomFactory()
+    classroom.users.append(student)
+    db.session.commit()
+    assign(quiz, classrooms=[classroom])
+    login(client, student)
+
+    assert listed_slugs(client) == ["quiz-one"]
+
+
+def test_a_student_in_another_classroom_does_not_see_it(client, student, quiz):
+    mine, named = ClassroomFactory(), ClassroomFactory()
+    mine.users.append(student)
+    db.session.commit()
+    assign(quiz, classrooms=[named])
+    login(client, student)
+
+    assert listed_slugs(client) == []
+
+
+def test_an_admin_sees_every_quiz(client, admin, quiz):
+    assign(quiz, students=[UserFactory()])
+    login(client, admin)
+
+    assert listed_slugs(client) == ["quiz-one"]
+
+
+def test_a_parent_sees_a_quiz_open_to_their_child(client, parent_of, student, quiz):
+    assign(quiz, students=[student])
+    login(client, parent_of(student))
+
+    [row] = data(client.get("/api/quizzes"))["quizzes"]
+
+    assert row["slug"] == "quiz-one"
+    assert row["can_start"] is False
+
+
+def test_a_parent_does_not_see_a_quiz_open_to_other_children(client, parent_of, student, quiz):
+    assign(quiz, students=[UserFactory()])
+    login(client, parent_of(student))
+
+    assert listed_slugs(client) == []
+
+
+def test_a_parent_without_children_sees_only_unassigned_quizzes(client, quiz):
+    assigned = make_quiz("assigned")
+    assigned.sort_order = 2
+    assign(assigned, students=[UserFactory()])
+    login(client, ParentFactory())
+
+    assert listed_slugs(client) == ["quiz-one"]
+
+
+def test_a_quiz_taken_before_it_was_reassigned_stays_listed_but_cannot_start(client, student, quiz):
+    submitted_attempt(client, student, {"1": "A"})
+    assign(quiz, students=[UserFactory()])
+
+    [row] = data(client.get("/api/quizzes"))["quizzes"]
+
+    assert row["slug"] == "quiz-one"
+    assert row["can_start"] is False
+    assert len(row["attempts"]) == 1
+
+
+def test_an_attempt_in_progress_keeps_a_reassigned_quiz_startable(client, student, quiz):
+    login(client, student)
+    attempt_id = data(start(client))["attempt"]["id"]
+    assign(quiz, students=[UserFactory()])
+
+    [row] = data(client.get("/api/quizzes"))["quizzes"]
+
+    assert row["can_start"] is True
+    assert row["in_progress_attempt_id"] == attempt_id
+
+
+def test_starting_a_quiz_not_open_to_the_student_is_not_found(client, student, quiz):
+    assign(quiz, students=[UserFactory()])
+    login(client, student)
+
+    response = start(client)
+
+    assert response.status_code == 404
+    assert response.get_json()["error"] == "Test not found"
+    assert QuizAttempt.query.count() == 0
+
+
+def test_starting_a_quiz_assigned_to_the_student_works(client, student, quiz):
+    assign(quiz, students=[student])
+    login(client, student)
+
+    assert start(client).status_code == 201
+
+
+def test_resuming_an_attempt_works_after_the_quiz_is_reassigned(client, student, quiz):
+    login(client, student)
+    attempt_id = data(start(client))["attempt"]["id"]
+    assign(quiz, students=[UserFactory()])
+
+    response = start(client)
+
+    assert response.status_code == 200
+    assert data(response)["attempt"]["id"] == attempt_id
+
+
+def test_an_admin_can_start_a_quiz_assigned_to_others(client, admin, quiz):
+    assign(quiz, students=[UserFactory()])
+    login(client, admin)
+
+    assert start(client).status_code == 201
+
+
+def test_admin_assigns_students_and_classrooms(client, admin, quiz):
+    zed, abe = UserFactory(nickname="Zed"), UserFactory(nickname="abe")
+    late, early = ClassroomFactory(name="Late"), ClassroomFactory(name="early")
+    login(client, admin)
+
+    response = put_assignments(
+        client, {"classroom_ids": [late.id, early.id], "student_ids": [zed.id, abe.id]}
+    )
+
+    assert response.status_code == 200
+    row = data(response)["quiz"]
+    assert row["slug"] == "quiz-one"
+    assert row["assignments"] == {
+        "classrooms": [{"id": early.id, "name": "early"}, {"id": late.id, "name": "Late"}],
+        "students": [
+            {"id": abe.id, "username": abe.username, "nickname": "abe"},
+            {"id": zed.id, "username": zed.username, "nickname": "Zed"},
+        ],
+    }
+    assert QuizAssignment.query.count() == 4
+
+
+def test_the_admin_list_carries_the_assignments(client, admin, student, quiz):
+    assign(quiz, students=[student])
+    login(client, admin)
+
+    [row] = data(client.get("/api/quizzes/admin"))["quizzes"]
+
+    assert [s["id"] for s in row["assignments"]["students"]] == [student.id]
+
+
+def test_assigning_replaces_the_previous_set(client, admin, quiz):
+    first, second = UserFactory(), UserFactory()
+    assign(quiz, students=[first], classrooms=[ClassroomFactory()])
+    login(client, admin)
+
+    response = put_assignments(client, {"student_ids": [second.id]})
+
+    assert response.status_code == 200
+    assert data(response)["quiz"]["assignments"]["classrooms"] == []
+    assert [s["id"] for s in data(response)["quiz"]["assignments"]["students"]] == [second.id]
+    assert [a.user_id for a in QuizAssignment.query.all()] == [second.id]
+
+
+def test_rows_that_stay_keep_their_id_and_created_at(client, admin, quiz):
+    keep, drop, add = UserFactory(), UserFactory(), UserFactory()
+    classroom = ClassroomFactory()
+    assign(quiz, students=[keep, drop], classrooms=[classroom])
+    before = {a.user_id or a.classroom_id: (a.id, a.created_at) for a in QuizAssignment.query}
+    login(client, admin)
+
+    put_assignments(client, {"classroom_ids": [classroom.id], "student_ids": [keep.id, add.id]})
+
+    now = {a.user_id or a.classroom_id: (a.id, a.created_at) for a in QuizAssignment.query}
+    assert set(now) == {keep.id, add.id, classroom.id}
+    assert now[keep.id] == before[keep.id]
+    assert now[classroom.id] == before[classroom.id]
+
+
+def test_assigning_nobody_opens_the_quiz_to_everyone_again(client, admin, student, quiz):
+    assign(quiz, students=[UserFactory()])
+    login(client, admin)
+
+    response = put_assignments(client, {"classroom_ids": [], "student_ids": []})
+
+    assert data(response)["quiz"]["assignments"] == {"classrooms": [], "students": []}
+    assert QuizAssignment.query.count() == 0
+    login(client, student)
+    assert listed_slugs(client) == ["quiz-one"]
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        [],
+        "x",
+        None,
+        {"classroom_ids": "c1"},
+        {"classroom_ids": [1]},
+        {"classroom_ids": None},
+        {"student_ids": 1},
+        {"student_ids": ["1"]},
+        {"student_ids": [1.5]},
+        {"student_ids": [True]},
+        {"student_ids": None},
+    ],
+)
+def test_assignments_reject_a_bad_body_and_change_nothing(client, admin, student, quiz, body):
+    assign(quiz, students=[student])
+    login(client, admin)
+
+    response = put_assignments(client, body)
+
+    assert response.status_code == 400
+    assert QuizAssignment.query.one().user_id == student.id
+
+
+def test_assigning_an_unknown_classroom_is_refused(client, admin, student, quiz):
+    login(client, admin)
+
+    response = put_assignments(client, {"classroom_ids": ["nope"], "student_ids": [student.id]})
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Unknown classroom"
+    assert QuizAssignment.query.count() == 0
+
+
+def test_assigning_an_unknown_student_is_refused(client, admin, quiz):
+    login(client, admin)
+
+    response = put_assignments(client, {"student_ids": [99999]})
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Unknown student"
+
+
+@pytest.mark.parametrize("role", ["admin", "parent"])
+def test_only_students_can_be_assigned(client, admin, quiz, role):
+    other = admin if role == "admin" else ParentFactory()
+    login(client, admin)
+
+    response = put_assignments(client, {"student_ids": [other.id]})
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Only students can be assigned"
+    assert QuizAssignment.query.count() == 0
+
+
+def test_assigning_an_unknown_quiz_is_not_found(client, admin):
+    login(client, admin)
+
+    assert put_assignments(client, {}, slug="nope").status_code == 404
+
+
+def test_the_assignment_endpoint_refuses_a_student_and_a_parent(client, student, parent_of, quiz):
+    for viewer in (student, parent_of(student)):
+        login(client, viewer)
+        assert put_assignments(client, {"student_ids": [student.id]}).status_code == 403
+    assert QuizAssignment.query.count() == 0
+
+
+def test_deleting_a_classroom_removes_its_assignments(init_db, quiz):
+    doomed, kept = ClassroomFactory(), ClassroomFactory()
+    assign(quiz, classrooms=[doomed, kept])
+
+    db.session.delete(doomed)
+    db.session.commit()
+
+    assert [a.classroom_id for a in QuizAssignment.query.all()] == [kept.id]
+
+
+# --- creating tests ------------------------------------------------------------
+
+
+def new_test(**changes):
+    body = {
+        "title": "My Test",
+        "description": "About it",
+        "questions": [
+            {
+                "prompt": "What is 1+1?",
+                "options": {"A": "2", "B": "3"},
+                "answer": "A",
+                "domain": "Maths",
+                "explanation": "Because",
+            }
+        ],
+    }
+    body.update(changes)
+    return body
+
+
+def question(**changes):
+    row = {"prompt": "Q", "options": {"A": "a", "B": "b"}, "answer": "A"}
+    row.update(changes)
+    return row
+
+
+def create(client, body):
+    return client.post("/api/quizzes/admin", json=body)
+
+
+def test_admin_creates_an_inactive_test(client, admin):
+    login(client, admin)
+
+    response = create(client, new_test())
+
+    assert response.status_code == 201
+    row = data(response)["quiz"]
+    assert row["slug"] == "my-test"
+    assert row["title"] == "My Test"
+    assert row["description"] == "About it"
+    assert row["is_active"] is False
+    assert row["question_count"] == 1
+    assert row["assignments"] == {"classrooms": [], "students": []}
+    [stored_question] = Quiz.query.one().questions
+    assert (stored_question.number, stored_question.domain) == (1, "Maths")
+    assert stored_question.options == {"A": "2", "B": "3"}
+    assert (stored_question.answer, stored_question.explanation) == ("A", "Because")
+
+
+def test_a_created_test_is_numbered_in_order_with_defaults(client, admin):
+    login(client, admin)
+    questions = [
+        question(prompt="  first  ", domain="  ", explanation="  "),
+        question(prompt="second", options={"B": " x ", "D": "y"}, answer="D"),
+        question(prompt="third", domain=None),
+    ]
+
+    create(client, new_test(description="  ", questions=questions))
+
+    stored = Quiz.query.one()
+    assert stored.description is None
+    rows = sorted(stored.questions, key=lambda q: q.number)
+    assert [q.number for q in rows] == [1, 2, 3]
+    assert [q.prompt for q in rows] == ["first", "second", "third"]
+    assert [q.domain for q in rows] == ["General", "General", "General"]
+    assert [q.explanation for q in rows] == [None, None, None]
+    assert rows[1].options == {"B": "x", "D": "y"}
+
+
+def test_a_created_test_goes_last_in_the_order(client, admin, quiz):
+    quiz.sort_order = 7
+    db.session.commit()
+    login(client, admin)
+
+    create(client, new_test())
+
+    assert Quiz.query.filter_by(slug="my-test").one().sort_order == 8
+
+
+def test_titles_that_make_the_same_slug_get_a_number(client, admin):
+    login(client, admin)
+
+    slugs = [
+        data(create(client, new_test(title=title)))["quiz"]["slug"]
+        for title in ("My Test", "my test!", "MY-TEST")
+    ]
+
+    assert slugs == ["my-test", "my-test-2", "my-test-3"]
+
+
+def test_a_slug_skips_one_already_taken_by_a_seeded_test(client, admin, quiz):
+    login(client, admin)
+
+    slug = data(create(client, new_test(title="Quiz One")))["quiz"]["slug"]
+
+    assert slug == "quiz-one-2"
+
+
+@pytest.mark.parametrize(
+    ("title", "slug"),
+    [
+        ("Hello,   World & Co", "hello-world-co"),
+        ("  Unit 3: Loops  ", "unit-3-loops"),
+        ("!!!", "test"),
+    ],
+)
+def test_the_slug_comes_from_the_title(client, admin, title, slug):
+    login(client, admin)
+
+    assert data(create(client, new_test(title=title)))["quiz"]["slug"] == slug
+
+
+def test_a_long_title_gets_a_slug_that_fits(client, admin):
+    login(client, admin)
+
+    response = create(client, new_test(title="a" * 150))
+
+    assert response.status_code == 201
+    assert len(data(response)["quiz"]["slug"]) <= 100
+
+
+def test_a_created_test_is_hidden_from_students_until_activated(client, admin, student):
+    login(client, admin)
+    slug = data(create(client, new_test()))["quiz"]["slug"]
+    login(client, student)
+    assert listed_slugs(client) == []
+    assert start(client, slug).status_code == 404
+
+    login(client, admin)
+    client.patch(f"/api/quizzes/admin/{slug}", json={"is_active": True})
+    login(client, student)
+
+    assert listed_slugs(client) == [slug]
+    assert start(client, slug).status_code == 201
+
+
+def test_creating_accepts_the_limits(client, admin):
+    login(client, admin)
+    options = {chr(ord("A") + i): "x" for i in range(8)}
+    body = new_test(
+        title="t" * 150,
+        description="d" * 255,
+        questions=[question(options=options)] * 200,
+    )
+
+    response = create(client, body)
+
+    assert response.status_code == 201
+    assert data(response)["quiz"]["question_count"] == 200
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        [],
+        "x",
+        new_test(title=None),
+        new_test(title="   "),
+        new_test(title=5),
+        new_test(title="t" * 151),
+        new_test(description="d" * 256),
+        new_test(questions=[]),
+        new_test(questions=None),
+        new_test(questions="Q"),
+        new_test(questions=[question()] * 201),
+        new_test(questions=["Q"]),
+        new_test(questions=[question(prompt="  ")]),
+        new_test(questions=[question(prompt=None)]),
+        new_test(questions=[question(options=["a", "b"])]),
+        new_test(questions=[question(options={"A": "a"})]),
+        new_test(questions=[question(options={chr(65 + i): "x" for i in range(9)})]),
+        new_test(questions=[question(options={"A": "a", "AB": "b"})]),
+        new_test(questions=[question(options={"A": "a", "b": "b"})]),
+        new_test(questions=[question(options={"A": "a", "1": "b"})]),
+        new_test(questions=[question(options={"A": "a", "B": "  "})]),
+        new_test(questions=[question(answer="C")]),
+        new_test(questions=[question(answer=None)]),
+        new_test(questions=[question(), question(answer="Z")]),
+    ],
+)
+def test_creating_rejects_bad_input_and_adds_nothing(client, admin, body):
+    login(client, admin)
+
+    response = create(client, body)
+
+    assert response.status_code == 400
+    assert response.get_json()["error"]
+    assert Quiz.query.count() == 0
+    assert QuizQuestion.query.count() == 0
+
+
+def test_the_error_names_the_question(client, admin):
+    login(client, admin)
+
+    response = create(client, new_test(questions=[question(), question(answer="Z")]))
+
+    assert "Question 2" in response.get_json()["error"]
+
+
+def test_creating_refuses_a_student_and_a_parent(client, student, parent_of):
+    for viewer in (student, parent_of(student)):
+        login(client, viewer)
+        assert create(client, new_test()).status_code == 403
+    assert Quiz.query.count() == 0
 
 
 # --- the test data stays off public pages -------------------------------------

@@ -1,7 +1,5 @@
 """
-File: conftest.py
-Type: py
-Summary: Fixtures for testing the standalone scripts in backend/tools and backend/reports.
+Fixtures for testing the standalone scripts in backend/tools and backend/reports.
 
 qrcode and reportlab are optional dependencies that the scripts import at module
 level, so they are stubbed here to keep the tests independent of what is installed.

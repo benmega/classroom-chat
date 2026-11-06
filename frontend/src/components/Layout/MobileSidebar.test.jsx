@@ -2,8 +2,9 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import MobileSidebar from './MobileSidebar';
+import { mockMatchMedia } from '../../test/mockMatchMedia';
 import client from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 
@@ -151,5 +152,99 @@ describe('MobileSidebar Component', () => {
         await userEvent.click(logoutBtn);
         expect(handleLogout).toHaveBeenCalled();
         expect(defaultProps.setSidebarOpen).toHaveBeenCalledWith(false);
+    });
+});
+describe('MobileSidebar keyboard and screen-reader behaviour', () => {
+    const defaultProps = {
+        user: { role: 'student', username: 'student1' },
+        isParent: false,
+        handleLogout: vi.fn(),
+    };
+
+    // The parent owns the open state, as Layout does through the sidebar context
+    const Harness = ({ initiallyOpen = false, onSetOpen }) => {
+        const [open, setOpen] = React.useState(initiallyOpen);
+        const set = (value) => { onSetOpen?.(value); setOpen(value); };
+        return (
+            <MemoryRouter>
+                <button type="button" onClick={() => set(true)}>Open menu</button>
+                <MobileSidebar {...defaultProps} isSidebarOpen={open} setSidebarOpen={set} />
+            </MemoryRouter>
+        );
+    };
+
+    beforeEach(() => {
+        useAuthStore.mockReturnValue({ unreadCount: 0, activityUnreadCount: 0 });
+    });
+
+    it('is inert while closed, so its links are not in the tab order, and is not once open', async () => {
+        const { container } = render(<Harness />);
+        const aside = container.querySelector('aside');
+
+        expect(aside).toHaveAttribute('inert');
+        expect(container.querySelector('.mobile-overlay')).toHaveAttribute('inert');
+
+        await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+
+        expect(aside).not.toHaveAttribute('inert');
+        expect(container.querySelector('.mobile-overlay')).not.toHaveAttribute('inert');
+    });
+
+    it('keeps the id the hamburger button points at with aria-controls', () => {
+        const { container } = render(<Harness />);
+
+        expect(container.querySelector('aside')).toHaveAttribute('id', 'mobile-sidebar');
+    });
+
+    it('moves focus in when opened, closes on Escape and gives focus back to the button that opened it', async () => {
+        const onSetOpen = vi.fn();
+        const { container } = render(<Harness onSetOpen={onSetOpen} />);
+        const opener = screen.getByRole('button', { name: 'Open menu' });
+
+        await userEvent.click(opener);
+        expect(screen.getByRole('button', { name: 'Close navigation' })).toHaveFocus();
+
+        await userEvent.keyboard('{Escape}');
+
+        expect(onSetOpen).toHaveBeenLastCalledWith(false);
+        expect(container.querySelector('aside')).toHaveAttribute('inert');
+        expect(opener).toHaveFocus();
+    });
+
+    it('names the overlay "Close menu", keeps it out of the tab order and closes on click', async () => {
+        const onSetOpen = vi.fn();
+        render(<Harness initiallyOpen onSetOpen={onSetOpen} />);
+
+        const overlay = screen.getByRole('button', { name: 'Close menu' });
+        expect(overlay).toHaveAttribute('tabindex', '-1');
+        expect(overlay.tagName).toBe('BUTTON');
+
+        await userEvent.click(overlay);
+        expect(onSetOpen).toHaveBeenCalledWith(false);
+    });
+
+    describe('when the window is widened', () => {
+        let media;
+        beforeEach(() => { media = mockMatchMedia(); });
+        afterEach(() => media.restore());
+
+        it('closes the open drawer once the desktop layout (which hides it) takes over', () => {
+            const onSetOpen = vi.fn();
+            render(<Harness initiallyOpen onSetOpen={onSetOpen} />);
+            expect(onSetOpen).not.toHaveBeenCalled();
+
+            media.set('(min-width: 801px)', true);
+
+            expect(onSetOpen).toHaveBeenCalledWith(false);
+        });
+
+        it('does nothing while the drawer is closed', () => {
+            const onSetOpen = vi.fn();
+            render(<Harness onSetOpen={onSetOpen} />);
+
+            media.set('(min-width: 801px)', true);
+
+            expect(onSetOpen).not.toHaveBeenCalled();
+        });
     });
 });

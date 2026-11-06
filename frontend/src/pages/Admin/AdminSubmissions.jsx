@@ -17,8 +17,9 @@ import adminCache from '../../utils/adminCache';
 import { getErrorMessage } from '../../utils/apiError';
 import { getApiUrl } from '../../utils/apiUrl';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import './AdminSubmissions.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const formatFileSize = (bytes) => {
     if (bytes === null || bytes === undefined || isNaN(bytes)) return '';
@@ -34,6 +35,7 @@ const formatFileSize = (bytes) => {
 };
 
 const AdminSubmissions = () => {
+    useDocumentTitle('Inbox · Admin');
     const [statusFilter, setStatusFilter] = useState('pending');
     const cacheKey = `admin_submissions_${statusFilter}`;
     const cached = adminCache.get(cacheKey);
@@ -128,7 +130,7 @@ const AdminSubmissions = () => {
     };
 
     if (isLoading) return (
-        <div className="admin-submissions-page animate-page-entry p-2rem">
+        <SkeletonGroup label="Loading submissions…" className="admin-submissions-page animate-page-entry p-2rem">
             <header className="page-header">
                 <Skeleton height="40px" width="240px" className="skeleton-title mb-2rem" />
             </header>
@@ -153,7 +155,7 @@ const AdminSubmissions = () => {
                     </div>
                 ))}
             </div>
-        </div>
+        </SkeletonGroup>
     );
 
     return (

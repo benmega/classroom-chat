@@ -74,9 +74,10 @@ client.interceptors.response.use(
     } else if (isCsrfFailure(error)) {
       // The call site would only say "Failed to ...". A stable id keeps a burst of failing calls to one toast.
       toast.error('Your session expired. Please reload the page and try again.', { id: 'csrf-expired', duration: 8000 });
-      // The session itself may be gone too: let the auth check send the user to /login if so
+      // The session itself may be gone too: if the server says so, the refresh signs the user out and
+      // ProtectedRoute sends them to /login. A refresh that fails (the server is busy, say) changes nothing.
       import('../store/useAuthStore').then(({ default: useAuthStore }) => {
-        useAuthStore.getState().checkAuth(true);
+        useAuthStore.getState().refreshUser();
       });
     }
     return Promise.reject(error);

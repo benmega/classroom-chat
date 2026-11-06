@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { FileQuestion, Home, ArrowLeft } from 'lucide-react';
 
 import './NotFound.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const NotFound = ({ message = "The page or resource you are looking for doesn't exist or has been moved." }) => {
+  useDocumentTitle('Page not found');
   return (
     <div className="not-found-container">
       <div className="not-found-card">

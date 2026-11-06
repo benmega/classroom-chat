@@ -1,64 +1,23 @@
 # Classroom Chat Route Map
 
-## Application Routes (Frontend)
+Frontend routes and who can open them, from [`frontend/src/App.jsx`](../frontend/src/App.jsx) (`ProtectedRoute`,
+`ProtectedLayout`, `GuestRoute` and the `adminOnly` and `parentOnly` props are the guards). Backend endpoints:
+see [api_reference.md](./api_reference.md). Chat messages go over Socket.IO (`send_message`, see there), not
+HTTP.
 
-Every available page in the React application and its required user role, mapped from `App.jsx`.
+| Access | Paths |
+| :--- | :--- |
+| Public | `/`, `/profile/:slug`, `/parent/connect` |
+| Signed-out only (a signed-in user is redirected away) | `/login`, `/signup`, `/forgot-password`, `/reset-password` |
+| Vite dev server only | `/dev-login` |
+| Student (any signed-in user; a parent is redirected to `/parent/dashboard` except on `/profile`, `/settings` and `/join-class`) | `/chat`, `/profile`, `/settings`, `/course-progress/:slug`, `/course-progress/:slug/breakdown`, `/project-info/:projectId`, `/achievements`, `/bit-shift`, `/shop`, `/activity`, `/project/new`, `/project/edit/:projectId`, `/tests`, `/tests/:slug`, `/tests/results/:attemptId` |
+| Student, outside the layout guard | `/join-class?code=...` signs itself in: a signed-out visitor is sent to `/login` first, a parent is told parents cannot join |
+| Parent | `/parent/dashboard`, `/parent/report/:studentId`, `/parent/tests/results/:attemptId`, `/parent/course-progress/:slug`, `/parent/course-progress/:slug/breakdown` |
+| Admin | `/admin/dashboard`, `/admin/to-review`, `/admin/assign-project`, `/admin/library`, `/admin/users`, `/admin/users/:userId`, `/admin/classes`, `/admin/classes/:classId`, `/admin/classes/:classId/kiosk`, `/admin/submissions`, `/admin/advanced`, `/admin/advanced-crud/*`, `/admin/transactions`, `/admin/student-activity`, `/admin/tests`, `/admin/tests/new`, `/admin/tests/results/:attemptId` |
 
-|Path|Required Role|
-|-|-|
-|`/`|Public (Landing)|
-|`/login`|Public (Guest)|
-|`/signup`|Public (Guest)|
-|`/forgot-password`|Public (Guest)|
-|`/reset-password`|Public (Guest)|
-|`/dev-login`|Development Only|
-|`/chat`|Student|
-|`/profile`|Student|
-|`/profile/:slug`|Public (View Profile)|
-|`/course-progress/:slug`|Student / Parent|
-|`/course-progress/:slug/breakdown`|Student / Parent|
-|`/project-info/:projectId`|Student|
-|`/achievements`|Student|
-|`/bit-shift`|Student|
-|`/shop`|Student|
-|`/activity`|Student|
-|`/settings`|Student|
-|`/project/new`|Student|
-|`/project/edit/:projectId`|Student|
-|`/tests`|Student|
-|`/tests/:slug`|Student|
-|`/tests/results/:attemptId`|Student|
-|`/join-class`|Student / Parent|
-|`/parent/dashboard`|Parent|
-|`/parent/report/:studentId`|Parent|
-|`/parent/tests/results/:attemptId`|Parent|
-|`/parent/connect`|Parent / Public|
-|`/admin/dashboard`|Admin|
-|`/admin/to-review`|Admin|
-|`/admin/assign-project`|Admin|
-|`/admin/library`|Admin|
-|`/admin/users`|Admin|
-|`/admin/classes`|Admin|
-|`/admin/classes/:classId`|Admin|
-|`/admin/users/:userId`|Admin|
-|`/admin/submissions`|Admin|
-|`/admin/advanced`|Admin|
-|`/admin/transactions`|Admin|
-|`/admin/student-activity`|Admin|
-|`/admin/tests`|Admin|
-|`/admin/tests/results/:attemptId`|Admin|
-|`/admin/classes/:classId/kiosk`|Admin|
-|`/admin/advanced-crud/*`|Admin|
+The three test-result routes (`/tests/results/:attemptId`, `/parent/tests/results/:attemptId`,
+`/admin/tests/results/:attemptId`) render the same page; the prefix picks the viewer and the back link.
 
-## Backend API Endpoints
-
-The backend routes have been significantly refactored. Please refer to **[`api_reference.md`](./api_reference.md)** for a complete, up-to-date catalog of all backend API endpoints and their corresponding blueprints.
-
-Key changes include:
-- Student tests: the `quiz_bp` blueprint at `/api/quizzes` (see [`student_tests.md`](./student_tests.md)). The three result routes (`/tests/results/:attemptId`, `/parent/tests/results/:attemptId`, `/admin/tests/results/:attemptId`) render the same page; the prefix picks the viewer and the back link.
-- The introduction of a React-Admin CRUD interface at `/admin/advanced-crud` backed by `/admin/crud`.
-- Restructured messaging API without public conversation histories.
-- Unified admin operations under the `admin_bp` blueprint.
-
-Chat messages are not sent over HTTP. The client emits the Socket.IO `send_message` event
-(`useChatSocket.js`); the server handles it in `socket_events.py`.
+Old `/admin/*` URLs (`students`, `parents`, `connections`, `analytics`, `projects`, `certificates`,
+`pending-*`, `standard-projects`, `add-*`, `documents`, `review`) redirect to `users`, `dashboard`,
+`to-review` or `library`; `/user/profile/:slug` redirects to `/profile/:slug`; unknown paths redirect to `/`.

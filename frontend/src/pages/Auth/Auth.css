@@ -277,7 +277,7 @@
 }
 
 .success-icon {
-    color: var(--success-color);
+    color: var(--success-text);
     background: rgba(16, 185, 129, 0.1);
     padding: 12px;
     border-radius: 20px;
@@ -289,7 +289,7 @@
     font-weight: 800;
     color: var(--text-primary);
     margin: 0;
-    background: linear-gradient(135deg, var(--success-color), var(--success-dark));
+    background: linear-gradient(135deg, var(--success-text), var(--green-700));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

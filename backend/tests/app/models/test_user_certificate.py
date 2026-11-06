@@ -1,9 +1,3 @@
-"""
-File: test_user_certificate.py
-Type: py
-Summary: Unit tests for UserCertificate model methods and properties.
-"""
-
 from datetime import datetime
 
 from application.extensions import db

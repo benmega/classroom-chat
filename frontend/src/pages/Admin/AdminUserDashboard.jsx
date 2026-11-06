@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import Modal from '../../components/common/Modal';
 import { getApiUrl } from '../../utils/apiUrl';
 import './AdminUserDashboard.css';
@@ -18,6 +18,7 @@ import { ALIGNED_NODES } from '../../constants/courseProgress';
 
 import codecombatLogo from '../../assets/codecombat-logo.png';
 import ozariaLogo from '../../assets/ozaria-logo.png';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const TRACKS = [
     { id: 'cs', label: 'Computer Science', short: 'CS', type: 'image', logo: codecombatLogo, desc: 'Core Programming & Algorithms' },
@@ -28,6 +29,7 @@ const TRACKS = [
 ];
 
 const AdminUserDashboard = () => {
+    useDocumentTitle('User · Admin');
     const { userId } = useParams();
     const navigate = useNavigate();
 
@@ -101,12 +103,14 @@ const AdminUserDashboard = () => {
         return (
             <div className="compact-dashboard">
                 <AdminPageHeader title="Loading User..." />
-                <Skeleton height="50px" />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                    <Skeleton height="300px" />
-                    <Skeleton height="300px" />
-                    <Skeleton height="300px" />
-                </div>
+                <SkeletonGroup label="Loading user…">
+                    <Skeleton height="50px" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                        <Skeleton height="300px" />
+                        <Skeleton height="300px" />
+                        <Skeleton height="300px" />
+                    </div>
+                </SkeletonGroup>
             </div>
         );
     }

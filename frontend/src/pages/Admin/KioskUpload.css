@@ -29,6 +29,11 @@
     text-align: center;
 }
 
+/* The shared loading indicator takes its spinner colour from here and its text colour from the container */
+.kiosk-loading {
+    --loading-color: var(--kiosk-accent);
+}
+
 .kiosk-spinner {
     animation: kiosk-spin 1s linear infinite;
     margin-bottom: 1rem;

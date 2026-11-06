@@ -72,7 +72,7 @@
 .action-blue { background: linear-gradient(135deg, var(--blue-600), var(--blue-600)); color: var(--text-on-primary); border: none; }
 .action-blue:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25); transform: translateY(-1px); }
 
-.action-green { background: linear-gradient(135deg, var(--success-color), var(--success-dark)); color: var(--text-on-primary); border: none; }
+.action-green { background: linear-gradient(135deg, var(--success-text), var(--green-800)); color: var(--text-on-primary); border: none; }
 .action-green:hover:not(:disabled) { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transform: translateY(-1px); }
 
 .action-neutral { background: rgba(241, 245, 249, 0.9); border: 1px solid rgba(203, 213, 225, 0.8); color: var(--text-primary, var(--text-primary)); }
@@ -116,7 +116,7 @@
 }
 
 .perk-list-item.on .perk-title {
-    color: var(--success-dark);
+    color: var(--success-text);
 }
 
 .perk-list-item .perk-desc {
@@ -158,7 +158,7 @@
 .compact-banner.warning-banner {
     background: linear-gradient(135deg, rgba(254, 243, 199, 0.95), rgba(253, 230, 138, 0.9));
     border: 1px solid rgba(245, 158, 11, 0.5);
-    color: var(--warning-color);
+    color: var(--amber-800);
     box-shadow: 0 4px 20px rgba(245, 158, 11, 0.12);
 }
 
@@ -275,7 +275,7 @@
 
 .status-pill.online {
     background: rgba(16, 185, 129, 0.12);
-    color: var(--success-dark);
+    color: var(--success-text);
     border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -359,7 +359,7 @@
 .chat-toggle-btn.enabled {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.12));
     border: 1px solid rgba(16, 185, 129, 0.35);
-    color: var(--success-dark);
+    color: var(--success-text);
 }
 
 .chat-toggle-btn.enabled:hover {
@@ -768,7 +768,7 @@
 }
 
 .perk-chip.on {
-    background: linear-gradient(135deg, var(--success-color), var(--success-dark));
+    background: linear-gradient(135deg, var(--success-text), var(--green-800));
     color: var(--text-on-primary);
     border: none;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
@@ -832,7 +832,7 @@
 }
 .pv-text {
     font-size: 0.775rem;
-    color: var(--warning-color);
+    color: var(--warning-text);
     font-weight: 700;
 }
 
@@ -882,7 +882,7 @@
 
 .btn-compact.warning { 
     background: linear-gradient(135deg, var(--yellow-200), var(--yellow-300));
-    color: var(--warning-color); 
+    color: var(--amber-800);
     box-shadow: 0 4px 12px rgba(253, 224, 71, 0.25);
 }
 

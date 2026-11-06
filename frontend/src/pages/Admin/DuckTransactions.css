@@ -240,7 +240,7 @@
 
 .amount-badge.positive {
     background: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
+    color: var(--success-text);
     border: 1px solid rgba(16, 185, 129, 0.2);
 }
 

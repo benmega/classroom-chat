@@ -1,8 +1,4 @@
-"""
-File: project_file.py
-Type: py
-Summary: SQLAlchemy model for the files of a project: 3D models, source files and assets.
-"""
+"""SQLAlchemy model for the files of a project: 3D models, source files and assets."""
 
 from urllib.parse import quote
 

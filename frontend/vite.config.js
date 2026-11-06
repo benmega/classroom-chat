@@ -155,13 +155,15 @@ export default defineConfig({
         'src/pages/General/LandingMobile.jsx',
         'src/hooks/useViewport.js',
       ],
-      // Branches was 80 while Vitest 2 counted the test files themselves in the totals (they
-      // are almost fully covered). Counting only src/, branch coverage is about 75%.
+      // About two points under what the suite measured on 2026-10-28 (lines 87.3-87.5,
+      // statements 85.3-85.5, branches 80.4-80.5, functions 81.4-82.0 across two runs), so a
+      // real drop fails the build and run-to-run noise does not.
+      // Raise these when the measured numbers go up; do not lower them to land a change.
       thresholds: {
-        lines: 80,
-        statements: 80,
-        branches: 75,
-        functions: 55,
+        lines: 85,
+        statements: 83,
+        branches: 78,
+        functions: 79,
       },
     },
   },

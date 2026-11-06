@@ -842,6 +842,48 @@ def test_project_review_packets(client, sample_admin, sample_user, test_app):
         assert updated_user3.packets == initial_packets
 
 
+def test_project_approval_email_links_the_profile_on_the_frontend(
+    client, sample_admin, sample_user, test_app, monkeypatch
+):
+    from application.models.project import Project
+
+    monkeypatch.setitem(test_app.config, "FRONTEND_URL", "https://spa.example.test/")
+    project = Project(name="Email Project", description="desc", user_id=sample_user.id)
+    db.session.add(project)
+    db.session.commit()
+    login_as_admin(client, sample_admin)
+
+    with patch("application.routes.admin.project_routes.send_admin_email") as send_admin_email:
+        response = client.post(
+            f"/api/admin/handle-project-review/{project.id}", json={"action": "approve"}
+        )
+
+    assert response.status_code == 200
+    send_admin_email.assert_called_once()
+    subject, body = send_admin_email.call_args.args
+    assert subject == "Project Approved: Email Project"
+    # The profile is a React page, so the link comes from FRONTEND_URL
+    assert f"https://spa.example.test/profile/{sample_user.slug}" in body
+    assert "blossom.benmega.com" not in body
+
+
+def test_project_rejection_sends_no_email(client, sample_admin, sample_user, test_app):
+    from application.models.project import Project
+
+    project = Project(name="Rejected Project", description="desc", user_id=sample_user.id)
+    db.session.add(project)
+    db.session.commit()
+    login_as_admin(client, sample_admin)
+
+    with patch("application.routes.admin.project_routes.send_admin_email") as send_admin_email:
+        response = client.post(
+            f"/api/admin/handle-project-review/{project.id}", json={"action": "reject"}
+        )
+
+    assert response.status_code == 200
+    send_admin_email.assert_not_called()
+
+
 def test_project_rejection_and_resubmission_lifecycle(client, sample_admin, sample_user, test_app):
     """Test that rejecting a project removes it from the pending queue until the student resubmits."""
     from application.models.project import Project
@@ -1126,6 +1168,71 @@ def test_export_transactions(client, sample_admin, test_app, sample_user):
     data = resp.data.decode("utf-8")
     assert "ID,User,Amount,Reason,Timestamp" in data
     assert "Export Test" in data
+
+
+def test_export_transactions_pages_through_every_row_newest_first(
+    client, sample_admin, test_app, sample_user, monkeypatch, count_queries
+):
+    """The export loads a page of rows per query, not one cursor held open across the response."""
+    import csv
+    import io
+
+    from application.models.duck_transaction import DuckTransaction
+
+    login_as_admin(client, sample_admin)
+    monkeypatch.setattr("application.routes.admin.dashboard_routes.CSV_EXPORT_PAGE_SIZE", 2)
+    with test_app.app_context():
+        db.session.add_all(
+            DuckTransaction(user_id=sample_user.id, amount=float(n), reason=f"Row {n}") for n in range(1, 6)
+        )
+        db.session.commit()
+
+    with count_queries() as statements:
+        resp = client.get("/api/admin/export/transactions")
+        body = resp.data.decode("utf-8")
+
+    rows = list(csv.reader(io.StringIO(body)))
+    assert rows[0] == ["ID", "User", "Amount", "Reason", "Timestamp"]
+    reasons = [row[3] for row in rows[1:]]
+    assert reasons == ["Row 5", "Row 4", "Row 3", "Row 2", "Row 1"]
+    assert {row[1] for row in rows[1:]} == {sample_user.username}
+    ids = [int(row[0]) for row in rows[1:]]
+    assert ids == sorted(ids, reverse=True)
+    # Pages of 2, 2 and 1 rows: the users come with each page (joinedload), none one by one
+    exports = [sql for sql in statements if "duck_transactions" in sql]
+    assert len(exports) == 3
+    assert all("JOIN users" in sql for sql in exports)
+
+
+def test_export_transactions_with_a_row_count_that_fills_the_last_page(
+    client, sample_admin, test_app, sample_user, monkeypatch
+):
+    from application.models.duck_transaction import DuckTransaction
+
+    login_as_admin(client, sample_admin)
+    monkeypatch.setattr("application.routes.admin.dashboard_routes.CSV_EXPORT_PAGE_SIZE", 2)
+    with test_app.app_context():
+        db.session.add_all(
+            DuckTransaction(user_id=sample_user.id, amount=1.0, reason=f"Row {n}") for n in range(1, 5)
+        )
+        db.session.commit()
+
+    lines = client.get("/api/admin/export/transactions").data.decode("utf-8").splitlines()
+
+    assert [line.split(",")[3] for line in lines[1:]] == ["Row 4", "Row 3", "Row 2", "Row 1"]
+
+
+def test_export_transactions_of_an_empty_table_is_only_the_header(client, sample_admin, test_app):
+    from application.models.duck_transaction import DuckTransaction
+
+    login_as_admin(client, sample_admin)
+    with test_app.app_context():
+        DuckTransaction.query.delete()
+        db.session.commit()
+
+    resp = client.get("/api/admin/export/transactions")
+
+    assert resp.data.decode("utf-8").strip() == "ID,User,Amount,Reason,Timestamp"
 
 
 def test_manage_projects(client, sample_admin, sample_user, test_app):

@@ -61,6 +61,10 @@ class Classroom(db.Model):
     course_assignments = db.relationship(
         "CourseInstance", backref="classroom", cascade="all, delete-orphan"
     )
+    # Tests assigned to this classroom, deleted with it
+    quiz_assignments = db.relationship(
+        "QuizAssignment", back_populates="classroom", cascade="all, delete-orphan"
+    )
     # Declared for what happens on delete: these rows outlive the classroom and
     # only lose their classroom_id. No code reads the collections.
     challenges = db.relationship("Challenge")

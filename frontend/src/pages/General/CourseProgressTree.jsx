@@ -13,8 +13,10 @@ import {
     getAncestors, getDescendants, getPrerequisiteTitles,
     getDomainConfig, getTrackDomain, findLevelForProject
 } from '../../constants/courseProgress';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const CourseProgressTree = () => {
+    useDocumentTitle('Learning path');
     const location = useLocation();
     const navigate = useNavigate();
     const { slug } = useParams();

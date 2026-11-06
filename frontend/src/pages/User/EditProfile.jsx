@@ -10,13 +10,15 @@ import { getApiUrl } from '../../utils/apiUrl';
 import { getErrorMessage } from '../../utils/apiError';
 import { PROFILE_PICTURE_TYPES, validateProfilePicture } from '../../utils/profilePicture';
 import { ConnectionCardModal } from '../../components/admin/AdminModals';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const serverPreviewUrl = (u) => (
     u?.profile_picture ? getApiUrl(`/user/profile_pictures/${u.profile_picture}`) : getApiUrl('/static/images/Default_pfp.jpg')
 );
 
 const EditProfile = () => {
-    const { user, checkAuth } = useAuthStore();
+    useDocumentTitle('Settings');
+    const { user, refreshUser } = useAuthStore();
     
     const [nickname, setNickname] = useState('');
     const [bio, setBio] = useState('');
@@ -53,7 +55,7 @@ const EditProfile = () => {
     }, [revokeBlobUrl]);
 
     // Initialise the form once per signed-in user. Keyed on the id, not the user
-    // object: checkAuth() replaces the object on every call (Shop, BitShift, ...),
+    // object: refreshUser() replaces the object on every call (Shop, BitShift, ...),
     // and re-initialising then would throw away unsaved edits and the photo preview.
     useEffect(() => {
         const current = useAuthStore.getState().user;
@@ -160,9 +162,9 @@ const EditProfile = () => {
                 }
             }
 
-            // checkAuth() swaps in a fresh user object, which no longer re-initialises
+            // refreshUser() swaps in a fresh user object, which no longer re-initialises
             // the form on its own, so resync it explicitly from the saved data.
-            await checkAuth(true);
+            await refreshUser();
             const saved = useAuthStore.getState().user;
             if (saved) {
                 syncTextFields(saved);

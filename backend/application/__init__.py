@@ -1,4 +1,3 @@
-import contextlib
 import logging
 import os
 import sys
@@ -18,7 +17,10 @@ from application.models.configuration import Configuration
 from application.models.user import User
 from application.routes import register_blueprints
 from application.utilities.helper_functions import format_number
-from application.utilities.schema_check import check_for_schema_drift
+from application.utilities.schema_check import (
+    check_for_schema_drift,
+    log_schema_drift_summary,
+)
 from flask import Flask, g, jsonify, request, session
 from flask_cors import CORS
 from flask_limiter import RateLimitExceeded
@@ -69,6 +71,23 @@ def _configure_logging():
     logging.getLogger("application").setLevel(logging.INFO)
     for noisy in ("werkzeug", "sqlalchemy.engine", "engineio", "socketio"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
+
+
+def _init_extension(app, name, init_app):
+    """
+    Run ``init_app()`` for the extension ``name``.
+
+    A failure is logged with its traceback and, outside the tests, stops the start-up:
+    an app that came up without websockets or without its scheduler would pass the
+    health check and run half broken. The test apps are built many times over, so
+    there (``TESTING``) the failure is logged and the app starts without the extension.
+    """
+    try:
+        init_app()
+    except Exception:
+        logging.getLogger(__name__).exception("Could not initialise %s", name)
+        if not app.config.get("TESTING"):
+            raise
 
 
 def create_app(config_class=None):
@@ -143,20 +162,27 @@ def create_app(config_class=None):
         )
 
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=10)
+    # Where Alembic alone owns the schema (production), /server/health fails a database
+    # that has no alembic_version table; elsewhere create_all builds the tables without one.
+    app.config.setdefault(
+        "HEALTH_REQUIRES_MIGRATION_STAMP", issubclass(config_class, ProductionConfig)
+    )
 
     db.init_app(app)
     migrate.init_app(app, db)
     # cors_allowed_origins must match cors_origins exactly — using "*" alongside
     # withCredentials:true on the client causes browsers to block the handshake.
     limiter.init_app(app)
-    with contextlib.suppress(Exception):
-        socketio.init_app(
+    _init_extension(
+        app,
+        "Socket.IO",
+        lambda: socketio.init_app(
             app,
             cors_allowed_origins=cors_origins,
             async_mode=app.config.get("SOCKETIO_ASYNC_MODE"),
-        )
-    with contextlib.suppress(Exception):
-        scheduler.init_app(app)
+        ),
+    )
+    _init_extension(app, "the scheduler", lambda: scheduler.init_app(app))
 
     from . import socket_events as socket_events
 
@@ -203,13 +229,14 @@ def create_app(config_class=None):
                 logger.warning(
                     "The database has no schema yet: skipping the default configuration."
                 )
+            if issubclass(config_class, ProductionConfig):
+                # Development gets the full report above. Production only says whether
+                # the migrations left the database matching the models (read-only).
+                log_schema_drift_summary(app)
 
         if _should_start_scheduler(app):
-            try:
-                if not getattr(scheduler, "running", False):
-                    scheduler.start()
-            except Exception:
-                logger.exception("Could not start the session cleanup scheduler")
+            if not getattr(scheduler, "running", False):
+                _init_extension(app, "the session cleanup scheduler", scheduler.start)
         else:
             logger.info("Session cleanup scheduler not started in this process")
 
@@ -301,6 +328,14 @@ def _should_start_scheduler(app):
 def ensure_default_configuration():
     Configuration.get_or_create()
     db.session.commit()
+
+
+# Standard project images that were PNGs of 6 MB or more and are now WebP (issue #112). Existing
+# database rows may still hold the old URLs; seed_global_data() rewrites them.
+CONVERTED_STANDARD_PROJECT_IMAGES = {
+    f"/images/standard_projects/proj_{n}.png": f"/images/standard_projects/proj_{n}.webp"
+    for n in range(16, 24)
+}
 
 
 def seed_global_data():
@@ -473,49 +508,49 @@ def seed_global_data():
                 "name": "Game Dev 3",
                 "description": "In this advanced game development project students implement complex game logic including multiple levels scoring systems and enemy AI behavior. It requires mastering functions and state management.",
                 "chapter": "Game Development 3",
-                "image_url": "/images/standard_projects/proj_16.png",
+                "image_url": "/images/standard_projects/proj_16.webp",
             },
             {
                 "name": "Arcade Card or Board Game",
                 "description": "Students design and program a digital version of a classic arcade card or board game. This project emphasizes object-oriented programming principles game physics and complex logic flow.",
                 "chapter": "Computer Science 4",
-                "image_url": "/images/standard_projects/proj_17.png",
+                "image_url": "/images/standard_projects/proj_17.webp",
             },
             {
                 "name": "Curiosity Sandbox",
                 "description": "Students utilize advanced logic and creative coding tools to build an open-ended simulation or interactive art piece. The project encourages experimentation with loops and variables to generate dynamic visual effects.",
                 "chapter": "Ozaria 4",
-                "image_url": "/images/standard_projects/proj_18.png",
+                "image_url": "/images/standard_projects/proj_18.webp",
             },
             {
                 "name": "Binary Search & Algorithms",
                 "description": "Students explore computer science fundamentals by implementing efficient search and sorting algorithms to solve complex data problems.",
                 "chapter": "Computer Science 5",
-                "image_url": "/images/standard_projects/proj_19.png",
+                "image_url": "/images/standard_projects/proj_19.webp",
             },
             {
                 "name": "Capstone Challenge",
                 "description": "The final challenge where students combine all learned skills to solve complex algorithmic puzzles or build a comprehensive software application from scratch.",
                 "chapter": "Computer Science 6",
-                "image_url": "/images/standard_projects/proj_20.png",
+                "image_url": "/images/standard_projects/proj_20.webp",
             },
             {
                 "name": "Group Roblox Game",
                 "description": "Our class has completed our first group project '” their very own Roblox game! By working together, they were able to build something much bigger than they could have achieved individually. While the game itself still has a lot of work ahead, this project has been a fantastic experience in teamwork, collaboration, and real-world development.",
                 "chapter": "Ozaria 4",
-                "image_url": "/images/standard_projects/proj_21.png",
+                "image_url": "/images/standard_projects/proj_21.webp",
             },
             {
                 "name": "Favorite Animal Page",
                 "description": "",
                 "chapter": "Web Development 1",
-                "image_url": "/images/standard_projects/proj_22.png",
+                "image_url": "/images/standard_projects/proj_22.webp",
             },
             {
                 "name": "Profile Page",
                 "description": "Students put their knowledge of HTML, CSS, and JS to work by creating their very own profile page! This will be a starting point for a future portfolio/resume page where they can show off all their accomplishments.",
                 "chapter": "Web Development 2",
-                "image_url": "/images/standard_projects/proj_23.png",
+                "image_url": "/images/standard_projects/proj_23.webp",
             },
             {
                 "name": "CS1 Capstone",
@@ -539,12 +574,29 @@ def seed_global_data():
                 db.session.add(ProjectTemplate(**template_data))
                 logger.info(f"Seeded project template '{template_data['name']}'.")
             else:
-                if template.chapter != template_data.get("chapter"):
+                # Backfill only: an admin's edits to a template survive restarts and
+                # deploys (flask seed --overwrite is the explicit way to reset them).
+                if not template.chapter and template_data.get("chapter"):
                     template.chapter = template_data.get("chapter")
-                    logger.info(f"Updated chapter for project template '{template_data['name']}'.")
+                    logger.info(f"Backfilled chapter for project template '{template_data['name']}'.")
                 if not template.image_url and template_data.get("image_url"):
                     template.image_url = template_data["image_url"]
                     logger.info(f"Backfilled image for project template '{template_data['name']}'.")
+
+        # 5. Rows saved before the large PNGs became WebP still point at the deleted files; a project
+        # copies its template's image_url, so both tables need the rewrite.
+        from application.models.project import Project
+
+        for model in (ProjectTemplate, Project):
+            stale_rows = model.query.filter(
+                model.image_url.in_(list(CONVERTED_STANDARD_PROJECT_IMAGES))
+            ).all()
+            for row in stale_rows:
+                row.image_url = CONVERTED_STANDARD_PROJECT_IMAGES[row.image_url]
+            if stale_rows:
+                logger.info(
+                    f"Repointed {len(stale_rows)} {model.__tablename__} image(s) to WebP."
+                )
 
         db.session.commit()
 

@@ -576,7 +576,7 @@
 
 .requester-type-badge.parent {
     background: rgba(16, 185, 129, 0.15);
-    color: var(--success-dark);
+    color: var(--success-text);
     border: 1px solid rgba(16, 185, 129, 0.3);
 }
 

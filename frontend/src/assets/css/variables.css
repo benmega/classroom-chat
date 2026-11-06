@@ -20,14 +20,19 @@
     --accent-color: #FACC15;        /* Golden Yellow — decorative only */
     --accent-glow: rgba(250, 204, 21, 0.4);
 
-    --success-color: #10B981;
-    --success-dark: #059669;
+    /* Success and warning each come as a fill and as a text colour. The bright values (--success-color 2.54:1,
+       --warning-color 3.19:1 on white) are for fills, borders, strokes and dots only; any text or glyph drawn in
+       the colour uses --success-text / --warning-text, which clear 4.5:1 on white. */
+    --success-color: #10B981;       /* Emerald 500 — fills, borders and dots only, never text */
+    --success-dark: #059669;        /* Emerald 600 — gradient end stop only (3.77:1 on white, not text) */
+    --success-text: #047857;        /* Emerald 700 — text and icons: 5.48:1 on white, 5.11:1 on --bg-secondary ✓ */
 
     /* Error — darkened from #EF4444 (3.76:1 FAIL) */
     --error-color: #DC2626;         /* AA red — on white: 4.83:1 ✓ */
     --error-light: #FECACA;
     --error-subtle: #FEF2F2;
-    --warning-color: #D97706;       /* Amber 700 — dark enough for text */
+    --warning-color: #D97706;       /* Amber 600 — fills, borders and strokes only (3.19:1 on white, not text) */
+    --warning-text: #B45309;        /* Amber 700 — text and icons: 5.02:1 on white, 4.68:1 on --bg-secondary ✓ */
 
     /* Neutral — Light & Clean */
     --bg-primary: #FFFFFF;
@@ -40,7 +45,8 @@
     --text-secondary: #334155;      /* Slate 700 — 10.3:1 on white ✓ */
     --text-muted: #475569;          /* Slate 600 — FIXED from #64748B; 6.41:1 on bg-tertiary ✓ */
     --border-subtle: #E2E8F0;
-    --border-rich: #94A3B8;         /* Slate 400 — border/decorative use only */
+    --border-rich: #94A3B8;         /* Slate 400 — decorative borders and light-on-dark text; 2.56:1 on white, so NOT a control border */
+    --input-border: var(--slate-500); /* Slate 500 — border of text fields: 4.76:1 on white (WCAG 1.4.11 needs 3:1) */
     --border-strong: var(--text-secondary);
 
     /* Scrollbar */
@@ -115,8 +121,8 @@
     --settings-tint: #EDF7F6;        /* account settings page: about-me panel background */
     --settings-border: #A4CFC9;      /* account settings page: about-me field border */
     --settings-code-bg: #D2E7E6;     /* account settings page: pairing code box */
-    --settings-accent: #2D8B83;      /* account settings page: save button */
-    --settings-accent-hover: #25746D;
+    --settings-accent: #287E77;      /* account settings page: save button; white on it is 4.84:1 (was #2D8B83, 4.09:1) */
+    --settings-accent-hover: #1F6F68; /* white on it is 5.95:1 */
     --primary-darker: #00666D;       /* contrast-tuned teal for small text on the pale teal tint */
     --gold: #FFD700;                 /* top proficiency tier border, BitShift duck head */
     --silver: #B0C4DE;               /* middle proficiency tier border */
@@ -135,11 +141,13 @@
     --graph-level-3: #38BDF8;
     --graph-level-4: #0284C7;
 
-    /* Gradients — both endpoints pass AA with white text */
+    /* Gradients — white text passes AA (4.5:1) at both ends of --gradient-primary, -error and -success.
+       --gradient-warning does not: its #D97706 end is 3.19:1 with white, so put dark text (--amber-950) on it
+       or use --warning-text as a flat fill behind white text. */
     --gradient-primary: linear-gradient(135deg, #007880 0%, #4F52C9 100%);
     --gradient-warning: linear-gradient(135deg, #D97706 0%, #B45309 100%);
     --gradient-error: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
-    --gradient-success: linear-gradient(135deg, #10B981 0%, #065F46 100%);
+    --gradient-success: linear-gradient(135deg, #047857 0%, #065F46 100%);
     --gradient-surface: linear-gradient(180deg, #FFFFFF 0%, #F5F7FA 100%);
 
     /* Shadows — Flat: barely-there, structural only */

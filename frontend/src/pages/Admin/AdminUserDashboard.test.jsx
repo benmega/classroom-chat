@@ -74,6 +74,16 @@ describe('AdminUserDashboard Component Redesign', () => {
         });
     });
 
+    it('announces the loading skeletons through a status region while the user loads', () => {
+        client.get.mockImplementation(() => new Promise(() => {})); // Never resolves
+        render(
+            <BrowserRouter>
+                <AdminUserDashboard />
+            </BrowserRouter>
+        );
+        expect(screen.getByRole('status')).toHaveTextContent(/Loading user/);
+    });
+
     it('renders hero status bar and prominent track selector', async () => {
         render(
             <BrowserRouter>

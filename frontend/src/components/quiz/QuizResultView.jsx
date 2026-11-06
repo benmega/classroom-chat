@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Flag } from 'lucide-react';
 import { safeDate } from '../../utils/formatters';
 import DuckIcon from '../Icons/DuckIcon';
 import DiagramFrame from './DiagramFrame';
@@ -21,13 +21,57 @@ const questionState = (question) => {
 
 const STATE_LABEL = { correct: 'Correct', wrong: 'Wrong', skipped: 'Skipped' };
 
-function ReviewQuestion({ question }) {
+const anchorId = (number) => `test-result-q${number}`;
+
+// One tile per question: the letter chosen and, when wrong, the key. Jumps to the question.
+function AnswerGrid({ review, onJump }) {
+    return (
+        <ol className="test-result-grid">
+            {review.map((q) => {
+                const state = questionState(q);
+                const chosen = q.selected || '-';
+                const label = `Q${q.number}: ${STATE_LABEL[state]}, ${q.selected ? `chose ${q.selected}` : 'none'}, key ${q.answer}${q.flagged ? ', flagged' : ''}`;
+                return (
+                    <li key={q.number}>
+                        <button
+                            type="button"
+                            className={`test-result-tile test-result-tile--${state}`}
+                            aria-label={label}
+                            title={label}
+                            onClick={() => onJump(q.number)}
+                        >
+                            <span className="test-result-tile-number">
+                                {q.number}
+                                {q.flagged && <Flag size={10} aria-hidden="true" />}
+                            </span>
+                            <span className="test-result-tile-letters">
+                                {state === 'correct' ? chosen : `${chosen}→${q.answer}`}
+                            </span>
+                        </button>
+                    </li>
+                );
+            })}
+        </ol>
+    );
+}
+
+function ReviewQuestion({ question, chosenLabel }) {
     const state = questionState(question);
     return (
-        <li className={`test-result-question test-result-question--${state}`} data-testid={`review-${question.number}`}>
+        <li
+            id={anchorId(question.number)}
+            tabIndex={-1}
+            className={`test-result-question test-result-question--${state}`}
+            data-testid={`review-${question.number}`}
+        >
             <div className="test-result-question-head">
                 <span className="test-result-question-number">{question.number}</span>
                 <span className="test-result-question-domain">{question.domain}</span>
+                {question.flagged && (
+                    <span className="test-result-question-flag">
+                        <Flag size={12} aria-hidden="true" /> Flagged
+                    </span>
+                )}
                 <span className="test-result-question-state">{STATE_LABEL[state]}</span>
             </div>
             <p className="test-result-prompt">{question.prompt}</p>
@@ -46,7 +90,7 @@ function ReviewQuestion({ question }) {
                             <span className="test-result-option-letter">{option.letter}</span>
                             <span className="test-result-option-text">{option.text}</span>
                             <span className="test-result-option-marks">
-                                {isSelected && <span className="test-result-mark">Your answer</span>}
+                                {isSelected && <span className="test-result-mark">{chosenLabel}</span>}
                                 {isAnswer && (
                                     <span className="test-result-mark test-result-mark--answer">
                                         <Check size={14} aria-hidden="true" /> Correct
@@ -81,6 +125,8 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
     const domains = attempt.domains || [];
     const ducks = Number(attempt.ducks_awarded) || 0;
     const review = Array.isArray(attempt.review) ? attempt.review : null;
+    const classrooms = Array.isArray(attempt.classrooms) ? attempt.classrooms : [];
+    const limit = attempt.time_limit_minutes;
 
     const counts = review
         ? {
@@ -89,6 +135,16 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
               correct: review.filter((q) => q.is_correct).length,
           }
         : null;
+    const jumpTo = (number) => {
+        setFilter('all');
+        // After the filter re-renders every question
+        requestAnimationFrame(() => {
+            const target = document.getElementById(anchorId(number));
+            target?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+            target?.focus?.({ preventScroll: true });
+        });
+    };
+
     const shown = review
         ? review.filter((q) => filter === 'all' || (filter === 'correct' ? q.is_correct : !q.is_correct))
         : [];
@@ -104,6 +160,18 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
                             <dd>{studentName}</dd>
                         </div>
                     )}
+                    {showStudent && classrooms.length > 0 && (
+                        <div>
+                            <dt>Class</dt>
+                            <dd>{classrooms.join(', ')}</dd>
+                        </div>
+                    )}
+                    {showStudent && attempt.attempt_number != null && (
+                        <div>
+                            <dt>Attempt</dt>
+                            <dd>{attempt.attempt_number}/{attempt.attempt_count}</dd>
+                        </div>
+                    )}
                     {!inProgress && submittedOn && (
                         <div>
                             <dt>Date</dt>
@@ -113,7 +181,10 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
                     {!inProgress && (
                         <div>
                             <dt>Time</dt>
-                            <dd>{formatDuration(attempt.elapsed_seconds)}</dd>
+                            <dd>
+                                {formatDuration(attempt.elapsed_seconds)}
+                                {limit ? ` / ${limit} min` : ''}
+                            </dd>
                         </div>
                     )}
                 </dl>
@@ -181,6 +252,13 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
                         </section>
                     )}
 
+                    {review && review.length > 0 && (
+                        <section className="test-result-section" aria-label="Answers">
+                            <h2>Answers</h2>
+                            <AnswerGrid review={review} onJump={jumpTo} />
+                        </section>
+                    )}
+
                     {review && (
                         <section className="test-result-section">
                             <div className="test-result-review-head">
@@ -201,7 +279,7 @@ const QuizResultView = ({ attempt, showStudent = false }) => {
                             </div>
                             <ol className="test-result-questions">
                                 {shown.map((q) => (
-                                    <ReviewQuestion key={q.number} question={q} />
+                                    <ReviewQuestion key={q.number} question={q} chosenLabel={showStudent ? 'Chosen' : 'Your answer'} />
                                 ))}
                             </ol>
                         </section>

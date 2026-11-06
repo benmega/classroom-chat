@@ -130,7 +130,7 @@ const methods = {
 
 /**
  * react-admin shows `error.message` in its notifications; surface the backend's own
- * error text (e.g. "Integrity error: UNIQUE constraint failed ...") instead of axios'
+ * error text (e.g. "That clashes with an existing record (duplicate or still in use).") instead of axios'
  * generic "Request failed with status code 409".
  */
 const dataProvider = Object.fromEntries(

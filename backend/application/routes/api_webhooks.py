@@ -1,5 +1,3 @@
-
-
 import os
 
 from application.extensions import csrf, db
@@ -38,7 +36,6 @@ def youtube_callback():
 
     try:
         project.video_url = f"https://youtu.be/{video_id}"
-        # Set high-quality YouTube thumbnail as the project image
         project.image_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
         db.session.commit()
         return jsonify({"success": True, "message": "YouTube info updated"})

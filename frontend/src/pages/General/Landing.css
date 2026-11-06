@@ -146,6 +146,39 @@
     animation: slideShow 25s infinite;
 }
 
+/* The pause button (WCAG 2.2.2) */
+.slideshow-track.is-paused {
+    animation-play-state: paused;
+}
+
+.slideshow-toggle {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-full);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 2px solid var(--input-border);
+    box-shadow: var(--shadow-md);
+}
+
+.slideshow-toggle:hover {
+    background: var(--bg-tertiary);
+}
+
+/* Reduced motion already holds the slideshow on its first slide, so there is nothing to pause */
+@media (prefers-reduced-motion: reduce) {
+    .slideshow-toggle {
+        display: none;
+    }
+}
+
 .slide {
     width: 100%;
     min-width: 100%;

@@ -7,9 +7,12 @@ import { Loader2, LogOut } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import CameraModal from '../../components/profile/CameraModal';
 import { getApiUrl } from '../../utils/apiUrl';
+import Loading from '../../components/common/Loading';
 import './KioskUpload.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const KioskUpload = () => {
+    useDocumentTitle('Kiosk · Admin');
     const { classId } = useParams();
     const navigate = useNavigate();
     const [classroom, setClassroom] = useState(null);
@@ -92,8 +95,7 @@ const KioskUpload = () => {
     if (isLoading) {
         return (
             <div className="kiosk-container kiosk-loading">
-                <Loader2 className="kiosk-spinner" size={48} />
-                <p>Loading Kiosk...</p>
+                <Loading label="Loading Kiosk..." showLabel size={48} />
             </div>
         );
     }

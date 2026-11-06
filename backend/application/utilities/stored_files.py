@@ -1,7 +1,5 @@
 """
-File: stored_files.py
-Type: py
-Summary: Uploaded files that belong to database rows follow the transaction of their row.
+Uploaded files that belong to database rows follow the transaction of their row.
 
 A file whose row is deleted is removed once the delete is committed; a rollback keeps
 the row and the file. A file written for a row that is never committed is removed

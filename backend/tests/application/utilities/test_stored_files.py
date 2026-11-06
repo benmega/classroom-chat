@@ -1,8 +1,6 @@
 """
-File: test_stored_files.py
-Type: py
-Summary: Stored files follow the transaction of their row: a deleted row's file goes once
-         the delete commits, a new row's file goes again unless the insert commits.
+Stored files follow the transaction of their row: a deleted row's file goes once
+the delete commits, a new row's file goes again unless the insert commits.
 
 The submission and project file tests cover the same rules through their models; these
 test the helpers themselves, including savepoints and a session closed mid-transaction.

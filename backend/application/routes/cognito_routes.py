@@ -7,6 +7,7 @@ Summary: Flask routes for AWS Cognito authentication using Boto3 (Custom UI).
 import base64
 import hashlib
 import hmac
+import json
 
 import boto3
 from application.extensions import db, limiter
@@ -15,9 +16,28 @@ from application.utilities.db_helpers import is_reserved_username
 from botocore.exceptions import ClientError
 from flask import Blueprint, current_app, jsonify, request, session
 from flask_limiter.util import get_remote_address
-from jose import jwt
 
 cognito_bp = Blueprint("cognito", __name__)
+
+
+def get_unverified_claims(token):
+    """Return the claims in a JWT's payload segment without verifying its signature.
+
+    Only for the id token that Cognito's own token endpoint returned to ``initiate_auth``
+    over TLS: the login route reads the user's ``sub`` and ``email`` from it and never trusts a
+    token that came from the browser. Do not use it for anything that arrives from a client.
+    Raises ``ValueError`` when ``token`` is not three dot-separated segments whose payload is
+    base64url-encoded JSON holding an object.
+    """
+    try:
+        _header, payload, _signature = token.split(".")
+        padded = payload + "=" * (-len(payload) % 4)
+        claims = json.loads(base64.b64decode(padded, altchars=b"-_", validate=True))
+    except (ValueError, TypeError, AttributeError) as e:  # bad base64 and bad JSON are both ValueErrors
+        raise ValueError("Malformed JWT: cannot read the payload segment") from e
+    if not isinstance(claims, dict):
+        raise ValueError("Malformed JWT: the payload is not a JSON object")  # noqa: TRY004 (one error type for every malformed token)
+    return claims
 
 
 def get_boto_client():
@@ -165,7 +185,7 @@ def login():
         )
 
         id_token = response["AuthenticationResult"]["IdToken"]
-        claims = jwt.get_unverified_claims(id_token)
+        claims = get_unverified_claims(id_token)
         cognito_sub = claims.get("sub")
         email_claim = claims.get("email", email)
 

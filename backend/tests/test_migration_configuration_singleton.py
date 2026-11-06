@@ -1,8 +1,6 @@
 """
-File: test_migration_configuration_singleton.py
-Type: py
-Summary: The 1785a35c3f5a migration leaves one configuration row, with id 1, and
-         makes the database refuse any other.
+The 1785a35c3f5a migration leaves one configuration row, with id 1, and
+makes the database refuse any other.
 """
 
 import importlib.util

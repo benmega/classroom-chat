@@ -14,15 +14,19 @@ function Assert-Success {
 # ---------------------------------------------------------
 
 # BACKEND CHECKS
-# Needs the backend test/lint tooling (ruff, pytest, ...) in the active venv:
+# Mirrors the Linting and Tests workflows (.github/workflows/). Needs the backend test/lint
+# tooling (ruff, mypy, pytest, ...) in the active venv:
 #   pip install -r backend/requirements-dev.txt
 # ---------------------------------------------------------
-Write-Host "`n[1/5] Running Backend Checks..." -ForegroundColor Yellow
+Write-Host "`n[1/4] Running Backend Checks..." -ForegroundColor Yellow
 Set-Location "$PSScriptRoot\..\backend"
 
-# Linting
+# Linting (CI lints backend/ only)
 Write-Host " -> Running Ruff (Linter)..." -ForegroundColor DarkGray
-ruff check "$PSScriptRoot\.." ; Assert-Success
+ruff check . ; Assert-Success
+
+Write-Host " -> Running Mypy (Type Check)..." -ForegroundColor DarkGray
+python -m mypy . ; Assert-Success
 
 # Security and Performance Analysis
 Write-Host " -> Running Admin Authorization Check..." -ForegroundColor DarkGray
@@ -30,18 +34,25 @@ python scripts/check_admin_auth.py ; Assert-Success
 Write-Host " -> Running N+1 Query Heuristic Check..." -ForegroundColor DarkGray
 python scripts/check_n_plus_one.py ; Assert-Success
 
-# Testing
+# Testing. The coverage floor is the one tests.yml enforces (keep the two numbers in step).
 Write-Host " -> Running Pytest with Coverage..." -ForegroundColor DarkGray
-python -m pytest ; Assert-Success
+python -m pytest --cov=application --cov-fail-under=92 ; Assert-Success
 
-# Migration linter
+# Migration checks (the same scripts the Tests workflow runs)
 Write-Host " -> Linting migrations for idempotency..." -ForegroundColor DarkGray
 $env:FLASK_APP = "main.py"
 python scripts/lint_migrations.py ; Assert-Success
+Write-Host " -> Validating migrations for duplicate operations..." -ForegroundColor DarkGray
+python scripts/validate_migrations.py ; Assert-Success
 
-# Prod migration simulation — run flask db upgrade against a copy of prod_users.db
-Write-Host " -> Simulating prod migration against prod_users.db copy..." -ForegroundColor DarkGray
-python scratch/sim_prod_migration.py ; Assert-Success
+# Prod migration simulation: run flask db upgrade against a copy of prod_users.db.
+# The helper is a local-only script (scratch/ is not tracked), so a fresh clone skips it.
+if (Test-Path "scratch/sim_prod_migration.py") {
+    Write-Host " -> Simulating prod migration against prod_users.db copy..." -ForegroundColor DarkGray
+    python scratch/sim_prod_migration.py ; Assert-Success
+} else {
+    Write-Host " -> Skipped: prod migration simulation (backend/scratch/sim_prod_migration.py is not in this checkout)" -ForegroundColor DarkGray
+}
 
 # Migrations Check
 Write-Host " -> Checking Database Migrations (Dev)..." -ForegroundColor DarkGray
@@ -51,7 +62,7 @@ flask db check ; Assert-Success
 # ---------------------------------------------------------
 # FRONTEND CHECKS
 # ---------------------------------------------------------
-Write-Host "`n[2/5] Running Frontend Checks..." -ForegroundColor Yellow
+Write-Host "`n[2/4] Running Frontend Checks..." -ForegroundColor Yellow
 Set-Location "$PSScriptRoot\..\frontend"
 
 # Linting
@@ -66,35 +77,60 @@ npm run test -- --run --coverage ; Assert-Success
 Write-Host " -> Verifying Vite Build (Simulating Prod Constraints)..." -ForegroundColor DarkGray
 npm run build:strict ; Assert-Success
 
-$distSize = (Get-ChildItem -Path dist -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB
-Write-Host (" -> Frontend Bundle Size: {0:N2} MB" -f $distSize) -ForegroundColor DarkGray
-if ($distSize -gt 3.0) {
-    Write-Warning "Frontend bundle size ($("{0:N2}" -f $distSize) MB) is getting large. Consider debloating."
+# Only dist/assets is the JS/CSS bundle. The rest of dist is a copy of public/ (images, fonts),
+# which would swamp the figure and make the warning fire on every run.
+$distSize = (Get-ChildItem -Path dist/assets -Recurse -File | Measure-Object -Property Length -Sum).Sum / 1MB
+Write-Host (" -> Frontend Bundle Size (dist/assets): {0:N2} MB" -f $distSize) -ForegroundColor DarkGray
+# 5.15 MB on 2026-10-28 (three.js, MUI and react-admin are the big chunks); warn about 15% above that.
+$bundleWarnMB = 6.0
+if ($distSize -gt $bundleWarnMB) {
+    Write-Warning "Frontend bundle size ($("{0:N2}" -f $distSize) MB) is over $bundleWarnMB MB. Consider debloating."
+}
+
+# ---------------------------------------------------------
+# PUBLIC IMAGE SIZES
+# ---------------------------------------------------------
+Write-Host "`n[3/4] Checking public image sizes..." -ForegroundColor Yellow
+
+# Everything in public/ is copied into dist/ and uploaded to S3 on every deploy.
+# Every image under public/ is under 1 MB; a new one over the limit fails the preflight (#112).
+$imageSizeIsFatal = $true
+$imageLimitBytes = 1MB
+$bigImages = @(Get-ChildItem -Path public/images -Recurse -File -ErrorAction SilentlyContinue |
+    Where-Object { $_.Length -gt $imageLimitBytes })
+foreach ($img in $bigImages) {
+    $relative = $img.FullName.Substring((Get-Location).Path.Length + 1)
+    Write-Host ("    {0:N2} MB  {1}" -f ($img.Length / 1MB), $relative) -ForegroundColor DarkGray
+}
+if ($bigImages.Count -gt 0) {
+    $message = "$($bigImages.Count) file(s) under frontend/public/images are over 1 MB. Compress or resize them before they reach the deploy."
+    if ($imageSizeIsFatal) {
+        Write-Error $message
+        exit 1
+    }
+    Write-Warning $message
+} else {
+    Write-Host " -> No image over 1 MB." -ForegroundColor DarkGray
 }
 
 # ---------------------------------------------------------
 # END-TO-END TESTS
 # ---------------------------------------------------------
-Write-Host "`n[3/5] Running End-to-End Tests..." -ForegroundColor Yellow
-Write-Host " -> Starting temporary backend instance..." -ForegroundColor DarkGray
+Write-Host "`n[4/4] Running End-to-End Tests..." -ForegroundColor Yellow
 
-# Start backend in background
+# The E2E users must exist in the dev database (the Tests workflow seeds them the same way).
+Write-Host " -> Seeding E2E test users..." -ForegroundColor DarkGray
 Set-Location "$PSScriptRoot\..\backend"
-$env:FLASK_USE_RELOADER = "False"
-$env:FLASK_DEBUG = "True"
-$backendProcess = Start-Process python -ArgumentList "main.py" -PassThru -NoNewWindow
-Start-Sleep -Seconds 3 # Wait for backend to be ready
+$env:FLASK_ENV = "development"
+python scripts/seed_e2e_users.py ; Assert-Success
 
-try {
-    Set-Location "$PSScriptRoot\..\frontend"
-    Write-Host " -> Running Playwright E2E Tests..." -ForegroundColor DarkGray
-    npm run test:e2e
-    if ($LASTEXITCODE -ne 0) { throw "E2E Tests failed with exit code $LASTEXITCODE" }
-} finally {
-    # Ensure backend is torn down even if tests fail
-    Write-Host " -> Tearing down temporary backend instance..." -ForegroundColor DarkGray
-    Stop-Process -Id $backendProcess.Id -Force -ErrorAction SilentlyContinue
-}
+# playwright.config.js starts the backend (python main.py, waiting on /server/health) and the
+# Vite dev server itself and stops them afterwards, so nothing is started by hand here. A dev
+# backend or dev server that is already running on port 8000 / 5173 is reused instead.
+Set-Location "$PSScriptRoot\..\frontend"
+Write-Host " -> Running Playwright E2E Tests..." -ForegroundColor DarkGray
+npm run test:e2e
+if ($LASTEXITCODE -ne 0) { throw "E2E Tests failed with exit code $LASTEXITCODE" }
 
 Write-Host "`n========================================================" -ForegroundColor Green
 Write-Host "           ALL CHECKS PASSED! SAFE TO MERGE.            " -ForegroundColor Green

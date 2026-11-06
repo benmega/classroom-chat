@@ -226,8 +226,8 @@ describe('colour tokens (T3a)', () => {
         expect(tokenValue('--settings-tint')).toBe('#EDF7F6');
         expect(tokenValue('--settings-border')).toBe('#A4CFC9');
         expect(tokenValue('--settings-code-bg')).toBe('#D2E7E6');
-        expect(tokenValue('--settings-accent')).toBe('#2D8B83');
-        expect(tokenValue('--settings-accent-hover')).toBe('#25746D');
+        expect(tokenValue('--settings-accent')).toBe('#287E77'); // was #2D8B83, 4.09:1 with white text (#111)
+        expect(tokenValue('--settings-accent-hover')).toBe('#1F6F68');
         expect(tokenValue('--primary-darker')).toBe('#00666D');
         expect(tokenValue('--gold')).toBe('#FFD700');
         expect(tokenValue('--silver')).toBe('#B0C4DE');

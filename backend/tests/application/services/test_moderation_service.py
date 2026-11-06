@@ -1,8 +1,6 @@
 """
-File: test_moderation_service.py
-Type: py
-Summary: Unit tests for banned-word moderation and its wiring into
-         the message save pipeline.
+Unit tests for banned-word moderation and its wiring into
+the message save pipeline.
 """
 
 from contextlib import contextmanager

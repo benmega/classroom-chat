@@ -15,6 +15,7 @@ import { acceptForKind, groupProjectFiles, primaryModelFile, projectFileUrl } fr
 import { modelFormatFromName } from '../../utils/modelFormats';
 
 import { useProjectManagement } from '../../hooks/useProjectManagement';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const PROJECT_TYPE_OPTIONS = [
     { value: 'code', label: 'Code project', Icon: Code },
@@ -31,6 +32,7 @@ const describeFileCounts = ({ model, source, asset }) => [
 ].filter(Boolean).join(', ');
 
 const ManageProject = () => {
+    useDocumentTitle('Manage project');
     const { user: currentUser } = useAuthStore();
     const {
         projectId,

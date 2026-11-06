@@ -1,8 +1,6 @@
 """
-File: test_quiz_seed.py
-Type: py
-Summary: The student tests load from quiz_data/*.json, again and again without changing
-         the settings an admin made, and `flask seed` runs the loader.
+The student tests load from quiz_data/*.json, again and again without changing
+the settings an admin made, and `flask seed` runs the loader.
 """
 
 import json

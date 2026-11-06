@@ -1,9 +1,3 @@
-"""
-File: level_game.py
-Type: py
-Summary: SQLAlchemy model for sandbox level games unlocked by progression milestones.
-"""
-
 from ..extensions import db
 from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 

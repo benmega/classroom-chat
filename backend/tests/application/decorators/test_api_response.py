@@ -1,8 +1,4 @@
-"""
-File: test_api_response.py
-Type: py
-Summary: Unit tests for the @api_response decorator (envelope, return shapes, errors).
-"""
+"""Unit tests for the @api_response decorator (envelope, return shapes, errors)."""
 
 from unittest.mock import patch
 
