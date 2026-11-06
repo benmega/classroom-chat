@@ -17,7 +17,7 @@ import adminCache from '../../utils/adminCache';
 import { getErrorMessage } from '../../utils/apiError';
 import { getApiUrl } from '../../utils/apiUrl';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import './AdminSubmissions.css';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 
@@ -130,7 +130,7 @@ const AdminSubmissions = () => {
     };
 
     if (isLoading) return (
-        <div className="admin-submissions-page animate-page-entry p-2rem">
+        <SkeletonGroup label="Loading submissions…" className="admin-submissions-page animate-page-entry p-2rem">
             <header className="page-header">
                 <Skeleton height="40px" width="240px" className="skeleton-title mb-2rem" />
             </header>
@@ -155,7 +155,7 @@ const AdminSubmissions = () => {
                     </div>
                 ))}
             </div>
-        </div>
+        </SkeletonGroup>
     );
 
     return (

@@ -21,7 +21,7 @@ const getCourseIcon = (courseName, courseId) => {
 
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Chat from '../Chat/Chat';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import SmartImage from '../../components/common/SmartImage';
 import { getApiUrl } from '../../utils/apiUrl';
 import { getSocket } from '../../hooks/useChatSocket';
@@ -307,7 +307,7 @@ const AdminClassDashboard = () => {
 
     if (isLoading || !classroom) {
         return (
-            <div className="admin-class-dashboard">
+            <SkeletonGroup label="Loading class…" className="admin-class-dashboard">
                 <div className="dashboard-header">
                     <Skeleton height="40px" width="300px" data-testid="skeleton-title" className="skeleton-title" />
                 </div>
@@ -316,7 +316,7 @@ const AdminClassDashboard = () => {
                         <Skeleton height="300px" className="skeleton-card" />
                     </div>
                 </div>
-            </div>
+            </SkeletonGroup>
         );
     }
 

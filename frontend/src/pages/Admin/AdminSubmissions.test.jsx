@@ -44,6 +44,7 @@ describe('AdminSubmissions Component', () => {
     });
 
     render(<AdminSubmissions />);
+    expect(screen.getByRole('status')).toHaveTextContent(/Loading submissions/);
 
     await waitFor(() => {
       expect(screen.getByText('No Submissions')).toBeInTheDocument();

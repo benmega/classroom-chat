@@ -104,6 +104,7 @@ describe('AdminDashboard', () => {
     useAdminDashboard.mockReturnValue({ ...defaultHookReturn, isLoading: true, dashboardData: null });
     renderComponent();
     expect(screen.getAllByTestId("skeleton-title")[0]).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(/Loading dashboard/);
   });
 
   it('renders error state when dashboardData is null after loading', () => {

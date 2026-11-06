@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import SmartImage from '../../components/common/SmartImage';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
-import Skeleton from '../../components/common/Skeleton';
+import Skeleton, { SkeletonGroup } from '../../components/common/Skeleton';
 import Modal from '../../components/common/Modal';
 import { getApiUrl } from '../../utils/apiUrl';
 import './AdminUserDashboard.css';
@@ -103,12 +103,14 @@ const AdminUserDashboard = () => {
         return (
             <div className="compact-dashboard">
                 <AdminPageHeader title="Loading User..." />
-                <Skeleton height="50px" />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
-                    <Skeleton height="300px" />
-                    <Skeleton height="300px" />
-                    <Skeleton height="300px" />
-                </div>
+                <SkeletonGroup label="Loading user…">
+                    <Skeleton height="50px" />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                        <Skeleton height="300px" />
+                        <Skeleton height="300px" />
+                        <Skeleton height="300px" />
+                    </div>
+                </SkeletonGroup>
             </div>
         );
     }
