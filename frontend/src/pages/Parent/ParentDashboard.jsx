@@ -12,6 +12,7 @@ import DesktopNotice from '../../components/common/DesktopNotice';
 import useModalA11y from '../../hooks/useModalA11y';
 import './ParentDashboard.css';
 import Skeleton from '../../components/common/Skeleton';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const timeAgo = (isoString) => {
     if (!isoString) return null;
@@ -31,6 +32,7 @@ const isWithinHours = (isoString, hours) => {
 };
 
 const ParentDashboard = () => {
+    useDocumentTitle('Parent dashboard');
     const navigate = useNavigate();
     const [children, setChildren] = useState([]);
     const [isLoading, setIsLoading] = useState(true);

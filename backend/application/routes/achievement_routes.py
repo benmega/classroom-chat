@@ -193,17 +193,19 @@ def _apply_badge_change(files, old_slug, new_slug, badge_png):
 
 def _commit_with_badge(old_slug, new_slug, badge_png):
     """
-    Flushes and commits the achievement the caller added or changed, together with its badge files.
+    Commits the achievement the caller added or changed, together with its badge files.
 
-    The row is flushed first, so a database problem shows up before any file is touched.
-    The badge files are then written and the sprite rebuilt (a slow subprocess), and only
-    then is the session committed. Returns None on success. On any failure the session is
-    rolled back, the files are put back as they were and the JSON error response is returned.
+    The badge files are written and the sprite rebuilt (a subprocess that may run for up to
+    SPRITE_REBUILD_TIMEOUT seconds) first, while the session holds only changes it has not
+    flushed. SQLite takes its write lock at the first INSERT or UPDATE and keeps it until the
+    commit, and every other write waits behind that lock, so nothing may be flushed before the
+    subprocess is done. The row is then written and committed in one short transaction.
+    Returns None on success. On any failure the session is rolled back, the files are put back
+    as they were, the sprite is rebuilt from them and the JSON error response is returned.
     """
     files = _BadgeFiles()
     rebuilt = False
     try:
-        db.session.flush()
         if _apply_badge_change(files, old_slug, new_slug, badge_png):
             _rebuild_sprite()
             rebuilt = True
@@ -300,8 +302,12 @@ def _certificate_download_name(cert, with_id=False):
 def get_achievements_json():
     """API endpoint to get all achievements and user's earned ones"""
     user_id = session.get("user")
+    # db.relationship() is typed RelationshipProperty rather than Mapped, which the loader
+    # options reject; they accept the attribute at runtime.
     current_user = (
-        User.query.options(joinedload(User.achievements)).filter_by(id=user_id).first()
+        User.query.options(joinedload(User.achievements))  # type: ignore[arg-type]
+        .filter_by(id=user_id)
+        .first()
     )
 
     if not current_user:
@@ -412,9 +418,10 @@ def add_achievement():
     )
     db.session.add(ach)
 
-    # The row is created first; the badge is saved to
+    # The row is only added to the session here: the badge is saved to
     # current_app.static_folder / "images" / "achievement_badges" and the sprite rebuilt
-    # before the commit, so a failure leaves neither a row nor a badge behind.
+    # before anything is written to the database, and then the row is committed. A failure
+    # leaves neither a row nor a badge behind.
     failure = _commit_with_badge(None, slug, badge_png)
     if failure:
         return failure
@@ -490,7 +497,8 @@ def edit_achievement(id):
     if source is not None: ach.source = source
 
     # A renamed slug moves the badge along; a new badge replaces it. The sprite is rebuilt
-    # before the commit, and a failure puts the previous badge files back.
+    # before the changes are written to the database, and a failure puts the previous badge
+    # files back.
     failure = _commit_with_badge(old_slug, ach.slug, badge_png)
     if failure:
         return failure
@@ -625,7 +633,7 @@ def admin_certificates():
         .join(Achievement)
         .options(
             contains_eager(UserCertificate.user),
-            contains_eager(UserCertificate.achievement),
+            contains_eager(UserCertificate.achievement),  # type: ignore[arg-type]  # see joinedload above
         )
         .order_by(UserCertificate.submitted_at, UserCertificate.id)
         .all()

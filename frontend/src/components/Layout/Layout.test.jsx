@@ -202,3 +202,110 @@ describe('Layout Component', () => {
         expect(screen.getByTestId('desktop-nav-rail')).toBeInTheDocument();
     });
 });
+describe('Layout skip link and focus handling', () => {
+    const context = {
+        user: { role: 'student', username: 'student1' },
+        isAuthenticated: true,
+        isSidebarOpen: false,
+        setSidebarOpen: vi.fn(),
+        toggleSidebar: vi.fn(),
+        handleLogout: vi.fn(),
+        isGuestPage: false,
+        isChatPage: false,
+        location: { pathname: '/profile' },
+        hamburgerProgress: 0,
+        activityUnreadCount: 0,
+    };
+
+    const renderAt = (pathname, children = <div>Page Content</div>) => {
+        useLayout.mockReturnValue({ ...context, location: { pathname } });
+        const ui = (inner) => (
+            <MemoryRouter>
+                <Layout>{inner}</Layout>
+            </MemoryRouter>
+        );
+        const view = render(ui(children));
+        return {
+            ...view,
+            goTo: (next, inner = children) => {
+                useLayout.mockReturnValue({ ...context, location: { pathname: next } });
+                view.rerender(ui(inner));
+            },
+        };
+    };
+
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it('gives main an id and tabIndex so the skip link and route changes can focus it', () => {
+        renderAt('/profile');
+
+        const main = screen.getByRole('main');
+        expect(main).toHaveAttribute('id', 'main-content');
+        expect(main).toHaveAttribute('tabindex', '-1');
+    });
+
+    it('puts "Skip to content" first in the tab order; activating it focuses main', async () => {
+        const user = userEvent.setup();
+        renderAt('/profile');
+
+        await user.tab();
+        const skip = screen.getByRole('link', { name: 'Skip to content' });
+        expect(skip).toHaveFocus();
+        expect(skip).toHaveAttribute('href', '#main-content');
+
+        await user.keyboard('{Enter}');
+        expect(screen.getByRole('main')).toHaveFocus();
+    });
+
+    it('points the hamburger at the sidebar it opens', () => {
+        renderAt('/profile');
+
+        const hamburger = screen.getByRole('button', { name: 'Toggle Sidebar' });
+        expect(hamburger).toHaveAttribute('aria-controls', 'mobile-sidebar');
+        expect(hamburger).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('does not move focus on the first render', () => {
+        renderAt('/profile');
+
+        expect(screen.getByRole('main')).not.toHaveFocus();
+        expect(document.body).toHaveFocus();
+    });
+
+    it('moves focus to the new main when the pathname changes', () => {
+        const { goTo } = renderAt('/profile');
+        const before = screen.getByRole('main');
+
+        goTo('/achievements');
+
+        const after = screen.getByRole('main');
+        expect(after).not.toBe(before); // main is remounted per path
+        expect(after).toHaveFocus();
+    });
+
+    it('leaves focus alone when the page already focused something inside itself', () => {
+        // like a page that focuses its search field when it mounts
+        const FocusesItself = () => {
+            const ref = React.useRef(null);
+            React.useEffect(() => ref.current.focus(), []);
+            return <input ref={ref} aria-label="Search" />;
+        };
+        const { goTo } = renderAt('/profile');
+
+        goTo('/chat', <FocusesItself />);
+
+        expect(screen.getByLabelText('Search')).toHaveFocus();
+    });
+
+    it('does not steal focus when the same path re-renders', () => {
+        const { goTo } = renderAt('/profile');
+        const button = screen.getByRole('button', { name: 'Toggle Sidebar' });
+        button.focus();
+
+        goTo('/profile');
+
+        expect(button).toHaveFocus();
+    });
+});

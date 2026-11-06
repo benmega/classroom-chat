@@ -37,6 +37,7 @@ from application.models.classroom import Classroom
 from application.models.configuration import Configuration
 from application.models.course import Course
 from application.models.course_instance import CourseInstance
+from application.models.project import Project
 from application.models.project_template import ProjectTemplate
 from application.utilities.spa import frontend_url
 from flask import Flask, request, session
@@ -450,7 +451,8 @@ def test_seed_global_data_sys_argv_db(test_app):
         seed_global_data()
 
 
-def test_seed_global_data_updates_template_chapter(test_app):
+def test_seed_global_data_keeps_an_edited_template_chapter(test_app):
+    """Start-up seeding backfills an empty chapter but never overwrites an admin's edit."""
     with test_app.app_context():
         tpl = ProjectTemplate.query.filter_by(name="Text-Based Adventure").first()
         if not tpl:
@@ -462,8 +464,33 @@ def test_seed_global_data_updates_template_chapter(test_app):
 
         seed_global_data()
 
-        updated_tpl = ProjectTemplate.query.filter_by(name="Text-Based Adventure").first()
-        assert updated_tpl.chapter == "Computer Science 2"
+        assert ProjectTemplate.query.filter_by(name="Text-Based Adventure").first().chapter == "Old Chapter"
+
+        tpl = ProjectTemplate.query.filter_by(name="Text-Based Adventure").first()
+        tpl.chapter = None
+        db.session.commit()
+
+        seed_global_data()
+
+        assert ProjectTemplate.query.filter_by(name="Text-Based Adventure").first().chapter == "Computer Science 2"
+
+
+def test_seed_global_data_repoints_converted_project_images(init_db, sample_user):
+    """Rows saved before proj_16-23 became WebP must not keep pointing at the deleted PNGs."""
+    old_url = "/images/standard_projects/proj_16.png"
+    new_url = "/images/standard_projects/proj_16.webp"
+    uploaded_url = "/user/project_images/" + "a" * 32 + ".png"
+    db.session.add(ProjectTemplate(name="Legacy PNG template", description="d", image_url=old_url))
+    db.session.add(Project(name="Legacy PNG project", user_id=sample_user.id, image_url=old_url))
+    db.session.add(Project(name="Uploaded cover", user_id=sample_user.id, image_url=uploaded_url))
+    db.session.commit()
+
+    seed_global_data()
+
+    assert ProjectTemplate.query.filter_by(name="Legacy PNG template").one().image_url == new_url
+    assert Project.query.filter_by(name="Legacy PNG project").one().image_url == new_url
+    assert Project.query.filter_by(name="Uploaded cover").one().image_url == uploaded_url
+    assert ProjectTemplate.query.filter_by(name="Game Dev 3").one().image_url == new_url
 
 
 def test_seed_global_data_operational_error(test_app):
@@ -510,11 +537,12 @@ def _run_seed(
     instances_csv=_INSTANCE_CSV_HEADER,
     courses_csv=_COURSE_CSV_HEADER,
     achievements_csv=_ACHIEVEMENT_CSV_HEADER,
+    overwrite=False,
 ):
     """Run `flask seed` with its seed files replaced by the given CSV text.
 
     The default for each file is a header with no rows. A file given as None is
-    read from the repository as it is.
+    read from the repository as it is. ``overwrite`` passes ``--overwrite``.
     """
     from io import StringIO
 
@@ -533,7 +561,9 @@ def _run_seed(
         return StringIO(text)
 
     with patch("os.path.exists", return_value=True), patch("builtins.open", side_effect=mock_open):
-        result = test_app.test_cli_runner().invoke(seed_command)
+        result = test_app.test_cli_runner().invoke(
+            seed_command, ["--overwrite"] if overwrite else []
+        )
     assert result.exit_code == 0
     return result.output
 
@@ -561,12 +591,12 @@ def test_seed_command_success(test_app):
 
     # Run first time (inserts)
     out1 = _run_seed(test_app, challenges_csv_content, instances_csv_content)
-    assert "Successfully inserted 2 and updated 0 challenges." in out1
+    assert "Successfully inserted 2 and updated 0 challenges (0 unchanged)." in out1
     assert "Successfully inserted 2 new course instances (skipped 0 orphan rows)" in out1
 
-    # Run second time (updates existing challenges)
+    # Run second time (the existing challenges are left as they are)
     out2 = _run_seed(test_app, challenges_csv_content, instances_csv_content)
-    assert "Successfully inserted 0 and updated 2 challenges." in out2
+    assert "Successfully inserted 0 and updated 0 challenges (2 unchanged)." in out2
     assert "Successfully inserted 0 new course instances (skipped 0 orphan rows)" in out2
 
     with test_app.app_context():
@@ -619,9 +649,15 @@ def test_seed_command_keeps_fractional_challenge_values(test_app):
         + "No Value,no-value,www.ozaria.com,course_1,desc,Medium,\n"
     )
 
-    # The second run takes the update path, which must not round the value either
-    for expected in ("inserted 3 and updated 0", "inserted 0 and updated 3"):
-        assert f"Successfully {expected} challenges." in _run_seed(test_app, challenges_csv)
+    # --overwrite takes the update path, which must not round the value either
+    for expected, overwrite in (
+        ("inserted 3 and updated 0 challenges (0 unchanged)", False),
+        ("inserted 0 and updated 0 challenges (3 unchanged)", False),
+        ("inserted 0 and updated 0 challenges (3 unchanged)", True),
+    ):
+        assert f"Successfully {expected}." in _run_seed(
+            test_app, challenges_csv, overwrite=overwrite
+        )
 
         with test_app.app_context():
             values = {c.slug: c.value for c in Challenge.query.filter_by(course_id="course_1")}
@@ -641,7 +677,7 @@ _SAME_NAME_LEVELS_CSV = (
 def test_seed_command_keeps_levels_that_share_a_name_apart(test_app):
     """The slug identifies a level. Three levels called Salazar are three rows, and
     seeding again must not fold them into one or move a slug from one to another."""
-    assert "Successfully inserted 4 and updated 0 challenges." in _run_seed(
+    assert "Successfully inserted 4 and updated 0 challenges (0 unchanged)." in _run_seed(
         test_app, _SAME_NAME_LEVELS_CSV
     )
 
@@ -658,7 +694,7 @@ def test_seed_command_keeps_levels_that_share_a_name_apart(test_app):
         "crossing": ("Crossing", "alone", 1),
     }
 
-    assert "Successfully inserted 0 and updated 4 challenges." in _run_seed(
+    assert "Successfully inserted 0 and updated 0 challenges (4 unchanged)." in _run_seed(
         test_app, _SAME_NAME_LEVELS_CSV
     )
 
@@ -686,12 +722,12 @@ def test_seed_command_does_not_take_over_a_row_with_the_same_name(test_app):
         )
         db.session.commit()
 
-    assert "Successfully inserted 4 and updated 0 challenges." in _run_seed(
+    assert "Successfully inserted 4 and updated 0 challenges (0 unchanged)." in _run_seed(
         test_app, _SAME_NAME_LEVELS_CSV
     )
 
     with test_app.app_context():
-        kept = Challenge.query.filter_by(slug="made-by-hand").one()
+        kept =Challenge.query.filter_by(slug="made-by-hand").one()
         assert (kept.name, kept.description, kept.difficulty, kept.value) == (
             "Salazar",
             "kept",
@@ -711,10 +747,13 @@ def test_seed_command_skips_only_the_rows_the_database_rejects(test_app):
         )
         db.session.commit()
 
-    for expected in ("inserted 2 and updated 0", "inserted 0 and updated 2"):
+    for expected in (
+        "inserted 2 and updated 0 challenges (0 unchanged)",
+        "inserted 0 and updated 0 challenges (2 unchanged)",
+    ):
         output = _run_seed(test_app, _SAME_NAME_LEVELS_CSV)
 
-        assert f"Successfully {expected} challenges. Skipped 2 rows" in output
+        assert f"Successfully {expected}. Skipped 2 rows" in output
         assert "its schema is older than the models" in output
         # `flask db upgrade` alone is wrong for a database create_all built
         assert "`flask db upgrade`, or for a development database" in output
@@ -726,6 +765,182 @@ def test_seed_command_skips_only_the_rows_the_database_rejects(test_app):
             slugs = {c.slug for c in Challenge.query.filter_by(course_id="course_1")}
             assert slugs == {"salazar-part-1", "crossing"}
             db.session.rollback()
+
+
+_SEED_V1_CSV = (
+    _LEVEL_CSV_HEADER
+    + "Alpha,alpha,www.ozaria.com,course_1,from the file,Easy,1\n"
+    + "Beta,beta,www.ozaria.com,course_1,second level,Medium,2\n"
+)
+# The same file after someone changed it: both levels differ, and one is new
+_SEED_V2_CSV = (
+    _LEVEL_CSV_HEADER
+    + "Alpha Renamed,alpha,codecombat.com,course_2,new wording,Hard,5\n"
+    + "Beta,beta,www.ozaria.com,course_1,second level,Medium,2\n"
+    + "Gamma,gamma,www.ozaria.com,course_1,third level,Medium,3\n"
+)
+
+
+def _challenge_fields(slug):
+    challenge = Challenge.query.filter_by(slug=slug).one()
+    return (
+        challenge.name,
+        challenge.domain,
+        challenge.course_id,
+        challenge.description,
+        challenge.difficulty,
+        challenge.value,
+    )
+
+
+def test_seed_command_leaves_admin_edited_challenges_alone(test_app):
+    assert "inserted 2 and updated 0 challenges (0 unchanged)." in _run_seed(
+        test_app, _SEED_V1_CSV
+    )
+    with test_app.app_context():
+        # What an admin does in the UI to the first level, and to its sequence
+        alpha = Challenge.query.filter_by(slug="alpha").one()
+        alpha.name = "Edited in the admin UI"
+        alpha.value = 7.5
+        alpha.description = "edited description"
+        alpha.sequence = 9
+        db.session.commit()
+
+    # Deploy again with a changed file: the new level is added, nothing else moves
+    output = _run_seed(test_app, _SEED_V2_CSV)
+
+    assert "Successfully inserted 1 and updated 0 challenges (2 unchanged)." in output
+    with test_app.app_context():
+        assert _challenge_fields("alpha") == (
+            "Edited in the admin UI",
+            "www.ozaria.com",
+            "course_1",
+            "edited description",
+            "Easy",
+            7.5,
+        )
+        assert Challenge.query.filter_by(slug="alpha").one().sequence == 9
+        assert _challenge_fields("beta") == (
+            "Beta",
+            "www.ozaria.com",
+            "course_1",
+            "second level",
+            "Medium",
+            2,
+        )
+        assert _challenge_fields("gamma") == (
+            "Gamma",
+            "www.ozaria.com",
+            "course_1",
+            "third level",
+            "Medium",
+            3,
+        )
+        assert Challenge.query.filter(
+            Challenge.slug.in_(["alpha", "beta", "gamma"])
+        ).count() == 3
+        db.session.rollback()
+
+
+def test_seed_command_overwrite_makes_the_file_win_again(test_app):
+    _run_seed(test_app, _SEED_V1_CSV)
+    with test_app.app_context():
+        alpha = Challenge.query.filter_by(slug="alpha").one()
+        alpha.name = "Edited in the admin UI"
+        alpha.value = 7.5
+        alpha.sequence = 9
+        db.session.commit()
+
+    output = _run_seed(test_app, _SEED_V2_CSV, overwrite=True)
+
+    # Alpha is rewritten, Beta already matches the file, Gamma is new
+    assert "Successfully inserted 1 and updated 1 challenges (1 unchanged)." in output
+    with test_app.app_context():
+        assert _challenge_fields("alpha") == (
+            "Alpha Renamed",
+            "codecombat.com",
+            "course_2",
+            "new wording",
+            "Hard",
+            5,
+        )
+        # Not a column of the seed file, so --overwrite does not reset it either
+        assert Challenge.query.filter_by(slug="alpha").one().sequence == 9
+        assert _challenge_fields("gamma")[0] == "Gamma"
+        assert Challenge.query.filter(
+            Challenge.slug.in_(["alpha", "beta", "gamma"])
+        ).count() == 3
+        db.session.rollback()
+
+    # A second --overwrite run has nothing left to change
+    assert "inserted 0 and updated 0 challenges (3 unchanged)." in _run_seed(
+        test_app, _SEED_V2_CSV, overwrite=True
+    )
+
+
+def test_seed_command_leaves_admin_edited_project_templates_alone(test_app):
+    from application.commands.projects_data import PROJECT_SEED_DATA
+
+    name, seeded_description, seeded_chapter = PROJECT_SEED_DATA[0]
+    total = len(PROJECT_SEED_DATA)
+
+    def template_fields():
+        template = ProjectTemplate.query.filter_by(name=name).one()
+        return template.description, template.chapter
+
+    # --overwrite on a fresh run puts every standard template as the file has it
+    _run_seed(test_app, overwrite=True)
+    with test_app.app_context():
+        assert template_fields() == (seeded_description, seeded_chapter)
+        template = ProjectTemplate.query.filter_by(name=name).one()
+        template.description = "Rewritten by a teacher"
+        template.chapter = "A different chapter"
+        db.session.commit()
+
+    # The deploy default: the template keeps what the teacher wrote
+    output = _run_seed(test_app)
+    assert (
+        f"Successfully inserted 0 and updated 0 project templates ({total} unchanged)."
+        in output
+    )
+    with test_app.app_context():
+        assert template_fields() == ("Rewritten by a teacher", "A different chapter")
+        db.session.rollback()
+
+    # --overwrite restores the file's wording for that template only
+    output = _run_seed(test_app, overwrite=True)
+    assert (
+        f"Successfully inserted 0 and updated 1 project templates ({total - 1} unchanged)."
+        in output
+    )
+    with test_app.app_context():
+        assert template_fields() == (seeded_description, seeded_chapter)
+        db.session.rollback()
+
+
+def test_seed_command_adds_a_project_template_that_is_missing(test_app):
+    from application.commands.projects_data import PROJECT_SEED_DATA
+
+    name = PROJECT_SEED_DATA[0][0]
+    with test_app.app_context():
+        ProjectTemplate.query.filter_by(name=name).delete()
+        db.session.commit()
+
+    output = _run_seed(test_app)
+
+    assert "Successfully inserted 1 and updated 0 project templates" in output
+    with test_app.app_context():
+        assert ProjectTemplate.query.filter_by(name=name).count() == 1
+        db.session.rollback()
+
+
+def test_seed_command_help_explains_overwrite(test_app):
+    result = test_app.test_cli_runner().invoke(seed_command, ["--help"])
+
+    assert result.exit_code == 0
+    text = " ".join(result.output.split())  # Click wraps the help text
+    assert "--overwrite" in text
+    assert "discards edits made in the admin UI" in text
 
 
 def _seed_file_rows(filename):
@@ -889,7 +1104,7 @@ def test_a_definition_file_that_cannot_be_used_does_not_stop_the_rest(test_app):
 
     assert "Successfully inserted 1 new courses" in output
     assert "Error seeding achievements: invalid literal for int()" in output
-    assert "Successfully inserted 1 and updated 0 challenges." in output
+    assert "Successfully inserted 1 and updated 0 challenges (0 unchanged)." in output
     with test_app.app_context():
         # Nothing from the file that failed is kept
         assert Achievement.query.count() == 0

@@ -7,6 +7,7 @@ import { parseServerDate } from '../../utils/formatters';
 import Skeleton from '../../components/common/Skeleton';
 import useAuthStore from '../../store/useAuthStore';
 import './Activity.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const PER_PAGE = 20;
 
@@ -85,6 +86,7 @@ const ActivityLoading = () => (
 );
 
 const Activity = () => {
+    useDocumentTitle('Activity');
     const [items, setItems] = useState([]);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);

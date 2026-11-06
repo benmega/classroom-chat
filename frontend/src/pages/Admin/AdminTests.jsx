@@ -11,6 +11,7 @@ import { getErrorMessage } from '../../utils/apiError';
 import { formatDuration } from '../../components/quiz/formatDuration';
 import { listAdminQuizzes, updateQuizSettings, listAdminResults, deleteAttempt } from '../../api/quizzes';
 import './AdminTests.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const TOGGLES = [
     { key: 'is_active', label: 'Active' },
@@ -95,6 +96,7 @@ const LoadingRows = () => (
 );
 
 const AdminTests = () => {
+    useDocumentTitle('Tests · Admin');
     const [quizzes, setQuizzes] = useState([]);
     const [quizzesLoading, setQuizzesLoading] = useState(true);
     const [results, setResults] = useState([]);

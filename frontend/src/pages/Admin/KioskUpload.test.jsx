@@ -113,3 +113,12 @@ describe('KioskUpload Component', () => {
         });
     });
 });
+describe('KioskUpload loading state', () => {
+    it('announces that the kiosk is loading', () => {
+        client.get.mockReturnValue(new Promise(() => {}));
+
+        render(<KioskUpload />);
+
+        expect(screen.getByRole('status')).toHaveTextContent('Loading Kiosk...');
+    });
+});

@@ -4,8 +4,10 @@ import { User, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import useAuthStore from '../../store/useAuthStore';
 import toast from 'react-hot-toast';
 import './Auth.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const Login = () => {
+    useDocumentTitle('Log in');
     const { login, loginParentCognito } = useAuthStore();
     const [usernameOrEmail, setUsernameOrEmail] = useState('');
     const [password, setPassword] = useState('');

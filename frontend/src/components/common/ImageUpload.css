@@ -231,7 +231,7 @@
 }
 
 .upload-status-badge.success {
-  color: var(--success-color);
+  color: var(--success-text);
   border: 1px solid var(--success-color);
 }
 

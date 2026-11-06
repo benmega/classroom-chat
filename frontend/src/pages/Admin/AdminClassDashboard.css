@@ -896,7 +896,7 @@
 .sandbox-active-badge.glowing {
     background: rgba(16, 185, 129, 0.12);
     border: 1.5px solid rgba(16, 185, 129, 0.5);
-    color: var(--success-color, #10b981);
+    color: var(--success-text);
     box-shadow: 0 0 16px rgba(16, 185, 129, 0.35);
     animation: sandboxGreenPulse 2s infinite ease-in-out;
 }

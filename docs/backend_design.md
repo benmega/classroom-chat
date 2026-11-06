@@ -34,7 +34,7 @@ API endpoints are structured into logical modules using **Flask Blueprints**. Th
 - **`api_webhooks`**: Ingress for external systems (e.g., Stripe, analytics).
 - **`challenge`** (`/challenge`): Challenge submission (honor system, CORS for codecombat.com / ozaria.com).
 - **`session`** (`/api/session`): Presence heartbeat.
-- **`server_info`** (`/server`): Health check.
+- **`server_info`** (`/server`): Health check (`/health`: database and migration head, 200 or 503) and liveness (`/live`).
 - **`general`**: Serves the React `index.html` and Vite public assets.
 
 See [api_reference.md](api_reference.md) for the endpoint catalog.
@@ -48,7 +48,7 @@ See [api_reference.md](api_reference.md) for the endpoint catalog.
 ## 3. Database & Models
 
 ### Relational Mapping
-The system uses **SQLite** via the SQLAlchemy ORM in both development and production (`backend/instance/dev_users.db` / `prod_users.db`). No Postgres driver is installed, so `DATABASE_URL` must point at a SQLite database. The relational schema is extensive, with core entities including:
+The system uses **SQLite** via the SQLAlchemy ORM in both development and production (`backend/instance/dev_users.db` / `prod_users.db`). No Postgres driver is installed, so `DATABASE_URL` must point at a SQLite database. Every SQLite connection runs in WAL mode with `synchronous=NORMAL` and a 2 s `busy_timeout` (a connect listener in `extensions.py`; see [infrastructure_and_devops.md](infrastructure_and_devops.md#sqlite-runtime-settings)). The relational schema is extensive, with core entities including:
 - **Users**: Core entity with password hashing (Werkzeug) and relationship links to projects, achievements, and messages.
 - **Conversations & Messages**: Real-time messaging entities with participant tracking.
 - **Projects & Challenges**: Student submission workflows.

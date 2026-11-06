@@ -200,7 +200,7 @@
 
 :where(.admin-users-page) .economy-info .duck-count {
     font-weight: 700;
-    color: var(--warning-color);
+    color: var(--warning-text);
     font-size: 0.95rem;
 }
 
@@ -253,7 +253,7 @@
     color: var(--slate-800);
 }
 
-.action-btn.adjust:hover { background: var(--amber-50); border-color: var(--accent-color); color: var(--warning-color); }
+.action-btn.adjust:hover { background: var(--amber-50); border-color: var(--accent-color); color: var(--warning-text); }
 .action-btn.pass:hover { background: var(--secondary-light); border-color: var(--indigo-200); color: var(--indigo-700); }
 .action-btn.delete:hover { background: var(--error-subtle); border-color: var(--error-light); color: var(--error-color); }
 
@@ -277,7 +277,7 @@
 }
 
 .bulk-conn-btn {
-    background: var(--success-color) !important;
+    background: var(--success-text) !important;
     color: var(--text-on-primary) !important;
     display: flex;
     align-items: center;
@@ -293,7 +293,7 @@
 }
 
 .action-btn-green {
-    color: var(--success-dark, var(--success-dark));
+    color: var(--success-text);
     border: 1px solid var(--success-color, var(--success-color));
     padding: 4px 8px;
     border-radius: 4px;

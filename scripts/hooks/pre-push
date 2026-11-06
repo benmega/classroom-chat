@@ -1,6 +1,6 @@
 #!/bin/sh
 # pre-push hook: runs Ruff and ESLint before any push reaches the remote.
-# Install with: powershell scripts/install-hooks.ps1
+# Install with: powershell scripts/install-hooks.ps1   (git config core.hooksPath scripts/hooks)
 # To bypass in an emergency: git push --no-verify
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -11,21 +11,25 @@ echo "  Run 'git push --no-verify' to bypass in emergencies." >&2
 echo "========================================================" >&2
 
 # ---- Ruff (Python) ---------------------------------------------------------
+# CI (lint.yml) lints backend/ only, so the hook does the same: linting the whole repo would
+# block pushes on files CI never looks at. The ruff settings live in the root pyproject.toml.
 echo "" >&2
 echo "--> Running Ruff..." >&2
-ruff check "$REPO_ROOT"
+(cd "$REPO_ROOT/backend" && ruff check .)
 RUFF_EXIT=$?
 if [ $RUFF_EXIT -ne 0 ]; then
     echo "" >&2
     echo "PUSH BLOCKED: Ruff found errors. Fix them, then push again." >&2
-    echo "  Tip: 'ruff check --fix .' will auto-fix many issues." >&2
+    echo "  Tip: 'ruff check --fix .' (from backend/) will auto-fix many issues." >&2
     exit $RUFF_EXIT
 fi
 echo "    Ruff: OK" >&2
 
 # ---- ESLint (JavaScript/JSX) -----------------------------------------------
+# --cache keeps the second and later pushes fast; the cache lives under node_modules so it
+# never shows up in git status.
 echo "--> Running ESLint..." >&2
-cd "$REPO_ROOT/frontend" && npm run lint --silent
+(cd "$REPO_ROOT/frontend" && npm run lint --silent -- --cache --cache-location node_modules/.cache/eslint/)
 ESLINT_EXIT=$?
 if [ $ESLINT_EXIT -ne 0 ]; then
     echo "" >&2

@@ -30,6 +30,7 @@ import '../../assets/css/sprite.css';
 import '../Profile/Profile.css';
 import './ParentReportCard.css';
 import Skeleton from '../../components/common/Skeleton';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 ChartJS.register(
     CategoryScale,
@@ -61,6 +62,7 @@ function timeAgo(isoString) {
 }
 
 const ParentReportCard = () => {
+    useDocumentTitle('Progress report');
     const { studentId } = useParams();
     const navigate = useNavigate();
     const [reportData, setReportData] = useState(null);

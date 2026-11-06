@@ -508,7 +508,7 @@
 
 .event-item--challenge .event-icon {
     background: rgba(16, 185, 129, 0.15);
-    color: var(--success-color);
+    color: var(--success-text);
 }
 
 .event-body {

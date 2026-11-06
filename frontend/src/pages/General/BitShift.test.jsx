@@ -16,7 +16,7 @@ vi.mock('react-hot-toast', () => ({
     default: { success: vi.fn(), error: vi.fn() },
 }));
 
-const mockCheckAuth = vi.fn();
+const mockRefreshUser = vi.fn();
 
 // Trade a single duck: 1 decimal = bit 0 on.
 const prepareValidTrade = () => {
@@ -28,7 +28,7 @@ const submit = () => fireEvent.submit(document.querySelector('form.trade-form'))
 describe('BitShift', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        useAuthStore.setState({ user: { id: 1, username: 'kid', duck_balance: 20 }, checkAuth: mockCheckAuth });
+        useAuthStore.setState({ user: { id: 1, username: 'kid', duck_balance: 20 }, refreshUser: mockRefreshUser });
     });
 
     it('rejects a trade of zero ducks without calling the server', () => {
@@ -58,7 +58,7 @@ describe('BitShift', () => {
 
         submit();
 
-        await waitFor(() => expect(mockCheckAuth).toHaveBeenCalled());
+        await waitFor(() => expect(mockRefreshUser).toHaveBeenCalled());
         expect(client.post).toHaveBeenCalledWith(
             '/duck_trade/submit_trade',
             { digital_ducks: 1, bit_ducks: [1, 0, 0, 0, 0, 0, 0, 0], byte_ducks: Array(8).fill(0) },
@@ -75,7 +75,7 @@ describe('BitShift', () => {
         submit();
 
         await waitFor(() => expect(toast.error).toHaveBeenCalledWith('You already have a pending trade.'));
-        expect(mockCheckAuth).not.toHaveBeenCalled();
+        expect(mockRefreshUser).not.toHaveBeenCalled();
     });
 
     it('falls back to a generic message when the turned-down trade carries no text', async () => {
@@ -253,7 +253,7 @@ describe('BitShift', () => {
 
             submit();
 
-            await waitFor(() => expect(mockCheckAuth).toHaveBeenCalledTimes(1));
+            await waitFor(() => expect(mockRefreshUser).toHaveBeenCalledTimes(1));
             expect(confetti).toHaveBeenCalledTimes(1);
             // The form empties in the render that follows
             await waitFor(() => expect(document.getElementById('digital_ducks')).toHaveValue(0));

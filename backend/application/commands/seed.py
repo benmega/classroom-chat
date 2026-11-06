@@ -19,10 +19,27 @@ def generate_kebab_slug(text):
 
 
 @click.command("seed")
+@click.option(
+    "--overwrite",
+    is_flag=True,
+    default=False,
+    help=(
+        "Make the seed files the source of truth for challenges and standard "
+        "project templates: rewrite the rows that already exist from the files, "
+        "which discards edits made in the admin UI. Without it, only missing "
+        "rows are added."
+    ),
+)
 @with_appcontext
-def seed_command():
+def seed_command(overwrite):
     """Seed the database from the CSV files in backend/instance/migration: courses,
-    achievements, course instances and challenges."""
+    achievements, course instances and challenges, then the standard project
+    templates and the student tests.
+
+    Challenges and standard project templates are insert-only: a row that already
+    exists (a challenge is matched by its slug, a template by its name) is left as
+    it is, so values edited in the admin UI survive every deploy. Pass --overwrite
+    to rewrite those rows from the files instead."""
     from application.extensions import db
     from application.models.challenge import Challenge
     from application.models.classroom import Classroom
@@ -114,6 +131,7 @@ def seed_command():
         click.echo(f"Seeding challenges from {challenges_csv}...")
         inserted_challenges = 0
         updated_challenges = 0
+        unchanged_challenges = 0
         skipped_challenges = 0
         try:
             with open(challenges_csv, mode="r", encoding="utf-8") as f:
@@ -133,20 +151,16 @@ def seed_command():
                     course_id = row.get("course_id")
 
                     # The slug alone identifies a challenge: levels may share a
-                    # name, even inside one domain. Each row gets a savepoint, so
-                    # a row the database rejects (a schema that still enforces
-                    # unique names) is skipped instead of failing the whole file.
+                    # name, even inside one domain. A slug that is already in the
+                    # database is left as it is (an admin may have edited the row)
+                    # unless --overwrite makes the file the source of truth. Each
+                    # row gets a savepoint, so a row the database rejects (a schema
+                    # that still enforces unique names) is skipped instead of
+                    # failing the whole file.
                     try:
                         with db.session.begin_nested():
                             challenge = Challenge.query.filter_by(slug=csv_slug).first()
-                            if challenge:
-                                challenge.name = name
-                                challenge.domain = domain
-                                challenge.difficulty = difficulty
-                                challenge.value = value
-                                challenge.description = description
-                                challenge.course_id = course_id
-                            else:
+                            if challenge is None:
                                 db.session.add(
                                     Challenge(
                                         name=name,
@@ -159,19 +173,36 @@ def seed_command():
                                         is_active=True,
                                     )
                                 )
+                                outcome = "inserted"
+                            elif overwrite and _overwrite_fields(
+                                challenge,
+                                name=name,
+                                domain=domain,
+                                difficulty=difficulty,
+                                value=value,
+                                description=description,
+                                course_id=course_id,
+                            ):
+                                outcome = "updated"
+                            else:
+                                outcome = "unchanged"
                     except IntegrityError as e:
                         click.echo(f"Skipping challenge '{csv_slug}': {e.orig}")
                         skipped_challenges += 1
                         continue
 
-                    if challenge:
+                    if outcome == "inserted":
+                        inserted_challenges += 1
+                    elif outcome == "updated":
                         updated_challenges += 1
                     else:
-                        inserted_challenges += 1
+                        unchanged_challenges += 1
 
             db.session.commit()
             summary = (
-                f"Successfully inserted {inserted_challenges} and updated {updated_challenges} challenges."
+                f"Successfully inserted {inserted_challenges} and updated"
+                f" {updated_challenges} challenges"
+                f" ({unchanged_challenges} unchanged)."
             )
             if skipped_challenges:
                 summary += (
@@ -194,21 +225,29 @@ def seed_command():
     click.echo("Seeding standard project templates...")
     inserted_projects = 0
     updated_projects = 0
+    unchanged_projects = 0
     try:
+        # Insert-only, keyed on the unique name: a template that exists keeps the
+        # chapter and description an admin gave it, unless --overwrite is passed.
         for name, desc, chapter in PROJECT_SEED_DATA:
             pt = ProjectTemplate.query.filter_by(name=name).first()
-            if not pt:
-                pt = ProjectTemplate(name=name, description=desc, chapter=chapter)
-                db.session.add(pt)
+            if pt is None:
+                db.session.add(
+                    ProjectTemplate(name=name, description=desc, chapter=chapter)
+                )
                 inserted_projects += 1
-            else:
-                pt.chapter = chapter
-                pt.description = desc
+            elif overwrite and _overwrite_fields(
+                pt, chapter=chapter, description=desc
+            ):
                 updated_projects += 1
+            else:
+                unchanged_projects += 1
 
         db.session.commit()
         click.echo(
-            f"Successfully inserted {inserted_projects} and updated {updated_projects} project templates."
+            f"Successfully inserted {inserted_projects} and updated"
+            f" {updated_projects} project templates"
+            f" ({unchanged_projects} unchanged)."
         )
     except Exception as e:
         db.session.rollback()
@@ -242,6 +281,20 @@ def seed_command():
     except Exception as e:
         db.session.rollback()
         click.echo(f"Error seeding student tests: {e}")
+
+
+def _overwrite_fields(row, **values):
+    """Set each given attribute of ``row`` from ``values``; True if any changed.
+
+    Only a value that differs is assigned, so a row that already matches the seed
+    file is not dirtied and counts as unchanged.
+    """
+    changed = False
+    for attribute, value in values.items():
+        if getattr(row, attribute) != value:
+            setattr(row, attribute, value)
+            changed = True
+    return changed
 
 
 def seed_courses(csv_path):

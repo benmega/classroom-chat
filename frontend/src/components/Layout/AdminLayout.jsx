@@ -21,10 +21,17 @@ import {
 import useAuthStore from '../../store/useAuthStore';
 import useSidebar from '../../hooks/useSidebar';
 import useLogout from '../../hooks/useLogout';
+import useMediaQuery from '../../hooks/useMediaQuery';
+import useModalA11y from '../../hooks/useModalA11y';
 import client from '../../api/client';
 import ContentLoader from '../common/ContentLoader';
+import SkipLink from '../common/SkipLink';
+import { ADMIN_SIDEBAR_ID, MAIN_CONTENT_ID } from './layoutIds';
 import '../admin/AdminShared.css';
 import './AdminLayout.css';
+
+// At this width and below the rail becomes a slide-in drawer (AdminLayout.css); above it, it is always on screen.
+const DRAWER_QUERY = '(max-width: 800px)';
 
 const AdminLayout = ({ children }) => {
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -65,11 +72,31 @@ const AdminLayout = ({ children }) => {
     // Close mobile menu on route change. Only a changed path closes it: the sidebar context hands out a
     // new setSidebarOpen on every render, so closing on each run would shut the menu as soon as it opened.
     const lastPathname = useRef(location.pathname);
+    const mainRef = useRef(null);
     useEffect(() => {
         if (lastPathname.current === location.pathname) return;
         lastPathname.current = location.pathname;
         setSidebarOpen(false);
+        // The page behind the link is new content: move focus to it (not on the first render, and not when the
+        // page already put focus inside itself).
+        const main = mainRef.current;
+        if (main && !main.contains(document.activeElement)) main.focus({ preventScroll: true });
     }, [location.pathname, setSidebarOpen]);
+
+    // Only the drawer layout hides the sidebar, so only there does a closed sidebar leave the tab order (inert)
+    // and an open one behave like a dialog: Escape closes, Tab stays inside, focus returns to the hamburger.
+    const isDrawer = useMediaQuery(DRAWER_QUERY);
+    const sidebarRef = useRef(null);
+    const closeSidebar = () => setSidebarOpen(false);
+    useModalA11y({ isOpen: isDrawer && Boolean(isSidebarOpen), onClose: closeSidebar, containerRef: sidebarRef });
+
+    // Resizing up to the desktop layout leaves no drawer to be open; close it so it does not reappear half-open
+    // when the window shrinks again.
+    const wasDrawer = useRef(isDrawer);
+    useEffect(() => {
+        if (wasDrawer.current && !isDrawer) setSidebarOpen(false);
+        wasDrawer.current = isDrawer;
+    }, [isDrawer, setSidebarOpen]);
 
     if (!isAuthenticated || user?.role !== 'admin') {
         return (
@@ -105,11 +132,17 @@ const AdminLayout = ({ children }) => {
 
     return (
         <div className={`admin-app-container ${isSidebarOpen ? 'mobile-open' : ''}`}>
-            {/* Mobile Overlay */}
-            <div role="button" tabIndex={0} className="admin-mobile-overlay" onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.currentTarget.click(); } }} onClick={() => setSidebarOpen(false)}></div>
+            <SkipLink targetRef={mainRef} />
 
-            {/* Sidebar */}
-            <aside className="admin-sidebar">
+            {/* Mobile Overlay: a real button so assistive tech can find "Close menu". Out of the tab order on
+                purpose: the close button in the sidebar and Escape do the same for a keyboard user. */}
+            <button type="button" tabIndex={-1} aria-label="Close menu" className="admin-mobile-overlay"
+                onClick={closeSidebar}></button>
+
+            {/* Sidebar. inert while it is a closed drawer: it is slid off-screen, not removed, so Tab would
+                otherwise walk through its links. */}
+            <aside id={ADMIN_SIDEBAR_ID} ref={sidebarRef} tabIndex={-1} className="admin-sidebar"
+                inert={isDrawer && !isSidebarOpen}>
                 {/* Logo */}
                 <Link
                     className="admin-rail-logo"
@@ -125,8 +158,9 @@ const AdminLayout = ({ children }) => {
                 {/* Mobile close button */}
                 <button
                     className="admin-mobile-close mobile-only"
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={closeSidebar}
                     aria-label="Close sidebar"
+                    data-autofocus
                 >
                     <X size={22} />
                 </button>
@@ -209,6 +243,7 @@ const AdminLayout = ({ children }) => {
                     className="admin-hamburger"
                     onClick={() => setSidebarOpen(true)}
                     aria-label="Open Sidebar"
+                    aria-controls={ADMIN_SIDEBAR_ID}
                     aria-expanded={Boolean(isSidebarOpen)}
                 >
                     <Menu size={24} />
@@ -216,7 +251,7 @@ const AdminLayout = ({ children }) => {
             </div>
 
             {/* Main Content Area */}
-            <main className="admin-body">
+            <main className="admin-body" id={MAIN_CONTENT_ID} ref={mainRef} tabIndex={-1}>
                 <Suspense fallback={<ContentLoader />}>
                     {children}
                 </Suspense>

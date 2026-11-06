@@ -163,7 +163,7 @@
 }
 
 .goal-check-icon {
-    color: var(--success-color);
+    color: var(--success-text);
     flex-shrink: 0;
     margin-top: 2px;
 }
@@ -283,7 +283,7 @@
 }
 
 .tips-icon {
-    color: var(--warning-color);
+    color: var(--warning-text);
     flex-shrink: 0;
 }
 

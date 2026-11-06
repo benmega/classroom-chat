@@ -36,6 +36,7 @@ import toast from 'react-hot-toast';
 
 // Hooks
 import { useUsersManagement, USERS_PER_PAGE } from '../../hooks/useUsersManagement';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const TABS = [
     { label: 'All', value: '' },
@@ -159,6 +160,7 @@ const UserRowActions = ({ u, setModalUser, setActiveModal, handleToggleChat, han
 };
 
 const Users = () => {
+    useDocumentTitle('Users · Admin');
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 

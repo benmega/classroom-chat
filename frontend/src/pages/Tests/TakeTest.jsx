@@ -8,6 +8,7 @@ import useAuthStore from '../../store/useAuthStore';
 import DiagramFrame from '../../components/quiz/DiagramFrame';
 import Skeleton from '../../components/common/Skeleton';
 import './TakeTest.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const SAVE_DEBOUNCE_MS = 800;
 const SAVE_INTERVAL_MS = 15000;
@@ -66,6 +67,7 @@ const Notice = ({ children }) => (
 );
 
 const TakeTest = () => {
+    useDocumentTitle('Take a test');
     const { slug } = useParams();
     const navigate = useNavigate();
 
@@ -114,7 +116,7 @@ const TakeTest = () => {
         (id) => {
             lockedRef.current = true;
             // A first attempt pays ducks: refresh the user so the header balance shows them.
-            useAuthStore.getState().checkAuth(true);
+            useAuthStore.getState().refreshUser();
             navigate(`/tests/results/${id}`, { replace: true });
         },
         [navigate]

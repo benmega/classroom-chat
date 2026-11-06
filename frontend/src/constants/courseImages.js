@@ -1,3 +1,8 @@
+// One shared 800px banner (about 60 KB) for every course without dedicated art. The full-size original
+// is kept in assets-src/courses/ and is not served. Swap a course onto its own file by pointing its key
+// at a new path below.
+const COURSE_DEFAULT_IMAGE = '/images/courses/course-default.webp';
+
 export const COURSE_IMAGES = {
     // Official CodeCombat Course Banners
     'cs-1': '/images/courses/cs1.png',
@@ -44,28 +49,28 @@ export const COURSE_IMAGES = {
     'ozaria-4': '/images/courses/ozaria2.jpg',
 
     // 3D Modeling (no dedicated art yet - reuse the generic classroom banner)
-    '3d-1': '/images/courses/codeai.png',
-    '3d1': '/images/courses/codeai.png',
-    '3d-2': '/images/courses/codeai.png',
-    '3d2': '/images/courses/codeai.png',
+    '3d-1': COURSE_DEFAULT_IMAGE,
+    '3d1': COURSE_DEFAULT_IMAGE,
+    '3d-2': COURSE_DEFAULT_IMAGE,
+    '3d2': COURSE_DEFAULT_IMAGE,
 
     // Official Code.org / CodeAI Banner
-    'code-org': '/images/courses/codeai.png',
-    'codeorg': '/images/courses/codeai.png',
-    'codeai': '/images/courses/codeai.png',
-    'code-ai': '/images/courses/codeai.png',
-    'express-course': '/images/courses/codeai.png',
-    'cs-discoveries': '/images/courses/codeai.png',
-    'ai-for-oceans': '/images/courses/codeai.png',
+    'code-org': COURSE_DEFAULT_IMAGE,
+    'codeorg': COURSE_DEFAULT_IMAGE,
+    'codeai': COURSE_DEFAULT_IMAGE,
+    'code-ai': COURSE_DEFAULT_IMAGE,
+    'express-course': COURSE_DEFAULT_IMAGE,
+    'cs-discoveries': COURSE_DEFAULT_IMAGE,
+    'ai-for-oceans': COURSE_DEFAULT_IMAGE,
 
-    // Code.org 2024 Course A-F (each gets its own copy of the CodeAI banner
-    // so future per-course art can be swapped in independently)
-    'coursea-2024': '/images/courses/coursea.png',
-    'courseb-2024': '/images/courses/courseb.png',
-    'coursec-2024': '/images/courses/coursec.png',
-    'coursed-2024': '/images/courses/coursed.png',
-    'coursee-2024': '/images/courses/coursee.png',
-    'coursef-2024': '/images/courses/coursef.png',
+    // Code.org 2024 Course A-F (all share the default banner; give a course its own file here
+    // when it has art of its own)
+    'coursea-2024': COURSE_DEFAULT_IMAGE,
+    'courseb-2024': COURSE_DEFAULT_IMAGE,
+    'coursec-2024': COURSE_DEFAULT_IMAGE,
+    'coursed-2024': COURSE_DEFAULT_IMAGE,
+    'coursee-2024': COURSE_DEFAULT_IMAGE,
+    'coursef-2024': COURSE_DEFAULT_IMAGE,
 };
 
 // Domain default fallback images
@@ -74,10 +79,10 @@ export const DOMAIN_DEFAULT_IMAGES = {
     'codecombat': '/images/courses/cs1.png',
     'ozaria.com': '/images/courses/ozaria1.png',
     'ozaria': '/images/courses/ozaria1.png',
-    'studio.code.org': '/images/courses/codeai.png',
-    'code.org': '/images/courses/codeai.png',
-    'codeai': '/images/courses/codeai.png',
-    '3d-modeling': '/images/courses/codeai.png',
+    'studio.code.org': COURSE_DEFAULT_IMAGE,
+    'code.org': COURSE_DEFAULT_IMAGE,
+    'codeai': COURSE_DEFAULT_IMAGE,
+    '3d-modeling': COURSE_DEFAULT_IMAGE,
 };
 
 export const getCourseHeaderImage = (courseId, courseName = '', domain = '') => {

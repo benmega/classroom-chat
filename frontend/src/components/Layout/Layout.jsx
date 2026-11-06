@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, Package, HelpCircle, User } from 'lucide-react';
 
@@ -9,11 +9,13 @@ import Tutorial from '../common/Tutorial';
 import HamburgerIcon from '../common/HamburgerIcon';
 import ContactTeacherModal from '../common/ContactTeacherModal';
 import ContentLoader from '../common/ContentLoader';
+import SkipLink from '../common/SkipLink';
 
 // Sub-components
 import ParentNavRail from './ParentNavRail';
 import DesktopNavRail from './DesktopNavRail';
 import MobileSidebar from './MobileSidebar';
+import { MAIN_CONTENT_ID, MOBILE_SIDEBAR_ID } from './layoutIds';
 
 // Hooks
 import { useLayout } from '../../hooks/useLayout';
@@ -34,8 +36,21 @@ const Layout = ({ children }) => {
     const isParent = user?.role === 'parent';
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
+    // <main> is remounted for every path (key below), so a route change would leave a keyboard or screen reader
+    // user on a link that no longer exists. Move focus to the new page instead, but not on the first render,
+    // and not when the page already put focus inside itself (an autofocused field).
+    const mainRef = useRef(null);
+    const lastPathname = useRef(location.pathname);
+    useEffect(() => {
+        if (lastPathname.current === location.pathname) return;
+        lastPathname.current = location.pathname;
+        const main = mainRef.current;
+        if (main && !main.contains(document.activeElement)) main.focus({ preventScroll: true });
+    }, [location.pathname]);
+
     return (
         <div className="app-container">
+            <SkipLink targetRef={mainRef} />
             {isAuthenticated && <Tutorial />}
             
             {/* Desktop Navigation Rails */}
@@ -55,6 +70,7 @@ const Layout = ({ children }) => {
                                 className="hamburger-toggle mobile-only" 
                                 onClick={toggleSidebar}
                                 aria-label="Toggle Sidebar"
+                                aria-controls={MOBILE_SIDEBAR_ID}
                                 aria-expanded={isSidebarOpen}
                             >
                                 <Menu size={24} />
@@ -134,7 +150,7 @@ const Layout = ({ children }) => {
                     </div>
                 </header>
 
-                <main key={location.pathname} className={`${isChatPage ? 'main-full' : ''} animate-page-entry`}>
+                <main key={location.pathname} ref={mainRef} id={MAIN_CONTENT_ID} tabIndex={-1} className={`${isChatPage ? 'main-full' : ''} animate-page-entry`}>
                     <Suspense fallback={<ContentLoader />}>
                         {children}
                     </Suspense>

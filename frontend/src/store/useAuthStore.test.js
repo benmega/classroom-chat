@@ -366,7 +366,7 @@ describe('useAuthStore', () => {
       http.get('*/user/api/auth/status', () => HttpResponse.json({ data: { logged_in: false } }))
     );
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
-    expect(resetSocket).not.toHaveBeenCalled();
+    resetSocket.mockClear();
 
     await useAuthStore.getState().checkAuth();
 
@@ -376,6 +376,7 @@ describe('useAuthStore', () => {
   it('discards the chat socket when the 401 interceptor clears the session', async () => {
     server.use(http.get('*/some/protected', () => new HttpResponse(null, { status: 401 })));
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
+    resetSocket.mockClear();
 
     await expect(client.get('/some/protected')).rejects.toThrow();
 
@@ -383,13 +384,173 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
   });
 
+  it('discards the chat socket on login too, so a socket refused while anonymous is never reused', async () => {
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+
+    await useAuthStore.getState().login('testuser', 'password123');
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(resetSocket).toHaveBeenCalledTimes(1);
+  });
+
+  it('discards the chat socket when an auth check signs a user in', async () => {
+    await useAuthStore.getState().checkAuth();
+
+    expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    expect(resetSocket).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps the chat socket while the session lives', async () => {
     useAuthStore.setState({ isAuthenticated: true, user: { id: 1 } });
     useAuthStore.setState({ unreadCount: 3 });
+    resetSocket.mockClear();
     await useAuthStore.getState().checkAuth(true);
+    await useAuthStore.getState().refreshUser();
 
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
     expect(resetSocket).not.toHaveBeenCalled();
+  });
+
+  describe('refreshUser', () => {
+    const signedIn = { id: 1, username: 'testuser', role: 'student', duck_balance: 5 };
+
+    beforeEach(() => {
+      // An override saved by an earlier test would win over the progress computed from the challenges
+      localStorage.removeItem('hamburger_override_testuser');
+      useAuthStore.setState({ user: signedIn, isAuthenticated: true, isLoading: false, hamburgerProgress: 0.3 });
+      resetSocket.mockClear();
+    });
+
+    afterEach(() => {
+      localStorage.removeItem('hamburger_override_testuser');
+    });
+
+    it('swaps in the fresh user and recomputes the hamburger progress', async () => {
+      server.use(
+        http.get('*/user/api/auth/status', () => HttpResponse.json({
+          data: { logged_in: true, user: { ...signedIn, duck_balance: 9, completed_challenges_count: 4 } },
+        }))
+      );
+
+      await useAuthStore.getState().refreshUser();
+
+      const state = useAuthStore.getState();
+      expect(state.user.duck_balance).toBe(9);
+      expect(state.user).not.toBe(signedIn);
+      expect(state.isAuthenticated).toBe(true);
+      expect(state.hamburgerProgress).toBeCloseTo(0.4);
+    });
+
+    it('applies a saved hamburger override like checkAuth does', async () => {
+      localStorage.setItem('hamburger_override_testuser', '0.8');
+
+      await useAuthStore.getState().refreshUser();
+
+      expect(useAuthStore.getState().hamburgerProgress).toBe(0.8);
+    });
+
+    it('never shows the loader', async () => {
+      const seen = [];
+      const unsubscribe = useAuthStore.subscribe((state) => seen.push(state.isLoading));
+
+      await useAuthStore.getState().refreshUser();
+      unsubscribe();
+
+      expect(seen.length).toBeGreaterThan(0);
+      expect(seen.every((isLoading) => isLoading === false)).toBe(true);
+    });
+
+    it.each([
+      ['a network error', () => HttpResponse.error()],
+      ['a 502 from the proxy', () => new HttpResponse(null, { status: 502 })],
+      ['a 503', () => new HttpResponse(null, { status: 503 })],
+      ['a 500 from the status route', () => HttpResponse.json({ data: { logged_in: false } }, { status: 500 })],
+      ['a body without data', () => HttpResponse.json({})],
+    ])('keeps the session when the request fails with %s', async (_name, respond) => {
+      server.use(http.get('*/user/api/auth/status', respond));
+
+      await useAuthStore.getState().refreshUser();
+
+      const state = useAuthStore.getState();
+      expect(state.isAuthenticated).toBe(true);
+      expect(state.user).toBe(signedIn);
+      expect(state.isServerOffline).toBe(false);
+      expect(state.hamburgerProgress).toBe(0.3);
+      expect(resetSocket).not.toHaveBeenCalled();
+    });
+
+    it('keeps the session when the request times out', async () => {
+      const getSpy = vi.spyOn(client, 'get').mockRejectedValueOnce(
+        Object.assign(new Error('timeout of 10000ms exceeded'), { code: 'ECONNABORTED' })
+      );
+
+      await useAuthStore.getState().refreshUser();
+      getSpy.mockRestore();
+
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
+      expect(useAuthStore.getState().user).toBe(signedIn);
+    });
+
+    it('does not reject, so call sites need no try/catch', async () => {
+      server.use(http.get('*/user/api/auth/status', () => HttpResponse.error()));
+
+      await expect(useAuthStore.getState().refreshUser()).resolves.toBeUndefined();
+    });
+
+    it('still signs the user out when the server says the session is gone', async () => {
+      server.use(http.get('*/user/api/auth/status', () => HttpResponse.json({ data: { logged_in: false } })));
+
+      await useAuthStore.getState().refreshUser();
+
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      expect(useAuthStore.getState().user).toBeNull();
+      expect(resetSocket).toHaveBeenCalledTimes(1);
+    });
+
+    it('drops an answer that arrives after the user signed out', async () => {
+      let answer;
+      server.use(http.get('*/user/api/auth/status', async () => {
+        await new Promise((resolve) => { answer = resolve; });
+        return HttpResponse.json({ data: { logged_in: true, user: { ...signedIn, duck_balance: 99 } } });
+      }));
+
+      const pending = useAuthStore.getState().refreshUser();
+      await vi.waitFor(() => expect(answer).toBeDefined());
+      useAuthStore.getState().clearSession();
+      answer();
+      await pending;
+
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      expect(useAuthStore.getState().user).toBeNull();
+    });
+  });
+
+  describe('checkAuth is the session check', () => {
+    it('still signs a failing session out and flags the server offline, in the background too', async () => {
+      useAuthStore.setState({ user: { id: 1, username: 'testuser' }, isAuthenticated: true });
+      server.use(http.get('*/user/api/auth/status', () => HttpResponse.error()));
+
+      await useAuthStore.getState().checkAuth(true);
+
+      const state = useAuthStore.getState();
+      expect(state.isAuthenticated).toBe(false);
+      expect(state.user).toBeNull();
+      expect(state.isServerOffline).toBe(true);
+    });
+
+    it('shows the loader only when it is not a background check', async () => {
+      useAuthStore.setState({ isLoading: false });
+      const seen = [];
+      const unsubscribe = useAuthStore.subscribe((state) => seen.push(state.isLoading));
+
+      await useAuthStore.getState().checkAuth(true);
+      expect(seen).not.toContain(true);
+
+      await useAuthStore.getState().checkAuth();
+      unsubscribe();
+      expect(seen).toContain(true);
+      expect(useAuthStore.getState().isLoading).toBe(false);
+    });
   });
 
   it('checkAuth sets isServerOffline to true on 502 Bad Gateway', async () => {

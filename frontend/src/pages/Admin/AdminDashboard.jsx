@@ -36,6 +36,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 import { useAdminDashboard } from '../../hooks/useAdminDashboard';
 import { getChartConfig, chartOptions } from './chartConfig';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 ChartJS.register(
     CategoryScale,
@@ -53,6 +54,7 @@ ChartJS.register(
 const MAX_DUCK_MULTIPLIER = 100;
 
 const AdminDashboard = () => {
+    useDocumentTitle('Dashboard · Admin');
     const navigate = useNavigate();
     const [newWord, setNewWord] = useState('');
     const [banReason, setBanReason] = useState('');

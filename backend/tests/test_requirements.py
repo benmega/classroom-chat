@@ -26,7 +26,6 @@ IMPORT_TO_DIST = {
     "PIL": "pillow",
     "dotenv": "python-dotenv",
     "factory": "factory-boy",
-    "jose": "python-jose",
 }
 
 # Imported directly by the code but installed as a dependency of another listed
@@ -41,7 +40,7 @@ PROVIDED_BY = {
 # Runtime requirements that no module under application/ or main.py imports, so the
 # "is it used" check below needs to be told why each one is still needed.
 NOT_IMPORTED = {
-    "cryptography": "the RSA/EC backend python-jose uses whenever it can be imported",
+    "cryptography": "no code imports it since python-jose (its only user) was removed; kept at its advisory floor until the server is confirmed not to need it",
     "gevent-websocket": "loaded by the gunicorn worker class named in the service file",
     "gunicorn": "the production server, started by the service file",
 }
@@ -50,9 +49,11 @@ NOT_IMPORTED = {
 # runtime requirement must not allow anything older.
 ADVISORY_FLOORS = {
     "flask": "3.1.3",
-    "werkzeug": "3.1.6",
+    "werkzeug": "3.1.9",
     "flask-cors": "6.0.2",
     "cryptography": "50.0.0",
+    "pillow": "13.0.0",
+    "python-dotenv": "1.2.2",
 }
 
 # Test and lint tooling that must never ship in the production requirements.

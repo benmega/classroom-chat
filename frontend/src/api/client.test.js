@@ -10,7 +10,7 @@ vi.mock('react-hot-toast', () => ({ default: { error: vi.fn() } }));
 // The 401 interceptor is what turns an expired session into the logged-out UI.
 // The heartbeat endpoint answers 401 when the session is gone, so it relies on it.
 describe('api client', () => {
-  const originalCheckAuth = useAuthStore.getState().checkAuth;
+  const originalRefreshUser = useAuthStore.getState().refreshUser;
 
   beforeEach(() => {
     window.history.pushState({}, '', '/');
@@ -25,7 +25,7 @@ describe('api client', () => {
   });
 
   afterEach(() => {
-    useAuthStore.setState({ checkAuth: originalCheckAuth });
+    useAuthStore.setState({ refreshUser: originalRefreshUser });
   });
 
   const settle = () => new Promise((resolve) => setTimeout(resolve, 25));
@@ -145,7 +145,7 @@ describe('api client', () => {
       });
 
     beforeEach(() => {
-      useAuthStore.setState({ checkAuth: vi.fn() });
+      useAuthStore.setState({ refreshUser: vi.fn() });
     });
 
     it('tells the user the session expired instead of leaving it to the call site', async () => {
@@ -174,7 +174,7 @@ describe('api client', () => {
 
       await expect(client.post('/some/form', {})).rejects.toMatchObject({ response: { status: 400 } });
 
-      await vi.waitFor(() => expect(useAuthStore.getState().checkAuth).toHaveBeenCalledWith(true));
+      await vi.waitFor(() => expect(useAuthStore.getState().refreshUser).toHaveBeenCalledTimes(1));
     });
 
     it('also recognises a JSON error body that names the CSRF token', async () => {
@@ -196,7 +196,7 @@ describe('api client', () => {
       await settle();
 
       expect(toast.error).not.toHaveBeenCalled();
-      expect(useAuthStore.getState().checkAuth).not.toHaveBeenCalled();
+      expect(useAuthStore.getState().refreshUser).not.toHaveBeenCalled();
     });
 
     it('does not mistake a CSRF mention in a non-400 response for an expired token', async () => {

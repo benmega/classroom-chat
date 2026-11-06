@@ -24,7 +24,8 @@ classroom-chat/
 │   ├── tools/                  # Manual maintenance helpers: scrape/asset scripts (none run by deploy.sh)
 │   ├── main.py                  # WSGI entrypoint (`gunicorn -w 1 main:app`)
 │   ├── requirements.txt        # Runtime dependencies (what deploy.sh installs)
-│   ├── requirements-dev.txt    # Runtime + test/lint tooling (pytest, ruff, mypy)
+│   ├── requirements-dev.txt    # Runtime + test tooling (pytest); includes requirements-lint.txt
+│   ├── requirements-lint.txt   # Pinned ruff and mypy (lint.yml installs this file on its own)
 │   └── requirements-tools.txt  # Runtime + extras for the manual scripts (reportlab, qrcode, playwright)
 ├── frontend/
 │   ├── src/                    # React 19 + Vite SPA (current UI)
@@ -41,7 +42,8 @@ classroom-chat/
 ├── infrastructure/              # nginx config, Cognito CFN template, Lambda transcriber, DNS/db-sync scripts
 ├── docs/                        # This documentation
 ├── .agents/                     # AI-agent rules and skills (see docs/agentic_workflows.md)
-├── .github/workflows/           # CI: tests.yml, lint.yml, deploy.yml, deploy-frontend.yml, ai-*.yml
+├── .github/workflows/           # CI: tests.yml, lint.yml, pip-audit.yml, deploy.yml, deploy-frontend.yml, ai-coder.yml
+├── .github/dependabot.yml       # Weekly grouped dependency PRs (pip, npm, github-actions)
 ├── userData/                    # Uploaded user assets (profile pictures, project images, project_files/, submissions, certificates)
 └── deploy.sh                    # Production deploy script (migrations, health check, rollback)
 ```
@@ -72,6 +74,17 @@ classroom-chat/
 
 ---
 
+## Development Setup
+
+[`INSTALLATION.md`](INSTALLATION.md) has the full first-run walkthrough (virtualenv, `.env`, running both servers). These keep your checkout in line with CI:
+
+- **Backend**: `pip install -r requirements-dev.txt` from `backend/` on Python 3.11 (`.python-version`). The ruff and mypy versions CI uses are pinned in `requirements-lint.txt`.
+- **Frontend**: Node 22 (`frontend/.nvmrc`), then `npm ci` from `frontend/` (not `npm install`, which can rewrite the lockfile).
+- **Git hooks** (once per clone): `powershell scripts/install-hooks.ps1`. It runs `git config core.hooksPath scripts/hooks`, so the tracked `pre-push` hook (Ruff over `backend/`, ESLint over `frontend/`, the same as `lint.yml`) runs before every push, in every worktree of the clone. `git push --no-verify` skips it.
+- **Before opening a PR**: `powershell scripts/preflight.ps1` runs what CI runs (Ruff, mypy, the admin-auth and migration checks, pytest with the coverage floor, ESLint, Vitest with coverage, the production build, Playwright) plus a warning for images over 1 MB under `frontend/public/images`.
+
+---
+
 ## Coding Standards
 
 - Python: PEP 8, enforced by `ruff` (run `ruff check .` from `backend/`) and type-checked with `mypy` (CI runs `python -m mypy .`).
@@ -79,6 +92,16 @@ classroom-chat/
 - Keep the app's tone intact — see [`PERSONALITY_GUIDE.md`](../PERSONALITY_GUIDE.md) at the repo root before removing anything that looks like an "easter egg" (e.g. the duck quack sound in `useLayout.js`).
 - Prefer small, focused route modules — the `routes/admin/` split (dashboard, user_mgmt, project_routes, etc.) is the pattern to follow for new admin functionality rather than growing a single monolithic file.
 - Chat messages are sent only through the Socket.IO `send_message` event; put validation rules in its handler (`handle_send_message` in `application/socket_events.py`), not in an HTTP route.
+
+---
+
+## Seeding the database
+
+`flask seed` (run from `backend/` with `FLASK_APP=main.py`) loads the data that lives in files under version control; `deploy.sh` runs it on every deploy, so it must be safe to run repeatedly.
+
+- **Insert-only**: courses, achievements, course instances, challenges (`backend/instance/migration/level_seed_data.csv`, matched by slug) and the standard project templates (`application/commands/projects_data.py`, matched by name) are only created when missing. A row that already exists is never changed, so a challenge value or a template description edited in the admin UI survives every deploy. The output counts what was inserted, updated and left unchanged, for example `Successfully inserted 1 and updated 0 challenges (41 unchanged).`
+- **`flask seed --overwrite`**: use it when the files are the source of truth and the database should follow them again. It rewrites the existing challenges (name, domain, difficulty, value, description, course) and project templates (chapter, description) from the files, which **discards any edit made in the admin UI** to those fields. Rows it has no file for are never deleted, and `deploy.sh` never passes it. The flag does not touch courses, achievements, course instances, the 3D modeling track or the student tests; those follow their own rules, see [`infrastructure_and_devops.md`](infrastructure_and_devops.md#8-database-migrations) and [`student_tests.md`](student_tests.md).
+- **Renaming a challenge slug**: an admin can change a slug in the UI. The completion logs, project templates and level games that use the old slug move to the new one in the same transaction, and the rename is refused with a 409 when a student would end up with two logs for the same challenge. The seed file is not edited by that: if `level_seed_data.csv` still lists the old slug, the next `flask seed` adds a challenge with that slug again. Change the slug in the CSV in the same commit.
 
 ---
 

@@ -13,8 +13,10 @@ import './AdvancedPanel.css';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import Modal from '../../components/common/Modal';
 import { getErrorMessage } from '../../utils/apiError';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const AdvancedPanel = () => {
+    useDocumentTitle('Advanced panel · Admin');
     const navigate = useNavigate();
     const [logs, setLogs] = useState('');
     const [showLogModal, setShowLogModal] = useState(false);

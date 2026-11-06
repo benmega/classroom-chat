@@ -23,6 +23,7 @@ from application.routes.achievement_routes import (
 )
 from application.utilities.helper_functions import utcnow_naive
 from PIL import Image
+from sqlalchemy import event
 from sqlalchemy.exc import IntegrityError
 from tests.factories import (
     AchievementFactory,
@@ -2264,14 +2265,93 @@ def test_add_badge_failed_commit_removes_the_badge_and_rebuilds_the_sprite(mock_
 
 
 @patch(RUN_SPRITE)
-def test_add_badge_failed_flush_touches_no_file(mock_run, admin_session, badge_dir):
-    with patch("application.extensions.db.session.flush", side_effect=Exception("constraint")):
-        response = _add_with_badge(admin_session, "flush-fails", png_bytes())
+def test_add_badge_failed_insert_removes_the_badge_and_rebuilds_the_sprite(mock_run, admin_session, badge_dir):
+    """The row is written after the badge, so a database error at that point undoes the badge."""
+
+    def refuse(mapper, connection, target):
+        raise IntegrityError("INSERT", {}, Exception("UNIQUE constraint failed: achievements.slug"))
+
+    event.listen(Achievement, "before_insert", refuse)
+    try:
+        response = _add_with_badge(admin_session, "insert-fails", png_bytes())
+    finally:
+        event.remove(Achievement, "before_insert", refuse)
 
     assert response.status_code == 500
-    assert Achievement.query.filter_by(slug="flush-fails").first() is None
-    assert not badge_dir.exists()
-    mock_run.assert_not_called()
+    assert response.json["message"] == "Error saving the achievement."
+    assert Achievement.query.filter_by(slug="insert-fails").first() is None
+    assert _names(badge_dir) == []
+    assert mock_run.call_count == 2  # built with the badge, then again without it
+
+
+def _write_transaction_open_during_sprite_rebuild(mock_run):
+    """Make the mocked sprite rebuild record whether SQLite held a write transaction at that moment."""
+    seen = []
+
+    def record(*args, **kwargs):
+        # sqlite3 begins a transaction at the first INSERT or UPDATE, and that takes the
+        # write lock every other writer waits for. A SELECT does not begin one.
+        seen.append(db.session.connection().connection.dbapi_connection.in_transaction)
+
+    mock_run.side_effect = record
+    return seen
+
+
+@patch(RUN_SPRITE)
+def test_add_badge_rebuilds_the_sprite_before_any_write_transaction_opens(mock_run, admin_session, badge_dir):
+    seen = _write_transaction_open_during_sprite_rebuild(mock_run)
+
+    response = _add_with_badge(admin_session, "no-lock-held", png_bytes())
+
+    assert response.status_code == 200
+    assert seen == [False]
+    assert Achievement.query.filter_by(slug="no-lock-held").one().slug == "no-lock-held"
+
+
+@patch(RUN_SPRITE)
+def test_edit_badge_rebuilds_the_sprite_before_any_write_transaction_opens(
+    mock_run, admin_session, test_achievement, badge_dir
+):
+    seen = _write_transaction_open_during_sprite_rebuild(mock_run)
+
+    response = _edit_badge(admin_session, test_achievement, png_bytes(), name="Edited while unlocked")
+
+    assert response.status_code == 200
+    assert seen == [False]
+    db.session.expire_all()
+    assert db.session.get(Achievement, test_achievement.id).name == "Edited while unlocked"
+
+
+@patch(RUN_SPRITE)
+def test_edit_rename_rebuilds_the_sprite_before_any_write_transaction_opens(
+    mock_run, admin_session, test_achievement, badge_dir
+):
+    _put(badge_dir, f"{test_achievement.slug}.png", b"png bytes")
+    seen = _write_transaction_open_during_sprite_rebuild(mock_run)
+
+    response = _edit_badge(admin_session, test_achievement, slug="renamed-unlocked")
+
+    assert response.status_code == 200
+    assert seen == [False]
+
+
+@patch(RUN_SPRITE)
+def test_the_undo_sprite_rebuild_also_runs_outside_a_write_transaction(mock_run, admin_session, badge_dir):
+    seen = _write_transaction_open_during_sprite_rebuild(mock_run)
+
+    def fail_after_the_insert(mapper, connection, target):
+        raise Exception("DB Error")  # the INSERT has run: a write transaction is open
+
+    event.listen(Achievement, "after_insert", fail_after_the_insert)
+    try:
+        response = _add_with_badge(admin_session, "undo-unlocked", png_bytes())
+    finally:
+        event.remove(Achievement, "after_insert", fail_after_the_insert)
+
+    assert response.status_code == 500
+    assert Achievement.query.filter_by(slug="undo-unlocked").first() is None
+    # With the badge, then again once it was taken back: the rollback came first
+    assert seen == [False, False]
 
 
 @patch(RUN_SPRITE)

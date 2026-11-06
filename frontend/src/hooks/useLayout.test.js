@@ -211,6 +211,30 @@ describe('useLayout - heartbeat', () => {
     expect(heartbeatCalls()).toHaveLength(4);
   });
 
+  it('keeps the same loop when refreshUser() hands over a new object for the same user', () => {
+    const { rerender } = renderHook(() => useLayout());
+    expect(heartbeatCalls()).toHaveLength(1);
+
+    currentStoreState = { ...currentStoreState, user: { ...currentStoreState.user, duck_balance: 99 } };
+    rerender();
+    rerender();
+    // A restart would have sent one at once; the next one is still due on the original schedule
+    expect(heartbeatCalls()).toHaveLength(1);
+    act(() => {
+      vi.advanceTimersByTime(30000);
+    });
+    expect(heartbeatCalls()).toHaveLength(2);
+  });
+
+  it('starts over for a different user', () => {
+    const { rerender } = renderHook(() => useLayout());
+
+    currentStoreState = { ...currentStoreState, user: { id: 2, username: 'other' } };
+    rerender();
+
+    expect(heartbeatCalls()).toHaveLength(2);
+  });
+
   it('does not send heartbeats when logged out', () => {
     currentStoreState = { ...currentStoreState, user: null, isAuthenticated: false };
 
@@ -319,6 +343,30 @@ describe('useLayout - unread count', () => {
     await act(async () => {});
 
     expect(unreadCalls()).toHaveLength(0);
+  });
+
+  it('does not ask again when refreshUser() hands over a new object for the same user', async () => {
+    const { rerender } = renderHook(() => useLayout());
+    await waitFor(() => expect(unreadCalls()).toHaveLength(1));
+
+    // The setters are the same functions as before, as they are in the real store
+    const { setUnreadCount, setLastReadMessageId } = currentStoreState;
+    storeWith({ user: { id: 1, username: 'testuser', duck_balance: 99, role: 'student' }, setUnreadCount, setLastReadMessageId });
+    rerender();
+    rerender();
+    await act(async () => {});
+
+    expect(unreadCalls()).toHaveLength(1);
+  });
+
+  it('asks again for a different user', async () => {
+    const { rerender } = renderHook(() => useLayout());
+    await waitFor(() => expect(unreadCalls()).toHaveLength(1));
+
+    storeWith({ user: { id: 2, username: 'other', role: 'student' } });
+    rerender();
+
+    await waitFor(() => expect(unreadCalls()).toHaveLength(2));
   });
 
   it('logs a failed request and leaves the badge alone', async () => {

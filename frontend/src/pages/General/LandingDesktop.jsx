@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import LandingSlideshow from './LandingSlideshow';
 import './Landing.css';
 
 const LandingDesktop = () => {
@@ -39,16 +40,7 @@ const LandingDesktop = () => {
                     </div>
                     
                     <div className="hero-visual animate-float">
-                        <div className="slideshow-window glass-panel">
-                            {/* RULE: All slideshow images below must be close to a 16:9 aspect ratio (e.g. 1024x576) to avoid awkward cropping */}
-                            <div className="slideshow-track">
-                                <img src="/images/code_combat.png" alt="Code Combat" className="slide object-cover" />
-                                <img src="/images/ozaria.png" alt="Ozaria" className="slide object-cover" />
-                                <img src="/images/pycharm.png" alt="PyCharm IDE" className="slide object-cover" />
-                                <img src="/images/turtle_code.png" alt="Turtle Code" className="slide object-cover" />
-                                <img src="/images/printed_ducks.png" alt="3D Printed Ducks" className="slide object-cover" />
-                            </div>
-                        </div>
+                        <LandingSlideshow />
                     </div>
                 </section>
 

@@ -5,8 +5,10 @@ import client from '../../api/client';
 import { getErrorMessage } from '../../utils/apiError';
 import toast from 'react-hot-toast';
 import './Auth.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const Signup = () => {
+    useDocumentTitle('Sign up');
     const [searchParams] = useSearchParams();
     const location = useLocation();
     const defaultRole = searchParams.get('role') || 'student';

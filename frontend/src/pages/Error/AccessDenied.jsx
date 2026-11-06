@@ -4,8 +4,10 @@ import { Home, ArrowLeft } from 'lucide-react';
 
 import youShallNotPassImage from '../../assets/you_shall_not_pass.png';
 import './AccessDenied.css';
+import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const AccessDenied = () => {
+  useDocumentTitle('Access denied');
   return (
     <div className="access-denied-page">
       <div className="access-denied-page-card">
