@@ -1,77 +1,55 @@
 ---
 name: remove-dead-code
-description: Find potentially unused and unneeded code, get user approval, remove it, verify success, and rollback on failure.
+description: Find potentially unused and unneeded code, get user approval, remove it, verify success, and roll back on failure.
 ---
 
 # Remove Dead Code Workflow
 
-This workflow systematically identifies code that appears unused or unnecessary, presents evidence for user approval, safely removes it, and rolls back if anything breaks.
+Identify code that appears unused, present evidence for user approval, remove it safely, and roll back if anything breaks. Follow [git-safety.md](../../rules/git-safety.md): never stash, never `git reset --hard`.
 
 1.  **Snapshot**:
-    // turbo
-    - Create a git stash or commit of the current state so there is always a clean rollback point.
-    - Run: `git stash push -m "dead-code-checkpoint"` (or `git add -A && git commit -m "checkpoint: before dead code removal"` if the working tree should be preserved).
-    - Record which method was used so the rollback step knows how to undo it.
+    - Require a clean `git status`. If the tree is dirty, stop and ask the user; do not stash.
+    - Record `git rev-parse HEAD` as the checkpoint. It is the rollback point.
 
-2.  **Discovery**:
-    - Use `grep_search` and `list_dir` to scan the codebase for candidates:
-        -   **Unused exports**: Functions, components, or constants that are exported but never imported elsewhere.
-        -   **Unused files**: Modules with zero inbound imports.
-        -   **Dead CSS**: Class names or CSS selectors with no matching usage in templates/JSX.
-        -   **Commented-out code**: Large blocks of commented code that have persisted (not recent TODOs).
-        -   **Unreachable logic**: Code behind always-false conditions, after unconditional returns, or in unused branches.
-        -   **Deprecated helpers**: Utility functions superseded by newer implementations.
-    - **Architecture Context**: Reference [frontend_design.md](../../../docs/frontend_design.md) and [backend_design.md](../../../docs/backend_design.md) to understand which modules are expected entry points, plug-ins, or dynamically loaded — these may appear unused but are intentional.
+2.  **Discovery**: search the codebase for candidates:
+    -   **Unused exports**: functions, components or constants exported but never imported.
+    -   **Unused files**: modules with zero inbound imports.
+    -   **Dead CSS**: classes or selectors with no matching usage in JSX.
+    -   **Commented-out code**: large blocks that have persisted (not recent TODOs).
+    -   **Unreachable logic**: code behind always-false conditions, after unconditional returns, or in unused branches.
+    -   **Deprecated helpers**: utilities superseded by newer ones.
+    -   **Architecture context**: check [frontend_design.md](../../../docs/frontend_design.md) and [backend_design.md](../../../docs/backend_design.md) for expected entry points, plug-ins and dynamically loaded modules. They may look unused but are intentional.
+    -   **Personality**: never flag Easter eggs or the quack sound as dead code ([PERSONALITY_GUIDE.md](../../../PERSONALITY_GUIDE.md)).
 
-3.  **Evidence Gathering**:
-    - For each candidate, search the **entire** project to confirm zero references:
-        -   `grep_search` for the symbol name, class name, or file basename.
-        -   Check for **dynamic usage** patterns: string-based imports, `getattr`, bracket-notation access (`obj[varName]`), template literals, or reflection.
-        -   Check for **test-only usage**: If the symbol is used only in tests, flag it separately — removing it may require removing corresponding tests too.
-        -   Check for **public API / external consumers**: If the project exposes an API or is used as a library, the symbol might be consumed externally.
-    - **Confidence rating**: For each candidate classify as `HIGH` (zero references, no dynamic risk), `MEDIUM` (zero static references but dynamic use is plausible), or `LOW` (some indirect references, unclear if live).
+3.  **Evidence**: for each candidate, search the **entire** project for the symbol name, class name or file basename, and check:
+    -   **Dynamic usage**: string-based imports, `getattr`, bracket access (`obj[varName]`), template literals, reflection.
+    -   **Test-only usage**: flag it separately; removing it may mean removing its tests too.
+    -   **External consumers**: HTTP routes and any public API.
+    -   Rate each candidate `HIGH` (zero references, no dynamic risk), `MEDIUM` (zero static references but dynamic use is plausible) or `LOW` (some indirect references, unclear if live).
 
-4.  **Approval**:
-    - Present a summary to the user listing each candidate with:
-        -   File path and symbol/block name.
-        -   Confidence rating and reasoning.
-        -   Number of lines to be removed.
-    - **STOP and wait for explicit user approval** before making any deletions. The user may approve all, approve selectively, or reject.
+4.  **Approval**: show the user each candidate with its file path and symbol or block, its confidence and reasoning, and the lines to be removed. **STOP and wait for explicit approval** (all, some or none) before deleting anything.
 
 5.  **Removal**:
-    - Only remove user-approved candidates.
-    - Use `replace_file_content` or `multi_replace_file_content` for surgical removals within files.
-    - For entire unused files, delete them using `run_command` (e.g., `Remove-Item`).
-    - Remove any now-orphaned imports or references that pointed to the deleted code.
-    - **Cascading cleanup**: After each removal, re-check whether anything else became unused as a result (e.g., a helper only used by the now-deleted function). Flag any cascading candidates but do not remove them without mentioning them to the user.
+    -   Remove only approved candidates: edit surgically within files, delete whole unused files, and remove the imports and references they leave orphaned.
+    -   Re-check after each removal for cascading candidates (a helper used only by the deleted function). Mention them to the user; do not remove them unasked.
+    -   Commit the removal on its own (stage only the files you touched), so it can be reverted as one unit.
 
 6.  **Verification**:
-    - **Build check**: Run `npm run dev` (frontend) and/or `python main.py` (backend) and monitor for errors or new warnings.
-    - **Lint check**: Run any configured linters or type checkers and verify no new errors were introduced.
-    - **UI smoke test**: If frontend code was removed, use `browser_subagent` to navigate the affected pages at `http://localhost:5173` and confirm nothing is visibly broken.
-    - **Backend smoke test**: If backend code was removed, hit the relevant API endpoints via `read_url_content` or `browser_subagent` and confirm correct responses.
+    -   **Lint and tests**: run `ruff check .` and `pytest` (from `backend/`) and `npm run lint` and `npm run test` (from `frontend/`).
+    -   **Frontend smoke test**: if frontend code was removed, start the dev servers (see the login skill), open the affected pages at `http://localhost:5173` and confirm nothing is visibly broken.
+    -   **Backend smoke test**: if backend code was removed, call the relevant API endpoints and confirm correct responses.
 
-7.  **Rollback** (if verification fails):
-    - If any verification step fails and the fix is not immediately obvious:
-        // turbo
-        -   Restore the snapshot: `git stash pop` or `git reset --hard HEAD~1` (matching the method from Step 1).
-        -   Confirm the rollback succeeded by re-running the failed verification step.
-    - Report to the user exactly what failed, which removal likely caused it, and why.
+7.  **Rollback** (if verification fails and the fix is not obvious): `git revert --no-edit <removal-sha>`, or re-create a deleted file from the checkpoint with `git show <checkpoint>:<path>`. Never `git reset --hard`, never stash. Re-run the failed check to confirm the rollback, then tell the user what failed, which removal likely caused it, and why.
 
-8.  **Finalize** (if verification passes):
-    // turbo
-    - If a stash-based checkpoint was used, drop it: `git stash drop`.
-    - If a commit-based checkpoint was used, squash or amend as appropriate.
+8.  **Finalize** (if verification passes): leave the commit; squash it only if the user asks.
 
-9.  **Summary**:
-    - Report what was removed, total lines eliminated, and verification results.
-    - If any `MEDIUM`-confidence candidates were skipped or deferred, mention them as candidates for a future pass.
+9.  **Summary**: report what was removed, the lines eliminated and the verification results. Mention any `MEDIUM` candidates you skipped as material for a later pass.
 
-## Edge Cases & Guardrails
+## Edge cases
 
-- **Dynamic imports / reflection**: Never rate something `HIGH` confidence if the codebase uses patterns like `import()`, `require(variable)`, `getattr()`, or string-based component resolution that could reference the symbol at runtime.
-- **Config-driven code**: Check config files, environment variables, and feature flags — a function might be toggled off but still needed.
-- **CSS-in-JS / scoped styles**: Class names generated at build time (CSS Modules, styled-components) won't grep cleanly. Trace usage through the component tree, not just raw string search.
-- **Backend route handlers**: A route handler may have zero in-code callers but is invoked by HTTP requests. Always cross-reference with API documentation or route registrations.
-- **Migration / seed files**: Database migrations and seed scripts are run outside normal app flow. Never flag these as dead code unless they are clearly superseded.
-- **Monorepo / multi-package**: If the project has multiple packages, search across all of them before concluding a symbol is unused.
+- **Dynamic imports and reflection**: never rate something `HIGH` if the codebase uses `import()`, `require(variable)`, `getattr()` or string-based component resolution that could reach the symbol at runtime.
+- **Config-driven code**: check config files, environment variables and feature flags; a function toggled off may still be needed.
+- **Generated class names** (CSS Modules, styled-components) do not grep cleanly: trace usage through the component tree.
+- **Backend route handlers** may have no in-code callers yet be called over HTTP: cross-check route registrations and [api_reference.md](../../../docs/api_reference.md).
+- **Migrations and seed scripts** run outside the normal app flow: never flag them unless clearly superseded.
+- **Multiple packages**: search all of them before concluding a symbol is unused.
