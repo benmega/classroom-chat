@@ -10,7 +10,7 @@ const srcDir = fileURLToPath(new URL('../', import.meta.url))
 const read = (rel) => readFileSync(join(srcDir, rel), 'utf8')
 
 const app = read('App.jsx')
-const routed = [...app.matchAll(/(?:import\(|from )'\.\/(pages\/[^']+)'/g)]
+const routed = [...app.matchAll(/(?:import\(|from )'\.\/((?:pages|admin)\/[^']+)'/g)]
   .map(([, spec]) => [spec + '.jsx', spec + '/index.jsx'].find((rel) => existsSync(join(srcDir, rel))))
 
 // Not covered yet: BitShift.jsx is also being edited by the auth-store change (checkAuth), so its two lines go in

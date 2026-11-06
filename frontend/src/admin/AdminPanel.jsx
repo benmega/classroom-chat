@@ -51,6 +51,7 @@ import dataProvider from './dataProvider';
 import adminQueryClient from './adminQueryClient';
 import { FK_OVERRIDES, HIDDEN_FIELDS, READONLY_FIELDS, RESOURCES } from './adminSchema';
 import client from '../api/client';
+import useDocumentTitle from '../hooks/useDocumentTitle';
 
 // ─── Schema Fetching ─────────────────────────────────────────────────────────
 
@@ -328,16 +329,19 @@ const darkTheme = {
     },
 };
 
-const AdminPanel = () => (
-    <Admin
-        queryClient={adminQueryClient}
-        dataProvider={dataProvider}
-        basename="/admin/advanced-crud"
-        layout={CustomLayout}
-        theme={darkTheme}
-    >
-        {RESOURCE_ELEMENTS}
-    </Admin>
-);
+const AdminPanel = () => {
+    useDocumentTitle('Advanced CRUD · Admin');
+    return (
+        <Admin
+            queryClient={adminQueryClient}
+            dataProvider={dataProvider}
+            basename="/admin/advanced-crud"
+            layout={CustomLayout}
+            theme={darkTheme}
+        >
+            {RESOURCE_ELEMENTS}
+        </Admin>
+    );
+};
 
 export default AdminPanel;
