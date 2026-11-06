@@ -5,7 +5,7 @@ import './Landing.css';
 // RULE: All slideshow images must be close to a 16:9 aspect ratio (e.g. 1024x576) to avoid awkward cropping
 const SLIDES = [
     { src: '/images/code_combat.png', alt: 'Code Combat' },
-    { src: '/images/ozaria.png', alt: 'Ozaria' },
+    { src: '/images/ozaria.webp', alt: 'Ozaria' },
     { src: '/images/pycharm.png', alt: 'PyCharm IDE' },
     { src: '/images/turtle_code.png', alt: 'Turtle Code' },
     { src: '/images/printed_ducks.png', alt: '3D Printed Ducks' },
