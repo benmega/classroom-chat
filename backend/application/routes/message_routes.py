@@ -6,6 +6,7 @@ from application.models.message import Message
 from application.models.user import User
 from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import Blueprint, g, jsonify, request
+from sqlalchemy import select, union
 from sqlalchemy.orm import selectinload
 
 logger = logging.getLogger(__name__)
@@ -55,23 +56,23 @@ def _visible_message_ids(user, classroom_id, before_id, limit):
         ).filter(message_users.c.user_id == user.id)
         queries.extend([q2, q3])
 
-    # If a specific classroom filter IS applied, include messages by this user
-    # to ensure they see their own messages in the stream even if they are missing from classroom target somehow
-    # Wait, no, we only want messages targeted at this classroom or global.
-    # But the user might want to see their own global/classroom messages. Those will be caught by q1 and q4.
-
     if user_classroom_ids:
         q4 = base_query.join(
             message_classrooms, Message.id == message_classrooms.c.message_id
         ).filter(message_classrooms.c.classroom_id.in_(user_classroom_ids))
         queries.append(q4)
 
-    from sqlalchemy import desc
-
-    union_query = (
-        queries[0].union(*queries[1:]).order_by(desc(Message.id)).limit(limit)
+    # Each branch keeps only its own newest `limit` ids, so no branch scans its whole set
+    # before the outer LIMIT; the union of those can still hold the overall newest `limit`.
+    branches = [
+        select(q.order_by(Message.id.desc()).limit(limit).subquery().c.id)
+        for q in queries
+    ]
+    merged = union(*branches).subquery()
+    rows = db.session.execute(
+        select(merged.c.id).order_by(merged.c.id.desc()).limit(limit)
     )
-    return [row[0] for row in union_query.all()]
+    return [row[0] for row in rows]
 
 
 @message.route("/api/feed", methods=["GET"])
