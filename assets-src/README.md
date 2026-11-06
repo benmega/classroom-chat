@@ -19,3 +19,10 @@ under the same file name in the served folder and rebuild the sprite.
 `frontend/public/images/courses/course-default.webp`, the same picture at 800px wide (about 60 KB),
 for every course that has no art of its own (`frontend/src/constants/courseImages.js`).
 To change it, edit the original here and re-export a WebP at 800px wide (quality 80) over the served copy.
+
+## images/
+
+`ozaria.png` is the original 1200x675 Ozaria slide (1.0 MB). The app serves
+`frontend/public/images/ozaria.webp`, the same picture as WebP at quality 82 (about 73 KB), from
+`frontend/src/pages/General/LandingSlideshow.jsx`. To change it, edit the original here and re-export
+the WebP over the served copy.

@@ -11,7 +11,7 @@ describe('LandingSlideshow', () => {
         render(<LandingSlideshow />);
 
         expect(screen.getAllByRole('img')).toHaveLength(5);
-        expect(screen.getByRole('img', { name: 'Ozaria' })).toHaveAttribute('src', '/images/ozaria.png');
+        expect(screen.getByRole('img', { name: 'Ozaria' })).toHaveAttribute('src', '/images/ozaria.webp');
         expect(screen.getByRole('group', { name: 'Screenshots of what students build' })).toBeInTheDocument();
     });
 

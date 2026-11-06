@@ -93,9 +93,8 @@ if ($distSize -gt $bundleWarnMB) {
 Write-Host "`n[3/4] Checking public image sizes..." -ForegroundColor Yellow
 
 # Everything in public/ is copied into dist/ and uploaded to S3 on every deploy.
-# TODO(#112): this only warns while the oversized originals are still in the tree. Once they
-# are compressed, set $imageSizeIsFatal to $true so a new 1 MB+ image fails the preflight.
-$imageSizeIsFatal = $false
+# Every image under public/ is under 1 MB; a new one over the limit fails the preflight (#112).
+$imageSizeIsFatal = $true
 $imageLimitBytes = 1MB
 $bigImages = @(Get-ChildItem -Path public/images -Recurse -File -ErrorAction SilentlyContinue |
     Where-Object { $_.Length -gt $imageLimitBytes })
