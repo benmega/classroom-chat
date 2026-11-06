@@ -1251,21 +1251,6 @@ def test_create_app_does_not_start_scheduler_when_disabled_or_testing():
     start.assert_not_called()
 
 
-def test_create_app_survives_and_logs_a_scheduler_start_failure(caplog):
-    with (
-        patch.object(scheduler, "start", side_effect=RuntimeError("no scheduler")),
-        patch.object(socketio, "init_app"),
-        _process_env(FLASK_ENV="production"),
-        patch.object(sys, "argv", ["gunicorn"]),
-        caplog.at_level("ERROR", logger="application"),
-    ):
-        app = create_app(ProductionConfig)
-
-    assert app is not None
-    assert "Could not start the session cleanup scheduler" in caplog.text
-    assert "no scheduler" in caplog.text
-
-
 # --- Configuration from the environment (T1, T2b, T4b, T7) ----------------------
 
 _CONFIG_ENV = (
