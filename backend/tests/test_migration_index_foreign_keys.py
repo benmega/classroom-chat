@@ -1,8 +1,6 @@
 """
-File: test_migration_index_foreign_keys.py
-Type: py
-Summary: The dcfead18fb96 migration adds the missing indexes on foreign keys and
-         session times, and nothing else.
+The dcfead18fb96 migration adds the missing indexes on foreign keys and
+session times, and nothing else.
 """
 
 import importlib.util

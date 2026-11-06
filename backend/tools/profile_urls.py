@@ -1,9 +1,4 @@
-"""
-File: profile_urls.py
-Path: backend/tools/profile_urls.py
-Type: py
-Summary: Shared builder for the public profile links printed on QR codes and student cards.
-"""
+"""Shared builder for the public profile links printed on QR codes and student cards."""
 
 import os
 

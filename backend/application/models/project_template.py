@@ -1,5 +1,3 @@
-
-
 from ..extensions import db
 from .project import DEFAULT_PROJECT_TYPE
 

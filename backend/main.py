@@ -1,8 +1,4 @@
-"""
-File: main.py
-Type: py
-Summary: Entry point for starting the Flask application.
-"""
+"""Entry point for starting the Flask application."""
 
 import os
 import sys

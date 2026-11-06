@@ -1,8 +1,4 @@
-"""
-File: project_file_helpers.py
-Type: py
-Summary: Small generated project files (STL, GLB) and upload parts for the project file tests.
-"""
+"""Small generated project files (STL, GLB) and upload parts for the project file tests."""
 
 import struct
 from io import BytesIO

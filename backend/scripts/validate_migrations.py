@@ -85,12 +85,10 @@ def main():
 
     errors = False
     for op, revs in op_to_revs.items():
-        # A simple check: if the exact same operation is in multiple files, warn about it
         if len(revs) > 1:
             print(f"WARNING: Duplicate operation detected: {op} in revisions {revs}")
             errors = True
 
-    # Note: Validate migrations script is less strict right now
     if errors:
         sys.exit(1)
     else:

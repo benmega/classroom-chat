@@ -1,7 +1,5 @@
 """
-File: test_app_schema_startup.py
-Type: py
-Summary: create_app() builds the schema from the models everywhere but in production.
+create_app() builds the schema from the models everywhere but in production.
 
 Production leaves the schema to Alembic (deploy.sh creates a new database and runs
 `flask db upgrade`), development also compares the database with the models. Each

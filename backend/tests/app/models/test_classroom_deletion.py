@@ -1,8 +1,6 @@
 """
-File: test_classroom_deletion.py
-Type: py
-Summary: Deleting a classroom deletes its course instances and leaves no row that
-         still points at it, on every path an admin can delete a classroom through.
+Deleting a classroom deletes its course instances and leaves no row that
+still points at it, on every path an admin can delete a classroom through.
 """
 
 import pytest

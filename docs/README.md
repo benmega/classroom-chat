@@ -1,41 +1,19 @@
-# Classroom Chat and Duck System
+# Documentation
 
-![Demo Screenshot](screenshots/student_chat.png)
+Setup, running, tests and the repository layout are in the [root README](../README.md). The rest of the docs:
 
-## Overview
-Classroom Chat is a web-based application designed to enhance student interaction and engagement during class. It features real-time chat functionality, challenge tracking, and a gamified reward system called "Ducks." Students can complete challenges to earn ducks, which are displayed on their profiles.
-
-## Core Features
-- **Real-Time Chat:** Allows students to communicate seamlessly during lessons.
-- **Challenge System:** Assign and track challenges with specific point values.
-- **Duck Rewards:** Gamified system rewarding student achievements.
-- **Profile Customization:** Users can manage their profile and view earned achievements.
-- **Student Tests:** Timed multiple-choice tests with server-side grading, duck rewards and results for parents and admins (see [student_tests.md](student_tests.md)).
-- **Educational Design:** Intentional "thinking in binary" philosophy (see [EDUCATIONAL_DESIGN.md](EDUCATIONAL_DESIGN.md)).
-
-## Quick Start
-
-- Follow the installation guide: [INSTALLATION.md](INSTALLATION.md)
-- After installing dependencies, run the backend server from the `backend` directory:
-
-  ```bash
-  cd backend
-  python main.py
-  ```
-
-- In another terminal, start the frontend dev server:
-
-  ```bash
-  cd frontend
-  npm run dev
-  ```
-
-- Open the app at http://localhost:5173.
-
-## Key Technologies
-- Flask (Backend)
-- SQLAlchemy (Database)
-- React 19 + Vite (Frontend)
-
-## Getting Started
-For detailed setup instructions, refer to [INSTALLATION.md](INSTALLATION.md).
+- [ARCHITECTURE.md](ARCHITECTURE.md): what runs where, as one diagram
+- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md): branching, git hooks, things that surprise people
+- [backend_design.md](backend_design.md): how the Flask app is put together
+- [frontend_design.md](frontend_design.md): how the React app is put together
+- [database_schema.md](database_schema.md): the tables and the integrity rules
+- [api_reference.md](api_reference.md): the endpoint catalog
+- [route_map.md](route_map.md): the frontend routes and who may open them
+- [infrastructure_and_devops.md](infrastructure_and_devops.md): hosting, CI/CD, deploys, migrations
+- [testing_and_qa.md](testing_and_qa.md): test commands, layout and CI
+- [student_tests.md](student_tests.md): the multiple-choice test feature
+- [ui_documentation.md](ui_documentation.md): every screen, with screenshots
+- [AESTHETIC_GUIDELINES.md](AESTHETIC_GUIDELINES.md): the look and feel
+- [EDUCATIONAL_DESIGN.md](EDUCATIONAL_DESIGN.md): why the Ducks and Bit Shift work the way they do
+- [issue_resolver_guide.md](issue_resolver_guide.md): the issue workflow and the AI agent skills
+- [PERSONALITY_GUIDE.md](../PERSONALITY_GUIDE.md): the app's tone, and which Easter eggs to leave alone

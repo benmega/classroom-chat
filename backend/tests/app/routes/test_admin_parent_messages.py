@@ -1,9 +1,3 @@
-"""
-File: test_admin_parent_messages.py
-Type: py
-Summary: Unit tests for admin parent message routes and resolution.
-"""
-
 from application.extensions import db
 from application.models.parent_message import ParentMessage
 from application.models.user import User

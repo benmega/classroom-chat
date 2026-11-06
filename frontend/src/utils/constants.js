@@ -1,8 +1,4 @@
-/**
- * File: constants.js
- * Summary: Application-level frontend constants.
- *          Must stay in sync with backend/application/constants.py.
- */
+// Keep in sync with backend/application/constants.py.
 
 /**
  * The reserved classroom ID for the Global Announcements feed.

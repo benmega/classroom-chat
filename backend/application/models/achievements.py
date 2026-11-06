@@ -1,9 +1,3 @@
-"""
-File: achievements.py
-Type: py
-Summary: SQLAlchemy model for achievement definitions and metadata.
-"""
-
 from ..extensions import db
 from ..utilities.helper_functions import to_utc_iso, utcnow_naive
 

@@ -1,8 +1,6 @@
 """
-File: test_migration_challenge_log_unique.py
-Type: py
-Summary: The 1dbcb322d37d migration leaves one challenge log per user, challenge and
-         course instance, and makes the database refuse a second one.
+The 1dbcb322d37d migration leaves one challenge log per user, challenge and
+course instance, and makes the database refuse a second one.
 """
 
 import importlib.util

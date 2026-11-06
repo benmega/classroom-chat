@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import client from '../api/client';
 
-/**
- * Fetches the list of children linked to the current parent user.
- *
- * @param {boolean} isParent - Only fetches if true; returns empty state otherwise.
- * @returns {{ children: Array, isLoading: boolean, error: string|null }}
- */
+// Fetches the parent's linked children; does nothing unless isParent.
 const useParentChildren = (isParent) => {
     const [children, setChildren] = useState([]);
     const [isLoading, setIsLoading] = useState(false);

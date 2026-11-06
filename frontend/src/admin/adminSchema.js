@@ -1,19 +1,4 @@
-/**
- * File: adminSchema.js
- * Summary: Override configuration for the dynamic admin panel.
- *
- * The admin UI auto-generates fields from the backend /api/admin/crud/schema/<resource>
- * endpoint. This file only defines what CANNOT be inferred from column types alone:
- *
- *   - FK reference overrides: which React-Admin "reference" resource and display
- *     field to use for a foreign-key column (instead of showing a raw integer ID).
- *   - Hidden fields: columns that exist in the DB but should NOT appear in the UI
- *     for a particular resource (beyond the global password_hash filter on the backend).
- *   - Read-only fields: columns that should render as disabled inputs in edit/create.
- *
- * When you add a new column to a SQLAlchemy model, you do NOT need to touch this file
- * unless that column is a FK, should be hidden, or should be read-only.
- */
+/** Overrides for the dynamic admin panel: what cannot be inferred from column types (FK references, hidden fields, read-only fields). */
 
 /**
  * FK reference overrides.
@@ -28,44 +13,21 @@
  * username column is mapped as "_username" (a "username" property sits on top of it).
  */
 export const FK_OVERRIDES = {
-    // Challenge
     "Challenge.classroom_id":       { reference: "Classroom",    displayField: "name" },
-
-    // Message
     "Message.user_id":              { reference: "User",         displayField: "_username" },
-
-    // UserAchievement
     "UserAchievement.user_id":      { reference: "User",         displayField: "_username" },
     "UserAchievement.achievement_id":{ reference: "Achievement", displayField: "name" },
-
-    // UserCertificate
     "UserCertificate.user_id":      { reference: "User",         displayField: "_username" },
     "UserCertificate.achievement_id":{ reference: "Achievement", displayField: "name" },
-
-    // Project
     "Project.user_id":              { reference: "User",         displayField: "_username" },
-
-    // SessionLog
     "SessionLog.user_id":           { reference: "User",         displayField: "_username" },
-
-    // Skill
     "Skill.user_id":                { reference: "User",         displayField: "_username" },
-
-    // CourseInstance
     "CourseInstance.classroom_id":  { reference: "Classroom",    displayField: "name" },
     "CourseInstance.course_id":     { reference: "Course",       displayField: "name" },
-
-    // DuckTransaction
     "DuckTransaction.user_id":      { reference: "User",         displayField: "_username" },
-
-    // DuckTradeLog
     "DuckTradeLog.user_id":         { reference: "User",         displayField: "_username" },
-
-    // ChallengeLog
     "ChallengeLog.user_id":         { reference: "User",         displayField: "_username" },
     "ChallengeLog.course_id":       { reference: "Course",       displayField: "name" },
-
-    // Note
     "Note.user_id":                 { reference: "User",         displayField: "_username" },
 };
 

@@ -1,8 +1,4 @@
-"""
-File: test_fs_isolation.py
-Type: py
-Summary: The suite writes uploads to a throwaway folder and does not leak app config between tests.
-"""
+"""The suite writes uploads to a throwaway folder and does not leak app config between tests."""
 
 import io
 from pathlib import Path

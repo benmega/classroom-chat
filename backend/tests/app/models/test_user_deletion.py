@@ -1,8 +1,6 @@
 """
-File: test_user_deletion.py
-Type: py
-Summary: Deleting a user leaves no row that still points at it, on every path an
-         admin can delete a user through.
+Deleting a user leaves no row that still points at it, on every path an
+admin can delete a user through.
 """
 
 import pytest

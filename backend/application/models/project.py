@@ -1,9 +1,3 @@
-"""
-File: project.py
-Type: py
-Summary: SQLAlchemy model for user projects and portfolio items.
-"""
-
 from ..extensions import db
 from ..utilities.helper_functions import to_utc_iso
 from .project_file import FILE_LISTING_ORDER

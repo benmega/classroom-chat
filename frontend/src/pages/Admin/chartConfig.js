@@ -1,8 +1,3 @@
-/**
- * chartConfig.js
- * Centralized chart configuration and options for the Admin Dashboard.
- */
-
 export const getChartConfig = (chartData) => {
     return {
         labels: chartData?.labels || [],

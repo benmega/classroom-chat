@@ -1,8 +1,6 @@
 """
-File: test_project_files_model.py
-Type: py
-Summary: ProjectFile rows: how a project lists and serialises them, its project_type,
-         and the stored files that go with the rows when a project or user is deleted.
+ProjectFile rows: how a project lists and serialises them, its project_type,
+and the stored files that go with the rows when a project or user is deleted.
 """
 
 import re

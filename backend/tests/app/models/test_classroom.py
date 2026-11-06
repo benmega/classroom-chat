@@ -1,9 +1,3 @@
-"""
-File: test_classroom.py
-Type: py
-Summary: Unit tests for Classroom model methods.
-"""
-
 import sqlalchemy as sa
 from application.extensions import db
 from application.models.classroom import Classroom, user_classrooms

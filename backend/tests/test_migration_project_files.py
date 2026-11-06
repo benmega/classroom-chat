@@ -1,8 +1,6 @@
 """
-File: test_migration_project_files.py
-Type: py
-Summary: The 183122a091ad migration adds project_files and project_type, marks the 3D
-         templates and their projects as '3d', can run twice, and downgrades cleanly.
+The 183122a091ad migration adds project_files and project_type, marks the 3D
+templates and their projects as '3d', can run twice, and downgrades cleanly.
 """
 
 import importlib.util

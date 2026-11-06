@@ -140,7 +140,6 @@ def check_for_schema_drift(app):
                 ]
                 logger.error("\n".join(lines))
 
-                # We don't crash the app, just warn loudly
                 logger.warning(
                     "Database schema drift detected. The report above says how to sync."
                 )

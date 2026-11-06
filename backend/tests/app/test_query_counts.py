@@ -1,9 +1,8 @@
 """
-File: test_query_counts.py
-Summary: Query-count guards for the paths that used to load whole message and
-         classroom graphs. Each test measures the statements a path sends with a
-         small message history and again after thousands more messages were
-         added: the count must be a small constant that does not move.
+Query-count guards for the paths that used to load whole message and
+classroom graphs. Each test measures the statements a path sends with a
+small message history and again after thousands more messages were
+added: the count must be a small constant that does not move.
 """
 
 import threading

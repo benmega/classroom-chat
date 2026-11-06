@@ -60,7 +60,7 @@
     min-height: 500px;
 }
 
-/* Optional: Slight tweaks to embedded pages so they fit better in the library context */
+/* Fade each embedded page in */
 .library-content-container > div {
     animation: slideUpFade 0.3s ease-out;
 }

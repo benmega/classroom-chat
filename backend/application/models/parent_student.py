@@ -1,8 +1,4 @@
-"""
-File: parent_student.py
-Type: py
-Summary: Many-to-many association table linking parent users to student users.
-"""
+"""Many-to-many association table linking parent users to student users."""
 
 from ..extensions import db
 

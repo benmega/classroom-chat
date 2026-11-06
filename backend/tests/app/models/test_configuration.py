@@ -1,9 +1,3 @@
-"""
-File: test_configuration.py
-Type: py
-Summary: Unit tests for the Configuration model.
-"""
-
 import pytest
 from application import db
 from application.models.configuration import Configuration

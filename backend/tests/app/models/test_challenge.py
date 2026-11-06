@@ -1,9 +1,3 @@
-"""
-File: test_challenge.py
-Type: py
-Summary: Unit tests for challenge model.
-"""
-
 from datetime import datetime
 
 import pytest

@@ -4,8 +4,7 @@ from pathlib import Path
 
 import requests
 
-# 1. CONFIGURATION
-# Replace with your actual teacher/owner ID
+# Teacher/owner id of the classes to scrape
 OWNER_ID = "62d23d975dafd60025f8c520"
 
 # Domains to iterate through
@@ -34,11 +33,9 @@ HEADERS = {
 }
 
 
-# 2. HELPER FUNCTIONS
 def fetch_json(url, description, cookie_string):
     print(f"Fetching {description}...")
 
-    # Copy headers so we can inject the specific cookie for this request
     req_headers = HEADERS.copy()
     req_headers["Cookie"] = cookie_string
 
@@ -51,7 +48,6 @@ def fetch_json(url, description, cookie_string):
         return []
 
 
-# 3. MAIN EXECUTION
 def process_domain(domain):
     print("\n========================================================")
     print(f"Processing '{domain}'...")
@@ -73,7 +69,6 @@ def process_domain(domain):
         print(f"  -> No classes found or API error for {domain}.")
         return []
 
-    # Extract unique classroom IDs
     classroom_ids = set()
     for item in teacher_instances:
         if "classroomID" in item:
@@ -93,16 +88,13 @@ def process_domain(domain):
             print("  -> No data found.")
             continue
 
-        # Prepare rows to match the SQLAlchemy CourseInstance model
         for item in instances_data:
             all_rows.append(
                 {
-                    "id": item.get("_id"),  # Maps to id (primary key)
-                    "classroom_id": item.get(
-                        "classroomID"
-                    ),  # Maps to classroom_id (FK)
-                    "course_id": item.get("courseID"),  # Maps to course_id (FK)
-                    # created_at is handled by SQLAlchemy default=datetime.utcnow
+                    "id": item.get("_id"),
+                    "classroom_id": item.get("classroomID"),
+                    "course_id": item.get("courseID"),
+                    # created_at is filled in by the model default
                 }
             )
 
@@ -119,7 +111,6 @@ def main():
     if total_rows:
         os.makedirs(OUT_DIR, exist_ok=True)
 
-        # Columns must exactly match the keys in the dict above
         fields = ["id", "classroom_id", "course_id"]
 
         with open(FILENAME, "w", newline="", encoding="utf-8") as f:

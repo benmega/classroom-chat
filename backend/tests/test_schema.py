@@ -1,7 +1,5 @@
 """
-File: test_schema.py
-Type: py
-Summary: The database the migrations produce must match the models.
+The database the migrations produce must match the models.
 
 The shared test app builds its tables with db.create_all(), and so does create_app()
 outside production, so comparing that database with the models can never fail. These
