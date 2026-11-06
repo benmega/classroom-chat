@@ -235,11 +235,8 @@ def create_app(config_class=None):
                 log_schema_drift_summary(app)
 
         if _should_start_scheduler(app):
-            try:
-                if not getattr(scheduler, "running", False):
-                    scheduler.start()
-            except Exception:
-                logger.exception("Could not start the session cleanup scheduler")
+            if not getattr(scheduler, "running", False):
+                _init_extension(app, "the session cleanup scheduler", scheduler.start)
         else:
             logger.info("Session cleanup scheduler not started in this process")
 

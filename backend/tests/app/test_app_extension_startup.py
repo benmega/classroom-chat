@@ -22,6 +22,14 @@ def keep_socketio_state(monkeypatch):
     monkeypatch.setattr(socketio, "server", socketio.server)
 
 
+@pytest.fixture
+def scheduler_wants_to_start(monkeypatch):
+    """Make create_app try to start the scheduler here, as the production worker does."""
+    monkeypatch.setattr("application._should_start_scheduler", lambda app: True)
+    # APScheduler.running is a read-only property: swap it on the class for this test only.
+    monkeypatch.setattr(type(scheduler), "running", property(lambda self: False))
+
+
 def _production_config(**overrides):
     return type("ExtensionStartupConfig", (ProductionConfig,), overrides)
 
@@ -100,3 +108,31 @@ def test_a_healthy_boot_logs_no_initialisation_error(caplog):
         create_app(TestingConfig)
 
     assert "Could not initialise" not in caplog.text
+
+
+def test_a_production_boot_stops_when_the_scheduler_will_not_start(scheduler_wants_to_start, caplog):
+    with (
+        patch.object(scheduler, "start", side_effect=RuntimeError("scheduler failed to start")) as start,
+        patch.object(socketio, "init_app"),
+        caplog.at_level("ERROR", logger="application"),
+        pytest.raises(RuntimeError, match="scheduler failed to start"),
+    ):
+        create_app(_production_config())
+
+    start.assert_called_once()
+    assert "Could not initialise the session cleanup scheduler" in caplog.text
+    assert "scheduler failed to start" in caplog.text  # the traceback is logged too
+
+
+def test_a_test_app_logs_the_scheduler_start_failure_and_starts(scheduler_wants_to_start, caplog):
+    with (
+        patch.object(scheduler, "start", side_effect=RuntimeError("scheduler failed to start")) as start,
+        patch.object(socketio, "init_app"),
+        caplog.at_level("ERROR", logger="application"),
+    ):
+        app = create_app(TestingConfig)
+
+    start.assert_called_once()
+    assert "Could not initialise the session cleanup scheduler" in caplog.text
+    assert "scheduler failed to start" in caplog.text
+    assert app.test_client().get("/server/health").status_code == 200
