@@ -1,8 +1,4 @@
-"""
-File: tasks.py
-Type: py
-Summary: Background scheduler tasks for periodic session cleanup.
-"""
+"""Background scheduler tasks for periodic session cleanup."""
 
 import logging
 import re

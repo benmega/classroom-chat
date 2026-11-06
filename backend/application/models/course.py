@@ -1,9 +1,3 @@
-"""
-File: course.py
-Type: py
-Summary: SQLAlchemy model for course information and mapping.
-"""
-
 from ..extensions import db
 from ..utilities.helper_functions import utcnow_naive
 

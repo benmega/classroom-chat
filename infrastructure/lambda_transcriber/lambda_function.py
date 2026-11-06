@@ -2,7 +2,7 @@ import os
 from urllib.parse import unquote_plus
 
 import boto3
-import requests  # <--- Much better than urllib
+import requests
 import whisper
 
 
@@ -23,7 +23,6 @@ def lambda_handler(event, context):
     # Check if event is from S3 or Dispatcher
     # Dispatcher sends the inner record directly sometimes, or the full event
     record = event["Records"][0] if "Records" in event else (event if "s3" in event else event.get("Records", [{}])[0])
-
 
     bucket = record["s3"]["bucket"]["name"]
     key = unquote_plus(record["s3"]["object"]["key"])

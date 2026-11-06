@@ -1,8 +1,6 @@
 """
-File: test_migration_one_open_session.py
-Type: py
-Summary: The 6f71766c6b8f migration leaves each user at most one open session and
-         makes the database refuse a second one.
+The 6f71766c6b8f migration leaves each user at most one open session and
+makes the database refuse a second one.
 """
 
 import importlib.util

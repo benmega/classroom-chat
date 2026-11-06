@@ -1,7 +1,5 @@
 """
-File: challenge_completion.py
-Type: py
-Summary: Shared helper that marks a Challenge as completed for a user without
+Shared helper that marks a Challenge as completed for a user without
 the CodeCombat/Ozaria URL flow (admin overrides, approved mini-projects, ...).
 """
 

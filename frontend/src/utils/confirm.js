@@ -1,4 +1,4 @@
-﻿// confirm.js - Singleton Promise Resolver for Confirm Dialog
+﻿// Lets any code await a ConfirmDialog answer
 
 class SimpleEmitter {
     constructor() {

@@ -1,8 +1,4 @@
-"""
-File: session_routes.py
-Type: py
-Summary: Flask routes for session routes functionality.
-"""
+"""Session heartbeat and CloudWatch metrics."""
 
 import threading
 from datetime import timedelta
@@ -74,8 +70,7 @@ def heartbeat():
 
     from application import User
 
-    # The request already loaded this user (load_user), so this is an identity-map
-    # hit, not another query.
+    # Identity-map hit: load_user already loaded this user.
     current_user = db.session.get(User, userid)
     if current_user is None:
         # The account was deleted while the session cookie lived on.

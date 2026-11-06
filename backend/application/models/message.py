@@ -1,8 +1,4 @@
-"""
-File: message.py
-Type: py
-Summary: SQLAlchemy model for feed posts (messages) and visibility targeting.
-"""
+"""SQLAlchemy model for feed posts (messages) and visibility targeting."""
 
 from sqlalchemy import Enum
 

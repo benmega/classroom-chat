@@ -56,7 +56,7 @@ def test_react_achievements_page_is_not_an_api_path(client):
 
 
 def test_dev_login_template_renders_values_as_json(client):
-    """dev_login.html must keep rendering (used by the login_automation skill)."""
+    """dev_login.html must keep rendering (used by the login skill)."""
     from flask import render_template
 
     with client.application.test_request_context():

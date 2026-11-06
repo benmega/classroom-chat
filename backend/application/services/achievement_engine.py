@@ -1,4 +1,3 @@
-# application/services/achievement_engine.py
 import logging
 
 from application.extensions import db
@@ -192,11 +191,10 @@ def _calculate_consistency(user_id):
 
 
 def evaluate_user(user, force=False):
-    """Evaluate all achievements for a given user with 1-hour throttling and pessimistic locking."""
+    """Award every achievement the user newly qualifies for; at most once every 5 minutes unless ``force``."""
     now = utcnow_naive()
 
-    # Use pessimistic locking to prevent concurrent evaluations
-    # Lock the user row to ensure only one evaluation runs at a time
+    # Lock the user row so only one evaluation runs at a time
     user = (
         db.session.query(user.__class__).with_for_update().filter_by(id=user.id).first()
     )
@@ -209,11 +207,7 @@ def evaluate_user(user, force=False):
         if elapsed < 300:  # 5 minutes
             return []
 
-    # Pre-calculate common stats for the entire evaluation pass
-    # This avoids N extra queries inside the loop below.
     stats = compute_user_stats(user)
-
-    # Optimization: Only query definitions once
     all_achievements = Achievement.query.all()
 
     # Two attempts: if a concurrent evaluation of the same user wins the race to
@@ -223,7 +217,6 @@ def evaluate_user(user, force=False):
         try:
             new_awards = _award_new_achievements(user, all_achievements, stats)
 
-            # Always update the last evaluation timestamp if we successfully ran
             user.last_achievement_evaluation = now
             db.session.commit()
         except IntegrityError:
@@ -255,7 +248,6 @@ def _award_new_achievements(user, all_achievements, stats):
                     UserAchievement(user_id=user.id, achievement_id=achievement.id)
                 )
                 earned_ids.add(achievement.id)
-                # grant ducks reward
                 if achievement.reward > 0:
                     user.add_ducks(
                         achievement.reward, reason=f"Achievement: {achievement.name}"

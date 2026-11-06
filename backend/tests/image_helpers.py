@@ -1,8 +1,4 @@
-"""
-File: image_helpers.py
-Type: py
-Summary: Builders for in-memory test images (valid, animated, oversized, corrupt) used by the upload tests.
-"""
+"""Builders for in-memory test images (valid, animated, oversized, corrupt) used by the upload tests."""
 
 import struct
 import zlib

@@ -1,5 +1,3 @@
-
-
 from application.decorators.api_response import api_response
 from application.decorators.login_required import require_login
 from application.models.challenge import Challenge
@@ -13,9 +11,7 @@ from sqlalchemy.orm import joinedload
 
 activity_bp = Blueprint("activity", __name__)
 
-# Reasonable per-source bound: this is a small single-classroom app on
-# SQLite, not a scale problem, so we don't need cross-table SQL UNION
-# machinery -- just pull each source's rows in Python and normalize.
+# Rows pulled per source before merging in Python (small single-classroom app).
 _SOURCE_LIMIT = 200
 
 _DEFAULT_PAGE = 1
@@ -25,10 +21,8 @@ _MAX_PER_PAGE = 100
 
 def _find_challenge(challenge_lookup, challenge_slug):
     """
-    Resolve a ChallengeLog.challenge_slug to a Challenge using the same
-    case-insensitive matching (with dash/space fallback) as
-    challenge_routes._update_user_ducks, so titles resolve consistently
-    with how the rest of the app matches slugs.
+    Resolve a ChallengeLog.challenge_slug to a Challenge: case-insensitive, with a
+    dash/space fallback. Same rule as challenge_routes._resolve_challenge.
     """
     if not challenge_slug:
         return None
@@ -51,8 +45,6 @@ def _get_challenge_activity(user_id):
     if not logs:
         return []
 
-    # Batch-fetch all challenges up front and build a slug -> Challenge
-    # lookup dict, rather than querying per-log-row (avoids N+1s).
     challenges = Challenge.query.all()
     challenge_lookup = {c.slug.lower(): c for c in challenges if c.slug}
 
@@ -81,7 +73,6 @@ def _get_challenge_activity(user_id):
 
 
 def _get_certificate_activity(user_id):
-    # Eager-load the achievement relationship in one query to avoid N+1s.
     certs = (
         UserCertificate.query.filter_by(user_id=user_id)
         .options(joinedload(UserCertificate.achievement))
@@ -132,8 +123,7 @@ def _get_file_activity(user_id):
                 "title": submission.original_filename,
                 "status": submission.status,
                 "submitted_at": submission.timestamp,
-                # No resolved/reviewed timestamp column exists on Submission
-                # today -- documented gap, see final report.
+                # No resolved-at column on Submission.
                 "resolved_at": None,
                 "detail": detail if detail else None,
                 "reward": None,
@@ -167,8 +157,7 @@ def _get_course_request_activity(user_id):
                 "title": title,
                 "status": req.status,
                 "submitted_at": req.created_at,
-                # No resolved-timestamp column exists on CourseInstanceRequest
-                # today -- documented gap, see final report.
+                # No resolved-at column on CourseInstanceRequest.
                 "resolved_at": None,
                 "detail": detail,
                 "reward": None,
@@ -178,8 +167,7 @@ def _get_course_request_activity(user_id):
 
 
 def _newest_first_key(item):
-    # None sorts oldest (shouldn't occur since every source always has a
-    # submitted-at-equivalent timestamp); the flag keeps the datetimes comparable.
+    # Newest first; a None timestamp sorts last.
     stamp = item["submitted_at"]
     return (stamp is not None, stamp or 0)
 

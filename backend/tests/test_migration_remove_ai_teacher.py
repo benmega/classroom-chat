@@ -1,8 +1,4 @@
-"""
-File: test_migration_remove_ai_teacher.py
-Type: py
-Summary: The remove_ai_teacher migration deletes the AI Teacher user and only its rows.
-"""
+"""The remove_ai_teacher migration deletes the AI Teacher user and only its rows."""
 
 import importlib.util
 import pathlib

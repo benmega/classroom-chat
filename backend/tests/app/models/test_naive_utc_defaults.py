@@ -1,8 +1,6 @@
 """
-File: test_naive_utc_defaults.py
-Type: py
-Summary: Column defaults that stamp a time keep the naive-UTC value the deprecated
-         datetime.utcnow() produced, so stored rows stay comparable with each other.
+Column defaults that stamp a time keep the naive-UTC value the deprecated
+datetime.utcnow() produced, so stored rows stay comparable with each other.
 """
 
 from datetime import timedelta

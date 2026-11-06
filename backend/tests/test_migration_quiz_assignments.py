@@ -1,8 +1,6 @@
 """
-File: test_migration_quiz_assignments.py
-Type: py
-Summary: The 7d3e1f9a2c64 migration adds the quiz assignments table, can run twice and
-         downgrades cleanly.
+The 7d3e1f9a2c64 migration adds the quiz assignments table, can run twice and
+downgrades cleanly.
 """
 
 import importlib.util

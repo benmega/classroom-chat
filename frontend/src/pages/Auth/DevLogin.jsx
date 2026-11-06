@@ -1,16 +1,6 @@
 /**
- * File: DevLogin.jsx
- * Type: React component (development-only)
- * Summary: Agent/automated-testing shortcut login page.
- *
- * This page is ONLY rendered in development builds (import.meta.env.DEV).
- * In production the route is not registered on App.jsx, and Vite strips
- * the entire module from the production bundle via dead-code elimination.
- *
- * Usage (browser agent task):
- *   Navigate to http://localhost:5173/dev-login?role=admin   (default)
- *   Navigate to http://localhost:5173/dev-login?role=student
- *   The page auto-submits, refreshes auth state, then redirects to /.
+ * Dev-only shortcut login for browser agents: /dev-login?role=admin (default) or ?role=student
+ * auto-submits, refreshes auth, then redirects to /. The route exists only when import.meta.env.DEV (App.jsx).
  */
 
 import React, { useEffect, useState } from 'react';

@@ -1,8 +1,6 @@
 """
-File: test_migration_student_tests.py
-Type: py
-Summary: The 4c9a7e2b51d3 migration adds the student tests tables, can run twice and
-         downgrades cleanly.
+The 4c9a7e2b51d3 migration adds the student tests tables, can run twice and
+downgrades cleanly.
 """
 
 import importlib.util

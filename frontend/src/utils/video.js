@@ -2,18 +2,12 @@
 // (a stalled download or an unsupported codec never fires onseeked or onerror).
 const THUMBNAIL_TIMEOUT_MS = 10000;
 
-/**
- * Extracts a thumbnail frame from a video file.
- * @param {File} videoFile - The video file object.
- * @param {number} seekTime - Time in seconds to capture the frame.
- * @returns {Promise<Blob>} - A promise that resolves to an image blob.
- */
+// Resolves with a JPEG Blob of one frame, taken at seekTime (or the middle of a shorter video).
 export const extractVideoThumbnail = (videoFile, seekTime = 1) => {
     return new Promise((resolve, reject) => {
         const video = document.createElement('video');
         video.preload = 'metadata';
         
-        // Use a hidden container to avoid polluting the DOM
         video.style.display = 'none';
         document.body.appendChild(video);
 

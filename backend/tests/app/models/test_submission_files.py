@@ -1,8 +1,6 @@
 """
-File: test_submission_files.py
-Type: py
-Summary: The uploaded file of a submission goes with its row, once the delete is
-         committed, also when the row goes because its user is deleted.
+The uploaded file of a submission goes with its row, once the delete is
+committed, also when the row goes because its user is deleted.
 """
 
 import os

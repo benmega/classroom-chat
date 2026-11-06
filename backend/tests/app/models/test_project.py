@@ -1,9 +1,3 @@
-"""
-File: test_project.py
-Type: py
-Summary: Unit tests for project model.
-"""
-
 from application import db
 from application.models.project import Project
 

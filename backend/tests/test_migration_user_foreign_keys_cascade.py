@@ -1,8 +1,6 @@
 """
-File: test_migration_user_foreign_keys_cascade.py
-Type: py
-Summary: The 28a685819194 migration gives ON DELETE CASCADE to every foreign key to
-         users.id that had no ON DELETE rule, and changes nothing else.
+The 28a685819194 migration gives ON DELETE CASCADE to every foreign key to
+users.id that had no ON DELETE rule, and changes nothing else.
 """
 
 import importlib.util
