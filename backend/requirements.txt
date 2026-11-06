@@ -9,7 +9,7 @@ Flask-SQLAlchemy~=3.1.1
 Werkzeug==3.1.9
 WTForms==3.2.1
 flask-cors>=6.0.2,<7
-gunicorn==23.0.0
+gunicorn==26.2.0
 cryptography~=50.0.0
 Flask-Talisman==1.1.0
 PyMuPDF>=1.24.3,<2  # first release with the `pymupdf` import name
