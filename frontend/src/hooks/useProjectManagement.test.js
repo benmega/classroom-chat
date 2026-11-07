@@ -1153,4 +1153,43 @@ describe('useProjectManagement', () => {
             expect(toast.success).not.toHaveBeenCalled();
         });
     });
+
+    describe('non-blocking video upload on save', () => {
+        it('creates the project without blocking on the video upload and uploads the video in the background', async () => {
+            mockParams = {};
+            mockUser = { id: 2, role: 'student' };
+            serveProject();
+            let resolveVideoUpload;
+            client.post
+                .mockResolvedValueOnce({ data: { status: 'success', data: { project_id: 42 } } })
+                .mockImplementationOnce(() => new Promise((resolve) => { resolveVideoUpload = resolve; }));
+
+            const { result } = await mountProject();
+            const videoFile = new File(['video-bytes'], 'demo.mp4', { type: 'video/mp4' });
+
+            await act(async () => {
+                await result.current.handleFileChange({ target: { name: 'project_video', files: [videoFile] } });
+            });
+
+            await submitForm(result);
+
+            expect(client.post).toHaveBeenCalledTimes(2);
+            const [createUrl, createBody] = client.post.mock.calls[0];
+            expect(createUrl).toBe('/user/project/new');
+            expect(createBody.has('project_video')).toBe(false);
+            expect(createBody.get('project_image')).toBeInstanceOf(File);
+
+            const [videoUrl, videoBody] = client.post.mock.calls[1];
+            expect(videoUrl).toBe('/user/project/edit/42');
+            expect(videoBody.get('action')).toBe('upload_video');
+            expect(videoBody.get('project_video')).toBe(videoFile);
+
+            // Navigation and saving state complete immediately without waiting for the video upload promise
+            expect(result.current.isSaving).toBe(false);
+            expect(mockNavigate).toHaveBeenCalledWith('/profile');
+            expect(toast.success).toHaveBeenCalledWith('Project saved! Your video is being processed in the background.');
+
+            resolveVideoUpload({ data: { status: 'success' } });
+        });
+    });
 });

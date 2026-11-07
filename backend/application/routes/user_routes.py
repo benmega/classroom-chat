@@ -1,6 +1,9 @@
+import contextlib
 import os
 import re
+import tempfile
 import threading
+import time
 from io import BytesIO
 
 from application.config import Config
@@ -542,6 +545,21 @@ def edit_project(project_id):
             _delete_project_image_if_unreferenced(image_url)
             return {"message": "Project deleted successfully."}
 
+        if action == "upload_video":
+            video_file = request.files.get("project_video")
+            if not video_file or not video_file.filename:
+                return "No video file provided.", 400
+            video_started = start_video_upload_thread(
+                video_file, current_user, project.name, project_id=project.id
+            )
+            if not video_started:
+                return "Invalid video file format.", 400
+            return {
+                "message": "Video upload started.",
+                "project": project.to_dict(),
+                "video_processing": True,
+            }
+
         template_id, template_error = _read_template_id(data)
         if template_error:
             return template_error
@@ -999,67 +1017,110 @@ def _delete_project_image_if_unreferenced(image_url):
         current_app.logger.exception(f"Could not clean up project image {filename}")
 
 
-def _do_s3_upload(app, file_bytes, filename, content_type, username, project_name, project_id):
+_STREAM_CHUNK_BYTES = 64 * 1024
+
+
+class _YieldingFileReader:
+    """File-like wrapper that yields to the gevent event loop on each chunk read."""
+
+    def __init__(self, raw_file):
+        self._file = raw_file
+
+    def read(self, size=-1):
+        time.sleep(0)
+        return self._file.read(size)
+
+    def seek(self, pos, whence=0):
+        return self._file.seek(pos, whence)
+
+    def tell(self):
+        return self._file.tell()
+
+    def close(self):
+        return self._file.close()
+
+
+def _do_s3_upload(app, file_or_path, filename, content_type, username, project_name, project_id):
     """
     Performs the S3 upload in a background thread.
 
     This runs outside the original Flask request context, so we push a fresh
-    app context and create our own DB session.  The caller must read the file
-    bytes into memory *before* the request context is torn down, then pass them
-    here as a plain ``bytes`` object.
+    app context and create our own DB session.  The caller streams the uploaded
+    file to a temporary file on disk *before* the request context is torn down,
+    then passes its path here (or plain ``bytes`` for backward compatibility).
     """
-    with app.app_context():
-        ext = filename.rsplit(".", 1)[1].lower()
-        project_slug = secure_filename(project_name).replace("_", "-").lower()
-        s3_filename = f"{username}-{project_slug}.{ext}"
+    try:
+        with app.app_context():
+            ext = filename.rsplit(".", 1)[1].lower()
+            project_slug = secure_filename(project_name).replace("_", "-").lower()
+            s3_filename = f"{username}-{project_slug}.{ext}"
 
-        s3_client = get_s3_client()
-        if not s3_client:
-            app.logger.error("S3 client not initialized. Check AWS credentials.")
-            return
+            s3_client = get_s3_client()
+            if not s3_client:
+                app.logger.error("S3 client not initialized. Check AWS credentials.")
+                return
 
-        try:
-            from boto3.s3.transfer import TransferConfig
+            try:
+                from boto3.s3.transfer import TransferConfig
 
-            # Increase multipart threshold to 500 MB to force PutObject for videos.
-            # S3 triggers are often configured only for s3:ObjectCreated:Put,
-            # which ignores MultipartUpload events unless explicitly enabled.
-            config = TransferConfig(multipart_threshold=1024 * 1024 * 500)
-
-            bucket = app.config["S3_UPLOAD_BUCKET"]
-            s3_client.upload_fileobj(
-                BytesIO(file_bytes),
-                bucket,
-                s3_filename,
-                ExtraArgs={
-                    "ContentType": content_type or "video/mp4",
-                    "Metadata": {"project-id": str(project_id)},
-                },
-                Config=config,
-            )
-
-            region = os.environ.get("AWS_REGION", Config.AWS_REGION)
-            video_url = f"https://{bucket}.s3.{region}.amazonaws.com/{s3_filename}"
-
-            project = db.session.get(Project, project_id)
-            if project:
-                project.video_url = video_url
-                db.session.commit()
-                app.logger.info(
-                    f"Background S3 upload complete for project {project_id}: {video_url}"
+                # Increase multipart threshold to 500 MB to force PutObject for videos.
+                # S3 triggers are often configured only for s3:ObjectCreated:Put,
+                # which ignores MultipartUpload events unless explicitly enabled.
+                # use_threads=False keeps boto3 from spawning threadpool workers inside a gevent worker.
+                config = TransferConfig(
+                    multipart_threshold=1024 * 1024 * 500,
+                    use_threads=False,
                 )
 
-        except Exception as e:
-            # NOTE: If S3 uploads or the transcriber Lambda fail, ensure AWS credentials
-            # and S3 bucket permissions are correctly configured. The Lambda trigger might
-            # need to be manually re-enabled if it was detached.
-            app.logger.exception(f"Background S3 Upload Error for project {project_id}: {e}")
+                bucket = app.config["S3_UPLOAD_BUCKET"]
+                extra_args = {
+                    "ContentType": content_type or "video/mp4",
+                    "Metadata": {"project-id": str(project_id)},
+                }
+                if isinstance(file_or_path, (bytes, bytearray)):
+                    s3_client.upload_fileobj(
+                        _YieldingFileReader(BytesIO(file_or_path)),
+                        bucket,
+                        s3_filename,
+                        ExtraArgs=extra_args,
+                        Config=config,
+                    )
+                else:
+                    with open(file_or_path, "rb") as raw_handle:
+                        s3_client.upload_fileobj(
+                            _YieldingFileReader(raw_handle),
+                            bucket,
+                            s3_filename,
+                            ExtraArgs=extra_args,
+                            Config=config,
+                        )
+
+                region = os.environ.get("AWS_REGION", Config.AWS_REGION)
+                video_url = f"https://{bucket}.s3.{region}.amazonaws.com/{s3_filename}"
+
+                project = db.session.get(Project, project_id)
+                if project:
+                    project.video_url = video_url
+                    db.session.commit()
+                    app.logger.info(
+                        f"Background S3 upload complete for project {project_id}: {video_url}"
+                    )
+
+            except Exception as e:
+                # NOTE: If S3 uploads or the transcriber Lambda fail, ensure AWS credentials
+                # and S3 bucket permissions are correctly configured. The Lambda trigger might
+                # need to be manually re-enabled if it was detached.
+                app.logger.exception(f"Background S3 Upload Error for project {project_id}: {e}")
+    finally:
+        if isinstance(file_or_path, str):
+            with contextlib.suppress(OSError):
+                os.unlink(file_or_path)
 
 
 def start_video_upload_thread(file, user_obj, project_name, project_id):
     """
-    Validates the uploaded video file, reads its bytes into memory, and starts a
-    background thread to push the file to S3.
+    Validates the uploaded video file, streams its bytes to a temporary file on disk,
+    and starts a background thread to push the file to S3.
 
     Returns ``True`` if the thread was successfully started (validation passed),
     ``False`` if the file is missing or has an unsupported extension.
@@ -1078,16 +1139,31 @@ def start_video_upload_thread(file, user_obj, project_name, project_id):
     if ext not in allowed_exts:
         return False
 
-    # Read all bytes while the request (and its file object) is still open.
+    # Stream to a temporary file on disk while the request (and its file object) is still open,
+    # yielding between chunks so a large upload never starves the gevent worker or spikes RAM.
     file.seek(0)
-    file_bytes = file.read()
-    content_type = file.content_type or "video/mp4"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=f".{ext}") as tmp_file:
+        tmp_path = tmp_file.name
+        while True:
+            try:
+                chunk = file.read(_STREAM_CHUNK_BYTES)
+            except TypeError:
+                chunk = file.read()
+                if chunk:
+                    tmp_file.write(chunk)
+                break
+            if not chunk:
+                break
+            tmp_file.write(chunk)
+            time.sleep(0)
+
+    content_type = getattr(file, "content_type", None) or "video/mp4"
 
     app = current_app._get_current_object()  # unwrap LocalProxy for the thread
 
     t = threading.Thread(
         target=_do_s3_upload,
-        args=(app, file_bytes, file.filename, content_type, user_obj.username, project_name, project_id),
+        args=(app, tmp_path, file.filename, content_type, user_obj.username, project_name, project_id),
         daemon=True,
     )
     t.start()
