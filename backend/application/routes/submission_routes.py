@@ -5,6 +5,7 @@ Summary: Student-facing endpoint for submitting homework/files to the teacher.
 """
 
 import os
+import time
 import uuid
 
 from application import limiter
@@ -50,7 +51,14 @@ def submit_work():
     os.makedirs(directory, exist_ok=True)
 
     stored_filename = f"{uuid.uuid4().hex}.{extension}"
-    file.save(os.path.join(directory, stored_filename))
+    dest_path = os.path.join(directory, stored_filename)
+    with open(dest_path, "wb") as dest:
+        while True:
+            chunk = file.read(64 * 1024)
+            if not chunk:
+                break
+            dest.write(chunk)
+            time.sleep(0)
     stored_path = f"submissions/{stored_filename}"
 
     classroom_id = user.classrooms[0].id if user.classrooms else None

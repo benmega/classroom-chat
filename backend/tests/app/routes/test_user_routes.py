@@ -2082,3 +2082,40 @@ def test_project_image_handler_returns_none_without_a_file(test_app):
 
     with test_app.test_request_context():
         assert handle_project_image_upload(None) is None
+
+
+def test_edit_project_upload_video_action_preserves_metadata(client, init_db):
+    sample_user = UserFactory()
+    project = Project(
+        name="Preserved Title",
+        description="Preserved Description",
+        link="https://example.com",
+        user_id=sample_user.id,
+    )
+    db.session.add(project)
+    db.session.commit()
+    _login(client, sample_user)
+
+    with patch("application.routes.user_routes.threading.Thread.start", synchronous_thread_start), patch(
+        "application.routes.user_routes.get_s3_client"
+    ) as mock_get_s3:
+        mock_s3 = mock_get_s3.return_value
+        resp = client.post(
+            f"/user/project/edit/{project.id}",
+            data={
+                "action": "upload_video",
+                "project_video": (BytesIO(b"video bytes"), "demo.mp4"),
+            },
+            content_type="multipart/form-data",
+        )
+
+    assert resp.status_code == 200
+    assert resp.json["data"]["video_processing"] is True
+    mock_s3.upload_fileobj.assert_called_once()
+    db.session.refresh(project)
+    assert project.name == "Preserved Title"
+    assert project.description == "Preserved Description"
+    assert project.link == "https://example.com"
+    assert project.video_url is not None
+    assert project.video_url.endswith(".mp4")
+
