@@ -1063,12 +1063,12 @@ def _do_s3_upload(app, file_or_path, filename, content_type, username, project_n
             try:
                 from boto3.s3.transfer import TransferConfig
 
-                # Increase multipart threshold to 500 MB to force PutObject for videos.
+                # Increase multipart threshold to 2 GB to force PutObject for large videos (600MB+).
                 # S3 triggers are often configured only for s3:ObjectCreated:Put,
                 # which ignores MultipartUpload events unless explicitly enabled.
                 # use_threads=False keeps boto3 from spawning threadpool workers inside a gevent worker.
                 config = TransferConfig(
-                    multipart_threshold=1024 * 1024 * 500,
+                    multipart_threshold=2 * 1024 * 1024 * 1024,
                     use_threads=False,
                 )
 
@@ -1135,8 +1135,7 @@ def start_video_upload_thread(file, user_obj, project_name, project_id):
         return False
 
     ext = file.filename.rsplit(".", 1)[1].lower()
-    allowed_exts = {"mp4", "mov", "avi", "wmv", "mkv", "webm"}
-    if ext not in allowed_exts:
+    if ext not in Config.ALLOWED_VIDEO_EXTENSIONS:
         return False
 
     # Stream to a temporary file on disk while the request (and its file object) is still open,

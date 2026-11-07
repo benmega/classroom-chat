@@ -40,7 +40,12 @@ def submit_work():
     file.seek(0, os.SEEK_END)
     size = file.tell()
     file.seek(0)
-    if size > Config.SUBMISSION_MAX_BYTES:
+    max_bytes = (
+        Config.SUBMISSION_VIDEO_MAX_BYTES
+        if extension in Config.ALLOWED_VIDEO_EXTENSIONS
+        else Config.SUBMISSION_MAX_BYTES
+    )
+    if size > max_bytes:
         return {"error": "File too large"}, 413
 
     user = db.session.get(User, session.get("user"))

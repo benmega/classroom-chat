@@ -151,6 +151,15 @@ def test_a_maximum_size_submission_is_still_accepted(logged_in_client, monkeypat
     assert response.status_code == 201
 
 
+def test_submissions_accepts_a_video_above_the_global_limit(logged_in_client, monkeypatch, tmp_path):
+    monkeypatch.setattr(Config, "UPLOAD_FOLDER", str(tmp_path))
+    payload = BytesIO(b"\0" * OVER_GLOBAL_LIMIT)
+
+    response = logged_in_client.post("/api/submissions", data={"file": (payload, "demo.mp4")})
+
+    assert response.status_code == 201
+
+
 # ---- Behaviour with CSRF protection on (as in production) ---------------------
 
 
@@ -170,8 +179,8 @@ def csrf_client():
 
 def test_csrf_check_rejects_oversized_bodies_on_ordinary_routes(csrf_client):
     response = csrf_client.post(
-        "/api/submissions",
-        data={"file": (BytesIO(b"\0" * OVER_GLOBAL_LIMIT), "big.txt")},
+        "/user/api/profile-picture",
+        data={"profile_picture": (BytesIO(b"\0" * OVER_GLOBAL_LIMIT), "big.png")},
     )
 
     assert response.status_code == 413
@@ -179,7 +188,7 @@ def test_csrf_check_rejects_oversized_bodies_on_ordinary_routes(csrf_client):
 
 def test_csrf_check_does_not_trip_the_global_limit_on_video_endpoints(csrf_client):
     """The CSRF hook reads request.form first; the raised limit must already be in force."""
-    for url in ("/user/project/new", "/user/project/edit/1"):
+    for url in ("/user/project/new", "/user/project/edit/1", "/api/submissions"):
         response = csrf_client.post(url, data=_big_video_form({"name": "x"}))
 
         # Rejected for the missing CSRF token (400), not for the body size (413).
