@@ -145,9 +145,13 @@ def test_default_origin_lists():
 def test_upload_limits():
     # The global cap covers the largest ordinary upload (a submission) plus multipart overhead...
     assert Config.SUBMISSION_MAX_BYTES < Config.MAX_CONTENT_LENGTH <= 30 * 1024 * 1024
-    # ...and only the video-upload endpoints get the old 500 MB limit.
-    assert Config.LARGE_UPLOAD_MAX_CONTENT_LENGTH == 500 * 1024 * 1024
-    assert {"user.new_project", "user.edit_project"} == Config.LARGE_UPLOAD_ENDPOINTS
+    # ...and only the video-upload endpoints get the 2 GB limit.
+    assert Config.LARGE_UPLOAD_MAX_CONTENT_LENGTH == 2 * 1024 * 1024 * 1024
+    assert {
+        "user.new_project",
+        "user.edit_project",
+        "submission.submit_work",
+    } == Config.LARGE_UPLOAD_ENDPOINTS
 
 
 # ---- S3 settings ------------------------------------------------------------
