@@ -54,7 +54,7 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        expect(await screen.findByText('Core Information')).toBeInTheDocument();
+        expect(await screen.findByText('1. Core Info')).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/What is this project about\? What did you learn\?/i)).toBeInTheDocument();
         
         expect(screen.getByRole('button', { name: /Next/i })).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        expect(await screen.findByText('Core Information')).toBeInTheDocument();
+        expect(await screen.findByText('1. Core Info')).toBeInTheDocument();
         expect(screen.getByDisplayValue('My Cool Game')).toBeInTheDocument();
         expect(screen.getByDisplayValue('A game I built')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Delete Project/i })).toBeInTheDocument();
@@ -96,7 +96,7 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        expect(await screen.findByText('Core Information')).toBeInTheDocument();
+        expect(await screen.findByText('1. Core Info')).toBeInTheDocument();
         expect(screen.getByText('Teacher Note: Great job!')).toBeInTheDocument();
         expect(screen.getByText('print("hello")')).toBeInTheDocument();
     });
@@ -115,7 +115,7 @@ describe('ManageProject', () => {
                     </Routes>
                 </MemoryRouter>
             );
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
         };
         const previewNote = () => document.querySelector('.preview-section-core .card-teacher-feedback');
 
@@ -173,7 +173,7 @@ describe('ManageProject', () => {
                     <ManageProject />
                 </MemoryRouter>
             );
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
             fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
 
             fireEvent.change(await screen.findByLabelText('Teacher Comment'), { target: { value: 'Great start, keep going' } });
@@ -195,16 +195,16 @@ describe('ManageProject', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         
-        expect(await screen.findByText(/Media Assets/i)).toBeInTheDocument();
+        expect(await screen.findByRole('heading', { name: 'Cover Image' })).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/YouTube\/Vimeo URL/i)).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
-        expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Source Files' })).toBeInTheDocument();
         
         expect(screen.getByRole('button', { name: /Create Project/i })).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', { name: /Back/i }));
-        expect(screen.getByText(/Media Assets/i)).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Cover Image' })).toBeInTheDocument();
     });
 
     it('gives Next and the submit button separate DOM nodes, so Next cannot submit the form', async () => {
@@ -234,7 +234,7 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        await screen.findByText('Core Information');
+        await screen.findByText('1. Core Info');
 
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
 
@@ -306,7 +306,7 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        await screen.findByText('Core Information');
+        await screen.findByText('1. Core Info');
 
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
@@ -318,6 +318,124 @@ describe('ManageProject', () => {
         expect(await screen.findByTestId('profile-page')).toBeInTheDocument();
         expect(sent.name).toBe('Old Name');
         expect(toast.success).toHaveBeenCalledWith('Project updated!');
+    });
+
+    it('allows updating project directly from Step 1 in edit mode without clicking Next', async () => {
+        let sent;
+        server.use(
+            http.get('*/user/project/edit/1', async () => {
+                return HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'Original Name' } } });
+            }),
+            http.post('*/user/project/edit/1', async ({ request }) => {
+                sent = Object.fromEntries(await request.formData());
+                return HttpResponse.json({ status: 'success' });
+            })
+        );
+
+        render(
+            <MemoryRouter initialEntries={['/manage-project/1']}>
+                <Routes>
+                    <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        await screen.findByText('1. Core Info');
+
+        // Both Next and Update Project buttons should be visible on Step 1 in edit mode
+        expect(screen.getByRole('button', { name: /Next/i })).toBeInTheDocument();
+        const updateBtn = screen.getByRole('button', { name: /Update Project/i });
+        expect(updateBtn).toBeInTheDocument();
+
+        // Edit the name directly on Step 1
+        fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'Updated from Step 1' } });
+
+        // Click Update Project without clicking Next
+        fireEvent.click(updateBtn);
+
+        expect(await screen.findByTestId('profile-page')).toBeInTheDocument();
+        expect(sent.name).toBe('Updated from Step 1');
+        expect(toast.success).toHaveBeenCalledWith('Project updated!');
+    });
+
+    it('allows editing GitHub Link on Step 1 and sends it in form data on save', async () => {
+        let sent;
+        server.use(
+            http.get('*/user/project/edit/1', async () => {
+                return HttpResponse.json({
+                    status: 'success',
+                    data: { project: { id: 1, name: 'GitHub Project', github_link: 'https://github.com/orig/repo' } }
+                });
+            }),
+            http.post('*/user/project/edit/1', async ({ request }) => {
+                sent = Object.fromEntries(await request.formData());
+                return HttpResponse.json({ status: 'success' });
+            })
+        );
+
+        render(
+            <MemoryRouter initialEntries={['/manage-project/1']}>
+                <Routes>
+                    <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        await screen.findByText('1. Core Info');
+
+        const githubInput = screen.getByLabelText(/GitHub Link/i);
+        expect(githubInput).toHaveValue('https://github.com/orig/repo');
+
+        fireEvent.change(githubInput, { target: { value: 'https://github.com/new/repo' } });
+
+        const updateBtn = screen.getByRole('button', { name: /Update Project/i });
+        fireEvent.click(updateBtn);
+
+        expect(await screen.findByTestId('profile-page')).toBeInTheDocument();
+        expect(sent.github_link).toBe('https://github.com/new/repo');
+    });
+
+    it('shows selected video row, replace hint, and compact model card', async () => {
+        server.use(
+            http.get('*/user/project/edit/1', async () => {
+                return HttpResponse.json({
+                    status: 'success',
+                    data: { project: { id: 1, name: 'Video Project', video_url: 'https://youtube.com/watch?v=123', project_type: 'code', files: [] } }
+                });
+            })
+        );
+
+        render(
+            <MemoryRouter initialEntries={['/manage-project/1']}>
+                <Routes>
+                    <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                </Routes>
+            </MemoryRouter>
+        );
+
+        await screen.findByText('1. Core Info');
+        fireEvent.click(screen.getByRole('button', { name: '2. Media' }));
+        await screen.findByText('Cover Image');
+
+        // Model card should have compact-model-card class because project is not 3D and has no model files
+        const modelHeading = screen.getByRole('heading', { level: 4, name: /3D Model/i });
+        const modelCard = modelHeading.closest('.media-input-card');
+        expect(modelCard).toHaveClass('compact-model-card');
+
+        // Select a video file
+        const videoInput = screen.getByLabelText(/Upload Video/i);
+        const videoFile = new File(['vid'], 'presentation.mp4', { type: 'video/mp4' });
+        fireEvent.change(videoInput, { target: { files: [videoFile] } });
+
+        // Selected video row should appear
+        expect(screen.getByText('Selected: presentation.mp4')).toBeInTheDocument();
+        const selectedRow = screen.getByText('Selected: presentation.mp4').closest('.file-selected-row');
+        expect(selectedRow).toBeInTheDocument();
+
+        // Subtle hint when both video_url and projectVideo are present
+        expect(screen.getByText('Uploaded video will replace the video URL when saved.')).toBeInTheDocument();
     });
 
     it('deletes project after confirmation', async () => {
@@ -340,7 +458,7 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        await screen.findByText('Core Information');
+        await screen.findByText('1. Core Info');
         
         fireEvent.click(screen.getByRole('button', { name: /Delete Project/i }));
 
@@ -371,7 +489,7 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        await screen.findByText('Core Information');
+        await screen.findByText('1. Core Info');
         
         fireEvent.click(screen.getByRole('button', { name: /Delete Project/i }));
 
@@ -394,7 +512,7 @@ describe('ManageProject', () => {
             </MemoryRouter>
         );
 
-        await screen.findByText('Core Information');
+        await screen.findByText('1. Core Info');
 
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
         fireEvent.click(screen.getByRole('button', { name: /Next/i }));
@@ -438,7 +556,7 @@ describe('ManageProject', () => {
             useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
 
             renderNewProject();
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
             fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
 
             expect(await screen.findByText('Admin Controls')).toBeInTheDocument();
@@ -455,7 +573,7 @@ describe('ManageProject', () => {
         it('shows no admin controls to a student, and never asks for the student list', async () => {
             renderNewProject();
 
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
 
             expect(screen.queryByText('Admin Controls')).not.toBeInTheDocument();
             expect(screen.queryByLabelText('Assign to Student')).not.toBeInTheDocument();
@@ -467,7 +585,7 @@ describe('ManageProject', () => {
             useAuthStore.setState({ user: { id: 2, username: 'mum', role: 'parent' } });
             renderNewProject();
 
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
 
             expect(screen.queryByText('Admin Controls')).not.toBeInTheDocument();
             expect(studentListRequests).toBe(0);
@@ -483,7 +601,7 @@ describe('ManageProject', () => {
                 })
             );
             renderNewProject();
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
             fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'Maze' } });
             
             fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
@@ -501,30 +619,26 @@ describe('ManageProject', () => {
             expect(sent.name).toBe('Maze');
         });
 
-        it('lets an admin rename a project that came from a template, which a student cannot', async () => {
+        it('marks a project whose name matches a template with a Template badge, and switches to custom when renamed', async () => {
             server.use(
                 http.get('*/user/project/edit/1', () =>
                     HttpResponse.json({ status: 'success', data: { project: { id: 1, name: 'Template A', user_id: 5 } } })
                 )
             );
-            const open = () =>
-                render(
-                    <MemoryRouter initialEntries={['/manage-project/1']}>
-                        <Routes>
-                            <Route path="/manage-project/:projectId" element={<ManageProject />} />
-                        </Routes>
-                    </MemoryRouter>
-                );
+            render(
+                <MemoryRouter initialEntries={['/manage-project/1']}>
+                    <Routes>
+                        <Route path="/manage-project/:projectId" element={<ManageProject />} />
+                    </Routes>
+                </MemoryRouter>
+            );
 
-            const studentView = open();
-            await screen.findByText('Core Information');
-            expect(screen.getByLabelText('Project Name')).toHaveAttribute('readonly');
-            studentView.unmount();
-
-            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
-            open();
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
+            expect(await screen.findByText('Template')).toBeInTheDocument();
             expect(screen.getByLabelText('Project Name')).not.toHaveAttribute('readonly');
+
+            fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'My Custom Name' } });
+            expect(screen.queryByText('Template')).not.toBeInTheDocument();
         });
 
         it('shows the admin the owner and the earlier teacher comment of the project being edited', async () => {
@@ -545,7 +659,7 @@ describe('ManageProject', () => {
                 </MemoryRouter>
             );
 
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
             fireEvent.click(screen.getByRole('button', { name: /4. Review/i }));
 
             const select = await screen.findByLabelText('Assign to Student');
@@ -556,14 +670,14 @@ describe('ManageProject', () => {
         it('walks an admin on from Code & Files to the review step and back', async () => {
             useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
             renderNewProject();
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
             fireEvent.click(screen.getByRole('button', { name: '3. Code & Files' }));
 
             fireEvent.click(screen.getByRole('button', { name: /Next/i }));
             expect(await screen.findByText('Admin Controls')).toBeInTheDocument();
 
             fireEvent.click(screen.getByRole('button', { name: /Back/i }));
-            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: 'Source Files' })).toBeInTheDocument();
         });
     });
 
@@ -576,7 +690,7 @@ describe('ManageProject', () => {
                 </Routes>
             </MemoryRouter>
         );
-        await screen.findByText('Core Information');
+        await screen.findByText('1. Core Info');
 
         fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
@@ -590,7 +704,7 @@ describe('ManageProject', () => {
                     <ManageProject />
                 </MemoryRouter>
             );
-            await screen.findByText('Core Information');
+            await screen.findByText('1. Core Info');
         };
 
         it('makes the wizard steps real buttons and marks the current one', async () => {
@@ -612,16 +726,16 @@ describe('ManageProject', () => {
             await openProject();
 
             fireEvent.click(screen.getByRole('button', { name: '2. Media' }));
-            expect(await screen.findByText('Media Assets')).toBeInTheDocument();
+            expect(await screen.findByText('Cover Image')).toBeInTheDocument();
             expect(screen.getByRole('button', { name: '2. Media' })).toHaveAttribute('aria-current', 'step');
             expect(screen.getByRole('button', { name: '1. Core Info' })).not.toHaveAttribute('aria-current');
 
             fireEvent.click(screen.getByRole('button', { name: '3. Code & Files' }));
-            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: 'Source Files' })).toBeInTheDocument();
             expect(screen.getByRole('button', { name: '3. Code & Files' })).toHaveAttribute('aria-current', 'step');
 
             fireEvent.click(screen.getByRole('button', { name: '1. Core Info' }));
-            expect(screen.getByText('Core Information')).toBeInTheDocument();
+            expect(screen.getByLabelText('Project Name')).toBeInTheDocument();
         });
 
         it('switches steps from the keyboard', async () => {
@@ -630,12 +744,12 @@ describe('ManageProject', () => {
 
             screen.getByRole('button', { name: '2. Media' }).focus();
             await user.keyboard('{Enter}');
-            expect(await screen.findByText('Media Assets')).toBeInTheDocument();
+            expect(await screen.findByText('Cover Image')).toBeInTheDocument();
 
             await user.tab();
             expect(screen.getByRole('button', { name: '3. Code & Files' })).toHaveFocus();
             await user.keyboard(' ');
-            expect(screen.getByRole('heading', { name: 'Code & Files' })).toBeInTheDocument();
+            expect(screen.getByRole('heading', { name: 'Source Files' })).toBeInTheDocument();
         });
 
         it('names the video URL field', async () => {
@@ -657,7 +771,7 @@ describe('ManageProject', () => {
             const user = userEvent.setup();
             await openProject();
             fireEvent.click(screen.getByRole('button', { name: '2. Media' }));
-            await screen.findByText('Media Assets');
+            await screen.findByText('Cover Image');
 
             const image = screen.getByLabelText(/Upload Image/i);
             const video = screen.getByLabelText(/Upload Video/i);

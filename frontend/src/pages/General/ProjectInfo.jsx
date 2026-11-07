@@ -82,6 +82,9 @@ const ProjectInfo = () => {
         formData.append('description', project.description || '');
         formData.append('student_id', user.id);
         formData.append('template_id', project.id);
+        if (project.project_type) {
+            formData.append('project_type', project.project_type);
+        }
         
         try {
             const response = await client.post('/user/project/new', formData);

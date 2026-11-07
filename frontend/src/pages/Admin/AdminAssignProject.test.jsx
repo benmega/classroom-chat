@@ -293,9 +293,23 @@ describe('AdminAssignProject', () => {
             await waitFor(() => {
                 expect(client.post).toHaveBeenCalledWith('/api/admin/assign-project', expect.objectContaining({
                     name: 'Marble Run',
-                    project_type: '3d'
+                    project_type: '3d',
+                    template_id: 1
                 }));
             });
+        });
+
+        it('clears prefilled template fields and resets template_id when switching back to custom blank', async () => {
+            await openPage({ 1: { id: 1, name: 'Marble Run', description: '3D desc', project_type: '3d' } });
+            await screen.findByText('Marble Run');
+
+            pickTemplate(1);
+            expect(screen.getByPlaceholderText(/awesome game/i)).toHaveValue('Marble Run');
+            expect(screen.getByLabelText('Project type')).toHaveValue('3d');
+
+            fireEvent.change(screen.getByLabelText(/Standard Project Template/), { target: { value: '' } });
+            expect(screen.getByPlaceholderText(/awesome game/i)).toHaveValue('');
+            expect(screen.getByLabelText('Project type')).toHaveValue('code');
         });
 
         it('lets the admin change the prefilled type before assigning', async () => {

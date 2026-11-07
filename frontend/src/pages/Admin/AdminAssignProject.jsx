@@ -27,7 +27,8 @@ const AdminAssignProject = () => {
         video_url: '',
         code_snippet: '',
         image_url: '',
-        project_type: 'code'
+        project_type: 'code',
+        template_id: null
     });
 
 
@@ -196,8 +197,22 @@ const AdminAssignProject = () => {
                                         <label htmlFor="input-193">Standard Project Template (Optional)</label>
                                         <select id="input-193" 
                                             className="form-control"
+                                            value={assignForm.template_id ?? ''}
                                             onChange={(e) => {
-                                                if (!e.target.value) return;
+                                                if (!e.target.value) {
+                                                    setAssignForm({
+                                                        name: '',
+                                                        description: '',
+                                                        link: '',
+                                                        github_link: '',
+                                                        video_url: '',
+                                                        code_snippet: '',
+                                                        image_url: '',
+                                                        project_type: 'code',
+                                                        template_id: null
+                                                    });
+                                                    return;
+                                                }
                                                 const sp = standardProjects.find(p => p.id === parseInt(e.target.value));
                                                 if (sp) {
                                                     setAssignForm({
@@ -208,7 +223,8 @@ const AdminAssignProject = () => {
                                                         video_url: sp.video_url || '',
                                                         code_snippet: sp.code_snippet || '',
                                                         image_url: sp.image_url || '',
-                                                        project_type: sp.project_type || 'code'
+                                                        project_type: sp.project_type || 'code',
+                                                        template_id: sp.id
                                                     });
                                                 }
                                             }}

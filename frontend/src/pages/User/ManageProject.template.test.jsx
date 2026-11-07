@@ -66,7 +66,7 @@ describe('ManageProject - template link (template_id)', () => {
         await waitFor(() => expect(screen.getByTestId('profile-page')).toBeInTheDocument());
     };
 
-    it('sends the selected template id when creating a project', async () => {
+    it('sends the selected template id when creating a project with a template name', async () => {
         let sent = null;
         server.use(
             http.post('*/user/project/new', async ({ request }) => {
@@ -76,9 +76,10 @@ describe('ManageProject - template link (template_id)', () => {
         );
 
         renderCreate();
-        await screen.findByText('Core Information');
-        await screen.findByRole('option', { name: 'Template B' });
-        fireEvent.change(screen.getByLabelText('Template'), { target: { value: 'Template B' } });
+        await screen.findByText('1. Core Info');
+        await waitFor(() => expect(document.querySelector('#project-template-options option[value="Template B"]')).toBeInTheDocument());
+        fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'Template B' } });
+        expect(screen.getByText('Template')).toBeInTheDocument();
 
         await submit(/Create Project/i);
         expect(sent.get('template_id')).toBe('12');
@@ -95,8 +96,9 @@ describe('ManageProject - template link (template_id)', () => {
         );
 
         renderCreate();
-        await screen.findByText('Core Information');
+        await screen.findByText('1. Core Info');
         fireEvent.change(screen.getByLabelText('Project Name'), { target: { value: 'Freeform' } });
+        expect(screen.queryByText('Template')).not.toBeInTheDocument();
 
         await submit(/Create Project/i);
         expect(sent.has('template_id')).toBe(false);
@@ -116,7 +118,7 @@ describe('ManageProject - template link (template_id)', () => {
         );
 
         renderEdit();
-        await waitFor(() => expect(screen.getByLabelText('Template')).toHaveValue('Template B'));
+        await waitFor(() => expect(screen.getByText('Template')).toBeInTheDocument());
         expect(screen.getByDisplayValue('My Renamed Thing')).toBeInTheDocument();
 
         await submit(/Update Project/i);
@@ -133,7 +135,7 @@ describe('ManageProject - template link (template_id)', () => {
         );
 
         renderEdit();
-        await waitFor(() => expect(screen.getByLabelText('Template')).toHaveValue('Template A'));
+        await waitFor(() => expect(screen.getByText('Template')).toBeInTheDocument());
     });
 
     it('sends an empty template_id when editing a custom project', async () => {
@@ -150,9 +152,9 @@ describe('ManageProject - template link (template_id)', () => {
         );
 
         renderEdit();
-        await screen.findByText('Core Information');
-        await screen.findByRole('option', { name: 'Template A' });
-        expect(screen.getByLabelText('Template')).toHaveValue('custom');
+        await screen.findByText('1. Core Info');
+        await waitFor(() => expect(document.querySelector('#project-template-options option[value="Template A"]')).toBeInTheDocument());
+        expect(screen.queryByText('Template')).not.toBeInTheDocument();
 
         await submit(/Update Project/i);
         // "null" tells the server to clear the link (the backend also accepts "")

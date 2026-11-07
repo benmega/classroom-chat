@@ -162,7 +162,7 @@ const PublicLayout = () => (
   </Layout>
 );
 
-const TOAST_POSITION = 'bottom-right';
+const TOAST_POSITION = 'top-right';
 
 // react-hot-toast announces every toast politely (role="status"). Errors should interrupt the screen
 // reader instead, so they are rendered as an assertive alert; the bar, its styling and animation are unchanged.
@@ -211,7 +211,7 @@ function App() {
             position={TOAST_POSITION}
             gutter={12}
             containerStyle={{
-                bottom: 24,
+                top: 24,
                 right: 24,
             }}
             toastOptions={{

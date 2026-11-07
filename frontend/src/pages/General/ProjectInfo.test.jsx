@@ -265,11 +265,11 @@ describe('ProjectInfo', () => {
         });
     });
 
-    it('sends the template id when assigning', async () => {
+    it('sends the template id and project_type when assigning', async () => {
         client.get.mockImplementation((url) => {
             if (url === '/api/project-templates') {
                 return Promise.resolve({
-                    data: { data: { templates: { 'Test Project': { id: 1, name: 'Test Project', description: 'Desc' } } } }
+                    data: { data: { templates: { 'Test Project': { id: 1, name: 'Test Project', description: 'Desc', project_type: '3d' } } } }
                 });
             }
             if (url === '/user/profile') {
@@ -287,6 +287,7 @@ describe('ProjectInfo', () => {
         expect(url).toBe('/user/project/new');
         expect(body.get('template_id')).toBe('1');
         expect(body.get('name')).toBe('Test Project');
+        expect(body.get('project_type')).toBe('3d');
     });
 
     it('recognises a renamed project through template_id', async () => {

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft, AlertCircle, Box, FileCode, FolderUp, Images, Files } from 'lucide-react';
+import { Save, Trash2, Upload, Link as LinkIcon, Video, Code, Camera, Image as ImageIcon, ExternalLink, Play, Youtube, ArrowRight, ArrowLeft, AlertCircle, Box, FileCode, FolderUp, Images, Files, HelpCircle } from 'lucide-react';
 import AccessDenied from '../Error/AccessDenied';
 import NotFound from '../Error/NotFound';
 import useAuthStore from '../../store/useAuthStore';
@@ -17,10 +17,12 @@ import { modelFormatFromName } from '../../utils/modelFormats';
 import { useProjectManagement } from '../../hooks/useProjectManagement';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 
-const PROJECT_TYPE_OPTIONS = [
-    { value: 'code', label: 'Code project', Icon: Code },
-    { value: '3d', label: '3D model', Icon: Box },
-];
+const InfoTooltip = ({ text }) => (
+    <span className="info-tooltip-wrapper" aria-label={text}>
+        <HelpCircle size={15} className="info-tooltip-icon" aria-hidden="true" />
+        <span className="info-tooltip-bubble" role="tooltip">{text}</span>
+    </span>
+);
 
 const countOf = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 
@@ -44,10 +46,10 @@ const ManageProject = () => {
         isSaving,
         imagePreview,
         projectVideo,
+        clearProjectVideo,
         isCustomImage,
         error,
         projectType,
-        setProjectType,
         existingFiles,
         pendingFiles,
         removedFileIds,
@@ -55,7 +57,6 @@ const ManageProject = () => {
         pendingModelPreviewUrl,
         uploadProgress,
         handleInputChange,
-        handleTemplateChange,
         handleFileChange,
         handleRecordedVideo,
         addFiles,
@@ -154,10 +155,9 @@ const ManageProject = () => {
     if (error === 'not_found') return <NotFound message="The project you are looking for does not exist or you do not have permission to view it." />;
 
     const feedback = getFeedbackStyle(projectData.status);
-    // A template fixes the type of the projects built from it; an admin can still change it
-    const canChooseType = selectedTemplate === 'custom' || currentUser?.role === 'admin';
     const is3d = projectType === '3d';
     const savedFiles = groupProjectFiles(existingFiles);
+    const showModelFirst = is3d || savedFiles.models.length > 0;
     const savedModel = primaryModelFile(existingFiles.filter((file) => !removedFileIds.has(file.id)));
     const pendingModel = pendingFiles.model[0];
     // The model the preview shows: a newly picked one first, else the saved one the project keeps
@@ -172,6 +172,7 @@ const ManageProject = () => {
         };
     }
     const fileSummary = describeFileCounts(fileCounts);
+    const isLastStep = currentUser?.role === 'admin' ? activeTab === 'review' : activeTab === 'code';
 
     const pickFiles = (kind) => (e) => {
         addFiles(kind, e.target.files);
@@ -192,9 +193,11 @@ const ManageProject = () => {
     );
 
     const modelCard = (
-        <div className="media-input-card">
-            <h4><Box size={16} /> 3D Model</h4>
-            <p className="media-hint">Export from Tinkercad with Export &gt; .STL, or from Blender with File &gt; Export &gt; STL or glTF. We will make a cover image from it if you have none.</p>
+        <div className={`media-input-card${!is3d && savedFiles.models.length === 0 && pendingFiles.model.length === 0 ? ' compact-model-card' : ''}`}>
+            <div className="media-card-header">
+                <h4><Box size={16} /> 3D Model</h4>
+                <InfoTooltip text="Export from Tinkercad with Export > .STL, or from Blender with File > Export > STL or glTF. We will make a cover image from it if you have none." />
+            </div>
             <label className="file-upload-btn primary-upload">
                 <Upload size={16} /> Upload 3D Model
                 <input type="file" name="model_files" multiple accept={acceptForKind('model')} onChange={pickFiles('model')} className="sr-only" />
@@ -234,58 +237,29 @@ const ManageProject = () => {
                         <div className="form-wizard-content">
                             {activeTab === 'core' && (
                                 <div className="form-section fade-in">
-                                    <h3>Core Information</h3>
                                     <div className="form-group">
-                                        <label htmlFor="input-141">Template</label>
-                                        <select id="input-141"
-                                            name="project_template"
-                                            value={selectedTemplate}
-                                            onChange={handleTemplateChange}
-                                            className="form-control"
-                                        >
-                                            <option value="custom">Custom Project</option>
-                                            {Object.keys(templates).map(t => (
-                                                <option key={t} value={t}>{t}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    {canChooseType ? (
-                                        <fieldset className="project-type-field">
-                                            <legend>Project Type</legend>
-                                            <div className="project-type-options">
-                                                {PROJECT_TYPE_OPTIONS.map((option) => (
-                                                    <label key={option.value} className={`project-type-option ${projectType === option.value ? 'selected' : ''}`}>
-                                                        <input
-                                                            type="radio"
-                                                            name="project_type"
-                                                            value={option.value}
-                                                            checked={projectType === option.value}
-                                                            onChange={() => setProjectType(option.value)}
-                                                            className="sr-only"
-                                                        />
-                                                        <option.Icon size={16} /> {option.label}
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        </fieldset>
-                                    ) : (
-                                        <p className="project-type-fixed">
-                                            <strong>Project Type:</strong> {PROJECT_TYPE_OPTIONS.find((option) => option.value === projectType)?.label}
-                                            <span className="optional-badge">Set by the template</span>
-                                        </p>
-                                    )}
-                                    <div className="form-group">
-                                        <label htmlFor="input-155">Project Name</label>
+                                        <div className="form-label-row">
+                                            <label htmlFor="input-155">Project Name</label>
+                                            <InfoTooltip text="Choose a default project name from the suggestions to use its template, or type any other name for a custom project." />
+                                            {selectedTemplate !== 'custom' && (
+                                                <span className="optional-badge">Template</span>
+                                            )}
+                                        </div>
                                         <input id="input-155"
                                             type="text"
                                             name="name"
+                                            list="project-template-options"
                                             value={projectData.name || ''}
                                             onChange={handleInputChange}
-                                            placeholder="e.g. My Awesome Platformer"
-                                            className={`form-control title-input-left ${selectedTemplate !== 'custom' && currentUser?.role !== 'admin' ? 'read-only-input' : ''}`}
+                                            placeholder="Choose a template or type a custom name..."
+                                            className="form-control title-input-left"
                                             required
-                                            readOnly={selectedTemplate !== 'custom' && currentUser?.role !== 'admin'}
                                         />
+                                        <datalist id="project-template-options">
+                                            {Object.keys(templates).map(t => (
+                                                <option key={t} value={t} />
+                                            ))}
+                                        </datalist>
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="input-168">Description</label>
@@ -299,18 +273,34 @@ const ManageProject = () => {
                                             rows="4"
                                         />
                                     </div>
-                                    <div className="form-group">
-                                        <label htmlFor="input-180">Demo Link <span className="optional-badge">Optional</span></label>
-                                        <div className="video-input-wrapper">
-                                            <LinkIcon size={16} className="input-icon-inside" />
-                                            <input id="input-180"
-                                                type="url"
-                                                name="link"
-                                                value={projectData.link || ''}
-                                                onChange={handleInputChange}
-                                                placeholder="https://..."
-                                                className="form-control with-icon-pl"
-                                            />
+                                    <div className="form-row-2col">
+                                        <div className="form-group">
+                                            <label htmlFor="input-180">Demo Link <span className="optional-badge">Optional</span></label>
+                                            <div className="video-input-wrapper">
+                                                <LinkIcon size={16} className="input-icon-inside" />
+                                                <input id="input-180"
+                                                    type="url"
+                                                    name="link"
+                                                    value={projectData.link || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="https://..."
+                                                    className="form-control with-icon-pl"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="input-github-link">GitHub Link <span className="optional-badge">Optional</span></label>
+                                            <div className="video-input-wrapper">
+                                                <LinkIcon size={16} className="input-icon-inside" />
+                                                <input id="input-github-link"
+                                                    type="url"
+                                                    name="github_link"
+                                                    value={projectData.github_link || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="https://github.com/..."
+                                                    className="form-control with-icon-pl"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -318,13 +308,13 @@ const ManageProject = () => {
 
                             {activeTab === 'media' && (
                                 <div className="form-section fade-in">
-                                    <h3>Media Assets</h3>
-
-                                    {is3d && modelCard}
+                                    {showModelFirst && modelCard}
 
                                     <div className="media-input-card">
-                                        <h4><ImageIcon size={16} /> Cover Image</h4>
-                                        <p className="media-hint">Upload a thumbnail to represent your project.</p>
+                                        <div className="media-card-header">
+                                            <h4><ImageIcon size={16} /> Cover Image</h4>
+                                            <InfoTooltip text="Upload a thumbnail to represent your project." />
+                                        </div>
                                         <label className="file-upload-btn primary-upload">
                                             <Upload size={16} /> {imagePreview || projectData.image_url ? 'Change Cover Image' : 'Upload Image'}
                                             <input type="file" name="project_image" onChange={handleFileChange} accept="image/*" className="sr-only" />
@@ -332,8 +322,10 @@ const ManageProject = () => {
                                     </div>
 
                                     <div className="media-input-card">
-                                        <h4><Video size={16} /> Video Presentation</h4>
-                                        <p className="media-hint">Add a YouTube/Vimeo link, or upload/record a video directly.</p>
+                                        <div className="media-card-header">
+                                            <h4><Video size={16} /> Video Presentation</h4>
+                                            <InfoTooltip text="Add a YouTube/Vimeo link, or upload/record a video directly." />
+                                        </div>
                                         
                                         <div className="video-input-wrapper">
                                             <Youtube size={16} className="input-icon-inside" />
@@ -357,33 +349,48 @@ const ManageProject = () => {
                                                 <Camera size={16} /> Record Screen
                                             </button>
                                         </div>
-                                        {projectVideo && <div className="file-name success-text">Selected: {projectVideo.name.split(/[\\/]/).pop()}</div>}
+                                        {projectVideo && (
+                                            <div className="file-selected-row">
+                                                <span className="file-name success-text">Selected: {projectVideo.name.split(/[\\/]/).pop()}</span>
+                                                {typeof clearProjectVideo === 'function' && (
+                                                    <button type="button" className="project-file-action" onClick={clearProjectVideo} aria-label="Remove selected video">
+                                                        Remove
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                        {projectData.video_url && projectVideo && (
+                                            <p className="media-hint video-replace-hint">Uploaded video will replace the video URL when saved.</p>
+                                        )}
                                     </div>
 
-                                    {!is3d && modelCard}
+                                    {!showModelFirst && modelCard}
                                 </div>
                             )}
 
                             {activeTab === 'code' && (
                                 <div className="form-section fade-in">
-                                    <h3>Code &amp; Files</h3>
                                     {is3d && <p className="media-hint">Everything in this step is optional for a 3D model.</p>}
                                     <div className="form-group">
-                                        <label htmlFor="project-code-snippet">Highlighted Code Snippet <span className="optional-badge">Optional</span></label>
-                                        <p className="media-hint">Paste the most interesting part of your code. It is shown highlighted on your project.</p>
+                                        <div className="form-label-row">
+                                            <label htmlFor="project-code-snippet">Highlighted Code Snippet <span className="optional-badge">Optional</span></label>
+                                            <InfoTooltip text="Paste the most interesting part of your code. It is shown highlighted on your project." />
+                                        </div>
                                         <textarea id="project-code-snippet"
                                             name="code_snippet"
                                             value={projectData.code_snippet || ''}
                                             onChange={handleInputChange}
                                             className="form-control inline-code-editor"
                                             placeholder="def my_awesome_function():\n    pass"
-                                            rows={8}
+                                            rows={5}
                                         />
                                     </div>
 
                                     <div className="media-input-card">
-                                        <h4><FileCode size={16} /> Source Files</h4>
-                                        <p className="media-hint">Add your code files, or a whole project folder to keep its folders. Hidden folders, node_modules, venv and __pycache__ are left out.</p>
+                                        <div className="media-card-header">
+                                            <h4><FileCode size={16} /> Source Files</h4>
+                                            <InfoTooltip text="Add your code files, or a whole project folder to keep its folders. Hidden folders, node_modules, venv and __pycache__ are left out." />
+                                        </div>
                                         <div className="upload-actions-row">
                                             <label className="file-upload-btn secondary-upload">
                                                 <Upload size={16} /> Add Files
@@ -398,8 +405,10 @@ const ManageProject = () => {
                                     </div>
 
                                     <div className="media-input-card">
-                                        <h4><Images size={16} /> Assets</h4>
-                                        <p className="media-hint">Images, sounds and PDFs that belong to your project.</p>
+                                        <div className="media-card-header">
+                                            <h4><Images size={16} /> Assets</h4>
+                                            <InfoTooltip text="Images, sounds and PDFs that belong to your project." />
+                                        </div>
                                         <label className="file-upload-btn secondary-upload">
                                             <Upload size={16} /> Add Assets
                                             <input type="file" name="asset_files" multiple accept={acceptForKind('asset')} onChange={pickFiles('asset')} className="sr-only" />
@@ -411,8 +420,7 @@ const ManageProject = () => {
                             
                             {activeTab === 'review' && currentUser?.role === 'admin' && (
                                 <div className="form-section fade-in">
-                                    <h3>Review</h3>
-                                    <div className="admin-controls-panel" style={{ marginTop: '1.5rem' }}>
+                                    <div className="admin-controls-panel">
                                         <h4>Admin Controls</h4>
                                         <div className="form-group">
                                             <label htmlFor="input-123">Assign to Student</label>
@@ -535,11 +543,12 @@ const ManageProject = () => {
                         {/* Distinct keys: without them React keeps one DOM node for both buttons, so a click on Next
                             turns that node into the submit button before the browser applies the click's default
                             action, and the form is submitted a step early. */}
-                        {(currentUser?.role === 'admin' ? activeTab !== 'review' : activeTab !== 'code') ? (
+                        {!isLastStep && (
                             <button key="next" type="button" className="btn-primary" onClick={handleNext}>
                                 Next <ArrowRight size={16} />
                             </button>
-                        ) : (
+                        )}
+                        {(isLastStep || projectId) && (
                             <button key="save" type="submit" disabled={isSaving} className="btn-save">
                                 <Save size={18} /> {isSaving ? (uploadProgress === null ? 'Saving...' : `Uploading ${uploadProgress}%`) : (projectData.status === 'rejected' ? 'Resubmit for Review' : (projectId ? 'Update Project' : 'Create Project'))}
                             </button>

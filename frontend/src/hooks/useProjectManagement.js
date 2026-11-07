@@ -87,6 +87,8 @@ export const useProjectManagement = () => {
     // isCustomImage for a model snapshot that resolves after the student picked a cover of their own
     const customCoverRef = useRef(false);
     const nextLocalFileIdRef = useRef(1);
+    const initialTemplateIdRef = useRef(null);
+    const templateChangedRef = useRef(false);
 
     const revokePreviewBlob = useCallback(() => {
         if (previewBlobRef.current) {
@@ -165,7 +167,8 @@ export const useProjectManagement = () => {
                     }
                     setExistingFiles(Array.isArray(p.files) ? p.files : []);
                     
-                    // Preselect the template this project was built from: by template_id
+                    initialTemplateIdRef.current = p.template_id ?? null;
+                    templateChangedRef.current = false;
                     // when present, else by exact (case-insensitive) name for older projects.
                     let matchingTemplate = 'custom';
                     const templateNames = Object.keys(fetchedTemplates);
@@ -208,26 +211,70 @@ export const useProjectManagement = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
+        if (name === 'name') {
+            templateChangedRef.current = true;
+            const trimmed = (value || '').trim().toLowerCase();
+            const matched = trimmed
+                ? (Object.keys(templates).find(t => t.toLowerCase() === trimmed) || 'custom')
+                : 'custom';
+            const prevTemplate = selectedTemplate;
+            setSelectedTemplate(matched);
+            if (matched !== 'custom') {
+                const tmpl = templates[matched] || {};
+                const prevTmpl = prevTemplate !== 'custom' ? templates[prevTemplate] : null;
+                setProjectData(prev => ({
+                    ...prev,
+                    name: value,
+                    description: (!prev.description || prev.description === prevTmpl?.description)
+                        ? (tmpl.description || '')
+                        : prev.description,
+                    link: tmpl.link ?? prev.link,
+                    github_link: tmpl.github_link ?? prev.github_link,
+                    code_snippet: tmpl.code_snippet ?? prev.code_snippet,
+                }));
+                if (!isCustomImage && tmpl.image_url) {
+                    setImagePreview(formatStaticUrl(tmpl.image_url));
+                }
+                setProjectTypeState(knownProjectType(tmpl.project_type) || 'code');
+            } else {
+                setProjectData(prev => ({ ...prev, name: value }));
+                if (prevTemplate !== 'custom') {
+                    setProjectTypeState('code');
+                }
+            }
+            return;
+        }
         setProjectData(prev => ({ ...prev, [name]: value }));
         
-        if (e.target.tagName.toLowerCase() === 'textarea') {
+        if (e.target.tagName && e.target.tagName.toLowerCase() === 'textarea') {
             adjustTextareaHeight(e.target);
         }
     };
 
     const handleTemplateChange = (e) => {
         const template = e.target.value;
+        templateChangedRef.current = true;
         setSelectedTemplate(template);
         if (template !== 'custom') {
+            const tmpl = templates[template] || {};
             setProjectData(prev => ({ 
                 ...prev, 
                 name: template,
-                description: templates[template]?.description || ''
+                description: tmpl.description || '',
+                link: tmpl.link ?? prev.link,
+                github_link: tmpl.github_link ?? prev.github_link,
+                code_snippet: tmpl.code_snippet ?? prev.code_snippet,
             }));
+            if (!isCustomImage && tmpl.image_url) {
+                setImagePreview(formatStaticUrl(tmpl.image_url));
+            }
             // A template decides what kind of project it is
-            setProjectTypeState(knownProjectType(templates[template]?.project_type) || 'code');
+            setProjectTypeState(knownProjectType(tmpl.project_type) || 'code');
         } else {
-            setProjectData(prev => ({ ...prev, name: '' }));
+            setProjectData(prev => ({
+                ...prev,
+                name: (!projectId || prev.name === selectedTemplate) ? '' : prev.name
+            }));
         }
     };
 
@@ -263,8 +310,19 @@ export const useProjectManagement = () => {
     };
 
     const handleRecordedVideo = async (blob) => {
+        if (!blob) return;
         const file = new File([blob], `recorded_video_${Date.now()}.webm`, { type: 'video/webm' });
         setProjectVideo(file);
+
+        const downloadUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = file.name;
+        link.setAttribute('download', file.name);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(downloadUrl);
         
         if (!isCustomImage) {
             try {
@@ -382,6 +440,7 @@ export const useProjectManagement = () => {
             fileCounts[file.kind] += 1;
         }
     });
+    const effectiveProjectType = fileCounts.model > 0 ? '3d' : projectType;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -393,15 +452,17 @@ export const useProjectManagement = () => {
                 formData.append(key, value);
             }
         });
-        formData.append('project_type', projectType);
+        formData.append('project_type', effectiveProjectType);
 
         // Link the project to its template so renaming it later can't break the link.
         // A custom project is only sent explicitly (as "null") when editing, to clear a link;
         // on create the server links exact name matches itself.
-        const templateId = selectedTemplate !== 'custom' ? templates[selectedTemplate]?.id : null;
+        const templateId = selectedTemplate !== 'custom'
+            ? templates[selectedTemplate]?.id
+            : (!templateChangedRef.current && initialTemplateIdRef.current != null ? initialTemplateIdRef.current : null);
         if (templateId != null) {
             formData.append('template_id', templateId);
-        } else if (projectId && Object.keys(templates).length > 0) {
+        } else if (projectId && (templateChangedRef.current || Object.keys(templates).length > 0)) {
             formData.append('template_id', 'null');
         }
 
@@ -455,6 +516,10 @@ export const useProjectManagement = () => {
         }
     };
 
+    const clearProjectVideo = () => {
+        setProjectVideo(null);
+    };
+
     const handleDelete = async () => {
         if (!await showConfirm('Are you sure you want to delete this project?', { title: 'Delete Project', destructive: true })) return;
         
@@ -495,7 +560,7 @@ export const useProjectManagement = () => {
         projectVideo,
         isCustomImage,
         error,
-        projectType,
+        projectType: effectiveProjectType,
         setProjectType,
         existingFiles,
         pendingFiles,
@@ -507,6 +572,7 @@ export const useProjectManagement = () => {
         handleTemplateChange,
         handleFileChange,
         handleRecordedVideo,
+        clearProjectVideo,
         addFiles,
         removePendingFile,
         toggleRemoveExisting,
