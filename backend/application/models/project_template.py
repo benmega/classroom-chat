@@ -1,5 +1,7 @@
 
 
+import sqlalchemy as sa
+
 from ..extensions import db
 from .project import DEFAULT_PROJECT_TYPE
 
@@ -31,6 +33,9 @@ class ProjectTemplate(db.Model):
         default=DEFAULT_PROJECT_TYPE,
         server_default=DEFAULT_PROJECT_TYPE,
     )
+    is_active = db.Column(
+        db.Boolean, default=True, nullable=False, server_default=sa.text("1")
+    )
 
     def __repr__(self):
         return f"<ProjectTemplate {self.name}>"
@@ -51,4 +56,5 @@ class ProjectTemplate(db.Model):
             "goals": self.goals,
             "challenge_slug": self.challenge_slug,
             "project_type": self.project_type,
+            "is_active": bool(self.is_active),
         }

@@ -384,46 +384,20 @@ label.file-upload-btn:has(input:focus-visible) {
 }
 
 /* Dynamic Highlighting Logic */
-.highlight-core .preview-section-media {
-    opacity: 0.5;
-    filter: blur(1px);
-}
-.highlight-core .preview-section-code {
-    opacity: 0.3;
-}
-.highlight-core .preview-section-core {
-    transform: scale(1.02);
-    transform-origin: center left;
-    background: rgba(16, 185, 129, 0.03);
-    border-radius: 8px;
-    box-shadow: var(--shadow-soft);
-}
-
-.highlight-media .preview-section-core {
-    opacity: 0.4;
-}
-.highlight-media .preview-section-code {
-    opacity: 0.3;
-}
-.highlight-media .preview-section-media {
-    transform: scale(1.02);
-    transform-origin: top center;
-    box-shadow: var(--shadow-lg);
-    z-index: 2;
-}
-
-.highlight-code .preview-section-core {
-    opacity: 0.4;
-}
+.highlight-core .preview-section-media,
+.highlight-core .preview-section-code,
+.highlight-media .preview-section-core,
+.highlight-media .preview-section-code,
+.highlight-code .preview-section-core,
 .highlight-code .preview-section-media {
-    opacity: 0.4;
+    opacity: 0.88;
 }
+
+.highlight-core .preview-section-core,
+.highlight-media .preview-section-media,
 .highlight-code .preview-section-code {
-    transform: scale(1.02);
-    transform-origin: bottom center;
-    background: rgba(16, 185, 129, 0.03);
-    border-radius: 8px;
-    padding-top: 1rem;
+    box-shadow: inset 3px 0 0 var(--primary-color);
+    background: rgba(16, 185, 129, 0.02);
 }
 
 /* Floating Action Bar */
@@ -612,7 +586,7 @@ label.file-upload-btn:has(input:focus-visible) {
 }
 
 .inline-code-editor {
-    min-height: 240px; /* the step also holds the source file and asset cards, which must stay in view */
+    min-height: 140px; /* the step also holds the source file and asset cards, which must stay in view */
     font-family: 'Fira Code', Consolas, Monaco, 'Courier New', Courier, monospace;
     font-size: 0.9rem;
     line-height: 1.5;
@@ -808,4 +782,96 @@ label.file-upload-btn:has(input:focus-visible) {
     font-size: var(--font-sm);
     font-weight: 600;
 }
+
+/* Responsive 2-column form row */
+.form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .form-row-2col {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Compact model card for non-3D projects with no model files */
+:where(.manage-project-page) .media-input-card.compact-model-card,
+.compact-model-card {
+    padding: 1rem 1.25rem;
+    border-style: dashed;
+}
+
+/* Selected video row with optional remove action */
+.file-selected-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 0.75rem;
+}
+
+.video-replace-hint {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* Header rows with inline instructional tooltips */
+.media-card-header,
+.form-label-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 0.75rem;
+}
+
+.media-card-header h4,
+:where(.manage-project-page) .form-group .form-label-row label {
+    margin: 0;
+}
+
+.info-tooltip-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-muted);
+    cursor: help;
+    transition: color 0.15s ease;
+}
+
+.info-tooltip-wrapper:hover {
+    color: var(--primary-accessible);
+}
+
+.info-tooltip-bubble {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    width: max-content;
+    max-width: 260px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--slate-800);
+    color: var(--text-on-primary);
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.4;
+    box-shadow: var(--shadow-lg);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+    z-index: 30;
+}
+
+.info-tooltip-wrapper:hover .info-tooltip-bubble {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
 

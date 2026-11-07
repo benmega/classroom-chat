@@ -13,6 +13,7 @@ import {
     projectFileUrl,
     acceptForKind,
     languageForFile,
+    normalizeProjectPath,
     validateNewFiles,
 } from './projectFiles';
 
@@ -449,6 +450,15 @@ describe('validateNewFiles project limits', () => {
             const replacement = fileOf('main.py', 10, { webkitRelativePath: 'src/main.py' });
 
             expect(validateNewFiles('source', [replacement], { existing }).accepted).toEqual([replacement]);
+        });
+
+        it('normalizes model folder paths and punctuation to match stored paths', () => {
+            const existing = [...storedFiles(39), stored(99, 'model', 'robot_v1.stl')];
+            const replacement = fileOf('robot*v1.stl', 10, { webkitRelativePath: 'models/robot*v1.stl' });
+
+            expect(normalizeProjectPath('model', 'models/robot*v1.stl')).toBe('robot_v1.stl');
+            expect(normalizeProjectPath('source', 'src/../game//level  1.py')).toBe('src/game/level 1.py');
+            expect(validateNewFiles('model', [replacement], { existing }).accepted).toEqual([replacement]);
         });
     });
 

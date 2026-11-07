@@ -20,7 +20,7 @@ project_templates_bp = Blueprint("project_templates", __name__)
 @require_login
 @api_response
 def list_templates():
-    templates = ProjectTemplate.query.all()
+    templates = ProjectTemplate.query.filter_by(is_active=True).all()
     templates_info = {
         t.name: t.to_dict()
         for t in templates
@@ -44,8 +44,27 @@ def create_template():
         return {"error": INVALID_PROJECT_TYPE_MESSAGE}, 400
 
     existing = ProjectTemplate.query.filter_by(name=name).first()
-    if existing:
+    if existing and existing.is_active:
         return {"error": "A template with this name already exists"}, 400
+    if existing and not existing.is_active:
+        existing.is_active = True
+        existing.description = description
+        existing.chapter = data.get("chapter")
+        existing.link = data.get("link")
+        existing.github_link = data.get("github_link")
+        existing.video_url = data.get("video_url")
+        existing.code_snippet = data.get("code_snippet")
+        existing.image_url = data.get("image_url")
+        existing.difficulty = data.get("difficulty", "Intermediate")
+        existing.concepts = data.get("concepts", [])
+        existing.goals = data.get("goals", [])
+        existing.challenge_slug = data.get("challenge_slug") or None
+        existing.project_type = project_type
+        db.session.commit()
+        return {
+            "message": f"Project template '{name}' created successfully.",
+            "template": existing.to_dict(),
+        }
 
     template = ProjectTemplate(
         name=name,
@@ -134,7 +153,7 @@ def delete_template(template_id):
     if not template:
         return {"error": "Template not found"}, 404
 
-    db.session.delete(template)
+    template.is_active = False
     db.session.commit()
 
     return {"message": "Project template deleted successfully."}

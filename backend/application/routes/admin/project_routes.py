@@ -231,7 +231,17 @@ def assign_project():
 
     from application.models.project_template import ProjectTemplate
 
-    matched_template = ProjectTemplate.query.filter_by(name=name).first()
+    template_id = data.get("template_id")
+    matched_template = None
+    if template_id is not None and template_id != "":
+        try:
+            matched_template = db.session.get(ProjectTemplate, int(template_id))
+        except (ValueError, TypeError):
+            matched_template = None
+        if not matched_template:
+            return jsonify({"status": "error", "message": "Invalid template."}), 400
+    else:
+        matched_template = ProjectTemplate.query.filter_by(name=name).first()
     project_type = read_project_type(
         data.get("project_type"),
         matched_template.project_type if matched_template else DEFAULT_PROJECT_TYPE,

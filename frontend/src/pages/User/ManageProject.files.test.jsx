@@ -98,7 +98,7 @@ const openEditor = async (route = '/manage-project') => {
             </Routes>
         </MemoryRouter>
     );
-    await screen.findByText('Core Information');
+    await screen.findByText('1. Core Info');
 };
 
 // A file as the browser hands it over; folderPath is where it sits in a picked folder, the folder itself first
@@ -131,27 +131,22 @@ describe('ManageProject - project files and type', () => {
     });
 
     describe('project type', () => {
-        const mediaCardTitles = () => within(screen.getByRole('heading', { name: 'Media Assets' }).parentElement)
+        const mediaCardTitles = () => within(document.querySelector('.form-wizard-content'))
             .getAllByRole('heading', { level: 4 })
             .map((heading) => heading.textContent.trim());
 
-        it('lets a student pick the type of a custom project, and puts the 3D model card first for a 3D one', async () => {
+        it('automatically marks a custom project as 3D when a 3D model is uploaded, and puts the 3D model card first', async () => {
             const user = userEvent.setup();
             serve();
             const sent = captureSave('/user/project/new');
             await openEditor();
 
-            const type = screen.getByRole('group', { name: 'Project Type' });
-            expect(within(type).getByRole('radio', { name: 'Code project' })).toBeChecked();
-            expect(within(type).getByRole('radio', { name: '3D model' })).not.toBeChecked();
+            expect(screen.queryByRole('group', { name: 'Project Type' })).not.toBeInTheDocument();
+            await user.type(screen.getByLabelText('Project Name'), 'Desk Lamp');
             await goTo(user, '2. Media');
             expect(mediaCardTitles()).toEqual(['Cover Image', 'Video Presentation', '3D Model']);
 
-            await goTo(user, '1. Core Info');
-            await user.click(screen.getByRole('radio', { name: '3D model' }));
-            expect(screen.getByRole('radio', { name: '3D model' })).toBeChecked();
-            await user.type(screen.getByLabelText('Project Name'), 'Desk Lamp');
-            await goTo(user, '2. Media');
+            await user.upload(screen.getByLabelText(/Upload 3D Model/), fileOf('lamp.stl', { size: 512 }));
             expect(mediaCardTitles()).toEqual(['3D Model', 'Cover Image', 'Video Presentation']);
 
             await goTo(user, '3. Code & Files');
@@ -159,7 +154,7 @@ describe('ManageProject - project files and type', () => {
             expect(sent.body.get('project_type')).toBe('3d');
         });
 
-        it('shows a student the type a template fixes, as text', async () => {
+        it('sets project_type from a matched 3D or code template name', async () => {
             const user = userEvent.setup();
             serve({
                 templates: {
@@ -168,31 +163,17 @@ describe('ManageProject - project files and type', () => {
                 },
             });
             await openEditor();
-            await screen.findByRole('option', { name: 'Desk Lamp' });
+            await waitFor(() => expect(document.querySelector('#project-template-options option[value="Desk Lamp"]')).toBeInTheDocument());
 
-            await user.selectOptions(screen.getByLabelText('Template'), 'Desk Lamp');
+            await user.type(screen.getByLabelText('Project Name'), 'Desk Lamp');
+            await goTo(user, '2. Media');
+            expect(mediaCardTitles()).toEqual(['3D Model', 'Cover Image', 'Video Presentation']);
 
-            expect(screen.queryByRole('radio')).not.toBeInTheDocument();
-            expect(screen.getByText('Set by the template').closest('p')).toHaveTextContent('Project Type: 3D model');
-
-            await user.selectOptions(screen.getByLabelText('Template'), 'Maze');
-            expect(screen.getByText('Set by the template').closest('p')).toHaveTextContent('Project Type: Code project');
-        });
-
-        it('lets an admin change the type of a project built from a template', async () => {
-            const user = userEvent.setup();
-            useAuthStore.setState({ user: { id: 1, username: 'teacher', role: 'admin' } });
-            serve({
-                project: { name: 'Desk Lamp', user_id: 5, template_id: 7 },
-                templates: { 'Desk Lamp': { id: 7, description: 'Model a lamp', project_type: '3d' } },
-            });
-            await openEditor('/manage-project/1');
-
-            expect(screen.getByRole('radio', { name: '3D model' })).toBeChecked();
-            expect(screen.queryByText('Set by the template')).not.toBeInTheDocument();
-
-            await user.click(screen.getByRole('radio', { name: 'Code project' }));
-            expect(screen.getByRole('radio', { name: 'Code project' })).toBeChecked();
+            await goTo(user, '1. Core Info');
+            await user.clear(screen.getByLabelText('Project Name'));
+            await user.type(screen.getByLabelText('Project Name'), 'Maze');
+            await goTo(user, '2. Media');
+            expect(mediaCardTitles()).toEqual(['Cover Image', 'Video Presentation', '3D Model']);
         });
     });
 
@@ -439,8 +420,8 @@ describe('ManageProject - project files and type', () => {
             await goTo(user, '3. Code & Files');
             expect(screen.queryByText('Everything in this step is optional for a 3D model.')).not.toBeInTheDocument();
 
-            await goTo(user, '1. Core Info');
-            await user.click(screen.getByRole('radio', { name: '3D model' }));
+            await goTo(user, '2. Media');
+            await user.upload(screen.getByLabelText(/Upload 3D Model/), fileOf('robot.stl'));
             await goTo(user, '3. Code & Files');
 
             expect(screen.getByText('Everything in this step is optional for a 3D model.')).toBeInTheDocument();

@@ -227,6 +227,63 @@ def test_deleting_template_nulls_project_template_id(sample_user, seeded):
     assert db.session.get(Project, pid).template_id is None
 
 
+def test_soft_delete_and_reactivation_of_template(
+    client, sample_admin, sample_user, seeded
+):
+    login_as_admin(client, sample_admin)
+    t = _template("Name Tag Model")
+    tid = t.id
+    p = Project(name="My Tag", user_id=sample_user.id, template_id=tid)
+    db.session.add(p)
+    db.session.commit()
+
+    # Soft-delete via DELETE endpoint
+    resp = client.delete(f"/api/project-templates/{tid}")
+    assert resp.status_code == 200
+
+    # Hidden from GET /api/project-templates
+    resp = client.get("/api/project-templates")
+    templates = resp.get_json()["data"]["templates"]
+    assert "Name Tag Model" not in templates
+
+    # Project.template_id stays intact
+    db.session.expire_all()
+    assert db.session.get(Project, p.id).template_id == tid
+
+    # Recreating a template with the same name reactivates it
+    resp = client.post(
+        "/api/project-templates",
+        json={
+            "name": "Name Tag Model",
+            "description": "Reactivated description",
+            "project_type": "3d",
+        },
+    )
+    assert resp.status_code == 200
+    db.session.expire_all()
+    reactivated = db.session.get(ProjectTemplate, tid)
+    assert reactivated.is_active is True
+    assert reactivated.description == "Reactivated description"
+
+
+def test_assign_project_with_explicit_template_id(
+    client, sample_admin, sample_user, seeded
+):
+    login_as_admin(client, sample_admin)
+    t = _template("Name Tag Model")
+    resp = client.post(
+        "/api/admin/assign-project",
+        json={
+            "user_id": sample_user.id,
+            "name": "Custom Student Name Tag",
+            "template_id": t.id,
+        },
+    )
+    assert resp.status_code == 200
+    p = Project.query.filter_by(name="Custom Student Name Tag").one()
+    assert p.template_id == t.id
+
+
 def test_assign_project_by_admin_links_template_by_name(
     client, sample_admin, sample_user, seeded
 ):

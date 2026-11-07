@@ -20,16 +20,12 @@ test.describe('Project files', () => {
         try {
             await page.goto('/api/dev-login?role=student');
             await page.goto('/project/new');
-            await expect(page.getByText('Core Information')).toBeVisible({ timeout: 15000 });
+            await expect(page.getByText('1. Core Info')).toBeVisible({ timeout: 15000 });
 
-            // A custom project of the 3D kind.
+            // A custom project: uploading a 3D model automatically sets project_type to 3d.
             await page.getByLabel('Project Name').fill(projectName);
-            await page.locator('label.project-type-option', { hasText: '3D model' }).click();
-            await expect(page.getByLabel('3D model')).toBeChecked();
 
-            // The Media step leads with the model card for a 3D project.
             await page.getByRole('button', { name: /^Next/ }).click();
-            // The preview column shows a "3D Model" placeholder heading too: look in the form only.
             await expect(page.locator('.form-column').getByRole('heading', { name: '3D Model' })).toBeVisible();
             await page.locator('input[name="model_files"]').setInputFiles(CUBE_STL);
             await expect(page.getByText('cube.stl')).toBeVisible();
@@ -37,7 +33,10 @@ test.describe('Project files', () => {
             await expect(page.locator('.preview-column .model-viewer')).toBeVisible();
 
             await page.getByRole('button', { name: /^Next/ }).click();
+            const createPromise = page.waitForResponse((res) => res.url().includes('/user/project/new') && res.request().method() === 'POST');
             await page.getByRole('button', { name: 'Create Project' }).click();
+            const createBody = await (await createPromise).json();
+            projectId = createBody?.data?.project_id ?? projectId;
             await page.waitForURL(/\/profile/, { timeout: 20000 });
 
             // The portfolio card carries the 3D chip and opens the modal on the viewer.
@@ -84,8 +83,7 @@ test.describe('Project files', () => {
     test('an unsupported model file is turned away before it is uploaded', async ({ page }) => {
         await page.goto('/api/dev-login?role=student');
         await page.goto('/project/new');
-        await expect(page.getByText('Core Information')).toBeVisible({ timeout: 15000 });
-        await page.locator('label.project-type-option', { hasText: '3D model' }).click();
+        await expect(page.getByText('1. Core Info')).toBeVisible({ timeout: 15000 });
         await page.getByRole('button', { name: /^Next/ }).click();
 
         await page.locator('input[name="model_files"]').setInputFiles({

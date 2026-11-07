@@ -259,7 +259,7 @@ describe('useProjectManagement', () => {
         expect(toast.success).toHaveBeenCalledWith('Generated thumbnail from video!');
     });
 
-    it('handles recorded video', async () => {
+    it('handles recorded video and triggers immediate download', async () => {
         client.get.mockResolvedValue(null);
         const { result } = renderHook(() => useProjectManagement());
 
@@ -267,7 +267,15 @@ describe('useProjectManagement', () => {
             await new Promise(r => setTimeout(r, 10));
         });
 
-        const blob = new Blob(['']);
+        const clickedDownloads = [];
+        const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function() {
+            clickedDownloads.push({
+                href: this.href,
+                download: this.download || this.getAttribute('download')
+            });
+        });
+
+        const blob = new Blob(['sample-video-content'], { type: 'video/webm' });
         
         await act(async () => {
             await result.current.handleRecordedVideo(blob);
@@ -275,6 +283,11 @@ describe('useProjectManagement', () => {
 
         expect(extractVideoThumbnail).toHaveBeenCalled();
         expect(toast.success).toHaveBeenCalledWith('Generated thumbnail from recording!');
+        expect(clickedDownloads).toHaveLength(1);
+        expect(clickedDownloads[0].download).toMatch(/^recorded_video_\d+\.webm$/);
+        expect(window.URL.createObjectURL).toHaveBeenCalledWith(blob);
+        expect(window.URL.revokeObjectURL).toHaveBeenCalledWith('blob:url');
+        clickSpy.mockRestore();
     });
 
     it('handles submit', async () => {
@@ -459,7 +472,9 @@ describe('useProjectManagement', () => {
         });
 
         it('releases a recorded-video thumbnail preview on unmount', async () => {
-            window.URL.createObjectURL.mockReturnValueOnce('blob:recorded-thumb');
+            window.URL.createObjectURL
+                .mockReturnValueOnce('blob:download-url')
+                .mockReturnValueOnce('blob:recorded-thumb');
             const { result, unmount } = await mount();
 
             await act(async () => {
@@ -920,7 +935,7 @@ describe('useProjectManagement', () => {
             expect(partNames(body, 'asset_files')).toEqual(['jump.wav']);
             expect(await body.get('model_files').text()).toBe('glTF');
             expect(body.getAll('remove_file_ids')).toEqual(['12', '14']);
-            expect(body.get('project_type')).toBe('code');
+            expect(body.get('project_type')).toBe('3d');
             expect(config).toEqual({ onUploadProgress: expect.any(Function) });
         });
 
@@ -1151,6 +1166,60 @@ describe('useProjectManagement', () => {
             expect(late(frame())).toBe(false);
             expect(URL.createObjectURL).not.toHaveBeenCalled();
             expect(toast.success).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('template preservation and video clearing', () => {
+        it('preserves template_id when editing a project whose template is no longer active', async () => {
+            serveProject({
+                project: { id: 1, name: 'My Archived Template Project', user_id: '2', template_id: 77 },
+                templates: { 'Active Template': { id: 10, description: 'Active' } },
+            });
+            client.post.mockResolvedValueOnce({ data: { status: 'success' } });
+            const { result } = await mountProject();
+
+            expect(result.current.selectedTemplate).toBe('custom');
+            await submitForm(result);
+
+            const sent = client.post.mock.calls[0][1];
+            expect(sent.get('template_id')).toBe('77');
+        });
+
+        it('copies link, github_link, code_snippet, and image_url from template and clears video via clearProjectVideo', async () => {
+            serveProject({
+                project: { id: 1, name: 'My Custom Name', user_id: '2' },
+                templates: {
+                    'Full Template': {
+                        id: 15,
+                        description: 'Full desc',
+                        link: 'https://demo.example.com',
+                        github_link: 'https://github.com/example/repo',
+                        code_snippet: 'print("hi")',
+                        image_url: '/static/tmpl.png',
+                        project_type: '3d',
+                    },
+                },
+            });
+            const { result } = await mountProject();
+
+            act(() => {
+                result.current.handleTemplateChange({ target: { value: 'Full Template' } });
+            });
+            expect(result.current.projectData.link).toBe('https://demo.example.com');
+            expect(result.current.projectData.github_link).toBe('https://github.com/example/repo');
+            expect(result.current.projectData.code_snippet).toBe('print("hi")');
+            expect(result.current.projectType).toBe('3d');
+
+            const videoFile = new File(['v'], 'demo.mp4', { type: 'video/mp4' });
+            await act(async () => {
+                await result.current.handleFileChange({ target: { name: 'project_video', files: [videoFile] } });
+            });
+            expect(result.current.projectVideo).toBe(videoFile);
+
+            act(() => {
+                result.current.clearProjectVideo();
+            });
+            expect(result.current.projectVideo).toBeNull();
         });
     });
 });

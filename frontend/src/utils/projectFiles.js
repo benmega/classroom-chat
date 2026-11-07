@@ -147,6 +147,26 @@ const KIND_MESSAGES = new Map([
     }],
 ]);
 
+const SEGMENT_PUNCTUATION = ' ._-()+@';
+
+const cleanSegment = (segment) => {
+    const normalized = String(segment || '').normalize('NFC');
+    const kept = Array.from(normalized).map((char) => {
+        if (SEGMENT_PUNCTUATION.includes(char)) return char;
+        return /\p{L}|\p{M}|\p{N}/u.test(char) ? char : '_';
+    }).join('');
+    return kept.replace(/\s+/g, ' ').replace(/^[ .]+|[ .]+$/g, '');
+};
+
+export const normalizeProjectPath = (kind, rawPath) => {
+    const str = String(rawPath || '').replace(/\\/g, '/');
+    const segments = str.split('/').map(cleanSegment).filter(Boolean);
+    if (kind === FILE_KINDS.MODEL) {
+        return segments[segments.length - 1] || '';
+    }
+    return segments.join('/');
+};
+
 // Pre-check of files the user picked for one kind of slot, against the extension list and the caps.
 //   existing:    the project's stored files that will still be there after the save
 //   pendingAdds: files already chosen in this edit but not uploaded yet (any kind)
@@ -158,7 +178,10 @@ export const validateNewFiles = (kind, files, { existing = [], pendingAdds = [] 
     const extensions = extensionsForKind(kind);
 
     const held = new Map();
-    [...existing, ...pendingAdds].forEach((file) => held.set(pathOf(file), sizeOf(file)));
+    [...existing, ...pendingAdds].forEach((file) => {
+        const fileKind = file.kind || fileKindForName(file.name || pathOf(file)) || kind;
+        held.set(normalizeProjectPath(fileKind, pathOf(file)), sizeOf(file));
+    });
     let total = 0;
     held.forEach((size) => { total += size; });
 
@@ -166,14 +189,15 @@ export const validateNewFiles = (kind, files, { existing = [], pendingAdds = [] 
     const rejected = [];
     Array.from(files || []).forEach((file) => {
         const label = file.name || 'This file';
-        const path = pathOf(file);
+        const rawPath = pathOf(file);
+        const path = normalizeProjectPath(kind, rawPath);
         const size = sizeOf(file);
         const replacedSize = held.get(path);
         let reason = null;
 
         if (!messages) {
             reason = `${label} cannot be added here.`;
-        } else if (!extensions.includes(extensionOf(file.name || path))) {
+        } else if (!extensions.includes(extensionOf(file.name || rawPath))) {
             reason = `${label} is not a supported ${messages.label}. ${messages.hint}`;
         } else if (size > FILE_CAPS[kind]) {
             reason = `${label} is larger than ${formatFileSize(FILE_CAPS[kind])}.`;
