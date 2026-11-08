@@ -5,6 +5,7 @@ Summary: Student-facing endpoint for submitting homework/files to the teacher.
 """
 
 import os
+import time
 import uuid
 
 from application import limiter
@@ -39,7 +40,12 @@ def submit_work():
     file.seek(0, os.SEEK_END)
     size = file.tell()
     file.seek(0)
-    if size > Config.SUBMISSION_MAX_BYTES:
+    max_bytes = (
+        Config.SUBMISSION_VIDEO_MAX_BYTES
+        if extension in Config.ALLOWED_VIDEO_EXTENSIONS
+        else Config.SUBMISSION_MAX_BYTES
+    )
+    if size > max_bytes:
         return {"error": "File too large"}, 413
 
     user = db.session.get(User, session.get("user"))
@@ -50,7 +56,14 @@ def submit_work():
     os.makedirs(directory, exist_ok=True)
 
     stored_filename = f"{uuid.uuid4().hex}.{extension}"
-    file.save(os.path.join(directory, stored_filename))
+    dest_path = os.path.join(directory, stored_filename)
+    with open(dest_path, "wb") as dest:
+        while True:
+            chunk = file.read(64 * 1024)
+            if not chunk:
+                break
+            dest.write(chunk)
+            time.sleep(0)
     stored_path = f"submissions/{stored_filename}"
 
     classroom_id = user.classrooms[0].id if user.classrooms else None

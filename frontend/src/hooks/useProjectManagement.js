@@ -467,7 +467,6 @@ export const useProjectManagement = () => {
         }
 
         if (projectImage) formData.append('project_image', projectImage);
-        if (projectVideo) formData.append('project_video', projectVideo);
         // The part's file name carries the path inside the project, so an uploaded folder keeps its layout
         FILE_KIND_LIST.forEach((kind) => {
             pendingFiles[kind].forEach(({ file, path }) => formData.append(FILE_FIELDS[kind], file, path));
@@ -475,7 +474,7 @@ export const useProjectManagement = () => {
         removedFileIds.forEach((id) => formData.append('remove_file_ids', id));
 
         // Only a save that carries files can take long enough for its progress to be worth showing
-        const sendsFiles = Boolean(projectImage || projectVideo) || FILE_KIND_LIST.some((kind) => pendingFiles[kind].length > 0);
+        const sendsFiles = Boolean(projectImage) || FILE_KIND_LIST.some((kind) => pendingFiles[kind].length > 0);
         const trackUpload = (event) => {
             if (event.total) setUploadProgress(Math.min(100, Math.round((event.loaded / event.total) * 100)));
         };
@@ -489,7 +488,18 @@ export const useProjectManagement = () => {
                 : await client.post(url, formData);
 
             if (response.data.status === 'success') {
-                if (response.data.data?.video_processing) {
+                const savedProjectId = projectId || response.data.data?.project_id || response.data.data?.project?.id;
+                if (projectVideo && savedProjectId) {
+                    const videoFormData = new FormData();
+                    videoFormData.append('action', 'upload_video');
+                    videoFormData.append('project_video', projectVideo);
+                    client.post(`/user/project/edit/${savedProjectId}`, videoFormData).catch((err) => {
+                        console.error('Background video upload error:', err);
+                        toast.error(getErrorMessage(err, 'Video upload failed, but your project was saved.'));
+                    });
+                }
+
+                if (projectVideo || response.data.data?.video_processing) {
                     toast.success(isResubmit ? 'Project resubmitted! Your video is being processed in the background.' : 'Project saved! Your video is being processed in the background.');
                 } else {
                     toast.success(isResubmit ? 'Project resubmitted for review!' : (projectId ? 'Project updated!' : 'Project created!'));

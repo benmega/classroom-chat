@@ -655,7 +655,9 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
         resp_delete = client.delete(f"/api/project-templates/{new_id}")
         assert resp_delete.status_code == 200
 
-        assert db.session.get(ProjectTemplate, new_id) is None
+        assert db.session.get(ProjectTemplate, new_id).is_active is False
+        listed = client.get("/api/project-templates").get_json()["data"]["templates"]
+        assert "New Custom Test Template" not in listed
 
 
 def test_upload_template_image_admin_success(client, sample_admin, test_app):

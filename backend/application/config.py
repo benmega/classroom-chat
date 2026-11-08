@@ -100,17 +100,23 @@ class Config:
         reject_placeholder_secret("SECRET_KEY", SECRET_KEY)
 
     UPLOAD_FOLDER = os.path.join(BASE_DIR, "userData")
-    # Global request body cap, just above SUBMISSION_MAX_BYTES. Project video
-    # uploads need far more, so the endpoints in LARGE_UPLOAD_ENDPOINTS get
-    # LARGE_UPLOAD_MAX_CONTENT_LENGTH instead (see create_app).
+    # Global request body cap, just above SUBMISSION_MAX_BYTES. Video uploads
+    # (project videos and video submissions) need far more, so the endpoints in
+    # LARGE_UPLOAD_ENDPOINTS get LARGE_UPLOAD_MAX_CONTENT_LENGTH instead (see create_app).
     MAX_CONTENT_LENGTH = 25 * 1024 * 1024
-    LARGE_UPLOAD_MAX_CONTENT_LENGTH = 500 * 1024 * 1024
-    LARGE_UPLOAD_ENDPOINTS: ClassVar[set[str]] = {"user.new_project", "user.edit_project"}
+    LARGE_UPLOAD_MAX_CONTENT_LENGTH = 2 * 1024 * 1024 * 1024  # 2GB
+    LARGE_UPLOAD_ENDPOINTS: ClassVar[set[str]] = {
+        "user.new_project",
+        "user.edit_project",
+        "submission.submit_work",
+    }
     ALLOWED_EXTENSIONS: ClassVar[set[str]] = {"png", "jpg", "jpeg", "gif", "webp"}
+    ALLOWED_VIDEO_EXTENSIONS: ClassVar[set[str]] = {"mp4", "mov", "avi", "wmv", "mkv", "webm"}
     SUBMISSION_BLOCKED_EXTENSIONS: ClassVar[set[str]] = {
         "exe", "bat", "cmd", "sh", "msi", "vbs", "ps1"
     }
-    SUBMISSION_MAX_BYTES = 20 * 1024 * 1024  # 20MB
+    SUBMISSION_MAX_BYTES = 20 * 1024 * 1024  # 20MB for ordinary files
+    SUBMISSION_VIDEO_MAX_BYTES = 2 * 1024 * 1024 * 1024  # 2GB for video submissions
 
     # Image uploads (application/utilities/image_upload.py). Each cap sits under
     # MAX_CONTENT_LENGTH, which is enforced on the request body before a route runs.
