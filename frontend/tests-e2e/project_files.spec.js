@@ -23,7 +23,7 @@ test.describe('Project files', () => {
             await expect(page.getByText('1. Core Info')).toBeVisible({ timeout: 15000 });
 
             // A custom project: uploading a 3D model automatically sets project_type to 3d.
-            await page.getByLabel('Project Name').fill(projectName);
+            await page.getByRole('combobox', { name: 'Project Name' }).fill(projectName);
 
             await page.getByRole('button', { name: /^Next/ }).click();
             await expect(page.locator('.form-column').getByRole('heading', { name: '3D Model' })).toBeVisible();
