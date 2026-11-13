@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Deploy Backend via SSH
-        uses: appleboy/ssh-action@v1.2.0
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: api-blossom.benmega.com
           username: ${{ secrets.EC2_USERNAME }}
