@@ -1,5 +1,5 @@
 # Lint and type-check tools, pinned so a new release of either cannot turn CI red with no code
 # change. lint.yml installs this file on its own; requirements-dev.txt includes it. Dependabot
 # proposes the bumps; run `ruff check .` and `python -m mypy .` from backend/ before merging one.
-ruff==0.16.9
-mypy==2.3.1
+ruff==0.17.4
+mypy==2.4.1
