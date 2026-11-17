@@ -52,5 +52,5 @@ Old admin URLs (`/admin/projects`, `/admin/analytics`, `/admin/certificates`, `/
 | Screen | How to open it | Screenshot |
 |-|-|-|
 | Mobile navigation drawer | Hamburger icon on a narrow screen; same destinations as the desktop nav rail, shown according to the user's state | [drawer](screenshots/drawer_mobile_sidebar.png) |
-| Create user | "Add Student" or "Add User" on `/admin/users` (hidden on the Parents tab) | [modal](screenshots/modal_create_user.png) |
+| Create user | "Add Student", "Add Parent", or "Add User" on `/admin/users` | [modal](screenshots/modal_create_user.png) |
 | Print Cohort Connection Cards | "Print Connection Cards" on `/admin/classes/:classId` | [modal](screenshots/modal_bulk_connection_cards.png) |

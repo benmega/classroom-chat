@@ -6,11 +6,39 @@ import SmartImage from '../common/SmartImage';
 import DuckIcon from '../Icons/DuckIcon';
 import { getApiUrl } from '../../utils/apiUrl';
 
-export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading }) => {
+export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors = {}, loading, defaultRole = 'student' }) => {
     const [showPassword, setShowPassword] = useState(false);
+    const [role, setRole] = useState(defaultRole || 'student');
+    const [prevOpen, setPrevOpen] = useState(isOpen);
+    const [prevDefaultRole, setPrevDefaultRole] = useState(defaultRole);
+
+    if (isOpen !== prevOpen || defaultRole !== prevDefaultRole) {
+        setPrevOpen(isOpen);
+        setPrevDefaultRole(defaultRole);
+        if (isOpen) {
+            setRole(defaultRole || 'student');
+            setShowPassword(false);
+        }
+    }
+
     return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New User">
         <form onSubmit={onSubmit} className="admin-form" noValidate>
+            <div className="form-group">
+                <label htmlFor="create-user-role">Role</label>
+                <select
+                    id="create-user-role"
+                    name="role"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="admin-select"
+                >
+                    <option value="student">Student</option>
+                    <option value="parent">Parent</option>
+                    <option value="observer">Observer</option>
+                    <option value="admin">Administrator</option>
+                </select>
+            </div>
             <div className={`form-group ${formErrors.username ? 'has-error' : ''}`}>
                 <label htmlFor="input-13">Username</label>
                 <input id="input-13" type="text" name="username" placeholder="lowercase_only" />
@@ -40,10 +68,14 @@ export const CreateUserModal = ({ isOpen, onClose, onSubmit, formErrors, loading
                 </div>
                 {formErrors.password && <span className="error-message">{formErrors.password}</span>}
             </div>
-            <div className="form-group">
-                <label htmlFor="input-41">Starting Duck Balance</label>
-                <input id="input-41" type="number" name="ducks" defaultValue="0" min="0" />
-            </div>
+            {role === 'student' ? (
+                <div className="form-group">
+                    <label htmlFor="input-41">Starting Duck Balance</label>
+                    <input id="input-41" type="number" name="ducks" defaultValue="0" min="0" />
+                </div>
+            ) : (
+                <input type="hidden" name="ducks" value="0" />
+            )}
             <button type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Creating...' : 'Create User'}
             </button>

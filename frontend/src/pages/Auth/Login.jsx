@@ -42,6 +42,8 @@ const Login = () => {
                     navigate(fromPath, { replace: true });
                 } else if (result.role === 'parent') {
                     navigate('/parent/dashboard', { replace: true });
+                } else if (result.role === 'observer') {
+                    navigate('/observer/dashboard', { replace: true });
                 } else {
                     const currentUser = useAuthStore.getState().user;
                     if (currentUser?.role === 'student' && currentUser?.slug) {

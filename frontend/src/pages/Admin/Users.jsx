@@ -51,6 +51,7 @@ const STATUS_OPTIONS = [
 
 const ACCOUNT_TYPE_OPTIONS = [
     { label: 'Administrator', value: 'admin' },
+    { label: 'Observer', value: 'observer' },
     { label: 'Parent', value: 'parent' },
     { label: 'Student', value: 'student' },
 ];
@@ -303,11 +304,9 @@ const Users = () => {
                         </button>
                     ))}
                 </div>
-                {activeRole !== 'parent' && (
-                    <button className="primary-btn" onClick={() => setActiveModal('create')}>
-                        <Plus size={18} /> {activeRole === 'student' ? 'Add Student' : 'Add User'}
-                    </button>
-                )}
+                <button className="primary-btn" onClick={() => setActiveModal('create')}>
+                    <Plus size={18} /> {activeRole === 'student' ? 'Add Student' : activeRole === 'parent' ? 'Add Parent' : 'Add User'}
+                </button>
             </AdminPageHeader>
 
 
@@ -442,6 +441,8 @@ const Users = () => {
                                                 <div className="type-badge">
                                                     {u.role === 'admin' ? (
                                                         <span className="user-role-badge admin"><Shield size={12} /> Administrator</span>
+                                                    ) : u.role === 'observer' ? (
+                                                        <span className="user-role-badge observer">Observer</span>
                                                     ) : u.role === 'parent' ? (
                                                         <span className="user-role-badge parent">Parent</span>
                                                     ) : (
@@ -662,6 +663,7 @@ const Users = () => {
                 onSubmit={handleCreateUser} 
                 formErrors={formErrors} 
                 loading={formLoading} 
+                defaultRole={activeRole || 'student'}
             />
 
             <AdjustDucksModal 

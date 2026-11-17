@@ -133,7 +133,7 @@ def serve_note(filename):
     if note is not None and viewer is not None:
         is_owner = note.user_id == viewer.id
         is_parent = viewer in (note.user.parents or [])
-        if not (is_owner or is_parent or viewer.role == 'admin'):
+        if not (is_owner or is_parent or viewer.role in ('admin', 'observer')):
             return jsonify({"error": "Not authorized to view this note"}), 403
 
     notes_dir = os.path.join(current_app.config["UPLOAD_FOLDER"], "notes")

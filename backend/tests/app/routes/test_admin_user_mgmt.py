@@ -205,6 +205,59 @@ def test_create_user(client, sample_admin, init_db):
     assert resp.status_code == 400
 
 
+def test_create_parent_and_admin_user(client, sample_admin, init_db):
+    login_as_admin(client, sample_admin)
+
+    # Create parent
+    resp = client.post(
+        "/api/admin/create_user",
+        data={"username": "newparent", "password": "password123", "role": "parent"},
+    )
+    assert resp.status_code == 200
+    assert resp.get_json()["success"] is True
+
+    parent = User.query.filter_by(username="newparent").first()
+    assert parent is not None
+    assert parent.role == "parent"
+    assert parent.is_approved is True
+    assert parent.duck_balance == 0
+
+    # Create admin
+    resp = client.post(
+        "/api/admin/create_user",
+        data={"username": "newadmin", "password": "password123", "role": "admin"},
+    )
+    assert resp.status_code == 200
+    assert resp.get_json()["success"] is True
+
+    admin = User.query.filter_by(username="newadmin").first()
+    assert admin is not None
+    assert admin.role == "admin"
+    assert admin.is_approved is True
+
+    # Create observer
+    resp = client.post(
+        "/api/admin/create_user",
+        data={"username": "newobserver", "password": "password123", "role": "observer", "ducks": 50},
+    )
+    assert resp.status_code == 200
+    assert resp.get_json()["success"] is True
+
+    observer = User.query.filter_by(username="newobserver").first()
+    assert observer is not None
+    assert observer.role == "observer"
+    assert observer.is_approved is True
+    assert observer.duck_balance == 0
+
+    # Invalid role
+    resp = client.post(
+        "/api/admin/create_user",
+        data={"username": "badroleuser", "password": "password123", "role": "invalid"},
+    )
+    assert resp.status_code == 400
+    assert "Invalid role" in resp.get_json()["message"]
+
+
 def test_create_user_rejects_initial_ducks_above_the_cap(
     client, sample_admin, init_db
 ):

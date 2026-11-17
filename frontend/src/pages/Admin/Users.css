@@ -197,6 +197,7 @@
 :where(.admin-users-page) .user-role-badge.student { background: linear-gradient(135deg, var(--blue-50), var(--blue-100)); color: var(--primary-accessible); border: 1px solid var(--blue-200); }
 :where(.admin-users-page) .user-role-badge.admin { background: linear-gradient(135deg, var(--error-subtle), var(--error-subtle)); color: var(--error-color); border: 1px solid var(--error-light); }
 :where(.admin-users-page) .user-role-badge.parent { background: linear-gradient(135deg, var(--violet-50), var(--violet-100)); color: var(--violet-700); border: 1px solid var(--violet-200); }
+:where(.admin-users-page) .user-role-badge.observer { background: linear-gradient(135deg, var(--green-50), var(--green-100)); color: var(--green-800); border: 1px solid var(--green-100); }
 
 :where(.admin-users-page) .economy-info .duck-count {
     font-weight: 700;

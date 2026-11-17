@@ -66,7 +66,7 @@ const EditProfile = () => {
     }, [userId, syncTextFields, syncPreview]);
 
     useEffect(() => {
-        if (!userId || userRole === 'parent') return;
+        if (!userId || userRole === 'parent' || userRole === 'observer') return;
         let cancelled = false;
         client.get('/user/api/parent-code')
             .then(res => {
@@ -249,7 +249,7 @@ const EditProfile = () => {
                         </div>
                     </div>
 
-                    {user?.role !== 'parent' && (
+                    {user?.role !== 'parent' && user?.role !== 'observer' && (
                         <div className="settings-panel connection-panel">
                             <h2 className="panel-title">Pairing Code & Connection</h2>
                             <div className="connection-code-box">

@@ -55,8 +55,8 @@ def _question_counts(quiz_ids=None):
 
 
 def _can_review(viewer, student):
-    """Admins, and parents linked to the student, may read any of their results."""
-    if viewer.role == "admin":
+    """Admins, observers, and parents linked to the student may read any of their results."""
+    if viewer.role in ("admin", "observer"):
         return True
     return viewer.role == "parent" and student in viewer.children
 
@@ -120,7 +120,7 @@ def list_quizzes():
             reverse=True,
         )
         can_start = in_progress is not None or (
-            user.role != "parent"
+            user.role not in ("parent", "observer")
             and is_open(quiz.id)
             and (quiz.allow_retakes or not submitted)
         )
@@ -160,7 +160,7 @@ def start_attempt(slug):
     quiz = Quiz.query.filter_by(slug=slug, is_active=True).first()
     if not quiz:
         return {"error": "Test not found"}, 404
-    if user.role == "parent":
+    if user.role in ("parent", "observer"):
         return {"error": "Parents cannot take tests"}, 403
 
     questions = _questions(quiz.id)
@@ -337,7 +337,7 @@ def list_student_attempts(student_id):
     if not user:
         return _gone()
     linked_parent = user.role == "parent" and student_id in {c.id for c in user.children}
-    if user.role != "admin" and not linked_parent:
+    if user.role not in ("admin", "observer") and not linked_parent:
         return {"error": "Access denied"}, 403
     student = db.session.get(User, student_id)
     if not student:

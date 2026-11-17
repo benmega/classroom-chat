@@ -362,7 +362,7 @@ def get_parent_connection_code():
     if not user_obj:
         return "User not found", 404
 
-    if user_obj.role == "parent":
+    if user_obj.role in ("parent", "observer"):
         return "Parents cannot use connection codes.", 400
 
     code = user_obj.get_connection_code()
@@ -411,6 +411,8 @@ def new_project():
     user_obj = db.session.get(User, user_id)
 
     if request.method == "POST":
+        if getattr(user_obj, "role", "") in ("parent", "observer"):
+            return "Observers cannot create projects.", 403
         data = request.form  # Using form because of file uploads
         name = data.get("name")
 

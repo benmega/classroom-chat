@@ -33,6 +33,8 @@ const DevLogin = () => {
                     const currentUser = useAuthStore.getState().user;
                     if (currentUser?.role === 'parent') {
                         navigate('/parent/dashboard');
+                    } else if (currentUser?.role === 'observer') {
+                        navigate('/observer/dashboard');
                     } else if (currentUser?.role === 'student' && currentUser?.slug) {
                         navigate(`/course-progress/${currentUser.slug}`);
                     } else {
