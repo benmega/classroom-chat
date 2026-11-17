@@ -99,7 +99,7 @@ const ProfileHeader = ({ target, isOwner, pfpInputRef, onPfpChange, editLink, on
                         <span className="value">{target.projects?.length || 0}</span>
                     </div>
                     
-                    {target.role !== 'parent' && (
+                    {target.role !== 'parent' && target.role !== 'observer' && (
                         <>
                             <div className="stat-divider"></div>
 

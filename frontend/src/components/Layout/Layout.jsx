@@ -34,6 +34,8 @@ const Layout = ({ children }) => {
     } = useLayout();
 
     const isParent = user?.role === 'parent';
+    const isObserver = user?.role === 'observer';
+    const isViewer = isParent || isObserver;
     const [isContactModalOpen, setIsContactModalOpen] = useState(false);
 
     // <main> is remounted for every path (key below), so a route change would leave a keyboard or screen reader
@@ -54,11 +56,11 @@ const Layout = ({ children }) => {
             {isAuthenticated && <Tutorial />}
             
             {/* Desktop Navigation Rails */}
-            {isAuthenticated && isParent && (
-                <ParentNavRail location={location} handleLogout={handleLogout} />
+            {isAuthenticated && isViewer && (
+                <ParentNavRail user={user} location={location} handleLogout={handleLogout} />
             )}
 
-            {isAuthenticated && user && user.role !== 'parent' && (
+            {isAuthenticated && user && !isViewer && (
                 <DesktopNavRail user={user} location={location} handleLogout={handleLogout} />
             )}
 
@@ -77,7 +79,7 @@ const Layout = ({ children }) => {
                             </button>
                         )}
                         <div id="logo-container" className="header-logo-wrap">
-                            <Link to={isParent ? "/parent/dashboard" : "/chat"} className="logo-link">
+                            <Link to={isObserver ? "/observer/dashboard" : isParent ? "/parent/dashboard" : "/chat"} className="logo-link">
                                 <div className="logo-icon-wrapper">
                                     <img src="/images/logo.png" alt="Classroom Chat Logo" className="logo-img" />
                                 </div>
@@ -89,7 +91,7 @@ const Layout = ({ children }) => {
 
                         <nav>
                             <ul>
-                                {isAuthenticated && user && user.role !== 'parent' && (
+                                {isAuthenticated && user && !isViewer && (
                                     <>
                                         <li className="nav-stat-item">
                                             <Link className="stat-badge ducks" to="/bit-shift" data-testid="nav-bit-shift">
@@ -161,6 +163,7 @@ const Layout = ({ children }) => {
                     <MobileSidebar 
                         user={user} 
                         isParent={isParent} 
+                        isObserver={isObserver}
                         isSidebarOpen={isSidebarOpen} 
                         setSidebarOpen={setSidebarOpen} 
                         handleLogout={handleLogout} 

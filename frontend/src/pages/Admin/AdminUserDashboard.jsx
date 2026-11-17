@@ -452,6 +452,7 @@ const AdminUserDashboard = () => {
                                 <select id="input-role" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
                                     <option value="student">Student</option>
                                     <option value="parent">Parent</option>
+                                    <option value="observer">Observer</option>
                                     <option value="teacher">Teacher</option>
                                 </select>
                             </div>

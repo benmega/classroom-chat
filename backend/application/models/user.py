@@ -665,7 +665,7 @@ class User(db.Model):
         from the row afterwards.  The caller must commit the session.  Both
         balances are rounded to ``DUCK_DECIMALS`` places after every change.
         """
-        if self.role == "parent":
+        if self.role in ("parent", "observer"):
             return False
 
         if not math.isfinite(amount):
@@ -714,7 +714,7 @@ class User(db.Model):
         return True
 
     def award_daily_duck(self, amount=1):
-        if self.role == "parent":
+        if self.role in ("parent", "observer"):
             return False
 
         if self.has_double_duck:

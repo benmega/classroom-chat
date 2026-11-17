@@ -22,7 +22,7 @@ const CourseProgressTree = () => {
     const { slug } = useParams();
     const { user: authUser } = useAuthStore();
     const isAdmin = authUser?.role === 'admin';
-    const isParent = authUser?.role === 'parent' || location.pathname.startsWith('/parent');
+    const isParent = authUser?.role === 'parent' || authUser?.role === 'observer' || location.pathname.startsWith('/parent') || location.pathname.startsWith('/observer');
 
     const containerRef = useRef(null);
     const nodeRefs = useRef({});

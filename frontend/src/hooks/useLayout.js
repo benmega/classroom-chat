@@ -28,7 +28,7 @@ export const useLayout = () => {
     // person must not restart the heartbeat or refetch the unread count.
     const userId = user?.id;
     const userRole = user?.role;
-    const countsUnread = Boolean(user) && userRole !== 'parent';
+    const countsUnread = Boolean(user) && userRole !== 'parent' && userRole !== 'observer';
 
     // Hook to listen to new messages and update unread count
     useChatSocket(
@@ -48,7 +48,7 @@ export const useLayout = () => {
 
     // Fetch initial unread count on login/load
     useEffect(() => {
-        if (!isAuthenticated || !userId || userRole === 'parent') return;
+        if (!isAuthenticated || !userId || userRole === 'parent' || userRole === 'observer') return;
         const controller = new AbortController();
 
         const fetchInitialUnread = async () => {

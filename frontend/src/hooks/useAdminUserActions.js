@@ -73,13 +73,18 @@ export const useAdminUserActions = ({ setFormLoading = () => {}, setFormErrors }
     const createUser = (formData, onSuccess) => {
         const username = formData.get('username')?.trim() || '';
         const password = formData.get('password')?.trim() || '';
+        const role = formData.get('role')?.trim() || 'student';
         formData.set('username', username);
         formData.set('password', password);
+        formData.set('role', role);
 
         const errors = {};
         const usernameError = validateUsername(username);
         if (usernameError) errors.username = usernameError;
         if (!password) errors.password = 'Initial password is required';
+        if (!['student', 'parent', 'observer', 'admin'].includes(role)) {
+            errors.role = 'Invalid role';
+        }
 
         return submit(errors, () => client.post('/api/admin/create_user', formData), 'Failed to create user.', onSuccess);
     };
