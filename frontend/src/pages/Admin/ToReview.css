@@ -566,6 +566,42 @@
     text-transform: uppercase;
 }
 
+.feedback-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.feedback-label-row .field-label {
+    margin-bottom: 0;
+}
+
+.btn-generate-comment {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-generate-comment:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.btn-generate-comment:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
 :where(.to-review-page) .input-with-icon {
     position: relative;
     display: flex;

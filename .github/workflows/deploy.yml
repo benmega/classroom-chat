@@ -60,6 +60,7 @@ jobs:
               printf 'ADMIN_PASSWORD=%s\n' '${{ secrets.ADMIN_PASSWORD }}'
               printf 'DATABASE_URL=sqlite:////home/ubuntu/classroom-chat/backend/instance/prod_users.db\n'
               printf 'WEBHOOK_SECRET=%s\n' '${{ secrets.WEBHOOK_SECRET }}'
+              printf 'OPENAI_API_KEY=%s\n' '${{ secrets.OPENAI_API_KEY }}'
               printf 'COGNITO_REGION=%s\n' '${{ secrets.COGNITO_REGION }}'
               printf 'COGNITO_USER_POOL_ID=%s\n' '${{ secrets.COGNITO_USER_POOL_ID }}'
               printf 'COGNITO_CLIENT_ID=%s\n' '${{ secrets.COGNITO_CLIENT_ID }}'

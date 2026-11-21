@@ -1376,3 +1376,102 @@ def test_review_counts_route(client, sample_admin):
     assert "pending_certificates" in data["data"]
     assert "pending_course_requests" in data["data"]
     assert "total_incomplete" in data["data"]
+
+
+class _FakeOpenAIResponse:
+    def __init__(self, status_code=200, payload=None):
+        self.status_code = status_code
+        self._payload = payload
+        self.text = ""
+
+    def json(self):
+        return self._payload
+
+
+def _make_project_for_comment(sample_user, **fields):
+    from application.models.project import Project
+
+    project = Project(name="Snake Game", user_id=sample_user.id, **fields)
+    db.session.add(project)
+    db.session.commit()
+    return project.id
+
+
+def test_generate_project_comment_sends_prompt_and_returns_comment(
+    client, sample_admin, sample_user, test_app, monkeypatch
+):
+    login_as_admin(client, sample_admin)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    with test_app.app_context():
+        project_id = _make_project_for_comment(
+            sample_user,
+            code_snippet="def move_snake(): pass",
+            video_transcript="I made a snake game",
+        )
+        nickname = sample_user.nickname or sample_user.username
+
+    fake = _FakeOpenAIResponse(
+        payload={"choices": [{"message": {"content": "  Nice work.  "}}]}
+    )
+    with patch(
+        "application.services.comment_generator.requests.post", return_value=fake
+    ) as post:
+        resp = client.post(f"/api/admin/generate-project-comment/{project_id}")
+
+    assert resp.status_code == 200
+    assert resp.get_json()["data"]["comment"] == "Nice work."
+    assert post.call_args.kwargs["headers"]["Authorization"] == "Bearer test-key"
+    prompt = post.call_args.kwargs["json"]["messages"][0]["content"]
+    assert f"Student Name: {nickname}" in prompt
+    assert "def move_snake(): pass" in prompt
+    assert "I made a snake game" in prompt
+
+    with test_app.app_context():
+        from application.models.project import Project
+
+        assert db.session.get(Project, project_id).teacher_comment is None
+
+
+def test_generate_project_comment_without_api_key(
+    client, sample_admin, sample_user, test_app, monkeypatch
+):
+    login_as_admin(client, sample_admin)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    with test_app.app_context():
+        project_id = _make_project_for_comment(sample_user)
+
+    with patch("application.services.comment_generator.requests.post") as post:
+        resp = client.post(f"/api/admin/generate-project-comment/{project_id}")
+
+    assert resp.status_code == 503
+    assert "OPENAI_API_KEY" in resp.get_json()["message"]
+    post.assert_not_called()
+
+
+def test_generate_project_comment_openai_failure(
+    client, sample_admin, sample_user, test_app, monkeypatch
+):
+    login_as_admin(client, sample_admin)
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    with test_app.app_context():
+        project_id = _make_project_for_comment(sample_user)
+
+    with patch(
+        "application.services.comment_generator.requests.post",
+        return_value=_FakeOpenAIResponse(status_code=429),
+    ):
+        resp = client.post(f"/api/admin/generate-project-comment/{project_id}")
+
+    assert resp.status_code == 502
+    assert resp.get_json()["status"] == "error"
+
+
+def test_generate_project_comment_unknown_project_and_non_admin(
+    client, sample_admin, sample_user
+):
+    login_as_admin(client, sample_admin)
+    assert client.post("/api/admin/generate-project-comment/999999").status_code == 404
+
+    with client.session_transaction() as sess:
+        sess.clear()
+    assert client.post("/api/admin/generate-project-comment/1").status_code in (401, 403)

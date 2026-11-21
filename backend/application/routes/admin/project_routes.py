@@ -1,10 +1,14 @@
 from application.decorators.admin_required import admin_only
-from application.extensions import db
+from application.extensions import db, limiter
 from application.models.project import (
     DEFAULT_PROJECT_TYPE,
     INVALID_PROJECT_TYPE_MESSAGE,
     Project,
     read_project_type,
+)
+from application.services.comment_generator import (
+    CommentGenerationError,
+    generate_project_comment,
 )
 from application.services.email_service import send_admin_email
 from application.utilities.spa import frontend_url
@@ -203,6 +207,19 @@ def handle_project_review(project_id):
         )
 
     return jsonify({"status": "error", "message": "Invalid action."}), 400
+
+
+@admin_bp.route("/generate-project-comment/<int:project_id>", methods=["POST"])
+@admin_only
+@limiter.limit("60 per hour")
+def generate_project_comment_route(project_id):
+    """Draft a parent-facing teacher comment for a project; nothing is saved."""
+    project = Project.query.get_or_404(project_id)
+    try:
+        comment = generate_project_comment(project)
+    except CommentGenerationError as error:
+        return jsonify({"status": "error", "message": error.message}), error.status
+    return jsonify({"status": "success", "data": {"comment": comment}})
 
 
 @admin_bp.route("/assign-project", methods=["POST"])

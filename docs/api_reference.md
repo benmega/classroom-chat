@@ -22,7 +22,7 @@ Timestamps in responses and socket payloads are ISO 8601 in UTC with a trailing 
 Split across `backend/application/routes/admin/*.py` by concern:
 - **`dashboard_routes.py`**: `GET /dashboard` (aggregated stats), `GET /logs`, `GET /transactions`, `GET /export/transactions`, `GET /review_counts`.
 - **`user_mgmt.py`**: user CRUD (`GET/POST/PUT /users`, `/user/<id>`), `create_user`, `remove_user`, `approve_user/<id>`, `reject_user/<id>`, `adjust_ducks`, `adjust_packets`, `reset_password`, classroom CRUD + enrollment (`/classrooms*`), parent-student linking (`/parents/<id>/children`, `/link`, `/unlink`), chapter progress overrides.
-- **`project_routes.py`**: `GET /manage-projects`, `POST /handle-project-review/<id>`, `POST /assign-project` (optional `project_type`, `code` or `3d`, else the type of the template whose name matches, else `code`; any other value is a 400).
+- **`project_routes.py`**: `GET /manage-projects`, `POST /handle-project-review/<id>`, `POST /generate-project-comment/<id>` (drafts the parent-facing comment with OpenAI from the project's code and video transcript; returns `data.comment`, saves nothing; 503 without `OPENAI_API_KEY`, 502 when OpenAI fails), `POST /assign-project` (optional `project_type`, `code` or `3d`, else the type of the template whose name matches, else `code`; any other value is a 400).
 - **`standard_project_routes.py`**: CRUD for `/standard-projects`.
 - **`trade_routes.py`**: `GET /pending_trades`, `POST /trade_action`.
 - **`challenge_mgmt.py`**: `POST /challenges/bulk_add`.

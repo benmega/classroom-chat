@@ -586,6 +586,40 @@ describe('ToReview Component', () => {
     describe('projects', () => {
       const typeFeedback = (text) => fireEvent.change(screen.getByLabelText(/Teacher Feedback/), { target: { value: text } });
 
+      it('fills the feedback field with a generated comment', async () => {
+        await loadItems({ projects });
+        client.post.mockResolvedValueOnce({ data: { status: 'success', data: { comment: 'Sam did a great job.' } } });
+
+        fireEvent.click(screen.getByRole('button', { name: /Generate comment/ }));
+
+        await waitFor(() => expect(screen.getByLabelText(/Teacher Feedback/)).toHaveValue('Sam did a great job.'));
+        expect(client.post).toHaveBeenCalledWith('/api/admin/generate-project-comment/11');
+        expect(showConfirm).not.toHaveBeenCalled();
+      });
+
+      it('keeps typed feedback when the admin declines to replace it', async () => {
+        await loadItems({ projects });
+        typeFeedback('My own words');
+        showConfirm.mockResolvedValueOnce(false);
+
+        fireEvent.click(screen.getByRole('button', { name: /Generate comment/ }));
+
+        await waitFor(() => expect(showConfirm).toHaveBeenCalled());
+        expect(client.post).not.toHaveBeenCalled();
+        expect(screen.getByLabelText(/Teacher Feedback/)).toHaveValue('My own words');
+      });
+
+      it('shows the server error and leaves the field alone when generation fails', async () => {
+        await loadItems({ projects });
+        client.post.mockRejectedValueOnce({ response: { data: { message: 'OPENAI_API_KEY is not configured.' } } });
+
+        fireEvent.click(screen.getByRole('button', { name: /Generate comment/ }));
+
+        await waitFor(() => expect(toast.error).toHaveBeenCalledWith('OPENAI_API_KEY is not configured.'));
+        expect(screen.getByLabelText(/Teacher Feedback/)).toHaveValue('');
+        expect(screen.getByRole('button', { name: /Generate comment/ })).toBeEnabled();
+      });
+
       it('asks for feedback before approving and does not prompt without it', async () => {
         await loadItems({ projects });
 

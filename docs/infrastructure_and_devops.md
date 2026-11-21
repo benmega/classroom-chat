@@ -91,6 +91,7 @@ See `backend/.env.example` for the full list of required variables. The code rea
 | `DATABASE_URL` | `config.py` (production) | SQLite file `prod_users.db` |
 | `DEV_DATABASE_URI` | `config.py` (development) | Optional dev override |
 | `WEBHOOK_SECRET` | webhook routes | Injected by `deploy.yml` |
+| `OPENAI_API_KEY`, `OPENAI_MODEL` | `services/comment_generator.py` | Key injected by `deploy.yml`; powers the admin "Generate comment" button, which answers 503 while the key is unset. Model defaults to `gpt-4o-mini` |
 | `WEBHOOK_URL` | `infrastructure/lambda_transcriber/lambda_function.py` (Lambda environment, not the Flask app) | Optional |
 | `CORS_ORIGINS` | `config.py` (production), `routes/challenge_routes.py` | Comma-separated (whitespace and empty entries are ignored). Not written by `deploy.yml`, so the default origin list in `config.py` is used. Localhost origins are defaults only outside production; `/challenge/submit` additionally allows the CodeCombat/Ozaria bookmarklet origins |
 | `FRONTEND_URL` | `config.py`, `utilities/spa.py` (`frontend_url`) | Public address of the React app, used for links to its pages in emails and API responses (class invite links, the student profile link in the certificate email). Default `https://blossom.benmega.com` in production and `http://localhost:5173` elsewhere; a trailing slash is ignored. The API host serves no pages, so these links are never built from the request. Not written by `deploy.yml`, so production uses the default |
@@ -298,7 +299,7 @@ sudo systemctl reload nginx
 
 Required GitHub Secrets: `EC2_USERNAME`, `EC2_SSH_KEY`, `SECRET_KEY`,
 `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `WEBHOOK_SECRET`, as well as AWS credentials for S3 uploads.
-The `ai-coder.yml` workflow additionally uses the `OPENAI_API_KEY` and `MY_WORKFLOW_TOKEN` (personal access token) secrets; the Flask app itself no longer reads the OpenAI key.
+The `ai-coder.yml` workflow additionally uses the `OPENAI_API_KEY` and `MY_WORKFLOW_TOKEN` (personal access token) secrets; the Flask app also reads the OpenAI key, for the admin comment generator.
 
 ---
 

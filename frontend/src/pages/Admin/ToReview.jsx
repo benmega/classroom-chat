@@ -22,7 +22,8 @@ import {
     ChevronUp,
     Edit,
     RotateCcw,
-    Box
+    Box,
+    Sparkles
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -123,6 +124,7 @@ const ToReview = () => {
     const [isLoading, setIsLoading] = useState(() => !cachedReview);
     const [activeTab, setActiveTab] = useState('all');
     const [isProcessing, setIsProcessing] = useState(null);
+    const [generatingCommentId, setGeneratingCommentId] = useState(null);
 
     const [projectComments, setProjectComments] = useState({});
     const [projectRewards, setProjectRewards] = useState({});
@@ -268,6 +270,25 @@ const ToReview = () => {
             toast.error(getErrorMessage(err, 'Failed to review project.'));
         } finally {
             setIsProcessing(null);
+        }
+    };
+
+    const handleGenerateComment = async (projectId) => {
+        if (projectComments[projectId]?.trim() && !await showConfirm(
+            'Replace the feedback you have typed with a generated comment?',
+            { title: 'Generate Comment', confirmText: 'Replace' }
+        )) return;
+
+        setGeneratingCommentId(projectId);
+        try {
+            const response = await client.post(`/api/admin/generate-project-comment/${projectId}`);
+            const comment = response.data?.data?.comment;
+            if (!comment) throw new Error('Empty comment');
+            setProjectComments(prev => ({ ...prev, [projectId]: comment }));
+        } catch (err) {
+            toast.error(getErrorMessage(err, 'Failed to generate comment.'));
+        } finally {
+            setGeneratingCommentId(null);
         }
     };
 
@@ -749,7 +770,17 @@ const ToReview = () => {
 
                     <div className="review-action-section">
                         <div className="feedback-field">
-                            <label htmlFor={`feedback-${p.id}`} className="field-label">Teacher Feedback (Required to Approve)</label>
+                            <div className="feedback-label-row">
+                                <label htmlFor={`feedback-${p.id}`} className="field-label">Teacher Feedback (Required to Approve)</label>
+                                <button
+                                    type="button"
+                                    className="btn-generate-comment"
+                                    onClick={() => handleGenerateComment(p.id)}
+                                    disabled={generatingCommentId === p.id}
+                                >
+                                    <Sparkles size={13} aria-hidden="true" /> {generatingCommentId === p.id ? 'Generating...' : 'Generate comment'}
+                                </button>
+                            </div>
                             <div className="input-with-icon">
                                 <MessageSquare size={16} className="input-icon" />
                                 <input 
