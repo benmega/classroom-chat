@@ -1177,6 +1177,22 @@ describe('ToReview Component', () => {
 
     const shown = (text) => screen.queryByText(text) !== null;
 
+    describe('issue ordering', () => {
+      it('lists projects with nothing missing first, keeping the incoming order within each group', async () => {
+        await loadProjects(
+          makeProject({ id: 1, name: 'No Video', code_snippet: 'x', video_url: null }),
+          makeProject({ id: 2, name: 'Complete A', code_snippet: 'x' }),
+          makeProject({ id: 3, name: 'No Code', video_url: 'https://video.test/demo' }),
+          makeProject({ id: 4, name: 'Complete B', github_link: 'https://github.com/a/b' })
+        );
+        fireEvent.click(screen.getByRole('button', { name: /Projects/ }));
+
+        const titles = screen.getAllByRole('heading', { level: 3 }).map(h => h.textContent);
+
+        expect(titles).toEqual(['Complete A', 'Complete B', 'No Video', 'No Code']);
+      });
+    });
+
     describe('type badge', () => {
       it('marks a 3D project right after the Project badge', async () => {
         await loadProjects(makeProject({ project_type: '3d', files: [robot] }));

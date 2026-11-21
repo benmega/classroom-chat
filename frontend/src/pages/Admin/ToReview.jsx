@@ -129,11 +129,27 @@ const CopyButton = ({ text, label }) => {
     };
 
     return (
-        <button type="button" className="copy-btn" onClick={handleCopy} aria-label={copied ? 'Copied' : label} title={copied ? 'Copied' : label}>
+        <button type="button" className="review-copy-btn" onClick={handleCopy} aria-label={copied ? 'Copied' : label} title={copied ? 'Copied' : label}>
             {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
         </button>
     );
 };
+
+// Key parts a project is flagged for lacking. Source files count as code, so an uploaded project is not flagged for
+// lacking a pasted snippet; a 3D project is judged on its model instead. A payload without project_type (an older
+// cached one) is a code project.
+const projectIssues = (p) => {
+    const files = p.files || [];
+    const is3d = p.project_type === '3d';
+    const { sources } = groupProjectFiles(files);
+    return {
+        missingCode: !is3d && !p.code_snippet && !p.github_link && sources.length === 0,
+        missingModel: is3d && !primaryModelFile(files),
+        missingVideo: !p.video_url,
+    };
+};
+
+const hasProjectIssues = (p) => Object.values(projectIssues(p)).some(Boolean);
 
 const ToReview = () => {
     useDocumentTitle('To review · Admin');
@@ -596,7 +612,12 @@ const ToReview = () => {
     const getDisplayItems = () => {
         if (activeTab === 'all') return getUnifiedList();
         if (activeTab === 'messages') return parentMessages.map(m => ({ ...m, type: 'parent_message', key: `parent-msg-${m.id}` }));
-        if (activeTab === 'projects') return projects.map(p => ({ ...p, type: 'project', key: `project-${p.id}` }));
+        // Projects with nothing missing first; the sort is stable, so each group keeps its incoming order.
+        if (activeTab === 'projects') {
+            return projects
+                .map(p => ({ ...p, type: 'project', key: `project-${p.id}` }))
+                .sort((a, b) => hasProjectIssues(a) - hasProjectIssues(b));
+        }
         if (activeTab === 'certificates') return certificates.map(c => ({ ...c, type: 'certificate', key: `cert-${c.id}` }));
         if (activeTab === 'users') return pendingUsers.map(u => ({ ...u, type: 'user', key: `user-${u.id}` }));
         if (activeTab === 'trades') return trades.map(t => ({ ...t, type: 'trade', key: `trade-${t.id}` }));
@@ -620,10 +641,7 @@ const ToReview = () => {
         const files = p.files || [];
         const { models, sources, assets } = groupProjectFiles(files);
         const primaryModel = primaryModelFile(files);
-        // Source files count as code, so an uploaded project is not flagged for lacking a pasted snippet; a 3D project
-        // is judged on its model instead.
-        const missingCode = !is3d && !p.code_snippet && !p.github_link && sources.length === 0;
-        const missingModel = is3d && !primaryModel;
+        const { missingCode, missingModel, missingVideo } = projectIssues(p);
         return (
             <div className="review-card project-review-card" key={p.key}>
                 <div className="review-card-header">
@@ -683,7 +701,7 @@ const ToReview = () => {
                                         <AlertCircle size={12} /> Missing 3D model
                                     </span>
                                 )}
-                                {!p.video_url && (
+                                {missingVideo && (
                                     <span className="missing-indicator">
                                         <AlertCircle size={12} /> Missing Video
                                     </span>
