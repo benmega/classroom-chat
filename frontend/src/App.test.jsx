@@ -35,6 +35,9 @@ vi.mock('./pages/Admin/AdminDashboard', () => ({
 vi.mock('./pages/Parent/ParentDashboard', () => ({
   default: () => <div>Parent Dashboard Mock</div>
 }));
+vi.mock('./pages/Observer/ObserverDashboard', () => ({
+  default: () => <div>Observer Dashboard Mock</div>
+}));
 vi.mock('./pages/General/CourseProgressTree', () => ({
   default: () => <div>Course Progress Mock</div>
 }));
@@ -363,6 +366,36 @@ describe('App Component', () => {
       expect(window.location.pathname).toBe('/parent/dashboard');
     });
 
+    it('lets an observer into the observer dashboard', async () => {
+      window.history.pushState({}, 'Test page', '/observer/dashboard');
+      signedInAs({ role: 'observer' });
+
+      renderApp();
+
+      expect(await screen.findByText('Observer Dashboard Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/observer/dashboard');
+    });
+
+    it('sends an observer who opens chat or parent dashboard to the observer dashboard', async () => {
+      window.history.pushState({}, 'Test page', '/chat');
+      signedInAs({ role: 'observer' });
+
+      renderApp();
+
+      expect(await screen.findByText('Observer Dashboard Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/observer/dashboard');
+    });
+
+    it('sends an observer who opens parent dashboard to the observer dashboard', async () => {
+      window.history.pushState({}, 'Test page', '/parent/dashboard');
+      signedInAs({ role: 'observer' });
+
+      renderApp();
+
+      expect(await screen.findByText('Observer Dashboard Mock')).toBeInTheDocument();
+      expect(window.location.pathname).toBe('/observer/dashboard');
+    });
+
     describe('where a signed-in user lands when they open /login', () => {
       beforeEach(() => {
         window.history.pushState({}, 'Test page', '/login');
@@ -384,6 +417,15 @@ describe('App Component', () => {
 
         expect(await screen.findByText('Parent Dashboard Mock')).toBeInTheDocument();
         expect(window.location.pathname).toBe('/parent/dashboard');
+      });
+
+      it('sends an observer to the observer dashboard', async () => {
+        signedInAs({ role: 'observer' });
+
+        renderApp();
+
+        expect(await screen.findByText('Observer Dashboard Mock')).toBeInTheDocument();
+        expect(window.location.pathname).toBe('/observer/dashboard');
       });
 
       it('sends a student with a profile slug to their course progress', async () => {

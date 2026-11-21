@@ -420,6 +420,7 @@ const AdminUserDashboard = () => {
                                     })}
                                 </tbody>
                             </table>
+                                    <option value="observer">Observer</option>
                         </div>
                     </div>
                 )}

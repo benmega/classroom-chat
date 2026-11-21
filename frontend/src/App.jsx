@@ -56,10 +56,11 @@ const KioskUpload = React.lazy(() => import('./pages/Admin/KioskUpload'));
 const AdminTests = React.lazy(() => import('./pages/Admin/AdminTests'));
 const AdminTestNew = React.lazy(() => import('./pages/Admin/AdminTestNew'));
 
-// --- Parent pages: lazily loaded (students never need these) ---
+// --- Parent & Observer pages: lazily loaded (students never need these) ---
 const ParentDashboard = React.lazy(() => import('./pages/Parent/ParentDashboard'));
 const ParentReportCard = React.lazy(() => import('./pages/Parent/ParentReportCard'));
 const ConnectChild = React.lazy(() => import('./pages/Parent/ConnectChild'));
+const ObserverDashboard = React.lazy(() => import('./pages/Observer/ObserverDashboard'));
 const JoinClassroomLink = React.lazy(() => import('./pages/General/JoinClassroomLink'));
 
 // Development-only shortcut page — Vite's tree-shaking removes this module
@@ -137,7 +138,24 @@ const ProtectedRoute = ({ children, adminOnly = false, parentOnly = false }) => 
     return <Navigate to="/parent/dashboard" replace />;
   }
 
-  if (parentOnly && user?.role !== 'parent') {
+  if (user?.role === 'observer' &&
+      !location.pathname.startsWith('/observer/') &&
+      !location.pathname.startsWith('/parent/') &&
+      !location.pathname.startsWith('/profile') &&
+      !location.pathname.startsWith('/settings') &&
+      !location.pathname.startsWith('/project-info/')) {
+    return <Navigate to="/observer/dashboard" replace />;
+  }
+
+  if (user?.role === 'observer' && (location.pathname === '/parent/dashboard' || location.pathname.startsWith('/parent/connect'))) {
+    return <Navigate to="/observer/dashboard" replace />;
+  }
+
+  if (user?.role === 'parent' && location.pathname.startsWith('/observer/')) {
+    return <Navigate to="/parent/dashboard" replace />;
+  }
+
+  if (parentOnly && user?.role !== 'parent' && user?.role !== 'observer') {
     return <Navigate to="/chat" replace />;
   }
 
@@ -198,6 +216,8 @@ function App() {
   let authRedirect = '/chat';
   if (user?.role === 'parent') {
     authRedirect = '/parent/dashboard';
+  } else if (user?.role === 'observer') {
+    authRedirect = '/observer/dashboard';
   } else if (user?.role === 'admin') {
     authRedirect = '/admin/dashboard';
   } else if (user?.role === 'student' && user?.slug) {
@@ -345,6 +365,7 @@ function App() {
         } />
 
         <Route element={<ProtectedLayout parentOnly />}>
+          <Route path="/observer/dashboard" element={<ObserverDashboard />} />
           <Route path="/parent/dashboard" element={<ParentDashboard />} />
           <Route path="/parent/report/:studentId" element={<ParentReportCard />} />
           <Route path="/parent/tests/results/:attemptId" element={<TestResult />} />

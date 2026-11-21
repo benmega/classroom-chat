@@ -17,6 +17,8 @@ const Landing = () => {
         if (isAuthenticated && user) {
             if (user.role === 'parent') {
                 navigate('/parent/dashboard', { replace: true });
+            } else if (user.role === 'observer') {
+                navigate('/observer/dashboard', { replace: true });
             } else if (user.role === 'admin') {
                 navigate('/admin/dashboard', { replace: true });
             } else {

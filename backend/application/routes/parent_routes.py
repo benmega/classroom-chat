@@ -8,20 +8,46 @@ from application.models.connection_attempt import ConnectionAttempt
 from application.models.user import User
 from application.utilities.helper_functions import to_utc_iso, utcnow_naive
 from flask import Blueprint, request, session
+from sqlalchemy.orm import selectinload
 
 parent = Blueprint("parent", __name__)
+
+
+def _accessible_student(user_obj, student_id):
+    """Return the target student if ``user_obj`` is permitted to view them, else (None, error_tuple)."""
+    if not user_obj or user_obj.role not in ("parent", "observer"):
+        return None, ({"error": "Access denied. Parent or observer account required."}, 403)
+
+    if user_obj.role == "parent":
+        child_ids = {child.id for child in user_obj.children}
+        if student_id not in child_ids:
+            return None, ({"error": "Access denied. This student is not linked to your account."}, 403)
+
+    student = db.session.get(User, student_id)
+    if not student or (user_obj.role == "observer" and student.role != "student"):
+        return None, ("Student not found.", 404)
+
+    return student, None
 
 
 @parent.route("/children", methods=["GET"])
 @require_login
 @api_response
 def get_children():
-    """Returns the list of children linked to the authenticated parent."""
+    """Returns the list of children linked to the parent, or all students for an observer."""
     user_id = session.get("user")
     user_obj = db.session.get(User, user_id)
 
-    if not user_obj or user_obj.role != "parent":
+    if not user_obj or user_obj.role not in ("parent", "observer"):
         return {"error": "Access denied. Parent account required."}, 403
+
+    target_students = (
+        User.query.filter_by(role="student")
+        .order_by(db.func.lower(db.func.coalesce(User.nickname, User._username)), User.id)
+        .all()
+        if user_obj.role == "observer"
+        else user_obj.children
+    )
 
     children = [
         {
@@ -37,31 +63,70 @@ def get_children():
             "current_activity": child.current_activity,
             "last_activity_time": to_utc_iso(child.last_activity_time),
         }
-        for child in user_obj.children
+        for child in target_students
     ]
 
     return {"children": children}
+
+
+@parent.route("/students", methods=["GET"])
+@require_login
+@api_response
+def get_all_students():
+    """Paginated read-only student roster for observer and admin accounts."""
+    user_id = session.get("user")
+    user_obj = db.session.get(User, user_id)
+
+    if not user_obj or user_obj.role not in ("observer", "admin"):
+        return {"error": "Access denied. Observer account required."}, 403
+
+    page = max(1, request.args.get("page", 1, type=int))
+    per_page = min(100, max(1, request.args.get("per_page", 24, type=int)))
+    search = (request.args.get("search", "", type=str) or "").strip()
+    track = (request.args.get("track", "", type=str) or "").strip()
+
+    query = User.query.filter_by(role="student")
+    if search:
+        query = query.filter(
+            db.or_(
+                User._username.ilike(f"%{search}%"),
+                User.nickname.ilike(f"%{search}%"),
+            )
+        )
+    if track:
+        query = query.filter_by(active_track=track)
+
+    query = query.order_by(
+        User.is_online.desc(),
+        User.last_activity_time.desc().nullslast(),
+        db.func.lower(db.func.coalesce(User.nickname, User._username)).asc(),
+        User.id.asc(),
+    )
+
+    pagination = query.options(selectinload(User.projects)).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    return {
+        "students": User.to_dict_summaries(pagination.items),
+        "total": pagination.total,
+        "pages": pagination.pages,
+        "current_page": pagination.page,
+        "per_page": per_page,
+    }
 
 
 @parent.route("/student/<int:student_id>/report", methods=["GET"])
 @require_login
 @api_response
 def get_student_report(student_id):
-    """Returns a read-only report card for a specific linked student."""
+    """Returns a read-only report card for a linked student (or any student for observers)."""
     user_id = session.get("user")
     user_obj = db.session.get(User, user_id)
 
-    if not user_obj or user_obj.role != "parent":
-        return {"error": "Access denied. Parent account required."}, 403
-
-    # Verify the student is linked to this parent
-    child_ids = {child.id for child in user_obj.children}
-    if student_id not in child_ids:
-        return {"error": "Access denied. This student is not linked to your account."}, 403
-
-    student = db.session.get(User, student_id)
-    if not student:
-        return "Student not found.", 404
+    student, error = _accessible_student(user_obj, student_id)
+    if error:
+        return error
 
     # Build unlocked achievements list (earned only)
     unlocked_achievements = []
@@ -82,6 +147,7 @@ def get_student_report(student_id):
     report = {
         "username": student.username,
         "nickname": student.nickname,
+        "slug": student.slug,
         "profile_picture_url": (
             f"/user/profile_pictures/{student.profile_picture}"
             if student.profile_picture
@@ -193,16 +259,9 @@ def get_student_history(student_id):
     user_id = session.get("user")
     user_obj = db.session.get(User, user_id)
 
-    if not user_obj or user_obj.role != "parent":
-        return {"error": "Access denied. Parent account required."}, 403
-
-    child_ids = {child.id for child in user_obj.children}
-    if student_id not in child_ids:
-        return {"error": "Access denied. This student is not linked to your account."}, 403
-
-    student = db.session.get(User, student_id)
-    if not student:
-        return "Student not found.", 404
+    student, error = _accessible_student(user_obj, student_id)
+    if error:
+        return error
 
     from application.models.challenge_log import ChallengeLog
     from application.models.duck_transaction import DuckTransaction

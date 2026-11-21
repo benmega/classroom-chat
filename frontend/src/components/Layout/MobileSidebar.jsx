@@ -10,9 +10,9 @@ import { MOBILE_SIDEBAR_ID } from './layoutIds';
 // Above this width the sidebar is display:none (the nav rail takes over), see Layout.css.
 const DESKTOP_QUERY = '(min-width: 801px)';
 
-const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLogout, onContactTeacher }) => {
+const MobileSidebar = ({ user, isParent, isObserver = false, isSidebarOpen, setSidebarOpen, handleLogout, onContactTeacher }) => {
     const { unreadCount, activityUnreadCount } = useAuthStore();
-    const { children } = useParentChildren(isParent);
+    const { children } = useParentChildren(isParent && !isObserver);
 
     const close = () => setSidebarOpen(false);
 
@@ -57,7 +57,13 @@ const MobileSidebar = ({ user, isParent, isSidebarOpen, setSidebarOpen, handleLo
  
                 <nav className="sidebar-nav">
                     <ul>
-                        {isParent ? (
+                        {isObserver ? (
+                            <li>
+                                <Link to="/observer/dashboard" onClick={close}>
+                                    <Home size={18} /> Dashboard
+                                </Link>
+                            </li>
+                        ) : isParent ? (
 
                             <>
                                 <li>

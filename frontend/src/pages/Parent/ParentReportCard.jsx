@@ -31,6 +31,7 @@ import '../Profile/Profile.css';
 import './ParentReportCard.css';
 import Skeleton from '../../components/common/Skeleton';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
+import useAuthStore from '../../store/useAuthStore';
 
 ChartJS.register(
     CategoryScale,
@@ -65,6 +66,9 @@ const ParentReportCard = () => {
     useDocumentTitle('Progress report');
     const { studentId } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuthStore();
+    const isObserver = user?.role === 'observer';
+    const dashboardPath = isObserver ? '/observer/dashboard' : '/parent/dashboard';
     const [reportData, setReportData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -80,7 +84,9 @@ const ParentReportCard = () => {
                 const response = await client.get(`/api/parents/student/${studentId}/report`);
                 setReportData(response.data.data);
                 // Persist so the nav rail can offer a quick-return link
-                localStorage.setItem('parent_last_report_child_id', studentId);
+                if (!isObserver) {
+                    localStorage.setItem('parent_last_report_child_id', studentId);
+                }
             } catch (err) {
                 setError(getErrorMessage(err, 'Failed to load report card'));
             } finally {
@@ -88,7 +94,7 @@ const ParentReportCard = () => {
             }
         };
         fetchReport();
-    }, [studentId, error]);
+    }, [studentId, error, isObserver]);
 
     useEffect(() => {
         if (!studentId || error) return;
@@ -184,19 +190,21 @@ const ParentReportCard = () => {
                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
                         <button
                             className="btn-secondary"
-                            onClick={() => navigate('/parent/dashboard')}
+                            onClick={() => navigate(dashboardPath)}
                             style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                         >
                             <ArrowLeft size={16} />
                             Back to Dashboard
                         </button>
-                        <button
-                            className="btn-primary"
-                            onClick={() => navigate('/parent/connect')}
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                        >
-                            Link a New Student
-                        </button>
+                        {!isObserver && (
+                            <button
+                                className="btn-primary"
+                                onClick={() => navigate('/parent/connect')}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            >
+                                Link a New Student
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -228,7 +236,7 @@ const ParentReportCard = () => {
                 <div className="report-header-inner">
                     <button
                         className="btn-secondary btn-secondary-sm report-back-btn"
-                        onClick={() => navigate('/parent/dashboard')}
+                        onClick={() => navigate(dashboardPath)}
                         title="Back to Dashboard"
                         aria-label="Back to Dashboard"
                     >
@@ -273,7 +281,9 @@ const ParentReportCard = () => {
             {isReportEmpty ? (
                 <div className="report-empty-state glass-panel animate-page-entry" style={{ padding: '3rem', textAlign: 'center', margin: '2rem auto', maxWidth: '600px', borderRadius: '12px' }}>
                     <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', margin: 0, fontWeight: '500', lineHeight: '1.6' }}>
-                        Welcome to the classroom chat. You'll be able to see your child's activity here.
+                        {isObserver
+                            ? 'No activity recorded for this student yet.'
+                            : "Welcome to the classroom chat. You'll be able to see your child's activity here."}
                     </p>
                 </div>
             ) : (

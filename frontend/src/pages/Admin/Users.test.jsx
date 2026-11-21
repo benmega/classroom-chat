@@ -203,6 +203,17 @@ describe('Users Page', () => {
     expect(mockSetActiveModal).toHaveBeenCalledWith('create');
   });
 
+  it('shows Add Student on Students tab and Add Parent on Parents tab', () => {
+    renderComponent();
+    const studentsTab = screen.getByText('Students');
+    fireEvent.click(studentsTab);
+    expect(screen.getByRole('button', { name: /Add Student/i })).toBeInTheDocument();
+
+    const parentsTab = screen.getByText('Parents');
+    fireEvent.click(parentsTab);
+    expect(screen.getByRole('button', { name: /Add Parent/i })).toBeInTheDocument();
+  });
+
 
   it('refreshes users', () => {
     renderComponent();
@@ -342,6 +353,20 @@ describe('Users Page', () => {
       renderComponent();
 
       expect(screen.getByText('@boss').closest('tr').querySelector('.economy-empty')).toHaveTextContent('—');
+    });
+
+    it('renders the Observer role badge and empty economy placeholder for observers', () => {
+      useUsersManagement.mockReturnValue({
+        ...defaultMockState,
+        users: [{ id: 9, username: 'principal', role: 'observer' }],
+        totalUsers: 1,
+      });
+
+      renderComponent();
+
+      const row = screen.getByText('@principal').closest('tr');
+      expect(within(row).getByText('Observer')).toHaveClass('user-role-badge', 'observer');
+      expect(row.querySelector('.economy-empty')).toHaveTextContent('—');
     });
   });
 

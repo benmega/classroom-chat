@@ -107,6 +107,7 @@ describe('useAdminUserActions', () => {
             expect(formData.get('username')).toBe('newkid');
             expect(formData.get('password')).toBe('pw');
             expect(formData.get('ducks')).toBe('5');
+            expect(formData.get('role')).toBe('student');
             expect(onSuccess).toHaveBeenCalledTimes(1);
             expect(setFormErrors).toHaveBeenCalledWith({});
             expect(setFormLoading.mock.calls).toEqual([[true], [false]]);
@@ -214,6 +215,33 @@ describe('useAdminUserActions', () => {
 
             await act(async () => { await create(); });
             expect(toast.error).toHaveBeenLastCalledWith('Failed to create user.');
+            expect(onSuccess).not.toHaveBeenCalled();
+        });
+
+        it.each(['parent', 'observer', 'admin'])('creates a user with %s role', async (role) => {
+            client.post.mockResolvedValueOnce({ data: { success: true } });
+            const actions = setup();
+            const formData = formWith({ username: 'user1', password: 'password123', role, ducks: '0' });
+
+            let ok;
+            await act(async () => { ok = await actions.createUser(formData, onSuccess); });
+
+            expect(ok).toBe(true);
+            expect(client.post).toHaveBeenCalledWith('/api/admin/create_user', formData);
+            expect(formData.get('role')).toBe(role);
+            expect(onSuccess).toHaveBeenCalledTimes(1);
+        });
+
+        it('rejects an invalid role', async () => {
+            const actions = setup();
+            const formData = formWith({ username: 'user1', password: 'password123', role: 'invalid_role' });
+
+            let ok;
+            await act(async () => { ok = await actions.createUser(formData, onSuccess); });
+
+            expect(ok).toBe(false);
+            expect(setFormErrors).toHaveBeenCalledWith({ role: 'Invalid role' });
+            expect(client.post).not.toHaveBeenCalled();
             expect(onSuccess).not.toHaveBeenCalled();
         });
     });

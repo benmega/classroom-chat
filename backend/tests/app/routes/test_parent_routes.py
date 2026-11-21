@@ -400,3 +400,84 @@ def test_contact_teacher_no_admins(client, app):
     assert res.status_code == 404
     assert "No teacher accounts found" in res.get_json()["error"]
 
+
+def test_observer_students_roster_search_filter_and_pagination(client, app):
+    with app.app_context():
+        observer = UserFactory(role="observer")
+        student_a = UserFactory(username="alice_obs", nickname="Alice", role="student", active_track="cs")
+        UserFactory(username="bob_obs", nickname="Bob", role="student", active_track="ozaria")
+        parent = UserFactory(username="parent_obs", role="parent")
+        db.session.commit()
+        obs_id = observer.id
+        sa_id = student_a.id
+        p_id = parent.id
+
+    # Non-observer/non-admin users are rejected
+    for uid in (sa_id, p_id):
+        with client.session_transaction() as sess:
+            sess["user"] = uid
+        assert client.get("/api/parents/students").status_code == 403
+
+    with client.session_transaction() as sess:
+        sess["user"] = obs_id
+
+    # Full roster excludes non-students
+    res = client.get("/api/parents/students?per_page=1&page=1")
+    assert res.status_code == 200
+    payload = res.get_json()["data"]
+    assert payload["total"] == 2
+    assert payload["pages"] == 2
+    assert len(payload["students"]) == 1
+
+    # Search by username/nickname
+    res_search = client.get("/api/parents/students?search=alice")
+    assert res_search.status_code == 200
+    search_students = res_search.get_json()["data"]["students"]
+    assert [s["username"] for s in search_students] == ["alice_obs"]
+
+    # Filter by track
+    res_track = client.get("/api/parents/students?track=ozaria")
+    assert res_track.status_code == 200
+    track_students = res_track.get_json()["data"]["students"]
+    assert [s["username"] for s in track_students] == ["bob_obs"]
+
+    # /api/parents/children also lists all students for observer
+    res_children = client.get("/api/parents/children")
+    assert res_children.status_code == 200
+    child_usernames = {c["username"] for c in res_children.get_json()["data"]["children"]}
+    assert child_usernames == {"alice_obs", "bob_obs"}
+
+
+def test_observer_can_view_any_student_report_and_history_but_cannot_mutate(client, app):
+    with app.app_context():
+        observer = UserFactory(role="observer")
+        student = UserFactory(username="unlinked_student", nickname="Unlinked", role="student", connection_code="OBS_CODE1")
+        other_parent = UserFactory(username="other_parent_obs", role="parent")
+        db.session.commit()
+        obs_id = observer.id
+        s_id = student.id
+        op_id = other_parent.id
+
+    with client.session_transaction() as sess:
+        sess["user"] = obs_id
+
+    # Read-only report & history work without linking
+    report_res = client.get(f"/api/parents/student/{s_id}/report")
+    assert report_res.status_code == 200
+    report_data = report_res.get_json()["data"]
+    assert report_data["username"] == "unlinked_student"
+    assert report_data["slug"] is not None
+
+    history_res = client.get(f"/api/parents/student/{s_id}/history")
+    assert history_res.status_code == 200
+    assert "recent_events" in history_res.get_json()["data"]
+
+    # Observer cannot view non-student report
+    assert client.get(f"/api/parents/student/{op_id}/report").status_code == 404
+
+    # Parent mutations are forbidden for observers
+    assert client.post("/api/parents/connect/code", json={"code": "OBS_CODE1"}).status_code == 403
+    assert client.post(f"/api/parents/disconnect/{s_id}").status_code == 403
+    assert client.post("/api/parents/contact-teacher", json={"body": "Hello"}).status_code == 403
+
+

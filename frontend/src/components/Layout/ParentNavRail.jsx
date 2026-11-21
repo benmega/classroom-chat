@@ -4,11 +4,14 @@ import { Home, LogOut, User, MessageSquare } from 'lucide-react';
 import client from '../../api/client';
 import { getApiUrl } from '../../utils/apiUrl';
 
-const ParentNavRail = ({ handleLogout }) => {
+const ParentNavRail = ({ user, handleLogout }) => {
     const location = useLocation();
     const [children, setChildren] = useState([]);
+    const isObserver = user?.role === 'observer';
+    const dashboardPath = isObserver ? '/observer/dashboard' : '/parent/dashboard';
 
     useEffect(() => {
+        if (isObserver) return;
         const fetchChildren = async () => {
             try {
                 const response = await client.get(`/api/parents/children?t=${new Date().getTime()}`);
@@ -18,7 +21,7 @@ const ParentNavRail = ({ handleLogout }) => {
             }
         };
         fetchChildren();
-    }, []);
+    }, [isObserver]);
 
     const isActive = (path) => location.pathname === path;
     const isReportActive = (childId) => location.pathname === `/parent/report/${childId}`;
@@ -26,18 +29,18 @@ const ParentNavRail = ({ handleLogout }) => {
     return (
         <aside className="desktop-nav-rail">
             {/* Logo */}
-            <Link to="/parent/dashboard" className="nav-rail-logo" data-tooltip="Classroom Chat">
+            <Link to={dashboardPath} className="nav-rail-logo" data-tooltip="Classroom Chat">
                 <img src="/images/logo.png" alt="Classroom Chat Logo" />
             </Link>
 
             {/* Center nav items */}
             <div className="nav-rail-center">
                 {/* Home / Dashboard */}
-                <div className={`nav-rail-item-container ${isActive('/parent/dashboard') ? 'active' : ''}`}>
+                <div className={`nav-rail-item-container ${isActive(dashboardPath) ? 'active' : ''}`}>
                     <div className="nav-rail-indicator" />
                     <Link
-                        to="/parent/dashboard"
-                        className={`nav-rail-item ${isActive('/parent/dashboard') ? 'active' : ''}`}
+                        to={dashboardPath}
+                        className={`nav-rail-item ${isActive(dashboardPath) ? 'active' : ''}`}
                         data-tooltip="Dashboard"
                         aria-label="Dashboard"
                     >
@@ -46,12 +49,12 @@ const ParentNavRail = ({ handleLogout }) => {
                 </div>
 
                 {/* Divider if we have children */}
-                {children.length > 0 && (
+                {!isObserver && children.length > 0 && (
                     <div className="nav-rail-divider" />
                 )}
 
                 {/* Dynamic Child Links */}
-                {children.map((child) => {
+                {!isObserver && children.map((child) => {
                     const active = isReportActive(child.id);
                     const displayName = child.nickname || child.username;
                     

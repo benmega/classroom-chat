@@ -9,6 +9,7 @@ import {
     findStudentProjectForTemplate, getStudentProjectStatus
 } from '../../constants/courseProgress';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
+import useAuthStore from '../../store/useAuthStore';
 
 const COURSE_CONCEPTS = {
     'cc-junior': {
@@ -135,6 +136,7 @@ const CourseLevelBreakdown = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { slug } = useParams();
+    const { user: authUser } = useAuthStore();
     const selectedNode = location.state?.selectedNode;
 
     const [userObj, setUserObj] = useState(location.state?.userObj || null);
@@ -193,7 +195,7 @@ const CourseLevelBreakdown = () => {
     }
 
     const domainConfig = getDomainConfig(selectedNode.domain);
-    const isParent = location.pathname.startsWith('/parent');
+    const isParent = location.pathname.startsWith('/parent') || location.pathname.startsWith('/observer') || authUser?.role === 'parent' || authUser?.role === 'observer';
     const mainGameLink = domainConfig.playUrl;
     const trackName = TRACK_NAMES[selectedNode.track];
 

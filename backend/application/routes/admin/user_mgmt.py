@@ -259,11 +259,39 @@ def reset_password():
 @admin_bp.route("/create_user", methods=["POST"])
 @admin_only
 def create_user():
-    username = request.form.get("username", "").strip().lower()
-    password = request.form.get("password", "")
-    ducks = request.form.get("ducks", type=int)
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        data = request.form
 
-    if not username or not password or ducks is None or ducks < 0:
+    username = (data.get("username") or "").strip().lower()
+    password = data.get("password") or ""
+    role = (data.get("role") or "student").strip().lower()
+
+    if role not in {"student", "parent", "observer", "admin"}:
+        return (
+            jsonify(
+                success=False,
+                message="Invalid role. Must be student, parent, observer, or admin",
+            ),
+            400,
+        )
+
+    raw_ducks = data.get("ducks")
+    if raw_ducks is None or raw_ducks == "":
+        ducks = 0
+    else:
+        try:
+            ducks = int(raw_ducks)
+        except (ValueError, TypeError):
+            return (
+                jsonify(
+                    success=False,
+                    message="Username, password, and non-negative ducks required",
+                ),
+                400,
+            )
+
+    if not username or not password or ducks < 0:
         return (
             jsonify(
                 success=False,
@@ -294,10 +322,10 @@ def create_user():
         return jsonify(success=False, message="Username already exists"), 409
 
     try:
-        new_user = User(username=username)
+        new_user = User(username=username, role=role, is_approved=True)
         new_user.set_password(password)
         save_new_user(new_user, commit=False)  # Flush to get the user ID
-        if ducks > 0:
+        if ducks > 0 and role == "student":
             new_user.add_ducks(ducks, reason="Initial Balance")
         db.session.commit()
         return jsonify(
@@ -620,7 +648,7 @@ def update_user_details(user_id):
     if "email" in data:
         user_obj.email = str(data["email"]).strip() if data["email"] else None
 
-    if "role" in data and data["role"] in ["student", "parent", "teacher"]:
+    if "role" in data and data["role"] in ["student", "parent", "observer", "teacher"]:
         user_obj.role = data["role"]
 
     if "is_admin" in data:

@@ -238,7 +238,7 @@ def handle_send_message(data):
 
     touch_presence(user.id)
 
-    if getattr(user, "role", None) == "parent":
+    if getattr(user, "role", None) in ("parent", "observer"):
         return {"success": False, "error": "Forbidden: Parents cannot send chat messages"}
 
     if not isinstance(data, dict):

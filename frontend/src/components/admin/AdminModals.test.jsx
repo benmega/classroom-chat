@@ -57,6 +57,50 @@ describe('AdminModals', () => {
       expect(screen.getByText('Password too short')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Creating...' })).toBeDisabled();
     });
+
+    it('renders role selector and switches duck balance field visibility', async () => {
+      render(
+        <CreateUserModal 
+          isOpen={true} 
+          onClose={vi.fn()} 
+          onSubmit={vi.fn()} 
+          formErrors={{}} 
+          loading={false} 
+        />
+      );
+
+      const roleSelect = screen.getByLabelText('Role');
+      expect(roleSelect).toHaveValue('student');
+      expect(screen.getByLabelText('Starting Duck Balance')).toBeInTheDocument();
+
+      await userEvent.selectOptions(roleSelect, 'parent');
+      expect(screen.queryByLabelText('Starting Duck Balance')).not.toBeInTheDocument();
+      expect(document.querySelector('input[type="hidden"][name="ducks"]')).toHaveValue('0');
+
+      await userEvent.selectOptions(roleSelect, 'observer');
+      expect(screen.queryByLabelText('Starting Duck Balance')).not.toBeInTheDocument();
+      expect(document.querySelector('input[type="hidden"][name="ducks"]')).toHaveValue('0');
+
+      await userEvent.selectOptions(roleSelect, 'admin');
+      expect(screen.queryByLabelText('Starting Duck Balance')).not.toBeInTheDocument();
+      expect(document.querySelector('input[type="hidden"][name="ducks"]')).toHaveValue('0');
+    });
+
+    it('respects defaultRole prop', () => {
+      render(
+        <CreateUserModal 
+          isOpen={true} 
+          onClose={vi.fn()} 
+          onSubmit={vi.fn()} 
+          formErrors={{}} 
+          loading={false} 
+          defaultRole="parent"
+        />
+      );
+
+      expect(screen.getByLabelText('Role')).toHaveValue('parent');
+      expect(screen.queryByLabelText('Starting Duck Balance')).not.toBeInTheDocument();
+    });
   });
 
   describe('AdjustDucksModal', () => {

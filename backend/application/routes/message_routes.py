@@ -212,7 +212,7 @@ def get_me_context():
                 for uid, username, nickname in db.session.query(
                     User.id, User._username, User.nickname
                 )
-                .filter(User.role != "parent")
+                .filter(~User.role.in_(("parent", "observer")))
                 .order_by(User._username)
             ]
         else:
