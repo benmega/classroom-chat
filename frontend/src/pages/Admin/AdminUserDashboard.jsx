@@ -262,38 +262,6 @@ const AdminUserDashboard = () => {
 
             {activeTab === 'standard' && (
                 <>
-
-                {user.role === 'student' && (
-                    <div className="admin-section section-grid-inline">
-                        <div className="compact-panel full-width">
-                            <div className="panel-head">Current Learning Track</div>
-                            <div className="track-cards-grid">
-                                {TRACKS.map((t) => {
-                                    const IconComponent = t.icon;
-                                    const isActive = editForm.active_track === t.id;
-                                    return (
-                                        <div
-                                            key={t.id}
-                                            className={`track-card-btn ${isActive ? 'active' : ''}`}
-                                            style={{ cursor: 'default' }}
-                                        >
-                                            {t.type === 'image' ? (
-                                                <img src={t.logo} alt={t.label} className="track-card-icon track-logo-img" />
-                                            ) : (
-                                                <IconComponent size={20} className="track-card-icon" />
-                                            )}
-                                            <div className="track-card-info">
-                                                <div className="track-card-name">{t.label}</div>
-                                            </div>
-                                            {isActive && <div className="track-active-badge">✓ Active</div>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {user.role === 'student' && (
                     <div className="admin-section section-grid-inline economy-grid">
 
@@ -420,7 +388,6 @@ const AdminUserDashboard = () => {
                                     })}
                                 </tbody>
                             </table>
-                                    <option value="observer">Observer</option>
                         </div>
                     </div>
                 )}
@@ -453,6 +420,7 @@ const AdminUserDashboard = () => {
                                 <select id="input-role" value={editForm.role} onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}>
                                     <option value="student">Student</option>
                                     <option value="parent">Parent</option>
+                                    <option value="observer">Observer</option>
                                     <option value="teacher">Teacher</option>
                                 </select>
                             </div>

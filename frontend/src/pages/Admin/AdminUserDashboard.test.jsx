@@ -84,7 +84,7 @@ describe('AdminUserDashboard Component Redesign', () => {
         expect(screen.getByRole('status')).toHaveTextContent(/Loading user/);
     });
 
-    it('renders hero status bar and prominent track selector', async () => {
+    it('renders hero status bar and does not render retired track cards', async () => {
         render(
             <BrowserRouter>
                 <AdminUserDashboard />
@@ -101,10 +101,7 @@ describe('AdminUserDashboard Component Redesign', () => {
 
         expect(screen.getByText('Chat Enabled')).toBeInTheDocument();
 
-        expect(screen.getByText('Computer Science')).toBeInTheDocument();
-        expect(screen.getByText('Ozaria')).toBeInTheDocument();
-        expect(screen.getByText('Game Development')).toBeInTheDocument();
-        expect(screen.getByText('Web Development')).toBeInTheDocument();
+        expect(screen.queryByText('Current Learning Track')).not.toBeInTheDocument();
 
         expect(screen.getByText('🦆 Ducks')).toBeInTheDocument();
         expect(screen.getByText('📦 Packets')).toBeInTheDocument();
@@ -132,7 +129,7 @@ describe('AdminUserDashboard Component Redesign', () => {
         expect(duckInputs[0].value).toBe('1');
     });
 
-    it('highlights the 3D Modeling track and recent 3D activity for a 3D student', async () => {
+    it('renders recent 3D activity badge for a 3D student', async () => {
         const threeDStudent = {
             ...mockStudent,
             active_track: '3d',
@@ -151,16 +148,11 @@ describe('AdminUserDashboard Component Redesign', () => {
             </BrowserRouter>
         );
 
-        await waitFor(() => {
-            expect(screen.getByText('3D Modeling', { selector: '.track-card-name' })).toBeInTheDocument();
-        });
-
-        const card = screen.getByText('3D Modeling', { selector: '.track-card-name' }).closest('.track-card-btn');
-        await waitFor(() => expect(card).toHaveClass('active'));
-        expect(screen.getByText('Computer Science').closest('.track-card-btn')).not.toHaveClass('active');
-
         // Recent activity badge resolves the 3D track (not hidden because of an unknown prefix)
-        expect(screen.getByText('TinkerCAD 1', { selector: '.course-badge' })).toBeInTheDocument();
+        await waitFor(() => {
+            expect(screen.getByText('TinkerCAD 1', { selector: '.course-badge' })).toBeInTheDocument();
+        });
+        expect(screen.queryByText('Current Learning Track')).not.toBeInTheDocument();
     });
 
     describe('administrator accounts', () => {
