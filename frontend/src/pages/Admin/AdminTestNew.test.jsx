@@ -442,4 +442,225 @@ describe('AdminTestNew', () => {
             expect(posts).toHaveLength(1);
         });
     });
+
+    describe('importing test files', () => {
+        it('imports a valid JSON file and submits properly on Save', async () => {
+            const posts = serve();
+            renderPage();
+
+            const json = JSON.stringify({
+                title: 'Computer Science Quiz',
+                description: 'Fundamentals exam',
+                questions: [
+                    {
+                        domain: 'Hardware',
+                        prompt: 'What is CPU?',
+                        options: {
+                            A: 'Central Processing Unit',
+                            B: 'Control Processing Unit',
+                            C: 'Core Processing Unit',
+                            D: 'Compute Power Unit',
+                        },
+                        answer: 'B',
+                        explanation: 'CPU is the brain',
+                    },
+                    {
+                        domain: 'Programming',
+                        prompt: 'What does CSS stand for?',
+                        options: [
+                            'Cascading Style Sheets',
+                            'Creative Style System',
+                            'Computer Style Sheets',
+                        ],
+                        answer: 'C',
+                        explanation: 'CSS handles presentation',
+                    },
+                ],
+            });
+
+            const file = new File([json], 'cs_quiz.json', { type: 'application/json' });
+            await userEvent.upload(screen.getByLabelText('Import test file'), file);
+
+            expect(toast.success).toHaveBeenCalledWith('Imported 2 questions');
+            expect(field('Title')).toHaveValue('Computer Science Quiz');
+            expect(field('Description')).toHaveValue('Fundamentals exam');
+
+            // Q1 verification
+            expect(field('Q1 topic')).toHaveValue('Hardware');
+            expect(field('Q1 prompt')).toHaveValue('What is CPU?');
+            expect(optionValues(1)).toEqual([
+                'Central Processing Unit',
+                'Control Processing Unit',
+                'Core Processing Unit',
+                'Compute Power Unit',
+            ]);
+            expect(checkedAnswer(1)).toBe('B');
+            expect(field('Q1 explanation')).toHaveValue('CPU is the brain');
+
+            // Q2 verification
+            expect(field('Q2 topic')).toHaveValue('Programming');
+            expect(field('Q2 prompt')).toHaveValue('What does CSS stand for?');
+            expect(optionValues(2)).toEqual([
+                'Cascading Style Sheets',
+                'Creative Style System',
+                'Computer Style Sheets',
+            ]);
+            expect(checkedAnswer(2)).toBe('C');
+            expect(field('Q2 explanation')).toHaveValue('CSS handles presentation');
+
+            await userEvent.click(button('Save'));
+
+            await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/admin/tests'));
+            expect(posts).toHaveLength(1);
+            expect(posts[0]).toEqual({
+                title: 'Computer Science Quiz',
+                description: 'Fundamentals exam',
+                questions: [
+                    {
+                        domain: 'Hardware',
+                        prompt: 'What is CPU?',
+                        options: {
+                            A: 'Central Processing Unit',
+                            B: 'Control Processing Unit',
+                            C: 'Core Processing Unit',
+                            D: 'Compute Power Unit',
+                        },
+                        answer: 'B',
+                        explanation: 'CPU is the brain',
+                    },
+                    {
+                        domain: 'Programming',
+                        prompt: 'What does CSS stand for?',
+                        options: {
+                            A: 'Cascading Style Sheets',
+                            B: 'Creative Style System',
+                            C: 'Computer Style Sheets',
+                        },
+                        answer: 'C',
+                        explanation: 'CSS handles presentation',
+                    },
+                ],
+            });
+        });
+
+        it('imports a valid CSV file, derives title from filename when blank, and submits on Save', async () => {
+            const posts = serve();
+            renderPage();
+
+            const csv = `prompt,domain,option_a,option_b,option_c,answer,explanation
+What is H2O?,Science,Water,Oxygen,Hydrogen,A,Formula for water
+What is 2 + 2?,Math,3,4,5,4,Basic addition`;
+
+            const file = new File([csv], 'science-and_math-quiz.csv', { type: 'text/csv' });
+            await userEvent.upload(screen.getByLabelText('Import test file'), file);
+
+            expect(toast.success).toHaveBeenCalledWith('Imported 2 questions');
+            expect(field('Title')).toHaveValue('science and math quiz');
+
+            // Q1
+            expect(field('Q1 topic')).toHaveValue('Science');
+            expect(field('Q1 prompt')).toHaveValue('What is H2O?');
+            expect(optionValues(1)).toEqual(['Water', 'Oxygen', 'Hydrogen']);
+            expect(checkedAnswer(1)).toBe('A');
+
+            // Q2 (answer was '4', matches option B)
+            expect(field('Q2 topic')).toHaveValue('Math');
+            expect(field('Q2 prompt')).toHaveValue('What is 2 + 2?');
+            expect(optionValues(2)).toEqual(['3', '4', '5']);
+            expect(checkedAnswer(2)).toBe('B');
+
+            await userEvent.click(button('Save'));
+
+            await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/admin/tests'));
+            expect(posts).toHaveLength(1);
+            expect(posts[0].title).toBe('science and math quiz');
+            expect(posts[0].questions).toHaveLength(2);
+            expect(posts[0].questions[0].answer).toBe('A');
+            expect(posts[0].questions[1].answer).toBe('B');
+        });
+
+        it('keeps existing title when CSV is imported if title is already typed', async () => {
+            const posts = serve();
+            renderPage();
+            await userEvent.type(field('Title'), 'My Custom Test Title');
+
+            const csv = `prompt,option_a,option_b,answer\nQuestion 1,True,False,A`;
+            const file = new File([csv], 'some_other_title.csv', { type: 'text/csv' });
+            await userEvent.upload(screen.getByLabelText('Import test file'), file);
+
+            expect(field('Title')).toHaveValue('My Custom Test Title');
+            expect(field('Q1 prompt')).toHaveValue('Question 1');
+
+            await userEvent.click(button('Save'));
+            await waitFor(() => expect(screen.getByTestId('where')).toHaveTextContent('/admin/tests'));
+            expect(posts[0].title).toBe('My Custom Test Title');
+        });
+
+        it('handles bad JSON file by showing toast.error and leaving existing state intact', async () => {
+            renderPage();
+            await userEvent.type(field('Title'), 'Draft Title');
+            await userEvent.type(field('Q1 prompt'), 'Draft Question Prompt');
+
+            // 1. Broken JSON
+            const brokenFile = new File(['{ invalid json'], 'broken.json', { type: 'application/json' });
+            await userEvent.upload(screen.getByLabelText('Import test file'), brokenFile);
+
+            expect(toast.error).toHaveBeenCalledWith('Invalid JSON format');
+            expect(field('Title')).toHaveValue('Draft Title');
+            expect(field('Q1 prompt')).toHaveValue('Draft Question Prompt');
+
+            // 2. Empty file
+            const emptyFile = new File(['   '], 'empty.json', { type: 'application/json' });
+            await userEvent.upload(screen.getByLabelText('Import test file'), emptyFile);
+
+            expect(toast.error).toHaveBeenCalledWith('File is empty');
+            expect(field('Title')).toHaveValue('Draft Title');
+            expect(field('Q1 prompt')).toHaveValue('Draft Question Prompt');
+
+            // 3. Question with invalid answer
+            const badAnswerFile = new File([
+                JSON.stringify({
+                    questions: [{ prompt: 'Q', options: ['A', 'B'], answer: 'Z' }],
+                }),
+            ], 'bad_answer.json', { type: 'application/json' });
+            await userEvent.upload(screen.getByLabelText('Import test file'), badAnswerFile);
+
+            expect(toast.error).toHaveBeenCalledWith('Question 1: answer must be one of the options');
+            expect(field('Title')).toHaveValue('Draft Title');
+            expect(field('Q1 prompt')).toHaveValue('Draft Question Prompt');
+        });
+
+        it('handles bad CSV file by showing toast.error with row number and leaving state intact', async () => {
+            renderPage();
+            await userEvent.type(field('Title'), 'Existing Title');
+            await userEvent.type(field('Q1 prompt'), 'Existing Prompt');
+
+            // Missing prompt in Row 2
+            const noPromptCsv = `prompt,option_a,option_b,answer\n,A,B,A`;
+            const file1 = new File([noPromptCsv], 'test.csv', { type: 'text/csv' });
+            await userEvent.upload(screen.getByLabelText('Import test file'), file1);
+
+            expect(toast.error).toHaveBeenCalledWith('Row 2: prompt is required');
+            expect(field('Title')).toHaveValue('Existing Title');
+            expect(field('Q1 prompt')).toHaveValue('Existing Prompt');
+
+            // Fewer than 2 options
+            const oneOptionCsv = `prompt,option_a,answer\nValid Prompt,Only One,A`;
+            const file2 = new File([oneOptionCsv], 'test.csv', { type: 'text/csv' });
+            await userEvent.upload(screen.getByLabelText('Import test file'), file2);
+
+            expect(toast.error).toHaveBeenCalledWith('Row 2: at least 2 options required');
+            expect(field('Title')).toHaveValue('Existing Title');
+            expect(field('Q1 prompt')).toHaveValue('Existing Prompt');
+        });
+
+        it('clicking the Import button triggers the hidden file input', async () => {
+            renderPage();
+            const input = screen.getByLabelText('Import test file');
+            const clickSpy = vi.spyOn(input, 'click');
+
+            await userEvent.click(button('Import'));
+            expect(clickSpy).toHaveBeenCalled();
+        });
+    });
 });

@@ -1,16 +1,29 @@
 import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, Upload, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { getErrorMessage } from '../../utils/apiError';
 import { createQuiz } from '../../api/quizzes';
+import { parseTestFile } from './testImportParser';
 import './AdminTests.css';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
 
 const MAX_OPTIONS = 8;
 const MIN_OPTIONS = 2;
 const letter = (index) => String.fromCharCode(65 + index);
+
+const readFileText = (file) => {
+    if (typeof file.text === 'function') {
+        return file.text();
+    }
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsText(file);
+    });
+};
 
 let nextKey = 0;
 // key: React identity only; answer: index into options
@@ -148,6 +161,7 @@ const AdminTestNew = () => {
     const [questions, setQuestions] = useState(() => [blankQuestion()]);
     const [saving, setSaving] = useState(false);
     const savingRef = useRef(false);
+    const fileInputRef = useRef(null);
 
     const updateQuestion = (key, next) =>
         setQuestions((prev) => prev.map((q) => (q.key === key ? next : q)));
@@ -155,6 +169,43 @@ const AdminTestNew = () => {
     // A new question keeps the topic of the last one: questions usually come in runs
     const addQuestion = () =>
         setQuestions((prev) => [...prev, blankQuestion(prev[prev.length - 1]?.domain || '')]);
+
+    const handleImportFile = async (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        try {
+            const content = await readFileText(file);
+            const parsed = parseTestFile({
+                content,
+                filename: file.name,
+                currentTitle: title,
+            });
+
+            if (parsed.title !== undefined) {
+                setTitle(parsed.title);
+            }
+            if (parsed.description !== undefined) {
+                setDescription(parsed.description);
+            }
+            if (parsed.questions && parsed.questions.length > 0) {
+                setQuestions(
+                    parsed.questions.map((q) => ({
+                        key: ++nextKey,
+                        domain: q.domain,
+                        prompt: q.prompt,
+                        options: q.options,
+                        answer: q.answer,
+                        explanation: q.explanation,
+                    })),
+                );
+            }
+            toast.success(`Imported ${parsed.questions.length} question${parsed.questions.length === 1 ? '' : 's'}`);
+        } catch (error) {
+            toast.error(error.message || 'Failed to import test file');
+        } finally {
+            event.target.value = '';
+        }
+    };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -175,6 +226,21 @@ const AdminTestNew = () => {
     return (
         <form className="admin-tests-page admin-test-new" onSubmit={handleSubmit}>
             <AdminPageHeader title="New test">
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json,.csv,application/json,text/csv"
+                    className="admin-tests-sr"
+                    aria-label="Import test file"
+                    onChange={handleImportFile}
+                />
+                <button
+                    type="button"
+                    className="admin-tests-btn"
+                    onClick={() => fileInputRef.current?.click()}
+                >
+                    <Upload size={16} aria-hidden="true" /> Import
+                </button>
                 <Link className="admin-tests-btn" to="/admin/tests">Cancel</Link>
                 <button type="submit" className="btn-primary" disabled={saving}>Save</button>
             </AdminPageHeader>
