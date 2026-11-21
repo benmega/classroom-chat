@@ -35,7 +35,7 @@ jobs:
       plan: ${{ steps.gen_plan.outputs.plan }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -98,7 +98,7 @@ jobs:
       has_patch: ${{ steps.export.outputs.has_patch }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # No credentials are left in .git/config: the agent's test runs execute in this checkout.
           persist-credentials: false
@@ -177,7 +177,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # A fresh clone: the personal access token is stored in it for the push and the PR, and
           # nothing from the agent's workspace is in it.
