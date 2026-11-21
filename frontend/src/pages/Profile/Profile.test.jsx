@@ -87,6 +87,9 @@ describe('Profile Page Component', () => {
 
     expect(screen.getByText('Loading Profile...')).toBeInTheDocument();
     expect(screen.getByRole('status')).toHaveTextContent('Loading Profile...');
+    expect(screen.getByTestId('profile-skeleton')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
+    expect(document.querySelectorAll('.skeleton-loader').length).toBeGreaterThan(0);
   });
 
   it('renders error state when profile data is not found', () => {
