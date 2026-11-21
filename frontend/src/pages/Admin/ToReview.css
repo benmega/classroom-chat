@@ -394,13 +394,15 @@
     color: var(--text-on-primary);
 }
 
+/* Red is reserved for issues, so the recording link is violet */
 .project-link-btn.video {
-    background: var(--rose-50);
-    color: var(--rose-700);
+    background: var(--violet-50);
+    color: var(--violet-700);
 }
 
 .project-link-btn.video:hover {
-    background: var(--rose-100);
+    background: var(--violet-100);
+    color: var(--violet-800);
 }
 
 /* Image Preview */
@@ -516,6 +518,38 @@
     font-size: var(--font-sm);
     max-height: 250px;
     overflow-y: auto;
+}
+
+/* Copy button pinned to the top-right of a code or transcript box; faint until hovered or focused */
+.copyable {
+    position: relative;
+}
+
+.copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    cursor: pointer;
+    opacity: 0.45;
+    transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.copyable:hover .copy-btn,
+.copy-btn:hover,
+.copy-btn:focus-visible {
+    opacity: 1;
+}
+
+.copy-btn:hover {
+    background: var(--bg-tertiary);
 }
 
 /* Collapsibles that hold a viewer (3D model, source files, assets) instead of text */

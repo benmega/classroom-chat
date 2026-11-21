@@ -1391,6 +1391,50 @@ describe('ToReview Component', () => {
         expect(screen.getByRole('button', { name: 'Files (1)' })).toHaveAttribute('aria-expanded', 'false');
       });
 
+      describe('copy buttons', () => {
+        let writeText;
+
+        beforeEach(() => {
+          writeText = vi.fn().mockResolvedValue(undefined);
+          Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+        });
+
+        it('copies the code snippet', async () => {
+          await loadProjects(makeProject({ code_snippet: 'x = 1' }));
+          fireEvent.click(screen.getByRole('button', { name: 'Code Snippet' }));
+
+          fireEvent.click(screen.getByRole('button', { name: 'Copy code' }));
+
+          expect(writeText).toHaveBeenCalledWith('x = 1');
+          expect(await screen.findByRole('button', { name: 'Copied' })).toBeInTheDocument();
+        });
+
+        it('copies the video transcript', async () => {
+          await loadProjects(makeProject({ video_transcript: 'Welcome to my robot' }));
+          fireEvent.click(screen.getByRole('button', { name: 'Video Transcript' }));
+
+          fireEvent.click(screen.getByRole('button', { name: 'Copy transcript' }));
+
+          expect(writeText).toHaveBeenCalledWith('Welcome to my robot');
+        });
+
+        it('shows no copy button while the box is collapsed', async () => {
+          await loadProjects(makeProject({ code_snippet: 'x = 1', video_transcript: 'Hi' }));
+
+          expect(screen.queryByRole('button', { name: /^Copy/ })).not.toBeInTheDocument();
+        });
+
+        it('reports a failed copy', async () => {
+          writeText.mockRejectedValue(new Error('denied'));
+          await loadProjects(makeProject({ code_snippet: 'x = 1' }));
+          fireEvent.click(screen.getByRole('button', { name: 'Code Snippet' }));
+
+          fireEvent.click(screen.getByRole('button', { name: 'Copy code' }));
+
+          await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Copy failed'));
+        });
+      });
+
       it('keeps the open state per project', async () => {
         await loadProjects(
           makeProject({ id: 70, name: 'Robot Arm', files: [mainPy] }),

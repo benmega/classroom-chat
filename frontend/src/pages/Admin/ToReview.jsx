@@ -23,7 +23,9 @@ import {
     Edit,
     RotateCcw,
     Box,
-    Sparkles
+    Sparkles,
+    Copy,
+    Check
 } from 'lucide-react';
 import client from '../../api/client';
 import toast from 'react-hot-toast';
@@ -106,6 +108,32 @@ const ReviewSection = ({ label, isOpen, onToggle, children }) => (
         {isOpen && <div className="review-section-body">{children}</div>}
     </div>
 );
+
+// Subtle icon button that copies `text`; the check icon confirms for a moment instead of a toast.
+const CopyButton = ({ text, label }) => {
+    const [copied, setCopied] = useState(false);
+
+    useEffect(() => {
+        if (!copied) return undefined;
+        const timer = setTimeout(() => setCopied(false), 1500);
+        return () => clearTimeout(timer);
+    }, [copied]);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopied(true);
+        } catch {
+            toast.error('Copy failed');
+        }
+    };
+
+    return (
+        <button type="button" className="copy-btn" onClick={handleCopy} aria-label={copied ? 'Copied' : label} title={copied ? 'Copied' : label}>
+            {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+        </button>
+    );
+};
 
 const ToReview = () => {
     useDocumentTitle('To review · Admin');
@@ -737,9 +765,12 @@ const ToReview = () => {
                                 {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                             </button>
                             {isExpanded && (
-                                <pre className="code-snippet-box">
-                                    <code>{p.code_snippet}</code>
-                                </pre>
+                                <div className="copyable">
+                                    <pre className="code-snippet-box">
+                                        <code>{p.code_snippet}</code>
+                                    </pre>
+                                    <CopyButton text={p.code_snippet} label="Copy code" />
+                                </div>
                             )}
                         </div>
                     )}
@@ -754,8 +785,11 @@ const ToReview = () => {
                                 {expandedSections[`transcript-${p.id}`] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                             </button>
                             {expandedSections[`transcript-${p.id}`] && (
-                                <div className="transcript-view">
-                                    {p.video_transcript}
+                                <div className="copyable">
+                                    <div className="transcript-view">
+                                        {p.video_transcript}
+                                    </div>
+                                    <CopyButton text={p.video_transcript} label="Copy transcript" />
                                 </div>
                             )}
                         </div>
