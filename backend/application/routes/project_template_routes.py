@@ -55,6 +55,7 @@ def create_template():
         existing.video_url = data.get("video_url")
         existing.code_snippet = data.get("code_snippet")
         existing.image_url = data.get("image_url")
+        existing.icon_url = data.get("icon_url")
         existing.difficulty = data.get("difficulty", "Intermediate")
         existing.concepts = data.get("concepts", [])
         existing.goals = data.get("goals", [])
@@ -75,6 +76,7 @@ def create_template():
         video_url=data.get("video_url"),
         code_snippet=data.get("code_snippet"),
         image_url=data.get("image_url"),
+        icon_url=data.get("icon_url"),
         difficulty=data.get("difficulty", "Intermediate"),
         concepts=data.get("concepts", []),
         goals=data.get("goals", []),
@@ -127,6 +129,8 @@ def update_template(template_id):
         template.code_snippet = data.get("code_snippet")
     if "image_url" in data:
         template.image_url = data.get("image_url")
+    if "icon_url" in data:
+        template.icon_url = data.get("icon_url")
     if "difficulty" in data:
         template.difficulty = data.get("difficulty")
     if "concepts" in data:

@@ -14,6 +14,32 @@ import {
     getDomainConfig, getTrackDomain, findLevelForProject
 } from '../../constants/courseProgress';
 import useDocumentTitle from '../../hooks/useDocumentTitle';
+import { formatStaticUrl } from '../../utils/formatters';
+
+const ProjectNodeIcon = ({ project, is3D }) => {
+    const iconSrc = project.icon_url || project.image_url;
+    const [prevSrc, setPrevSrc] = useState(iconSrc);
+    const [hasError, setHasError] = useState(false);
+    const DefaultIcon = is3D ? Box : Code;
+
+    if (prevSrc !== iconSrc) {
+        setPrevSrc(iconSrc);
+        setHasError(false);
+    }
+
+    if (!iconSrc || hasError) {
+        return <DefaultIcon size={20} className="project-icon" aria-hidden="true" />;
+    }
+
+    return (
+        <img
+            src={formatStaticUrl(iconSrc)}
+            alt=""
+            className="project-icon-img"
+            onError={() => setHasError(true)}
+        />
+    );
+};
 
 const CourseProgressTree = () => {
     useDocumentTitle('Learning path');
@@ -538,7 +564,7 @@ const CourseProgressTree = () => {
                                             >
                                                 {projectDone
                                                     ? <CheckCircle size={20} className="project-icon" aria-hidden="true" />
-                                                    : <ProjectIcon size={20} className="project-icon" aria-hidden="true" />}
+                                                    : <ProjectNodeIcon project={project} is3D={is3D} />}
                                             </button>
                                         );
                                     })}

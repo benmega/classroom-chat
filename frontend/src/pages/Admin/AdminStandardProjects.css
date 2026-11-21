@@ -195,3 +195,26 @@
     box-shadow: var(--focus-ring);
 }
 
+
+:where(.admin-body) .project-card-icon-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    z-index: 2;
+}
+
+:where(.admin-body) .project-card-icon-badge img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

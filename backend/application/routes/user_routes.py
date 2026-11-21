@@ -1012,6 +1012,7 @@ def _delete_project_image_if_unreferenced(image_url):
         in_use = (
             db.session.query(Project.id).filter(Project.image_url.endswith(filename)).first()
             or db.session.query(ProjectTemplate.id).filter(ProjectTemplate.image_url.endswith(filename)).first()
+            or db.session.query(ProjectTemplate.id).filter(ProjectTemplate.icon_url.endswith(filename)).first()
         )
         if not in_use:
             delete_stored_image(_upload_dir("projects"), filename)

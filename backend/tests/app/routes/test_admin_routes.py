@@ -635,14 +635,19 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
         payload = {
             "name": "New Custom Test Template",
             "description": "Test description for new custom template.",
+            "icon_url": "/static/images/custom_icon.png",
         }
         resp_create = client.post("/api/project-templates", json=payload)
         assert resp_create.status_code == 200
         new_template = resp_create.get_json()["data"]["template"]
         assert new_template["name"] == "New Custom Test Template"
+        assert new_template["icon_url"] == "/static/images/custom_icon.png"
         new_id = new_template["id"]
 
-        update_payload = {"description": "Updated custom description."}
+        update_payload = {
+            "description": "Updated custom description.",
+            "icon_url": "/static/images/updated_icon.png",
+        }
         resp_update = client.put(
             f"/api/project-templates/{new_id}", json=update_payload
         )
@@ -650,6 +655,10 @@ def test_project_template_crud_admin(client, sample_admin, test_app):
         assert (
             resp_update.get_json()["data"]["template"]["description"]
             == "Updated custom description."
+        )
+        assert (
+            resp_update.get_json()["data"]["template"]["icon_url"]
+            == "/static/images/updated_icon.png"
         )
 
         resp_delete = client.delete(f"/api/project-templates/{new_id}")

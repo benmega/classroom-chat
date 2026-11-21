@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import adminCache from '../../utils/adminCache';
 import { getErrorMessage } from '../../utils/apiError';
 import { Plus, Edit, X, BookOpen } from 'lucide-react';
-import { cssUrl } from '../../utils/formatters';
+import { cssUrl, formatStaticUrl } from '../../utils/formatters';
 import Modal from '../../components/common/Modal';
 import ImageUpload from '../../components/common/ImageUpload';
 import { ALIGNED_NODES } from '../../constants/courseProgress';
@@ -21,7 +21,7 @@ const AdminStandardProjects = () => {
     
     const [form, setForm] = useState({
         name: '', description: '', chapter: '', link: '', github_link: '', 
-        video_url: '', code_snippet: '', image_url: '',
+        video_url: '', code_snippet: '', image_url: '', icon_url: '',
         difficulty: 'Intermediate', concepts: '', goals: '', project_type: 'code'
     });
 
@@ -67,6 +67,7 @@ const AdminStandardProjects = () => {
                 video_url: project.video_url || '',
                 code_snippet: project.code_snippet || '',
                 image_url: project.image_url || '',
+                icon_url: project.icon_url || '',
                 difficulty: project.difficulty || 'Intermediate',
                 concepts: Array.isArray(project.concepts) ? project.concepts.join(', ') : (project.concepts || ''),
                 goals: Array.isArray(project.goals) ? project.goals.join('\n') : (project.goals || ''),
@@ -77,7 +78,7 @@ const AdminStandardProjects = () => {
             setEditingProject(null);
             setForm({
                 name: '', description: '', chapter: '', link: '', github_link: '', 
-                video_url: '', code_snippet: '', image_url: '',
+                video_url: '', code_snippet: '', image_url: '', icon_url: '',
                 difficulty: 'Intermediate', concepts: '', goals: '', project_type: 'code'
             });
         }
@@ -167,6 +168,11 @@ const AdminStandardProjects = () => {
                                         }}
                                     >
                                         {!p.image_url && <BookOpen size={48} aria-hidden="true" />}
+                                        {p.icon_url && (
+                                            <span className="project-card-icon-badge" title="Project Icon">
+                                                <img src={formatStaticUrl(p.icon_url)} alt="" />
+                                            </span>
+                                        )}
                                     </span>
                                     <span className="project-card-body">
                                         <span className="project-card-title-row">
@@ -279,6 +285,33 @@ const AdminStandardProjects = () => {
                                 />
                             </div>
                         </div>
+                        <div className="form-group standard-project-image-group">
+                            <ImageUpload
+                                uploadUrl="/api/project-templates/upload-image"
+                                fieldName="file"
+                                initialImage={form.icon_url}
+                                onUploadSuccess={({ new_url }) => setForm(prev => ({ ...prev, icon_url: new_url }))}
+                                onRemove={() => setForm(prev => ({ ...prev, icon_url: '' }))}
+                                label="Project Icon"
+                                secondaryLabel="Square icon (PNG, JPG, WebP, SVG)"
+                                uploadText="Click to upload icon or drag and drop"
+                            />
+                            <div className="image-url-secondary">
+                                <label htmlFor="input-icon-url" className="image-url-label">
+                                    Or Direct Icon URL
+                                </label>
+                                <input 
+                                    id="input-icon-url"
+                                    type="text" 
+                                    value={form.icon_url} 
+                                    onChange={e => setForm({...form, icon_url: e.target.value})} 
+                                    placeholder="e.g. https://... or /images/..."
+                                    className="admin-input-subtle"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="standard-project-form-row">
                         <div className="form-group">
                             <label htmlFor="input-concepts">Concepts Covered</label>
                             <input id="input-concepts"

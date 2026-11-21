@@ -425,4 +425,34 @@ describe('CourseProgressTree - 3D Modeling track', () => {
       { state: expect.objectContaining({ selectedNode: expect.objectContaining({ id: '3d-1', domain: '3d-modeling', toolName: 'Tinkercad' }) }) }
     );
   });
+  it('renders custom icon, falls back to thumbnail, or falls back to generic symbol', async () => {
+    server.use(http.get('*/api/project-templates', () => HttpResponse.json({
+      data: {
+        templates: {
+          withIcon: { id: 10, name: 'Project Custom Icon', chapter: 'Computer Science 1', icon_url: '/icons/proj1.svg' },
+          withThumb: { id: 11, name: 'Project Thumbnail Fallback', chapter: 'Computer Science 1', image_url: '/images/thumb2.jpg' },
+          generic: { id: 12, name: 'Project Generic', chapter: 'Computer Science 1' },
+        },
+      },
+    })));
+    renderWithProviders(<CourseProgressTree />);
+
+    const btnWithIcon = await screen.findByRole('button', { name: 'Project Custom Icon' });
+    const imgIcon = btnWithIcon.querySelector('img.project-icon-img');
+    expect(imgIcon).toBeInTheDocument();
+    expect(imgIcon.getAttribute('src')).toContain('/icons/proj1.svg');
+
+    const btnWithThumb = screen.getByRole('button', { name: 'Project Thumbnail Fallback' });
+    const imgThumb = btnWithThumb.querySelector('img.project-icon-img');
+    expect(imgThumb).toBeInTheDocument();
+    expect(imgThumb.getAttribute('src')).toContain('/images/thumb2.jpg');
+
+    const btnGeneric = screen.getByRole('button', { name: 'Project Generic' });
+    expect(btnGeneric.querySelector('img.project-icon-img')).not.toBeInTheDocument();
+    expect(btnGeneric.querySelector('.project-icon')).toBeInTheDocument();
+
+    fireEvent.error(imgThumb);
+    expect(btnWithThumb.querySelector('img.project-icon-img')).not.toBeInTheDocument();
+    expect(btnWithThumb.querySelector('.project-icon')).toBeInTheDocument();
+  });
 });

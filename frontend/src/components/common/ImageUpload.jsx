@@ -25,7 +25,8 @@ const ImageUpload = ({
   onUploadSuccess = () => {}, 
   onRemove = () => {},
   label = 'Upload Image',
-  secondaryLabel = 'PNG, JPG, WebP or GIF (max. 10MB)'
+  secondaryLabel = 'PNG, JPG, WebP or GIF (max. 10MB)',
+  uploadText = 'Click to upload or drag and drop'
 }) => {
   const [preview, setPreview] = useState(initialImage);
   const [isUploading, setIsUploading] = useState(false);
@@ -212,7 +213,7 @@ const ImageUpload = ({
             <div className="upload-icon-circle">
               <Upload size={24} className="upload-icon" />
             </div>
-            <p className="upload-text">Click to upload or drag and drop</p>
+            <p className="upload-text">{uploadText}</p>
             <p className="upload-hint">{secondaryLabel}</p>
           </div>
         )}

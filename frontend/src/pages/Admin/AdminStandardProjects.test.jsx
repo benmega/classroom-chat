@@ -631,5 +631,48 @@ describe('AdminStandardProjects', () => {
             expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
             expect(card).toHaveFocus();
         });
+        it('displays icon badge on project card and saves edited icon_url', async () => {
+            const projectWithIcon = {
+                data: {
+                    status: 'success',
+                    data: {
+                        templates: {
+                            1: { id: 1, name: 'Project Icon Test', description: 'Desc', icon_url: '/static/icons/test_icon.svg' }
+                        }
+                    }
+                }
+            };
+            client.get.mockResolvedValue(projectWithIcon);
+            client.put.mockResolvedValueOnce({
+                data: { status: 'success', message: 'Updated successfully.' }
+            });
+
+            renderWithRouter(<AdminStandardProjects />);
+            await screen.findByText('Project Icon Test');
+
+            const badge = document.querySelector('.project-card-icon-badge img');
+            expect(badge).toBeInTheDocument();
+            expect(badge.getAttribute('src')).toContain('/static/icons/test_icon.svg');
+
+            fireEvent.click(screen.getByRole('button', { name: /^Project Icon Test/ }));
+            expect(screen.getByRole('dialog', { name: 'Edit Standard Project' })).toBeInTheDocument();
+
+            const directIconUrlInput = screen.getByLabelText(/Direct Icon URL/i);
+            expect(directIconUrlInput).toHaveValue('/static/icons/test_icon.svg');
+
+            fireEvent.change(directIconUrlInput, { target: { value: '/static/icons/new_icon.svg' } });
+
+            const saveBtn = screen.getByRole('button', { name: /Save Template/i });
+            fireEvent.submit(saveBtn.closest('form'));
+
+            await waitFor(() => {
+                expect(client.put).toHaveBeenCalledWith(
+                    '/api/project-templates/1',
+                    expect.objectContaining({
+                        icon_url: '/static/icons/new_icon.svg'
+                    })
+                );
+            });
+        });
     });
 });
